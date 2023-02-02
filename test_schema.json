@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "appconfig_v1.0.0",
+  "description": "container for the entire configuration. Holds one appconfig and arrays of processes, fields, translations and values",
+  "type": "object",
+  "required": ["appConfig"],
+  "properties": {
+    "appConfig": {
+      "type": "object",
+      "description": "holds keyvalues and entity references pertaining the whole app",
+      "properties": {
+        "keyValues": {
+          "$ref": "#/$defs/keyValueArray"
+        },
+        "entityReferences": {
+          "$ref": "#/$defs/entityReferenceArray"
+        }
+      }
+    },
+    "processes": {
+      "$ref": "#/$defs/configElementArray"
+    },
+    "fields": {
+      "$ref": "#/$defs/configElementArray"
+    },
+    "translations": {
+      "$ref": "#/$defs/configElementArray"
+    },
+    "values": {
+      "$ref": "#/$defs/configElementArray"
+    }
+  },
+  "$defs": {
+    "configElementArray": {
+      "type": "array",
+      "description": "this definition is an array of config elements. Config elements have a cid, an id, keyvalues and entity references",
+      "items": {
+        "$ref": "#/$defs/configElement"
+      }
+    },
+    "configElement": {
+      "type": "object",
+      "description": "a config element is either a process, a field, a translation or a value. Only the id is required, the rest can be left out",
+      "required": ["id"],
+      "properties": {
+        "cid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "keyValues": {
+          "$ref": "#/$defs/keyValueArray"
+        },
+        "entityReferences": {
+          "$ref": "#/$defs/entityReferenceArray"
+        }
+      }
+    },
+    "keyValueArray": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "a single keyvalue has both a key and a value. Both are required",
+        "required":["key", "value"],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "entityReferenceArray": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "an entity reference has key, entity type and entity id as required parameters. The entity cid will default to 0 if not set",
+        "required": ["key", "entity_type", "entity_id"],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "entity_type": {
+            "type": "string"
+          },
+          "entity_cid": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "entity_id": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}
