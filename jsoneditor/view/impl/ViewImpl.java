@@ -5,8 +5,8 @@ import jsoneditor.model.ReadableModel;
 import jsoneditor.model.observe.Subject;
 import jsoneditor.model.statemachine.impl.State;
 import jsoneditor.view.View;
-import jsoneditor.view.impl.swing.UIHandler;
-import jsoneditor.view.impl.swing.impl.UIHandlerImpl;
+import jsoneditor.view.impl.jfx.UIHandler;
+import jsoneditor.view.impl.jfx.impl.UIHandlerImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +34,11 @@ public class ViewImpl implements View
     public void update()
     {
         State newState = model.getCurrentState();
-        switch (newState) {
-            case READ_JSON_AND_SCHEMA ->
+        switch (newState)
+        {
+            case READ_JSON_AND_SCHEMA:
+                uiHandler.startUI();
+                break;
         }
     
     }
@@ -43,6 +46,7 @@ public class ViewImpl implements View
     @Override
     public void observe(Subject subjectToObserve)
     {
+        subjectToObserve.registerObserver(this);
         subjects.add(subjectToObserve);
     }
     
