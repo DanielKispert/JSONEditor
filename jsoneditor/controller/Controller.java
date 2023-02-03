@@ -1,6 +1,14 @@
 package jsoneditor.controller;
 
-public interface Controller {
+import java.io.File;
+
+public interface Controller
+{
+
+    void launchFinished();
+    
+    void jsonAndSchemaSelected(File json, File schema);
+
 
     
 

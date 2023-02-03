@@ -5,11 +5,10 @@ import jsoneditor.model.statemachine.impl.State;
 
 import java.io.File;
 
-public interface ReadableModel
+public interface ReadableModel extends ReadableState
 {
     File getCurrentJSONFile();
     
     File getCurrentSchemaFile();
     
-    State getCurrentState();
 }

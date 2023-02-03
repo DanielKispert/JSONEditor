@@ -1,22 +1,26 @@
 package jsoneditor.view.impl.jfx.impl;
 
-import javafx.application.Application;
 import javafx.stage.Stage;
+import jsoneditor.controller.Controller;
 import jsoneditor.view.impl.jfx.UIHandler;
-import jsoneditor.view.impl.jfx.impl.scenes.JSONSelection;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelection;
 
-public class UIHandlerImpl extends Application implements UIHandler
+public class UIHandlerImpl implements UIHandler
 {
-    @Override
-    public void start(Stage stage) throws Exception
+    private final Controller controller;
+    
+    private final Stage stage;
+    
+    public UIHandlerImpl(Controller controller, Stage stage)
     {
-        stage.setScene(new JSONSelection().getScene(stage));
-        stage.show();
+        this.controller = controller;
+        this.stage = stage;
     }
     
     @Override
-    public void startUI()
+    public void showSelectJsonAndSchema()
     {
-        launch();
+        stage.setScene(new JSONSelection(controller).getScene(stage));
+        stage.show();
     }
 }

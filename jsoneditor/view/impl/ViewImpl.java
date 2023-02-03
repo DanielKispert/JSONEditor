@@ -1,5 +1,8 @@
 package jsoneditor.view.impl;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.stage.Stage;
 import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.model.observe.Subject;
@@ -21,10 +24,10 @@ public class ViewImpl implements View
     
     private final UIHandler uiHandler;
     
-    public ViewImpl(ReadableModel model, Controller controller)
+    public ViewImpl(ReadableModel model, Controller controller, Stage stage)
     {
         this.subjects = new ArrayList<>();
-        this.uiHandler = new UIHandlerImpl();
+        this.uiHandler = new UIHandlerImpl(controller, stage);
         this.controller = controller;
         this.model = model;
     }
@@ -36,9 +39,13 @@ public class ViewImpl implements View
         State newState = model.getCurrentState();
         switch (newState)
         {
-            case READ_JSON_AND_SCHEMA:
-                uiHandler.startUI();
+            case LAUNCHING:
+                controller.launchFinished();
                 break;
+            case READ_JSON_AND_SCHEMA:
+                uiHandler.showSelectJsonAndSchema();
+                break;
+            
         }
     
     }
@@ -50,6 +57,17 @@ public class ViewImpl implements View
         subjects.add(subjectToObserve);
     }
     
+    @Override
+    public void cantValidateJson()
+    {
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Can't validate JSON using selected Schema!", ButtonType.OK);
+        alert.showAndWait();
+    }
     
-    
+    @Override
+    public void selectJsonAndSchema()
+    {
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Can't validate JSON using selected Schema!", ButtonType.OK);
+        alert.showAndWait();
+    }
 }
