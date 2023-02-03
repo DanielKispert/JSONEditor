@@ -15,8 +15,8 @@ public class StateMachineImpl implements StateMachine
     
     public StateMachineImpl()
     {
-        this.currentState = State.READ_JSON_AND_SCHEMA;
         this.observers = new ArrayList<>();
+        setState(State.LAUNCHING);
     }
     
     @Override
@@ -35,6 +35,7 @@ public class StateMachineImpl implements StateMachine
     @Override
     public void setState(State newState)
     {
+        System.out.println("State Machine entering state " + newState);
         this.currentState = newState;
         notifyObservers();
     }
