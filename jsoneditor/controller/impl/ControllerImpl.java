@@ -74,10 +74,7 @@ public class ControllerImpl implements Controller, Observer
             JsonSchema schema = reader.getSchemaFromFile(schemaFile);
             if (reader.validateJsonWithSchema(json, schema))
             {
-                model.setCurrentJSONFile(jsonFile);
-                model.setCurrentSchemaFile(schemaFile);
-                model.setJson(json);
-                model.setSchema(schema);
+                model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
             }
             else
             {
@@ -93,5 +90,9 @@ public class ControllerImpl implements Controller, Observer
     
     }
     
-    
+    @Override
+    public void chooseNodeFromNavbar(String name, JsonNode node)
+    {
+        model.selectJsonNode(name, node);
+    }
 }
