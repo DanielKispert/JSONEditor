@@ -2,7 +2,7 @@
 
 allows editing JSON files to certain templates in a kind of more streamlined UI
 
-will become a website/server at some point, swing UI as a placeholder until then
+will maybe become a website/server at some point, javafx UI as a placeholder until then
 
 workflow:
 
