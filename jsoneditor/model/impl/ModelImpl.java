@@ -18,7 +18,11 @@ public class ModelImpl implements ReadableModel, WritableModel
     
     private File schemaFile;
     
-    private JsonNode json;
+    private JsonNode rootJson;
+    
+    private JsonNode selectedJsonNode;
+    
+    private String nameOfSelectedJsonNode;
     
     private JsonSchema schema;
     
@@ -41,6 +45,12 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public JsonNode getRootJson()
+    {
+        return rootJson;
+    }
+    
+    @Override
     public State getCurrentState()
     {
         return stateMachine.getState();
@@ -53,32 +63,59 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public void jsonAndSchemaSuccessfullyValidated(File jsonFile, File schemaFile, JsonNode json, JsonSchema schema)
+    {
+        setCurrentJSONFile(jsonFile);
+        setCurrentSchemaFile(schemaFile);
+        setRootJson(json);
+        this.selectedJsonNode = json;
+        this.nameOfSelectedJsonNode = "Root Element";
+        setSchema(schema);
+        setState(State.MAIN_EDITOR);
+    }
+    
     public void setCurrentJSONFile(File json)
     {
         this.jsonFile = json;
     }
     
-    @Override
-    public void setCurrentSchemaFile(File schema)
+    private void setCurrentSchemaFile(File schema)
     {
         this.schemaFile = schema;
     }
     
-    @Override
-    public void setJson(JsonNode json)
+    private void setRootJson(JsonNode rootJson)
     {
-        this.json = json;
+        this.rootJson = rootJson;
     }
     
-    @Override
-    public void setSchema(JsonSchema schema)
+    private void setSchema(JsonSchema schema)
     {
         this.schema = schema;
     }
     
-    @Override
     public void setState(State state)
     {
         stateMachine.setState(state);
+    }
+    
+    @Override
+    public void selectJsonNode(String name, JsonNode jsonNode)
+    {
+        this.selectedJsonNode = jsonNode;
+        this.nameOfSelectedJsonNode = name;
+        setState(State.UPDATED_SELECTED_JSON_NODE);
+    }
+    
+    @Override
+    public JsonNode getSelectedJsonNode()
+    {
+        return selectedJsonNode;
+    }
+    
+    @Override
+    public String getNameOfSelectedJsonNode()
+    {
+        return nameOfSelectedJsonNode;
     }
 }

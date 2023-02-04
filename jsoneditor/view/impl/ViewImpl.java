@@ -27,7 +27,7 @@ public class ViewImpl implements View
     public ViewImpl(ReadableModel model, Controller controller, Stage stage)
     {
         this.subjects = new ArrayList<>();
-        this.uiHandler = new UIHandlerImpl(controller, stage);
+        this.uiHandler = new UIHandlerImpl(controller, stage, model);
         this.controller = controller;
         this.model = model;
     }
@@ -44,6 +44,12 @@ public class ViewImpl implements View
                 break;
             case READ_JSON_AND_SCHEMA:
                 uiHandler.showSelectJsonAndSchema();
+                break;
+            case MAIN_EDITOR:
+                uiHandler.showMainEditor();
+                break;
+            case UPDATED_SELECTED_JSON_NODE:
+                uiHandler.updateEditorSceneWithSelectedJson();
                 break;
             
         }

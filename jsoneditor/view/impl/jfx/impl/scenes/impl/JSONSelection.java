@@ -9,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import jsoneditor.controller.Controller;
+import jsoneditor.model.ReadableModel;
 
 import java.io.File;
 
@@ -18,9 +19,11 @@ public class JSONSelection extends SceneHandlerImpl
     
     private File selectedSchema;
     
-    public JSONSelection(Controller controller)
+    private File lastDirectory;
+    
+    public JSONSelection(Controller controller, ReadableModel model)
     {
-        super(controller);
+        super(controller, model);
     }
     
     @Override
@@ -36,10 +39,15 @@ public class JSONSelection extends SceneHandlerImpl
             fileChooser.getExtensionFilters().addAll(
                     new FileChooser.ExtensionFilter("JSON Files", "*.json")
             );
+            if (lastDirectory != null)
+            {
+                fileChooser.setInitialDirectory(lastDirectory);
+            }
             selectedJson = fileChooser.showOpenDialog(stage);
             if (selectedJson != null)
             {
                 jsonFileField.setText(selectedJson.getAbsolutePath());
+                lastDirectory = selectedJson.getParentFile();
             }
         });
         HBox jsonBox = new HBox(jsonLabel, jsonFileField, jsonButton);
@@ -54,10 +62,15 @@ public class JSONSelection extends SceneHandlerImpl
             fileChooser.getExtensionFilters().addAll(
                     new FileChooser.ExtensionFilter("JSON Files", "*.json")
             );
+            if (lastDirectory != null)
+            {
+                fileChooser.setInitialDirectory(lastDirectory);
+            }
             selectedSchema = fileChooser.showOpenDialog(stage);
             if (selectedSchema != null)
             {
                 schemaFileField.setText(selectedSchema.getAbsolutePath());
+                lastDirectory = selectedSchema.getParentFile();
             }
         });
         HBox schemaBox = new HBox(schemaLabel, schemaFileField, schemaButton);

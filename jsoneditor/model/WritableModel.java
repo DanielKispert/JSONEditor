@@ -8,13 +8,9 @@ import java.io.File;
 
 public interface WritableModel
 {
-    void setCurrentJSONFile(File json);
-    
-    void setCurrentSchemaFile(File schema);
-    
-    void setJson(JsonNode json);
-    
-    void setSchema(JsonSchema schema);
+    void jsonAndSchemaSuccessfullyValidated(File jsonFile, File schemaFile, JsonNode json, JsonSchema schema);
     
     void setState(State state);
+    
+    void selectJsonNode(String name, JsonNode jsonNode);
 }
