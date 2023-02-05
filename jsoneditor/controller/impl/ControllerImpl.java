@@ -11,6 +11,7 @@ import jsoneditor.controller.impl.json.impl.JsonReaderImpl;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.model.ReadableState;
 import jsoneditor.model.WritableModel;
+import jsoneditor.model.json.JsonNodeWithPath;
 import jsoneditor.model.observe.Observer;
 import jsoneditor.model.observe.Subject;
 import jsoneditor.model.statemachine.impl.State;
@@ -91,8 +92,20 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
-    public void chooseNodeFromNavbar(String name, JsonNode node)
+    public void chooseNodeFromNavbar(JsonNodeWithPath node)
     {
-        model.selectJsonNode(name, node);
+        model.selectJsonNode(node);
+    }
+    
+    @Override
+    public void removeNodeFromArray(JsonNode node)
+    {
+        model.removeNodeFromArray(node);
+    }
+    
+    @Override
+    public void removeSelectedNode()
+    {
+        model.removeSelectedNode();
     }
 }

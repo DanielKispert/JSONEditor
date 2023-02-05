@@ -1,9 +1,12 @@
 package jsoneditor.model.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.networknt.schema.JsonSchema;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.model.WritableModel;
+import jsoneditor.model.json.JsonNodeWithPath;
 import jsoneditor.model.observe.Subject;
 import jsoneditor.model.statemachine.StateMachine;
 import jsoneditor.model.statemachine.impl.State;
@@ -20,9 +23,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     
     private JsonNode rootJson;
     
-    private JsonNode selectedJsonNode;
-    
-    private String nameOfSelectedJsonNode;
+    private JsonNodeWithPath selectedJsonNode;
     
     private JsonSchema schema;
     
@@ -68,8 +69,7 @@ public class ModelImpl implements ReadableModel, WritableModel
         setCurrentJSONFile(jsonFile);
         setCurrentSchemaFile(schemaFile);
         setRootJson(json);
-        this.selectedJsonNode = json;
-        this.nameOfSelectedJsonNode = "Root Element";
+        this.selectedJsonNode = new JsonNodeWithPath(json, "Root Element", "");
         setSchema(schema);
         setState(State.MAIN_EDITOR);
     }
@@ -100,22 +100,54 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public void selectJsonNode(String name, JsonNode jsonNode)
+    public void selectJsonNode(JsonNodeWithPath nodeWithPath)
     {
-        this.selectedJsonNode = jsonNode;
-        this.nameOfSelectedJsonNode = name;
+        this.selectedJsonNode = nodeWithPath;
         setState(State.UPDATED_SELECTED_JSON_NODE);
     }
     
     @Override
-    public JsonNode getSelectedJsonNode()
+    public JsonNodeWithPath getSelectedJsonNode()
     {
         return selectedJsonNode;
     }
     
     @Override
-    public String getNameOfSelectedJsonNode()
+    public JsonSchema getSchema()
     {
-        return nameOfSelectedJsonNode;
+        return schema;
+    }
+    
+    
+    @Override
+    public boolean canAddMoreItems()
+    {
+        return false;
+    }
+    
+    @Override
+    public void removeNodeFromArray(JsonNode node)
+    {
+        JsonNode selectedNode = selectedJsonNode.getNode();
+        if (JsonNodeType.ARRAY.equals(selectedNode.getNodeType()))
+        {
+            ArrayNode arrayNode = (ArrayNode) selectedNode;
+            for (int i = 0; i < arrayNode.size(); i++)
+            {
+                if (arrayNode.get(i).equals(node))
+                {
+                    arrayNode.remove(i);
+                    break;
+                }
+            }
+        }
+        setState(State.UPDATED_SELECTED_JSON_NODE);
+    }
+    
+    @Override
+    public void removeSelectedNode()
+    {
+        selectedJsonNode.
+    
     }
 }
