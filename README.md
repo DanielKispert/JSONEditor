@@ -1,6 +1,6 @@
 # JSONEditor
 
-allows editing JSON files to certain templates in a kind of more streamlined UI
+allows editing JSON files to certain json schemas in a kind of more streamlined UI
 
 will maybe become a website/server at some point, javafx UI as a placeholder until then
 

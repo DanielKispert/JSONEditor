@@ -2,6 +2,7 @@ package jsoneditor.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
+import jsoneditor.model.json.JsonNodeWithPath;
 import jsoneditor.model.statemachine.impl.State;
 
 import java.io.File;
@@ -12,5 +13,9 @@ public interface WritableModel
     
     void setState(State state);
     
-    void selectJsonNode(String name, JsonNode jsonNode);
+    void selectJsonNode(JsonNodeWithPath node);
+    
+    void removeNodeFromArray(JsonNode node);
+    
+    void removeSelectedNode();
 }
