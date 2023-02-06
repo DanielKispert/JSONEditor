@@ -2,19 +2,57 @@ package jsoneditor.model.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class JsonNodeWithPath
+import java.util.Objects;
+
+public final class JsonNodeWithPath
 {
+    private final JsonNode node;
+    private final String name;
     private final String path;
     
-    private final String name;
-    
-    private final JsonNode node;
-    
-    public JsonNodeWithPath(JsonNode node, String name, String path)
+    public JsonNodeWithPath(JsonNode node, String path)
     {
-        this.path = path;
-        this.name = name;
         this.node = node;
+        this.path = path;
+        if (path.isEmpty())
+        {
+            this.name = "Root Element";
+        }
+        else
+        {
+            String[] pathSplit = path.split("/");
+            String name = pathSplit[pathSplit.length - 1];
+            if (node.isArray())
+            {
+                name += "[]";
+            }
+            this.name = name;
+        }
+    }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        JsonNodeWithPath that = (JsonNodeWithPath) o;
+        return Objects.equals(getPath(), that.getPath()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getNode(), that.getNode());
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(getPath(), getDisplayName(), getNode());
+    }
+    
+    public JsonNode getNode()
+    {
+        return node;
+    }
+    
+    public String getDisplayName()
+    {
+        return name;
     }
     
     public String getPath()
@@ -22,13 +60,10 @@ public class JsonNodeWithPath
         return path;
     }
     
-    public String getName()
+    @Override
+    public String toString()
     {
-        return name;
+        return getDisplayName();
     }
     
-    public JsonNode getNode()
-    {
-        return node;
-    }
 }

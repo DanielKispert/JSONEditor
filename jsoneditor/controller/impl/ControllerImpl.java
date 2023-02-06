@@ -2,8 +2,6 @@ package jsoneditor.controller.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 import jsoneditor.controller.Controller;
 import jsoneditor.controller.impl.json.JsonReader;
@@ -14,7 +12,7 @@ import jsoneditor.model.WritableModel;
 import jsoneditor.model.json.JsonNodeWithPath;
 import jsoneditor.model.observe.Observer;
 import jsoneditor.model.observe.Subject;
-import jsoneditor.model.statemachine.impl.State;
+import jsoneditor.model.statemachine.impl.Event;
 import jsoneditor.view.View;
 import jsoneditor.view.impl.ViewImpl;
 
@@ -30,7 +28,7 @@ public class ControllerImpl implements Controller, Observer
     
     private final View view;
     
-    private State currentState;
+    private Event currentState;
     
     private List<Subject> subjects;
     
@@ -61,7 +59,7 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void launchFinished()
     {
-        model.setState(State.READ_JSON_AND_SCHEMA);
+        model.sendEvent(Event.READ_JSON_AND_SCHEMA);
     }
     
     @Override
@@ -106,6 +104,7 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void removeSelectedNode()
     {
+        // TODO check if the user tries to remove the root node and prevent
         model.removeSelectedNode();
     }
 }

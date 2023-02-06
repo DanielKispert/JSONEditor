@@ -2,10 +2,9 @@ package jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -15,7 +14,9 @@ import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.model.json.JsonNodeWithPath;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -34,6 +35,7 @@ public class JsonEditorEditorWindow extends VBox
     {
         nameBar = new Label();
         editor = new ListView<>();
+        VBox.setVgrow(editor, Priority.ALWAYS);
         this.controller = controller;
         updateSelectedJson(model);
         getChildren().addAll(nameBar, editor);
@@ -52,17 +54,17 @@ public class JsonEditorEditorWindow extends VBox
             if (JsonNodeType.OBJECT.equals(selectedNode.getNodeType()))
             {
                 // display all fields of non object or array type
-                nameBar.setText(nodeWithPath.getName());
-                editor.getItems().add(getObjectAsRow(selectedNode));
+                nameBar.setText(makeFancyName(nodeWithPath));
+                editor.getItems().addAll(getObjectAsItems(nodeWithPath));
             }
             else if (JsonNodeType.ARRAY.equals(selectedNode.getNodeType()))
             {
-                nameBar.setText(nodeWithPath.getName() + "(Array)");
+                nameBar.setText(makeFancyName(nodeWithPath));
                 // display all items in the array
                 for (JsonNode arrayItem : selectedNode)
                 {
                     
-                    editor.getItems().add(getObjectAsRow(arrayItem));
+                    editor.getItems().add(getArrayItemAsRow(arrayItem));
                 }
                 if (model.canAddMoreItems())
                 {
@@ -73,10 +75,51 @@ public class JsonEditorEditorWindow extends VBox
         }
     }
     
-    private HBox getObjectAsRow(JsonNode object)
+    private String makeFancyName(JsonNodeWithPath node)
+    {
+        String path = node.getPath();
+        String displayName = node.getDisplayName();
+        String[] nameParts = path.split("/");
+        nameParts[nameParts.length - 1] = displayName;
+        StringBuilder newName = new StringBuilder();
+        for (int i = 0; i < nameParts.length; i++)
+        {
+            if (i != 0)
+            {
+                newName.append(" > ");
+            }
+            newName.append(nameParts[i]);
+        }
+        return newName.toString();
+    }
+    
+    private List<HBox> getObjectAsItems(JsonNodeWithPath node)
+    {
+        List<HBox> hBoxes = new ArrayList<>();
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.getNode().fields(); it.hasNext(); )
+        {
+            Map.Entry<String, JsonNode> field = it.next();
+            HBox hBox = new HBox();
+            VBox keyField = makeFieldWithTitle("Key", field.getKey());
+            hBox.getChildren().add(keyField);
+            JsonNode value = field.getValue();
+            if (value.isArray() || value.isObject())
+            {
+                hBox.getChildren().add(makeGoToButton(new JsonNodeWithPath(value, node.getPath() + "/" + field.getKey())));
+            }
+            else
+            {
+                hBox.getChildren().add(makeFieldWithTitle("Value", value.asText()));
+            }
+            hBoxes.add(hBox);
+        }
+        return hBoxes;
+    }
+    
+    private HBox getArrayItemAsRow(JsonNode arrayItem)
     {
         HBox row = new HBox();
-        Iterator<Map.Entry<String, JsonNode>> fields = object.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = arrayItem.fields();
         while (fields.hasNext())
         {
             Map.Entry<String, JsonNode> field = fields.next();
@@ -88,8 +131,22 @@ public class JsonEditorEditorWindow extends VBox
             }
         }
         // add remove button
-        row.getChildren().add(makeRemoveButton(object));
+        row.getChildren().add(makeRemoveButton(arrayItem));
         return row;
+    }
+    
+    private Button makeGoToButton(JsonNodeWithPath node)
+    {
+        Button goToButton = new Button();
+        goToButton.setMaxWidth(Double.MAX_VALUE);
+        goToButton.setMaxHeight(Double.MAX_VALUE);
+        goToButton.setAlignment(Pos.BOTTOM_CENTER);
+        HBox.setHgrow(goToButton, Priority.ALWAYS);
+        VBox.setVgrow(goToButton, Priority.ALWAYS);
+        goToButton.setText("Go to");
+        goToButton.setContentDisplay(ContentDisplay.CENTER);
+        goToButton.setOnAction(event -> controller.chooseNodeFromNavbar(node));
+        return goToButton;
     }
     
     private Button makeRemoveButton(JsonNode object)
@@ -104,7 +161,10 @@ public class JsonEditorEditorWindow extends VBox
     
     private HBox makeAddButton()
     {
-        HBox hBox = new HBox(new Button("+"));
+        Button addButton = new Button("+");
+        HBox hBox = new HBox(addButton);
+        addButton.prefWidthProperty().bind(hBox.widthProperty().divide(3));
+        hBox.setAlignment(Pos.CENTER);
         return hBox;
     }
     

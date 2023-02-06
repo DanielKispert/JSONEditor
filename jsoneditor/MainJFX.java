@@ -21,6 +21,7 @@ public class MainJFX extends Application
     @Override
     public void start(Stage stage) throws Exception
     {
+        stage.setTitle("JSON Editor");
         StateMachine stateMachine = new StateMachineImpl();
         ModelImpl model = new ModelImpl(stateMachine);
         new ControllerImpl(model, model, stage);
