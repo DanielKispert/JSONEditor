@@ -9,14 +9,14 @@ import java.util.List;
 public class StateMachineImpl implements StateMachine
 {
     
-    private State currentState;
+    private Event currentState;
     
     private List<Observer> observers;
     
     public StateMachineImpl()
     {
         this.observers = new ArrayList<>();
-        setState(State.LAUNCHING);
+        setState(Event.LAUNCHING);
     }
     
     @Override
@@ -33,7 +33,7 @@ public class StateMachineImpl implements StateMachine
     }
     
     @Override
-    public void setState(State newState)
+    public void setState(Event newState)
     {
         System.out.println("State Machine entering state " + newState);
         this.currentState = newState;
@@ -41,7 +41,7 @@ public class StateMachineImpl implements StateMachine
     }
     
     @Override
-    public State getState()
+    public Event getState()
     {
         return currentState;
     }

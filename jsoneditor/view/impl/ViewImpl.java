@@ -6,7 +6,7 @@ import javafx.stage.Stage;
 import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.model.observe.Subject;
-import jsoneditor.model.statemachine.impl.State;
+import jsoneditor.model.statemachine.impl.Event;
 import jsoneditor.view.View;
 import jsoneditor.view.impl.jfx.UIHandler;
 import jsoneditor.view.impl.jfx.impl.UIHandlerImpl;
@@ -36,7 +36,7 @@ public class ViewImpl implements View
     @Override
     public void update()
     {
-        State newState = model.getCurrentState();
+        Event newState = model.getCurrentState();
         switch (newState)
         {
             case LAUNCHING:
@@ -50,6 +50,9 @@ public class ViewImpl implements View
                 break;
             case UPDATED_SELECTED_JSON_NODE:
                 uiHandler.updateEditorSceneWithSelectedJson();
+                break;
+            case REMOVED_SELECTED_JSON_NODE:
+                uiHandler.updateEditorSceneWithRemovedJson();
                 break;
             
         }

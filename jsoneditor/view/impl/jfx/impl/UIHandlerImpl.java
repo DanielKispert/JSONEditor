@@ -52,6 +52,16 @@ public class UIHandlerImpl implements UIHandler
         }
     }
     
+    @Override
+    public void updateEditorSceneWithRemovedJson()
+    {
+        if (editorScene != null)
+        {
+            editorScene.handleRemovedSelection();
+        }
+        
+    }
+    
     public static void showConfirmDialog(Runnable onContinue, String text)
     {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);

@@ -59,6 +59,12 @@ public class EditorScene extends SceneHandlerImpl
         editor.updateSelectedJson(model);
     }
     
+    public void handleRemovedSelection()
+    {
+        editor.updateSelectedJson(model);
+        navbar.updateTreeAndSelectParent();
+    }
+    
     
 
     

@@ -1,12 +1,12 @@
 package jsoneditor.model;
 
 import jsoneditor.model.observe.Subject;
-import jsoneditor.model.statemachine.impl.State;
+import jsoneditor.model.statemachine.impl.Event;
 
 public interface ReadableState
 {
     
-    State getCurrentState();
+    Event getCurrentState();
     
     Subject getForObservation();
 }
