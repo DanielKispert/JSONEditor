@@ -127,7 +127,7 @@ public class JsonEditorEditorWindow extends VBox
             JsonNode value = field.getValue();
             if (value.getNodeType() != JsonNodeType.OBJECT && value.getNodeType() != JsonNodeType.ARRAY)
             {
-                row.getChildren().add(makeFieldWithTitle(key, value.textValue()));
+                row.getChildren().add(makeFieldWithTitle(key, value.asText()));
             }
         }
         // add remove button
@@ -164,6 +164,7 @@ public class JsonEditorEditorWindow extends VBox
         Button addButton = new Button("+");
         HBox hBox = new HBox(addButton);
         addButton.prefWidthProperty().bind(hBox.widthProperty().divide(3));
+        addButton.setOnAction(event -> controller.addNewNodeToSelectedArray());
         hBox.setAlignment(Pos.CENTER);
         return hBox;
     }

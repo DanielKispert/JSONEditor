@@ -6,17 +6,17 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
-import jsoneditor.controller.impl.json.JsonReader;
+import jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
-public class JsonReaderImpl implements JsonReader
+public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
 {
     private final ObjectMapper mapper;
     
-    public JsonReaderImpl()
+    public JsonFileReaderAndWriterImpl()
     {
         this.mapper = new ObjectMapper();
     }
@@ -49,4 +49,18 @@ public class JsonReaderImpl implements JsonReader
         return factory.getSchema(getJsonFromFile(file));
     }
     
+    @Override
+    public boolean writeJsonToFile(JsonNode json, File file)
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        try
+        {
+            mapper.writeValue(file, json);
+        }
+        catch (IOException e)
+        {
+            return false;
+        }
+        return true;
+    }
 }

@@ -5,11 +5,13 @@ import com.networknt.schema.JsonSchema;
 
 import java.io.File;
 
-public interface JsonReader
+public interface JsonFileReaderAndWriter
 {
     boolean validateJsonWithSchema(JsonNode json, JsonSchema schema);
     
     JsonNode getJsonFromFile(File file);
     
     JsonSchema getSchemaFromFile(File file);
+    
+    boolean writeJsonToFile(JsonNode json, File file);
 }

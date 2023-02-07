@@ -16,7 +16,11 @@ public interface Controller
     
     void removeNodeFromArray(JsonNode node);
     
+    void addNewNodeToSelectedArray();
+    
     void removeSelectedNode();
+    
+    void saveToFile();
     
 
 }

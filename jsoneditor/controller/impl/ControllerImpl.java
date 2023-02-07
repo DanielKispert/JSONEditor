@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import javafx.stage.Stage;
 import jsoneditor.controller.Controller;
-import jsoneditor.controller.impl.json.JsonReader;
-import jsoneditor.controller.impl.json.impl.JsonReaderImpl;
+import jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
+import jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
 import jsoneditor.model.ReadableModel;
-import jsoneditor.model.ReadableState;
 import jsoneditor.model.WritableModel;
 import jsoneditor.model.json.JsonNodeWithPath;
 import jsoneditor.model.observe.Observer;
@@ -24,7 +23,7 @@ public class ControllerImpl implements Controller, Observer
 {
     private final WritableModel model;
     
-    private final ReadableState readableState;
+    private final ReadableModel readableModel;
     
     private final View view;
     
@@ -34,18 +33,18 @@ public class ControllerImpl implements Controller, Observer
     
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage) {
         this.model = model;
-        this.readableState = readableModel;
+        this.readableModel = readableModel;
         this.currentState = null;
         this.subjects = new ArrayList<>();
         this.view = new ViewImpl(readableModel, this, stage);
-        this.view.observe(readableState.getForObservation());
+        this.view.observe(this.readableModel.getForObservation());
     }
     
     
     @Override
     public void update()
     {
-        this.currentState = readableState.getCurrentState();
+        this.currentState = readableModel.getCurrentState();
     }
     
     @Override
@@ -68,7 +67,7 @@ public class ControllerImpl implements Controller, Observer
         if (jsonFile != null && schemaFile != null)
         {
             // grab json from files and validate
-            JsonReader reader = new JsonReaderImpl();
+            JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
             JsonNode json = reader.getJsonFromFile(jsonFile);
             JsonSchema schema = reader.getSchemaFromFile(schemaFile);
             if (reader.validateJsonWithSchema(json, schema))
@@ -98,7 +97,13 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void removeNodeFromArray(JsonNode node)
     {
-        model.removeNodeFromArray(node);
+        model.removeNodeFromSelectedArray(node);
+    }
+    
+    @Override
+    public void addNewNodeToSelectedArray()
+    {
+        model.addNodeToSelectedArray();
     }
     
     @Override
@@ -106,5 +111,13 @@ public class ControllerImpl implements Controller, Observer
     {
         // TODO check if the user tries to remove the root node and prevent
         model.removeSelectedNode();
+    }
+    
+    @Override
+    public void saveToFile()
+    {
+        JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();
+        jsonWriter.writeJsonToFile(readableModel.getRootJson(), readableModel.getCurrentJSONFile());
+    
     }
 }
