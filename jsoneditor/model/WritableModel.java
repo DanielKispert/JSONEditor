@@ -15,7 +15,9 @@ public interface WritableModel
     
     void selectJsonNode(JsonNodeWithPath node);
     
-    void removeNodeFromArray(JsonNode node);
+    void removeNodeFromSelectedArray(JsonNode node);
+    
+    void addNodeToSelectedArray();
     
     void removeSelectedNode();
 }

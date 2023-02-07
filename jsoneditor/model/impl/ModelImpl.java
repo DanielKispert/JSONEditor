@@ -2,6 +2,7 @@ package jsoneditor.model.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
@@ -42,7 +43,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public File getCurrentJSONFile()
     {
-        return null;
+        return jsonFile;
     }
     
     @Override
@@ -115,7 +116,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     private void selectJsonNodeAndSubschema(JsonNodeWithPath nodeWithPath)
     {
         this.selectedJsonNode = nodeWithPath;
-        this.subschemaForSelectedNode = SchemaHelper.getSubschemaNodeForPath(rootSchema, nodeWithPath);
+        this.subschemaForSelectedNode = getSubschemaNodeForPath(nodeWithPath);
     }
     
     @Override
@@ -130,23 +131,32 @@ public class ModelImpl implements ReadableModel, WritableModel
         return rootSchema;
     }
     
+    @Override
+    public JsonNodeWithPath getNodeForPath(String path)
+    {
+        return new JsonNodeWithPath(getRootJson().at(path), path);
+    }
     
     @Override
     public boolean canAddMoreItems()
     {
-    
-        Integer maxItems = SchemaHelper.getMaxItems(subschemaForSelectedNode);
-        if (maxItems != null)
+        JsonNode node = getSchemaNodeOfSelectedNode();
+        JsonNode maxItemsNode = node.get("maxItems");
+        if (maxItemsNode != null && maxItemsNode.isInt())
         {
-            return selectedJsonNode.getNode().size() < maxItems;
+            return selectedJsonNode.getNode().size() < maxItemsNode.intValue();
         }
         return true;
     }
     
-
+    @Override
+    public JsonNode getSchemaNodeOfSelectedNode()
+    {
+        return SchemaHelper.getSchemaNodeResolvingRefs(rootSchema, subschemaForSelectedNode);
+    }
     
     @Override
-    public void removeNodeFromArray(JsonNode node)
+    public void removeNodeFromSelectedArray(JsonNode node)
     {
         JsonNode selectedNode = selectedJsonNode.getNode();
         if (JsonNodeType.ARRAY.equals(selectedNode.getNodeType()))
@@ -162,6 +172,31 @@ public class ModelImpl implements ReadableModel, WritableModel
             }
         }
         sendEvent(Event.UPDATED_SELECTED_JSON_NODE);
+    }
+    
+    @Override
+    public void addNodeToSelectedArray()
+    {
+        JsonNodeWithPath selectedArray = selectedJsonNode;
+        JsonNode newItem = makeNodeThatFitsIntoArraySchema();
+        ((ArrayNode) selectedArray.getNode()).add(newItem);
+        sendEvent(Event.UPDATED_SELECTED_JSON_NODE);
+    }
+    
+    public JsonNode makeNodeThatFitsIntoArraySchema()
+    {
+        JsonNode schema = getSchemaNodeOfSelectedNode();
+        JsonNodeFactory factory = JsonNodeFactory.instance;
+        String type = schema.get("items").get("type").asText().toLowerCase();
+        return switch (type)
+                       {
+                           case "object" -> factory.objectNode();
+                           case "array" -> factory.arrayNode();
+                           case "string" -> factory.textNode("");
+                           case "number", "integer" -> factory.numberNode(0);
+                           case "boolean" -> factory.booleanNode(true);
+                           default -> null;
+                       };
     }
     
     @Override
@@ -210,5 +245,45 @@ public class ModelImpl implements ReadableModel, WritableModel
         sendEvent(Event.REMOVED_SELECTED_JSON_NODE);
         
         
+    }
+    
+    public JsonSchema getSubschemaNodeForPath(JsonNodeWithPath node)
+    {
+        // this will be an array like ["", "addresses" "1" "street"]
+        String[] pathParts = node.getPath().split("/");
+        // this is the root schema, we want the schema that validates only the node that is given by the path
+        JsonNode subNode = rootSchema.getSchemaNode();
+        for (String part : pathParts)
+        {
+            if (!part.isEmpty())
+            {
+                subNode = resolveRef(subNode);
+                JsonNode typeNode = subNode.get("type");
+                if (typeNode.isTextual())
+                {
+                    String type = typeNode.textValue();
+                    if ("object".equalsIgnoreCase(type))
+                    {
+                        // go into the "properties" node and then get the object that's referenced by the key
+                        subNode = subNode.get("properties").get(part);
+                    }
+                    else if ("array".equalsIgnoreCase(type))
+                    {
+                        subNode = subNode.get("items");
+                    }
+                }
+            }
+        }
+        return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(subNode);
+    }
+    
+    private JsonNode resolveRef(JsonNode nodeWithRef)
+    {
+        JsonNode ref = nodeWithRef.get("$ref");
+        if (ref != null)
+        {
+            return rootSchema.getRefSchemaNode(ref.textValue());
+        }
+        return nodeWithRef;
     }
 }

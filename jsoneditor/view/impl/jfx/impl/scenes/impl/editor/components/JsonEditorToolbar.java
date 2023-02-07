@@ -14,11 +14,13 @@ public class JsonEditorToolbar extends ToolBar
     public JsonEditorToolbar(ReadableModel model, Controller controller)
     {
         this.controller = controller;
-        Button removeSelectedObjectButton = new Button("Remove selected object");
+        Button removeSelectedObjectButton = new Button("Remove visible object");
         removeSelectedObjectButton.setOnAction(event ->
         {
-            UIHandlerImpl.showConfirmDialog(controller::removeSelectedNode, "this will remove the json object currently visible in the editor window");
+            UIHandlerImpl.showConfirmDialog(controller::removeSelectedNode, "this will remove the json object currently visible in the editor window, not just the selected one!");
         });
-        getItems().addAll(removeSelectedObjectButton);
+        Button saveButton = new Button("Save to file");
+        saveButton.setOnAction(event -> controller.saveToFile());
+        getItems().addAll(saveButton, removeSelectedObjectButton);
     }
 }

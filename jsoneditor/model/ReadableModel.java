@@ -16,11 +16,15 @@ public interface ReadableModel extends ReadableState
     
     JsonNodeWithPath getSelectedJsonNode();
     
+    JsonNode getSchemaNodeOfSelectedNode();
+    
     JsonSchema getRootSchema();
     
     /**
      * @return true if the currently selected node is an array and can have more items, false if not
      */
     boolean canAddMoreItems();
+    
+    JsonNodeWithPath getNodeForPath(String path);
     
 }
