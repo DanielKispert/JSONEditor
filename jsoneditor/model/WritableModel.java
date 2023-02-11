@@ -13,7 +13,9 @@ public interface WritableModel
     
     void sendEvent(Event state);
     
-    void selectJsonNode(JsonNodeWithPath node);
+    void selectJsonNode(String path);
+    
+    void moveItemToIndex(JsonNodeWithPath item, int index);
     
     void removeNodeFromSelectedArray(JsonNode node);
     

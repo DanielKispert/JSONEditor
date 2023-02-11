@@ -1,4 +1,4 @@
-package jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components;
+package jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
@@ -27,20 +27,21 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         this.controller = controller;
         this.selectedItem = null;
         SplitPane.setResizableWithParent(this, false);
-        setRoot(makeTree(model.getRootJson()));
-        getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> handleNavbarClick(newValue));
+        setRoot(makeTree());
+        getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> JsonEditorNavbar.this.handleNavbarClick(newValue));
         
     }
     
-    private TreeItem<JsonNodeWithPath> makeTree(JsonNode node)
+    private NavbarItem makeTree()
     {
-        TreeItem<JsonNodeWithPath> root = new TreeItem<>(new JsonNodeWithPath(node, ""));
+        model.getRootJson();
+        NavbarItem root = new NavbarItem(model, "");
         root.setExpanded(true);
         populateItem(root);
         return root;
     }
     
-    private void populateItem(TreeItem<JsonNodeWithPath> item)
+    private void populateItem(NavbarItem item)
     {
         JsonNode node = item.getValue().getNode();
         if (node.getNodeType().equals(JsonNodeType.OBJECT))
@@ -53,7 +54,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         }
     }
     
-    private void populateForObject(TreeItem<JsonNodeWithPath> parent)
+    private void populateForObject(NavbarItem parent)
     {
         Iterator<Map.Entry<String, JsonNode>> fields = parent.getValue().getNode().fields();
         String pathForFields = parent.getValue().getPath() + "/";
@@ -64,7 +65,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
             if (value.getNodeType() == JsonNodeType.OBJECT || value.getNodeType() == JsonNodeType.ARRAY)
             {
                 String pathForNode = pathForFields + field.getKey();
-                TreeItem<JsonNodeWithPath> child = new TreeItem<>(new JsonNodeWithPath(value, pathForNode));
+                NavbarItem child = new NavbarItem(model, pathForNode);
                 populateItem(child);
                 parent.getChildren().add(child);
             }
@@ -72,7 +73,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     }
     
     
-    private void populateForArray(TreeItem<JsonNodeWithPath> parent)
+    private void populateForArray(NavbarItem parent)
     {
         String pathForItems = parent.getValue().getPath() + "/";
         int index = 0;
@@ -81,7 +82,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
             if (item.getNodeType() == JsonNodeType.OBJECT || item.getNodeType() == JsonNodeType.ARRAY)
             {
                 String pathForNode = pathForItems + index++;
-                TreeItem<JsonNodeWithPath> child = new TreeItem<>(new JsonNodeWithPath(item, pathForNode));
+                NavbarItem child = new NavbarItem(model, pathForNode);
                 populateItem(child);
                 parent.getChildren().add(child);
             }
@@ -90,8 +91,17 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     
     private void handleNavbarClick(TreeItem<JsonNodeWithPath> item)
     {
-        selectedItem = item;
-        controller.chooseNodeFromNavbar(item.getValue());
+        if (item != null)
+        {
+            selectedItem = item;
+            controller.chooseNodeFromNavbar(item.getValue().getPath());
+        }
+    }
+    
+    public void updateTree()
+    {
+        setRoot(makeTree());
+        getSelectionModel().select(selectedItem);
     }
     
     public void updateTreeAndSelectParent()

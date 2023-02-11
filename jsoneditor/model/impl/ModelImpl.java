@@ -107,10 +107,34 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public void selectJsonNode(JsonNodeWithPath nodeWithPath)
+    public void selectJsonNode(String path)
     {
-        selectJsonNodeAndSubschema(nodeWithPath);
+        selectJsonNodeAndSubschema(getNodeForPath(path));
         sendEvent(Event.UPDATED_SELECTED_JSON_NODE);
+    }
+    
+    @Override
+    public void moveItemToIndex(JsonNodeWithPath item, int index)
+    {
+        JsonNode selectedNode = selectedJsonNode.getNode();
+        JsonNode itemNode = item.getNode();
+        if (selectedNode.isArray())
+        {
+            ArrayNode arrayNode = (ArrayNode) selectedNode;
+            for (int i = 0; i < arrayNode.size(); i++)
+            {
+                JsonNode arrayItem = arrayNode.get(i);
+                if (arrayItem.equals(itemNode))
+                {
+                    arrayNode.remove(i);
+                    arrayNode.insert(index, itemNode);
+                    sendEvent(Event.MOVED_CHILD_OF_SELECTED_JSON_NODE);
+                    break;
+                }
+            }
+        }
+
+        
     }
     
     private void selectJsonNodeAndSubschema(JsonNodeWithPath nodeWithPath)

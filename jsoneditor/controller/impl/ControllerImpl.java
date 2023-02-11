@@ -89,9 +89,15 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
-    public void chooseNodeFromNavbar(JsonNodeWithPath node)
+    public void chooseNodeFromNavbar(String path)
     {
-        model.selectJsonNode(node);
+        model.selectJsonNode(path);
+    }
+    
+    @Override
+    public void moveItemToIndex(JsonNodeWithPath item, int index)
+    {
+        model.moveItemToIndex(item, index);
     }
     
     @Override

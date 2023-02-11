@@ -2,6 +2,8 @@ package jsoneditor.model.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
 
 public final class JsonNodeWithPath
@@ -26,6 +28,10 @@ public final class JsonNodeWithPath
             {
                 name += "[]";
             }
+            else if (node.isObject() && isStringInt(name))
+            {
+                name = makeFancyObjectName();
+            }
             this.name = name;
         }
     }
@@ -37,6 +43,39 @@ public final class JsonNodeWithPath
         if (o == null || getClass() != o.getClass()) return false;
         JsonNodeWithPath that = (JsonNodeWithPath) o;
         return Objects.equals(getPath(), that.getPath()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getNode(), that.getNode());
+    }
+    
+    private String makeFancyObjectName()
+    {
+        StringBuilder builder = new StringBuilder();
+        int index = 0;
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); )
+        {
+            Map.Entry<String, JsonNode> field = it.next();
+            JsonNode value = field.getValue();
+            if (!value.isArray() && !value.isObject())
+            {
+                if (index++ != 0)
+                {
+                    builder.append("|");
+                }
+                builder.append(value.asText());
+            }
+        }
+        return builder.toString();
+    }
+    
+    private boolean isStringInt(String s)
+    {
+        try
+        {
+            Integer.parseInt(s);
+            return true;
+        }
+        catch (NumberFormatException e)
+        {
+            return false;
+        }
     }
     
     @Override

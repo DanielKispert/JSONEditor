@@ -11,4 +11,6 @@ public interface UIHandler
     
     void updateEditorSceneWithRemovedJson();
     
+    void updateEditorSceneWithMovedJson();
+    
 }

@@ -59,7 +59,15 @@ public class UIHandlerImpl implements UIHandler
         {
             editorScene.handleRemovedSelection();
         }
-        
+    }
+    
+    @Override
+    public void updateEditorSceneWithMovedJson()
+    {
+        if (editorScene != null)
+        {
+            editorScene.handleMovedSelection();
+        }
     }
     
     public static void showConfirmDialog(Runnable onContinue, String text)
