@@ -8,7 +8,7 @@ import javafx.stage.Stage;
 import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.view.impl.jfx.impl.scenes.impl.SceneHandlerImpl;
-import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.JsonEditorEditorWindow;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.JsonEditorNavbar;
 import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.JsonEditorToolbar;
 
@@ -57,6 +57,7 @@ public class EditorScene extends SceneHandlerImpl
     public void updateSelectedJson()
     {
         editor.updateSelectedJson(model);
+        toolbar.updateSelectedJson();
     }
     
     public void handleRemovedSelection()

@@ -25,6 +25,10 @@ public interface ReadableModel extends ReadableState
      */
     boolean canAddMoreItems();
     
+    boolean editingAnArray();
+    
+    boolean editingAnObject();
+    
     JsonNodeWithPath getNodeForPath(String path);
     
 }
