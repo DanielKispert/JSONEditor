@@ -9,7 +9,7 @@ import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.view.impl.jfx.impl.scenes.impl.SceneHandlerImpl;
 import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
-import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.JsonEditorNavbar;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.JsonEditorToolbar;
 
 public class EditorScene extends SceneHandlerImpl
@@ -48,7 +48,7 @@ public class EditorScene extends SceneHandlerImpl
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.HORIZONTAL);
         splitPane.getItems().addAll(navbar, editor);
-        splitPane.setDividerPositions(0.2);
+        splitPane.setDividerPositions(0.4);
         splitPane.prefWidthProperty().bind(scene.widthProperty());
         splitPane.prefHeightProperty().bind(scene.heightProperty());
         return splitPane;
@@ -64,6 +64,11 @@ public class EditorScene extends SceneHandlerImpl
     {
         editor.updateSelectedJson(model);
         navbar.updateTreeAndSelectParent();
+    }
+    
+    public void handleMovedSelection() {
+        navbar.updateTree();
+        
     }
     
     

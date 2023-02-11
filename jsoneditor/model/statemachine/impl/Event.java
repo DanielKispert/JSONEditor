@@ -10,5 +10,7 @@ public enum Event
     
     UPDATED_SELECTED_JSON_NODE,
     
+    MOVED_CHILD_OF_SELECTED_JSON_NODE,
+    
     REMOVED_SELECTED_JSON_NODE
 }

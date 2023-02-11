@@ -110,14 +110,13 @@ public class JsonEditorListCell extends ListCell<JsonNodeWithPath>
             boolean success = false;
             if (db.hasString())
             {
+                JsonNodeWithPath itemToMove = getItem();
                 int newIndex = getListView().getSelectionModel().getSelectedIndex();
-                getListView().getItems().remove(getItem());
-                getListView().getItems().add(newIndex, getItem());
-                getListView().getSelectionModel().clearAndSelect(newIndex);
                 success = true;
+                controller.moveItemToIndex(itemToMove, newIndex);
             }
             event.setDropCompleted(success);
-        
+    
             event.consume();
         });
         setOnDragDone(DragEvent::consume);

@@ -12,7 +12,9 @@ public interface Controller
     
     void jsonAndSchemaSelected(File json, File schema);
     
-    void chooseNodeFromNavbar(JsonNodeWithPath node);
+    void chooseNodeFromNavbar(String path);
+    
+    void moveItemToIndex(JsonNodeWithPath item, int index);
     
     void removeNodeFromArray(JsonNode node);
     

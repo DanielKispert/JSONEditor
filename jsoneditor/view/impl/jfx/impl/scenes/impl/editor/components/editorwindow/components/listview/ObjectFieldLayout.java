@@ -41,7 +41,7 @@ public class ObjectFieldLayout extends HBox
         VBox.setVgrow(goToButton, Priority.ALWAYS);
         goToButton.setText("Go to");
         goToButton.setContentDisplay(ContentDisplay.CENTER);
-        goToButton.setOnAction(event -> controller.chooseNodeFromNavbar(node));
+        goToButton.setOnAction(event -> controller.chooseNodeFromNavbar(node.getPath()));
         return goToButton;
     }
 }
