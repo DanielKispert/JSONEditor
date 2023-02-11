@@ -150,6 +150,18 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public boolean editingAnArray()
+    {
+        return selectedJsonNode.getNode().isArray();
+    }
+    
+    @Override
+    public boolean editingAnObject()
+    {
+        return selectedJsonNode.getNode().isObject();
+    }
+    
+    @Override
     public JsonNode getSchemaNodeOfSelectedNode()
     {
         return SchemaHelper.getSchemaNodeResolvingRefs(rootSchema, subschemaForSelectedNode);

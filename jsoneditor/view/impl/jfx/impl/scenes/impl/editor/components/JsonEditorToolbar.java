@@ -8,12 +8,16 @@ import jsoneditor.view.impl.jfx.impl.UIHandlerImpl;
 
 public class JsonEditorToolbar extends ToolBar
 {
+    private final Button addItemButton;
+    
+    private final ReadableModel model;
     
     private final Controller controller;
     
     public JsonEditorToolbar(ReadableModel model, Controller controller)
     {
         this.controller = controller;
+        this.model = model;
         Button removeSelectedObjectButton = new Button("Remove visible object");
         removeSelectedObjectButton.setOnAction(event ->
         {
@@ -21,6 +25,22 @@ public class JsonEditorToolbar extends ToolBar
         });
         Button saveButton = new Button("Save to file");
         saveButton.setOnAction(event -> controller.saveToFile());
-        getItems().addAll(saveButton, removeSelectedObjectButton);
+        addItemButton = new Button("Add Item");
+        addItemButton.setOnAction(event -> controller.addNewNodeToSelectedArray());
+        
+        getItems().addAll(saveButton, removeSelectedObjectButton, addItemButton);
+        updateSelectedJson();
+    }
+    
+    public void updateSelectedJson()
+    {
+        if (model.editingAnArray() && model.canAddMoreItems())
+        {
+            addItemButton.setVisible(true);
+        }
+        else
+        {
+            addItemButton.setVisible(false);
+        }
     }
 }
