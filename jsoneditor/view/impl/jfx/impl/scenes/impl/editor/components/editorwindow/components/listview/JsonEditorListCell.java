@@ -1,9 +1,6 @@
 package jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview;
 
 
-import javafx.collections.ObservableList;
-import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.*;
 import jsoneditor.controller.Controller;
@@ -44,7 +41,7 @@ public class JsonEditorListCell extends ListCell<JsonNodeWithPath>
             else if (model.editingAnObject())
             {
                 this.draggable = false;
-                setGraphic(new ObjectFieldLayout(controller, item));
+                setGraphic(new ObjectFieldLayout(model.getSelectedJsonNode().getNode(), controller, item));
             }
             else
             {

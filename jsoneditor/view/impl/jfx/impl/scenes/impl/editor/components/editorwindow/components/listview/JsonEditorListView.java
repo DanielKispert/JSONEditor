@@ -1,13 +1,17 @@
 package jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.model.json.JsonNodeWithPath;
@@ -52,9 +56,12 @@ public class JsonEditorListView extends ListView<JsonNodeWithPath>
     {
         VBox fieldBox = new VBox();
         Label fieldTitle = new Label(title);
-        fieldTitle.setFont(new Font(12));
-        TextField fieldInput = new TextField(value);
-        fieldBox.getChildren().addAll(fieldTitle, fieldInput);
+        fieldTitle.setTextFill(Color.GREY);
+        fieldTitle.setFont(Font.font(null, FontWeight.NORMAL, 12));
+        Label fieldValue = new Label(value);
+        fieldValue.setTextFill(Color.BLACK);
+        fieldValue.setFont(Font.font(null, FontWeight.NORMAL, 16));
+        fieldBox.getChildren().addAll(fieldTitle, fieldValue);
         HBox.setHgrow(fieldBox, Priority.ALWAYS);
         return fieldBox;
     }

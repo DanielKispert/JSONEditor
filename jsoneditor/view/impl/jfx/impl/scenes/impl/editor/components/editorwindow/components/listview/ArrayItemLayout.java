@@ -2,14 +2,13 @@ package jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import javafx.event.EventHandler;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.input.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import jsoneditor.controller.Controller;
 import jsoneditor.model.json.JsonNodeWithPath;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.field.EditorTextFieldFactory;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -25,11 +24,10 @@ public class ArrayItemLayout extends HBox
         while (fields.hasNext())
         {
             Map.Entry<String, JsonNode> field = fields.next();
-            String key = field.getKey();
             JsonNode value = field.getValue();
             if (value.getNodeType() != JsonNodeType.OBJECT && value.getNodeType() != JsonNodeType.ARRAY)
             {
-                getChildren().add(JsonEditorListView.makeFieldWithTitle(key, value.asText()));
+                getChildren().add(EditorTextFieldFactory.makeTextField((ObjectNode) item.getNode(), field.getKey(), value));
             }
         }
         getChildren().add(makeRemoveButton(item));
