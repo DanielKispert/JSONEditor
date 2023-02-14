@@ -9,24 +9,16 @@ public class EditorTextFieldFactory
     {
         if (value != null)
         {
-            switch (value.getNodeType()) {
-                
-                case BOOLEAN ->
-                {
+            switch (value.getNodeType())
+            {
+                case BOOLEAN:
                     return new BooleanNodeField(parent, title);
-                }
-                case NUMBER ->
-                {
+                case NUMBER:
                     return new NumberNodeField(parent, title);
-                }
-                case STRING ->
-                {
+                case STRING:
                     return new TextNodeField(parent, title);
-                }
             }
         }
         return null;
-        
-        
     }
 }
