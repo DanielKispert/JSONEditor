@@ -224,15 +224,21 @@ public class ModelImpl implements ReadableModel, WritableModel
         JsonNode schema = getSchemaNodeOfSelectedNode();
         JsonNodeFactory factory = JsonNodeFactory.instance;
         String type = schema.get("items").get("type").asText().toLowerCase();
-        return switch (type)
-                       {
-                           case "object" -> factory.objectNode();
-                           case "array" -> factory.arrayNode();
-                           case "string" -> factory.textNode("");
-                           case "number", "integer" -> factory.numberNode(0);
-                           case "boolean" -> factory.booleanNode(true);
-                           default -> null;
-                       };
+        switch (type)
+        {
+            case "object":
+                return factory.objectNode();
+            case "array":
+                return factory.arrayNode();
+            case "string":
+                return factory.textNode("");
+            case "number":
+            case "integer":
+                return factory.numberNode(0);
+            case "boolean":
+                return factory.booleanNode(true);
+        }
+        return null;
     }
     
     @Override
