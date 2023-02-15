@@ -1,6 +1,7 @@
 package jsoneditor.model.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
@@ -191,6 +192,16 @@ public class ModelImpl implements ReadableModel, WritableModel
         return SchemaHelper.getSchemaNodeResolvingRefs(rootSchema, subschemaForSelectedNode);
     }
     
+    private JsonNode getSchemaForSelectedArrayItem()
+    {
+        JsonNode arraySchema = getSchemaNodeOfSelectedNode();
+        if ("array".equals(arraySchema.get("type").asText()))
+        {
+            return arraySchema.get("items");
+        }
+        return null;
+    }
+    
     @Override
     public void removeNodeFromSelectedArray(JsonNode node)
     {
@@ -213,32 +224,43 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void addNodeToSelectedArray()
     {
-        JsonNodeWithPath selectedArray = selectedJsonNode;
-        JsonNode newItem = makeNodeThatFitsIntoArraySchema();
-        ((ArrayNode) selectedArray.getNode()).add(newItem);
+        JsonNode newItem = generateNodeFromSchema(getSchemaForSelectedArrayItem());
+        ((ArrayNode) selectedJsonNode.getNode()).add(newItem);
         sendEvent(Event.UPDATED_SELECTED_JSON_NODE);
     }
     
-    public JsonNode makeNodeThatFitsIntoArraySchema()
+    public JsonNode generateNodeFromSchema(JsonNode schema)
     {
-        JsonNode schema = getSchemaNodeOfSelectedNode();
-        JsonNodeFactory factory = JsonNodeFactory.instance;
-        String type = schema.get("items").get("type").asText().toLowerCase();
-        switch (type)
+        switch (schema.get("type").asText())
         {
-            case "object":
-                return factory.objectNode();
             case "array":
-                return factory.arrayNode();
+                JsonNode itemSchema = schema.get("items");
+                int maxItems = schema.has("maxItems") ? schema.get("maxItems").asInt() : 10;
+                ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
+                for (int i = 0; i < maxItems; i++)
+                {
+                    arrayNode.add(generateNodeFromSchema(itemSchema));
+                }
+                return arrayNode;
+            case "object":
+                ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+                JsonNode properties = schema.get("properties");
+                properties.fields().forEachRemaining(entry ->
+                {
+                    String key = entry.getKey();
+                    JsonNode value = entry.getValue();
+                    objectNode.set(key, generateNodeFromSchema(value));
+                });
+                return objectNode;
             case "string":
-                return factory.textNode("");
+                return JsonNodeFactory.instance.textNode("");
             case "number":
-            case "integer":
-                return factory.numberNode(0);
+                return JsonNodeFactory.instance.numberNode(0);
             case "boolean":
-                return factory.booleanNode(true);
+                return JsonNodeFactory.instance.booleanNode(true);
+            default:
+                return JsonNodeFactory.instance.nullNode();
         }
-        return null;
     }
     
     @Override

@@ -19,6 +19,7 @@ public class ObjectFieldLayout extends HBox
     public ObjectFieldLayout(JsonNode parent, Controller controller, JsonNodeWithPath node)
     {
         this.controller = controller;
+        setAlignment(Pos.CENTER_LEFT);
         VBox keyField = JsonEditorListView.makeFieldWithTitle("Key", node.getDisplayName());
         getChildren().add(keyField);
         JsonNode value = node.getNode();
@@ -38,7 +39,6 @@ public class ObjectFieldLayout extends HBox
         Button goToButton = new Button();
         goToButton.setMaxWidth(Double.MAX_VALUE);
         goToButton.setMaxHeight(Double.MAX_VALUE);
-        goToButton.setAlignment(Pos.BOTTOM_CENTER);
         HBox.setHgrow(goToButton, Priority.ALWAYS);
         VBox.setVgrow(goToButton, Priority.ALWAYS);
         goToButton.setText("Go to");
