@@ -6,11 +6,14 @@ import com.networknt.schema.JsonSchema;
 public class SchemaHelper
 {
     
-
     
     public static JsonNode getSchemaNodeResolvingRefs(JsonSchema root, JsonSchema possibleRef)
     {
-        JsonNode node = possibleRef.getSchemaNode();
+        return getSchemaNodeResolvingRefs(root, possibleRef.getSchemaNode());
+    }
+    
+    public static JsonNode getSchemaNodeResolvingRefs(JsonSchema root, JsonNode node)
+    {
         JsonNode ref = node.get("$ref");
         if (ref != null)
         {

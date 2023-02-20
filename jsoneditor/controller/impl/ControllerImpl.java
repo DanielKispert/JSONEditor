@@ -11,6 +11,7 @@ import jsoneditor.model.WritableModel;
 import jsoneditor.model.json.JsonNodeWithPath;
 import jsoneditor.model.observe.Observer;
 import jsoneditor.model.observe.Subject;
+import jsoneditor.model.settings.Settings;
 import jsoneditor.model.statemachine.impl.Event;
 import jsoneditor.view.View;
 import jsoneditor.view.impl.ViewImpl;
@@ -56,13 +57,19 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void searchForNode(String path, String value)
+    {
+        model.searchForNode(path, value);
+    }
+    
+    @Override
     public void launchFinished()
     {
         model.sendEvent(Event.READ_JSON_AND_SCHEMA);
     }
     
     @Override
-    public void jsonAndSchemaSelected(File jsonFile, File schemaFile)
+    public void jsonAndSchemaSelected(File jsonFile, File schemaFile, File settingsFile)
     {
         if (jsonFile != null && schemaFile != null)
         {
@@ -72,6 +79,11 @@ public class ControllerImpl implements Controller, Observer
             JsonSchema schema = reader.getSchemaFromFile(schemaFile);
             if (reader.validateJsonWithSchema(json, schema))
             {
+                // settings file is optional
+                if (settingsFile != null)
+                {
+                    model.setSettings(reader.getJsonFromFile(settingsFile, Settings.class));
+                }
                 model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
             }
             else

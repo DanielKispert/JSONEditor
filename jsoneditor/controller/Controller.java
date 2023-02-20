@@ -10,7 +10,7 @@ public interface Controller
 
     void launchFinished();
     
-    void jsonAndSchemaSelected(File json, File schema);
+    void jsonAndSchemaSelected(File json, File schema, File settings);
     
     void chooseNodeFromNavbar(String path);
     
@@ -21,6 +21,8 @@ public interface Controller
     void addNewNodeToSelectedArray();
     
     void removeSelectedNode();
+    
+    void searchForNode(String path, String value);
     
     void saveToFile();
     

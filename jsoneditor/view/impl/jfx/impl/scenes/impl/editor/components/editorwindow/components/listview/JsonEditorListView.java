@@ -62,6 +62,8 @@ public class JsonEditorListView extends ListView<JsonNodeWithPath>
         fieldValue.setTextFill(Color.BLACK);
         fieldValue.setFont(Font.font(null, FontWeight.NORMAL, 16));
         fieldBox.getChildren().addAll(fieldTitle, fieldValue);
+        HBox.setHgrow(fieldTitle, Priority.ALWAYS);
+        HBox.setHgrow(fieldValue, Priority.ALWAYS);
         HBox.setHgrow(fieldBox, Priority.ALWAYS);
         return fieldBox;
     }

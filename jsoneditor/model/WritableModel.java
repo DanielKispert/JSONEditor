@@ -3,6 +3,7 @@ package jsoneditor.model;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import jsoneditor.model.json.JsonNodeWithPath;
+import jsoneditor.model.settings.Settings;
 import jsoneditor.model.statemachine.impl.Event;
 
 import java.io.File;
@@ -11,9 +12,13 @@ public interface WritableModel
 {
     void jsonAndSchemaSuccessfullyValidated(File jsonFile, File schemaFile, JsonNode json, JsonSchema schema);
     
+    void setSettings(Settings settings);
+    
     void sendEvent(Event state);
     
     void selectJsonNode(String path);
+    
+    void searchForNode(String path, String value);
     
     void moveItemToIndex(JsonNodeWithPath item, int index);
     
