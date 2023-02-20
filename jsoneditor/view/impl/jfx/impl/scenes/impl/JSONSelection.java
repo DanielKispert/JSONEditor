@@ -19,7 +19,11 @@ public class JSONSelection extends SceneHandlerImpl
     
     private File selectedSchema;
     
+    private File selectedSettings;
+    
     private File lastDirectory;
+    
+    private File lastSettingsDirectory;
     
     public JSONSelection(Controller controller, ReadableModel model)
     {
@@ -74,17 +78,40 @@ public class JSONSelection extends SceneHandlerImpl
             }
         });
         HBox schemaBox = new HBox(schemaLabel, schemaFileField, schemaButton);
+        Label settingsLabel = new Label("Settings:");
+        TextField settingsFileField = new TextField();
+        Button settingsButton = new Button("Select Settings");
+        settingsButton.setOnAction(e ->
+        {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select Settings file");
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
+            );
+            if (lastSettingsDirectory != null)
+            {
+                fileChooser.setInitialDirectory(lastSettingsDirectory);
+            }
+            selectedSettings = fileChooser.showOpenDialog(stage);
+            if (selectedSettings != null)
+            {
+                settingsFileField.setText(selectedSettings.getAbsolutePath());
+                lastSettingsDirectory = selectedSettings.getParentFile();
+            }
+        });
+        HBox settingsBox = new HBox(settingsLabel, settingsFileField, settingsButton);
         
         Button okButton = new Button("OK");
         okButton.setOnAction(e ->
         {
-            controller.jsonAndSchemaSelected(selectedJson, selectedSchema);
+            controller.jsonAndSchemaSelected(selectedJson, selectedSchema, selectedSettings);
         });
         
         GridPane root = new GridPane();
         root.addRow(0, jsonBox);
         root.addRow(1, schemaBox);
-        root.addRow(2, okButton);
+        root.addRow(2, settingsBox);
+        root.addRow(3, okButton);
         
         return new Scene(root, 400, 200);
     }

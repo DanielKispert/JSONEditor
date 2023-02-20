@@ -43,6 +43,20 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     }
     
     @Override
+    public <T> T getJsonFromFile(File file, Class<T> classOfObject)
+    {
+        try
+        {
+            return mapper.readValue(file, classOfObject);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    @Override
     public JsonSchema getSchemaFromFile(File file)
     {
         JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);

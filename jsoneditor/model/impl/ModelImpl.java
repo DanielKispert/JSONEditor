@@ -14,6 +14,7 @@ import jsoneditor.model.WritableModel;
 import jsoneditor.model.json.JsonNodeWithPath;
 import jsoneditor.model.json.schema.SchemaHelper;
 import jsoneditor.model.observe.Subject;
+import jsoneditor.model.settings.Settings;
 import jsoneditor.model.statemachine.StateMachine;
 import jsoneditor.model.statemachine.impl.Event;
 
@@ -35,9 +36,12 @@ public class ModelImpl implements ReadableModel, WritableModel
     
     private JsonSchema rootSchema;
     
+    private Settings settings;
+    
     public ModelImpl(StateMachine stateMachine)
     {
         this.stateMachine = stateMachine;
+        this.settings = new Settings(null);
     }
     
     
@@ -80,6 +84,12 @@ public class ModelImpl implements ReadableModel, WritableModel
         setRootSchema(schema);
         selectJsonNodeAndSubschema(new JsonNodeWithPath(json, ""));
         sendEvent(Event.MAIN_EDITOR);
+    }
+    
+    @Override
+    public void setSettings(Settings settings)
+    {
+        this.settings = settings;
     }
     
     public void setCurrentJSONFile(File json)
@@ -157,6 +167,12 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public Settings getSettings()
+    {
+        return settings;
+    }
+    
+    @Override
     public JsonNodeWithPath getNodeForPath(String path)
     {
         return new JsonNodeWithPath(getRootJson().at(path), path);
@@ -197,7 +213,7 @@ public class ModelImpl implements ReadableModel, WritableModel
         JsonNode arraySchema = getSchemaNodeOfSelectedNode();
         if ("array".equals(arraySchema.get("type").asText()))
         {
-            return arraySchema.get("items");
+            return SchemaHelper.getSchemaNodeResolvingRefs(getRootSchema(), arraySchema.get("items"));
         }
         return null;
     }
