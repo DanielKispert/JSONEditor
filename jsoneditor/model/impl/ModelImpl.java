@@ -1,7 +1,6 @@
 package jsoneditor.model.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
@@ -29,10 +28,6 @@ public class ModelImpl implements ReadableModel, WritableModel
     private File schemaFile;
     
     private JsonNode rootJson;
-    
-    private JsonNodeWithPath selectedJsonNode;
-    
-    private JsonSchema subschemaForSelectedNode;
     
     private JsonSchema rootSchema;
     
@@ -82,8 +77,13 @@ public class ModelImpl implements ReadableModel, WritableModel
         setCurrentSchemaFile(schemaFile);
         setRootJson(json);
         setRootSchema(schema);
-        selectJsonNodeAndSubschema(new JsonNodeWithPath(json, ""));
         sendEvent(Event.MAIN_EDITOR);
+    }
+    
+    @Override
+    public String searchForNode(String path, String value)
+    {
+        return NodeSearcher.findNodeWithValue(getRootJson(), path, value);
     }
     
     @Override
@@ -118,16 +118,9 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public void selectJsonNode(String path)
+    public void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index)
     {
-        selectJsonNodeAndSubschema(getNodeForPath(path));
-        sendEvent(Event.UPDATED_SELECTED_JSON_NODE);
-    }
-    
-    @Override
-    public void moveItemToIndex(JsonNodeWithPath item, int index)
-    {
-        JsonNode selectedNode = selectedJsonNode.getNode();
+        JsonNode selectedNode = newParent.getNode();
         JsonNode itemNode = item.getNode();
         if (selectedNode.isArray())
         {
@@ -146,18 +139,6 @@ public class ModelImpl implements ReadableModel, WritableModel
         }
 
         
-    }
-    
-    private void selectJsonNodeAndSubschema(JsonNodeWithPath nodeWithPath)
-    {
-        this.selectedJsonNode = nodeWithPath;
-        this.subschemaForSelectedNode = getSubschemaNodeForPath(nodeWithPath);
-    }
-    
-    @Override
-    public JsonNodeWithPath getSelectedJsonNode()
-    {
-        return selectedJsonNode;
     }
     
     @Override
@@ -179,111 +160,40 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public boolean canAddMoreItems()
+    public JsonNode getSubschemaForPath(String path)
     {
-        JsonNode node = getSchemaNodeOfSelectedNode();
+        return SchemaHelper.getSchemaNodeResolvingRefs(rootSchema, getSubschemaNodeForPath(path));
+    }
+    
+    public boolean canAddMoreItems(String path)
+    {
+        JsonNode node = getSubschemaForPath(path);
         JsonNode maxItemsNode = node.get("maxItems");
         if (maxItemsNode != null && maxItemsNode.isInt())
         {
-            return selectedJsonNode.getNode().size() < maxItemsNode.intValue();
+            return getNodeForPath(path).getNode().size() < maxItemsNode.intValue();
         }
         return true;
     }
     
     @Override
-    public boolean editingAnArray()
+    public void addNodeToArray(String selectedPath)
     {
-        return selectedJsonNode.getNode().isArray();
-    }
-    
-    @Override
-    public boolean editingAnObject()
-    {
-        return selectedJsonNode.getNode().isObject();
-    }
-    
-    @Override
-    public JsonNode getSchemaNodeOfSelectedNode()
-    {
-        return SchemaHelper.getSchemaNodeResolvingRefs(rootSchema, subschemaForSelectedNode);
-    }
-    
-    private JsonNode getSchemaForSelectedArrayItem()
-    {
-        JsonNode arraySchema = getSchemaNodeOfSelectedNode();
-        if ("array".equals(arraySchema.get("type").asText()))
+        JsonNode newItem = NodeGenerator.generateNodeFromSchema(getSubschemaForPath(selectedPath));
+        JsonNodeWithPath parent = getNodeForPath(selectedPath);
+        if (parent.isArray())
         {
-            return SchemaHelper.getSchemaNodeResolvingRefs(getRootSchema(), arraySchema.get("items"));
-        }
-        return null;
-    }
-    
-    @Override
-    public void removeNodeFromSelectedArray(JsonNode node)
-    {
-        JsonNode selectedNode = selectedJsonNode.getNode();
-        if (JsonNodeType.ARRAY.equals(selectedNode.getNodeType()))
-        {
-            ArrayNode arrayNode = (ArrayNode) selectedNode;
-            for (int i = 0; i < arrayNode.size(); i++)
-            {
-                if (arrayNode.get(i).equals(node))
-                {
-                    arrayNode.remove(i);
-                    break;
-                }
-            }
-        }
-        sendEvent(Event.UPDATED_SELECTED_JSON_NODE);
-    }
-    
-    @Override
-    public void addNodeToSelectedArray()
-    {
-        JsonNode newItem = generateNodeFromSchema(getSchemaForSelectedArrayItem());
-        ((ArrayNode) selectedJsonNode.getNode()).add(newItem);
-        sendEvent(Event.UPDATED_SELECTED_JSON_NODE);
-    }
-    
-    public JsonNode generateNodeFromSchema(JsonNode schema)
-    {
-        switch (schema.get("type").asText())
-        {
-            case "array":
-                JsonNode itemSchema = schema.get("items");
-                int maxItems = schema.has("maxItems") ? schema.get("maxItems").asInt() : 10;
-                ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-                for (int i = 0; i < maxItems; i++)
-                {
-                    arrayNode.add(generateNodeFromSchema(itemSchema));
-                }
-                return arrayNode;
-            case "object":
-                ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-                JsonNode properties = schema.get("properties");
-                properties.fields().forEachRemaining(entry ->
-                {
-                    String key = entry.getKey();
-                    JsonNode value = entry.getValue();
-                    objectNode.set(key, generateNodeFromSchema(value));
-                });
-                return objectNode;
-            case "string":
-                return JsonNodeFactory.instance.textNode("");
-            case "number":
-                return JsonNodeFactory.instance.numberNode(0);
-            case "boolean":
-                return JsonNodeFactory.instance.booleanNode(true);
-            default:
-                return JsonNodeFactory.instance.nullNode();
+            ((ArrayNode) parent.getNode()).add(newItem);
+            sendEvent(Event.UPDATED_SELECTED_JSON_NODE);
         }
     }
     
+
+    
     @Override
-    public void removeSelectedNode()
+    public void removeNode(String path)
     {
-        String selectedPath = selectedJsonNode.getPath();
-        String[] pathComponents = selectedPath.split("/");
+        String[] pathComponents = path.split("/");
         JsonNode parentNode = rootJson;
         // we go to the parent node of the one we want to remove
         for (int i = 1; i < pathComponents.length - 1; i++)
@@ -314,23 +224,15 @@ public class ModelImpl implements ReadableModel, WritableModel
             // TODO make this prettier
             return;
         }
-        // the parent node becomes the new selected node
-        String parentPath = "";
-        int lastSlashIndex = selectedPath.lastIndexOf("/");
-        if (lastSlashIndex != -1)
-        {
-            parentPath = selectedPath.substring(0, lastSlashIndex);
-        }
-        selectJsonNodeAndSubschema(new JsonNodeWithPath(parentNode, parentPath));
         sendEvent(Event.REMOVED_SELECTED_JSON_NODE);
         
         
     }
     
-    public JsonSchema getSubschemaNodeForPath(JsonNodeWithPath node)
+    private JsonSchema getSubschemaNodeForPath(String path)
     {
         // this will be an array like ["", "addresses" "1" "street"]
-        String[] pathParts = node.getPath().split("/");
+        String[] pathParts = path.split("/");
         // this is the root schema, we want the schema that validates only the node that is given by the path
         JsonNode subNode = rootSchema.getSchemaNode();
         for (String part : pathParts)

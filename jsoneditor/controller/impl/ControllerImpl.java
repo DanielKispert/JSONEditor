@@ -28,14 +28,11 @@ public class ControllerImpl implements Controller, Observer
     
     private final View view;
     
-    private Event currentState;
-    
     private List<Subject> subjects;
     
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage) {
         this.model = model;
         this.readableModel = readableModel;
-        this.currentState = null;
         this.subjects = new ArrayList<>();
         this.view = new ViewImpl(readableModel, this, stage);
         this.view.observe(this.readableModel.getForObservation());
@@ -45,7 +42,6 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void update()
     {
-        this.currentState = readableModel.getCurrentState();
     }
     
     @Override
@@ -54,12 +50,6 @@ public class ControllerImpl implements Controller, Observer
         subjects.add(subjectToObserve);
         subjectToObserve.registerObserver(this);
         
-    }
-    
-    @Override
-    public void searchForNode(String path, String value)
-    {
-        model.searchForNode(path, value);
     }
     
     @Override
@@ -101,34 +91,21 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
-    public void chooseNodeFromNavbar(String path)
+    public void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index)
     {
-        model.selectJsonNode(path);
+        model.moveItemToIndex(newParent, item, index);
     }
     
     @Override
-    public void moveItemToIndex(JsonNodeWithPath item, int index)
+    public void removeNode(String path)
     {
-        model.moveItemToIndex(item, index);
+        model.removeNode(path);
     }
     
     @Override
-    public void removeNodeFromArray(JsonNode node)
+    public void addNewNodeToArray(String path)
     {
-        model.removeNodeFromSelectedArray(node);
-    }
-    
-    @Override
-    public void addNewNodeToSelectedArray()
-    {
-        model.addNodeToSelectedArray();
-    }
-    
-    @Override
-    public void removeSelectedNode()
-    {
-        // TODO check if the user tries to remove the root node and prevent
-        model.removeSelectedNode();
+        model.addNodeToArray(path);
     }
     
     @Override
@@ -138,4 +115,6 @@ public class ControllerImpl implements Controller, Observer
         jsonWriter.writeJsonToFile(readableModel.getRootJson(), readableModel.getCurrentJSONFile());
     
     }
+    
+    
 }

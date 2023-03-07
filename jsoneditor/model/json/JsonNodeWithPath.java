@@ -105,4 +105,14 @@ public final class JsonNodeWithPath
         return getDisplayName();
     }
     
+    public boolean isArray()
+    {
+        return node.isArray();
+    }
+    
+    public boolean isObject()
+    {
+        return node.isObject();
+    }
+    
 }

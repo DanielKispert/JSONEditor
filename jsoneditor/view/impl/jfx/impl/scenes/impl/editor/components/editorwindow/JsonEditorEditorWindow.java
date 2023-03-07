@@ -1,6 +1,7 @@
 package jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import jsoneditor.controller.Controller;
@@ -15,32 +16,35 @@ import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.
  */
 public class JsonEditorEditorWindow extends VBox
 {
+    
+    private String selectedPath;
+    
     private final JsonEditorNamebar nameBar;
     
     private final JsonEditorListView editor;
     
-    public JsonEditorEditorWindow(ReadableModel model, Controller controller)
+    private final ReadableModel model;
+    
+    public JsonEditorEditorWindow(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
+        this.model = model;
         nameBar = new JsonEditorNamebar();
-        editor = new JsonEditorListView(model, controller);
-        VBox.setVgrow(editor, Priority.ALWAYS);
-        updateSelectedJson(model);
+        editor = new JsonEditorListView(manager, model, controller);
+        VBox.setVgrow(this, Priority.ALWAYS);
+        HBox.setHgrow(this, Priority.ALWAYS);
         getChildren().addAll(nameBar, editor);
     }
     
-    
-    public void updateSelectedJson(ReadableModel model)
+    public void setSelectedPath(String path)
     {
-        JsonNodeWithPath nodeWithPath = model.getSelectedJsonNode();
-        JsonNode selectedNode = nodeWithPath.getNode();
-        if (selectedNode != null)
-        {
-            // update name bar
-            nameBar.setSelection(nodeWithPath);
-            // update editing window
-            editor.setSelection(nodeWithPath);
-        }
+        this.selectedPath = path;
+        JsonNodeWithPath newNode = model.getNodeForPath(path);
+        nameBar.setSelection(newNode);
+        editor.setSelection(newNode);
     }
     
-
+    public String getSelectedPath()
+    {
+        return selectedPath;
+    }
 }

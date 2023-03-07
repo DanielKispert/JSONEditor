@@ -8,6 +8,7 @@ import javafx.scene.control.TreeView;
 import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.model.json.JsonNodeWithPath;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -18,13 +19,16 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     
     private final Controller controller;
     
+    private final EditorWindowManager editorWindowManager;
+    
     private TreeItem<JsonNodeWithPath> selectedItem;
     
-    public JsonEditorNavbar(ReadableModel model, Controller controller)
+    public JsonEditorNavbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager)
     {
         
         this.model = model;
         this.controller = controller;
+        this.editorWindowManager = editorWindowManager;
         this.selectedItem = null;
         SplitPane.setResizableWithParent(this, false);
         setRoot(makeTree());
@@ -94,7 +98,8 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         if (item != null)
         {
             selectedItem = item;
-            controller.chooseNodeFromNavbar(item.getValue().getPath());
+            // the navbar just tells the editor view to open this node, nothing is sent to the model or controller yet
+            editorWindowManager.selectFromNavbar(item.getValue().getPath());
         }
     }
     

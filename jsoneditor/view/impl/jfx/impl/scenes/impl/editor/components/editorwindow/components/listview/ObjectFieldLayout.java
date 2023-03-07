@@ -10,15 +10,19 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import jsoneditor.controller.Controller;
 import jsoneditor.model.json.JsonNodeWithPath;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.field.EditorTextFieldFactory;
 
+/**
+ * layout that displays one field of an object in a row
+ */
 public class ObjectFieldLayout extends HBox
 {
-    private final Controller controller;
+    private final EditorWindowManager editorWindowManager;
     
-    public ObjectFieldLayout(JsonNode parent, Controller controller, JsonNodeWithPath node)
+    public ObjectFieldLayout(JsonNode parent, EditorWindowManager editorWindowManager, JsonNodeWithPath node)
     {
-        this.controller = controller;
+        this.editorWindowManager = editorWindowManager;
         setAlignment(Pos.CENTER_LEFT);
         VBox keyField = JsonEditorListView.makeFieldWithTitle("Key", node.getDisplayName());
         getChildren().add(keyField);
@@ -43,7 +47,7 @@ public class ObjectFieldLayout extends HBox
         VBox.setVgrow(goToButton, Priority.ALWAYS);
         goToButton.setText("Go to");
         goToButton.setContentDisplay(ContentDisplay.CENTER);
-        goToButton.setOnAction(event -> controller.chooseNodeFromNavbar(node.getPath()));
+        goToButton.setOnAction(event -> editorWindowManager.selectFromNavbar(node.getPath()));
         return goToButton;
     }
 }

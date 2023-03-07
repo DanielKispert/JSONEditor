@@ -48,7 +48,7 @@ public class UIHandlerImpl implements UIHandler
     {
         if (editorScene != null)
         {
-            editorScene.updateSelectedJson();
+            editorScene.handleUpdatedSelection();
         }
     }
     

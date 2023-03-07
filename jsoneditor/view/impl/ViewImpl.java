@@ -79,7 +79,7 @@ public class ViewImpl implements View
     @Override
     public void selectJsonAndSchema()
     {
-        Alert alert = new Alert(Alert.AlertType.ERROR, "Can't validate JSON using selected Schema!", ButtonType.OK);
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Select a JSON and a Schema!", ButtonType.OK);
         alert.showAndWait();
     }
 }

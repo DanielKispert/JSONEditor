@@ -23,8 +23,6 @@ public class JSONSelection extends SceneHandlerImpl
     
     private File lastDirectory;
     
-    private File lastSettingsDirectory;
-    
     public JSONSelection(Controller controller, ReadableModel model)
     {
         super(controller, model);
@@ -88,15 +86,15 @@ public class JSONSelection extends SceneHandlerImpl
             fileChooser.getExtensionFilters().addAll(
                     new FileChooser.ExtensionFilter("JSON Files", "*.json")
             );
-            if (lastSettingsDirectory != null)
+            if (lastDirectory != null)
             {
-                fileChooser.setInitialDirectory(lastSettingsDirectory);
+                fileChooser.setInitialDirectory(lastDirectory);
             }
             selectedSettings = fileChooser.showOpenDialog(stage);
             if (selectedSettings != null)
             {
                 settingsFileField.setText(selectedSettings.getAbsolutePath());
-                lastSettingsDirectory = selectedSettings.getParentFile();
+                lastDirectory = selectedSettings.getParentFile();
             }
         });
         HBox settingsBox = new HBox(settingsLabel, settingsFileField, settingsButton);

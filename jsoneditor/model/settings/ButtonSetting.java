@@ -3,16 +3,12 @@ package jsoneditor.model.settings;
 public class ButtonSetting
 {
     
-    private final String title;
+    private String title;
     
-    private final String target;
+    private String target;
     
-    
-    // intended to be private, will be initialized by reading from json
-    private ButtonSetting(String title, String target)
+    public ButtonSetting()
     {
-        this.title = title;
-        this.target = target;
     }
     
     public String getTitle()
