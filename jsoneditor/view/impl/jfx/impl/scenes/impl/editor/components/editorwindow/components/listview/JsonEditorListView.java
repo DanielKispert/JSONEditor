@@ -1,11 +1,8 @@
 package jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -14,23 +11,33 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
+import jsoneditor.model.impl.NodeSearcher;
 import jsoneditor.model.json.JsonNodeWithPath;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class JsonEditorListView extends ListView<JsonNodeWithPath>
 {
-    public JsonEditorListView(ReadableModel model, Controller controller)
+    private final ReadableModel model;
+    
+    private final EditorWindowManager manager;
+    
+    private JsonNodeWithPath selection;
+    
+    public JsonEditorListView(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
-        setCellFactory(jsonNodeWithPathListView -> new JsonEditorListCell(model, controller));
+        this.manager = manager;
+        this.model = model;
+        setCellFactory(jsonNodeWithPathListView -> new JsonEditorListCell(this, model, controller));
     }
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
     {
+        this.selection = nodeWithPath;
         JsonNode node = nodeWithPath.getNode();
+        JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath());
         List<JsonNodeWithPath> childNodes = new ArrayList<>(); //either a list of array items or object fields
         if (node.isArray())
         {
@@ -40,15 +47,21 @@ public class JsonEditorListView extends ListView<JsonNodeWithPath>
                 childNodes.add(new JsonNodeWithPath(arrayItem, nodeWithPath.getPath() + "/" + arrayItemIndex++));
             }
         }
-        else if (node.isObject())
+        else if (nodeWithPath.isObject())
         {
-            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); )
-            {
-                Map.Entry<String, JsonNode> field = it.next();
-                childNodes.add(new JsonNodeWithPath(field.getValue(), nodeWithPath.getPath() + "/" + field.getKey()));
-            }
+            childNodes = NodeSearcher.getAllChildNodesFromSchema(model.getRootSchema(), nodeWithPath, schema);
         }
         getItems().setAll(childNodes);
+    }
+    
+    public JsonNodeWithPath getSelection()
+    {
+        return selection;
+    }
+    
+    public EditorWindowManager getManager()
+    {
+        return manager;
     }
     
     

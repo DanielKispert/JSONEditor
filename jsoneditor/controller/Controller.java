@@ -1,6 +1,5 @@
 package jsoneditor.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jsoneditor.model.json.JsonNodeWithPath;
 
 import java.io.File;
@@ -12,17 +11,11 @@ public interface Controller
     
     void jsonAndSchemaSelected(File json, File schema, File settings);
     
-    void chooseNodeFromNavbar(String path);
+    void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index);
     
-    void moveItemToIndex(JsonNodeWithPath item, int index);
+    void removeNode(String path);
     
-    void removeNodeFromArray(JsonNode node);
-    
-    void addNewNodeToSelectedArray();
-    
-    void removeSelectedNode();
-    
-    void searchForNode(String path, String value);
+    void addNewNodeToArray(String path);
     
     void saveToFile();
     

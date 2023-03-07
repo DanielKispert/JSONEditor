@@ -15,10 +15,6 @@ public interface ReadableModel extends ReadableState
     
     JsonNode getRootJson();
     
-    JsonNodeWithPath getSelectedJsonNode();
-    
-    JsonNode getSchemaNodeOfSelectedNode();
-    
     JsonSchema getRootSchema();
     
     Settings getSettings();
@@ -26,12 +22,12 @@ public interface ReadableModel extends ReadableState
     /**
      * @return true if the currently selected node is an array and can have more items, false if not
      */
-    boolean canAddMoreItems();
+    boolean canAddMoreItems(String path);
     
-    boolean editingAnArray();
-    
-    boolean editingAnObject();
+    String searchForNode(String path, String value);
     
     JsonNodeWithPath getNodeForPath(String path);
+    
+    JsonNode getSubschemaForPath(String path);
     
 }

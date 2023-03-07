@@ -11,3 +11,7 @@ workflow:
 3. try validating file through schema
 4. if no, file cannot be edited, it has to match the format. New File and Schema must be chosen
 5. if yes, file can be edited
+
+
+you can configure extra buttons in the toolbar by writing a settings json and adding buttons like in the example settings file
+

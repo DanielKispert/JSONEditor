@@ -1,0 +1,12 @@
+{
+    "buttons":[
+        {
+            "title":"Find Person",
+            "target":"/people/?/name"
+        },
+        {
+            "title":"Go to field",
+            "target":"/?"
+        }
+    ]
+}

@@ -1,8 +1,6 @@
 package jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
@@ -10,8 +8,8 @@ import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.model.settings.ButtonSetting;
 import jsoneditor.view.impl.jfx.impl.UIHandlerImpl;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -25,23 +23,27 @@ public class JsonEditorToolbar extends ToolBar
     
     private final Controller controller;
     
-    public JsonEditorToolbar(ReadableModel model, Controller controller)
+    private final EditorWindowManager editorWindowManager;
+    
+    public JsonEditorToolbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager)
     {
         this.controller = controller;
         this.model = model;
+        this.editorWindowManager = editorWindowManager;
         Button removeSelectedObjectButton = new Button("Remove visible object");
         removeSelectedObjectButton.setOnAction(event ->
         {
-            UIHandlerImpl.showConfirmDialog(controller::removeSelectedNode, "this will remove the json object currently visible in the editor window, not just the selected one!");
+            // TODO
+            UIHandlerImpl.showConfirmDialog(() -> controller.removeNode(null), "this will remove the json object currently visible in the editor window, not just the selected one!");
         });
+        removeSelectedObjectButton.setDisable(true);
         Button saveButton = new Button("Save to file");
         saveButton.setOnAction(event -> controller.saveToFile());
         addItemButton = new Button("Add Item");
-        addItemButton.setOnAction(event -> controller.addNewNodeToSelectedArray());
+        //addItemButton.setOnAction(event -> controller.addNewNodeToArray());
         
-        getItems().addAll(saveButton, removeSelectedObjectButton, addItemButton);
+        getItems().addAll(saveButton, removeSelectedObjectButton);
         getItems().addAll(makeSearchButtons());
-        updateSelectedJson();
     }
     
     private List<Button> makeSearchButtons()
@@ -57,76 +59,17 @@ public class JsonEditorToolbar extends ToolBar
     
         button.setOnAction(actionEvent ->
         {
+            Platform.runLater(() -> dialog.getEditor().requestFocus());
             Optional<String> result = dialog.showAndWait();
-            result.ifPresent(s -> controller.searchForNode(buttonSetting.getTarget(), s));
+            result.ifPresent(s ->
+            {
+                String foundNode = model.searchForNode(buttonSetting.getTarget(), s);
+                if (foundNode != null)
+                {
+                    editorWindowManager.selectFromNavbar(foundNode);
+                }
+            });
         });
         return button;
-        
-        
-    }
-    
-    public JsonNode getNodeFromPath(JsonNode node, String path)
-    {
-        String[] parts = path.split("/");
-        
-        for (int i = 0; i < parts.length; i++)
-        {
-            String part = parts[i];
-            if (part.equals("?"))
-            {
-                JsonNode fields = node.get(parts[i - 1]);
-                if (fields.isArray())
-                {
-                    TextInputDialog dialog = new TextInputDialog("");
-                    dialog.setHeaderText("Please enter a number:");
-                    Optional<String> result = dialog.showAndWait();
-                    if (result.isPresent())
-                    {
-                        int index = Integer.parseInt(result.get());
-                        node = fields.get(index);
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                else if (fields.isObject())
-                {
-                    TextInputDialog dialog = new TextInputDialog("");
-                    dialog.setHeaderText("Please enter some text:");
-                    Optional<String> result = dialog.showAndWait();
-                    if (result.isPresent())
-                    {
-                        String key = result.get();
-                        node = fields.get(key);
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            else if (!part.isEmpty())
-            {
-                node = node.get(part);
-            }
-        }
-        return node;
-    }
-    
-    public void updateSelectedJson()
-    {
-        if (model.editingAnArray() && model.canAddMoreItems())
-        {
-            addItemButton.setVisible(true);
-        }
-        else
-        {
-            addItemButton.setVisible(false);
-        }
     }
 }

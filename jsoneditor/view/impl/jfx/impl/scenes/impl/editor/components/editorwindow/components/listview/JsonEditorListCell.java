@@ -14,16 +14,19 @@ public class JsonEditorListCell extends ListCell<JsonNodeWithPath>
     
     private final ReadableModel model;
     
-    public JsonEditorListCell(ReadableModel model, Controller controller)
+    private final JsonEditorListView parent;
+    
+    public JsonEditorListCell(JsonEditorListView parent, ReadableModel model, Controller controller)
     {
+        this.parent = parent;
         this.model = model;
         this.controller = controller;
-       
     }
     
     @Override
     protected void updateItem(JsonNodeWithPath item, boolean empty)
     {
+        JsonNodeWithPath selectedNode = parent.getSelection();
     
         super.updateItem(item, empty);
         if (empty || item == null)
@@ -33,15 +36,15 @@ public class JsonEditorListCell extends ListCell<JsonNodeWithPath>
         }
         else
         {
-            if (model.editingAnArray())
+            if (selectedNode.isArray())
             {
                 this.draggable = true;
-                setGraphic(new ArrayItemLayout(controller, item));
+                setGraphic(new ArrayItemLayout(model, controller, item));
             }
-            else if (model.editingAnObject())
+            else if (selectedNode.isObject())
             {
                 this.draggable = false;
-                setGraphic(new ObjectFieldLayout(model.getSelectedJsonNode().getNode(), controller, item));
+                setGraphic(new ObjectFieldLayout(selectedNode.getNode(), parent.getManager(), item));
             }
             else
             {
@@ -110,7 +113,7 @@ public class JsonEditorListCell extends ListCell<JsonNodeWithPath>
                 JsonNodeWithPath itemToMove = getItem();
                 int newIndex = getListView().getSelectionModel().getSelectedIndex();
                 success = true;
-                controller.moveItemToIndex(itemToMove, newIndex);
+                controller.moveItemToIndex(parent.getSelection(), itemToMove, newIndex);
             }
             event.setDropCompleted(success);
     

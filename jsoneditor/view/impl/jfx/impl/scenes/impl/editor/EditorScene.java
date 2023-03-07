@@ -8,22 +8,25 @@ import javafx.stage.Stage;
 import jsoneditor.controller.Controller;
 import jsoneditor.model.ReadableModel;
 import jsoneditor.view.impl.jfx.impl.scenes.impl.SceneHandlerImpl;
-import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
-import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.JsonEditorToolbar;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManagerImpl;
+import jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 
 public class EditorScene extends SceneHandlerImpl
 {
-    private JsonEditorEditorWindow editor;
     
     private JsonEditorNavbar navbar;
     
     private JsonEditorToolbar toolbar;
     
+    private final EditorWindowManager editorWindowManager;
+    
     
     public EditorScene(Controller controller, ReadableModel model)
     {
         super(controller, model);
+        editorWindowManager = new EditorWindowManagerImpl(model, controller);
     }
     
     @Override
@@ -35,9 +38,8 @@ public class EditorScene extends SceneHandlerImpl
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root, startingSceneWidth, startingSceneHeight);
         
-        toolbar = new JsonEditorToolbar(model, controller);
-        navbar = new JsonEditorNavbar(model, controller);
-        editor = new JsonEditorEditorWindow(model, controller);
+        toolbar = new JsonEditorToolbar(model, controller, editorWindowManager);
+        navbar = new JsonEditorNavbar(model, controller, editorWindowManager);
         root.setTop(toolbar);
         root.setLeft(makeSplitPane(scene));
         return scene;
@@ -47,28 +49,27 @@ public class EditorScene extends SceneHandlerImpl
     {
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.HORIZONTAL);
-        splitPane.getItems().addAll(navbar, editor);
+        splitPane.getItems().addAll(navbar, editorWindowManager.getEditorWindows());
         splitPane.setDividerPositions(0.4);
         splitPane.prefWidthProperty().bind(scene.widthProperty());
         splitPane.prefHeightProperty().bind(scene.heightProperty());
         return splitPane;
     }
     
-    public void updateSelectedJson()
+    public void handleUpdatedSelection()
     {
-        editor.updateSelectedJson(model);
-        toolbar.updateSelectedJson();
+        editorWindowManager.updateEditors();
     }
     
     public void handleRemovedSelection()
     {
-        editor.updateSelectedJson(model);
-        navbar.updateTreeAndSelectParent();
+        editorWindowManager.updateEditors();
+        navbar.updateTree();
     }
     
-    public void handleMovedSelection() {
+    public void handleMovedSelection()
+    {
         navbar.updateTree();
-        
     }
     
     
