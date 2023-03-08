@@ -1,4 +1,4 @@
-package jsoneditor;
+package jsoneditor.view;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -7,12 +7,12 @@ import jsoneditor.model.impl.ModelImpl;
 import jsoneditor.model.statemachine.StateMachine;
 import jsoneditor.model.statemachine.impl.StateMachineImpl;
 
-public class MainJFX extends Application
+public class JFXLauncher extends Application
 {
     
     
     
-    public static void main(String[] args)
+    public static void launchJFXApplication(String[] args)
     {
         launch(args);
     }
