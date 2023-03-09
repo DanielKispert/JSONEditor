@@ -2,6 +2,7 @@ package jsoneditor.view.impl.jfx.impl.scenes.impl;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -31,8 +32,25 @@ public class JSONSelection extends SceneHandlerImpl
     @Override
     public Scene getScene(Stage stage)
     {
+        boolean rememberFiles = controller.getRememberPaths();
+        String rememberedJsonPath = controller.getLastJsonPath();
+        String rememberedSchemaPath = controller.getLastSchemaPath();
+        String rememberedSettingsPath = controller.getLastSettingsPath();
+        if (rememberFiles && rememberedJsonPath != null)
+        {
+            selectedJson = new File(rememberedJsonPath);
+        }
+        if (rememberFiles && rememberedSchemaPath != null)
+        {
+            selectedSchema = new File(rememberedSchemaPath);
+        }
+        if (rememberFiles && rememberedSettingsPath != null)
+        {
+            selectedSettings = new File(rememberedSettingsPath);
+        }
+        boolean rememberedRememberSettings = controller.getRememberPaths();
         Label jsonLabel = new Label("JSON to edit:");
-        TextField jsonFileField = new TextField();
+        TextField jsonFileField = new TextField(rememberedJsonPath);
         Button jsonButton = new Button("Select JSON");
         jsonButton.setOnAction(e ->
         {
@@ -55,7 +73,7 @@ public class JSONSelection extends SceneHandlerImpl
         HBox jsonBox = new HBox(jsonLabel, jsonFileField, jsonButton);
         
         Label schemaLabel = new Label("Schema:");
-        TextField schemaFileField = new TextField();
+        TextField schemaFileField = new TextField(rememberedSchemaPath);
         Button schemaButton = new Button("Select Schema");
         schemaButton.setOnAction(e ->
         {
@@ -77,7 +95,7 @@ public class JSONSelection extends SceneHandlerImpl
         });
         HBox schemaBox = new HBox(schemaLabel, schemaFileField, schemaButton);
         Label settingsLabel = new Label("Settings:");
-        TextField settingsFileField = new TextField();
+        TextField settingsFileField = new TextField(rememberedSettingsPath);
         Button settingsButton = new Button("Select Settings");
         settingsButton.setOnAction(e ->
         {
@@ -98,10 +116,14 @@ public class JSONSelection extends SceneHandlerImpl
             }
         });
         HBox settingsBox = new HBox(settingsLabel, settingsFileField, settingsButton);
+    
+        CheckBox rememberCheckBox = new CheckBox("Remember");
+        rememberCheckBox.setSelected(rememberedRememberSettings);
         
         Button okButton = new Button("OK");
         okButton.setOnAction(e ->
         {
+            controller.setFileProperties(rememberCheckBox.isSelected(), selectedJson.getAbsolutePath(), selectedSchema.getAbsolutePath(), selectedSettings.getAbsolutePath());
             controller.jsonAndSchemaSelected(selectedJson, selectedSchema, selectedSettings);
         });
         
@@ -109,7 +131,8 @@ public class JSONSelection extends SceneHandlerImpl
         root.addRow(0, jsonBox);
         root.addRow(1, schemaBox);
         root.addRow(2, settingsBox);
-        root.addRow(3, okButton);
+        root.addRow(3, rememberCheckBox);
+        root.addRow(4, okButton);
         
         return new Scene(root, 400, 200);
     }

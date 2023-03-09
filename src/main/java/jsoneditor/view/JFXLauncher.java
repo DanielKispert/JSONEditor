@@ -19,7 +19,7 @@ public class JFXLauncher extends Application
     
     
     @Override
-    public void start(Stage stage) throws Exception
+    public void start(Stage stage)
     {
         stage.setTitle("JSON Editor");
         StateMachine stateMachine = new StateMachineImpl();

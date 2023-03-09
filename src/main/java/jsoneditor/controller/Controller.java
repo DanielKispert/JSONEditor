@@ -6,6 +6,8 @@ import java.io.File;
 
 public interface Controller
 {
+    
+    void setFileProperties(boolean rememberPaths, String jsonPath, String schemaPath, String settingsPath);
 
     void launchFinished();
     
@@ -18,6 +20,14 @@ public interface Controller
     void addNewNodeToArray(String path);
     
     void saveToFile();
+    
+    String getLastJsonPath();
+    
+    String getLastSchemaPath();
+    
+    String getLastSettingsPath();
+    
+    boolean getRememberPaths();
     
 
 }
