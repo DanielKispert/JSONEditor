@@ -7,9 +7,11 @@ import jsoneditor.model.settings.Settings;
 import jsoneditor.model.statemachine.impl.Event;
 
 import java.io.File;
+import java.util.Properties;
 
 public interface WritableModel
 {
+    
     void jsonAndSchemaSuccessfullyValidated(File jsonFile, File schemaFile, JsonNode json, JsonSchema schema);
     
     void setSettings(Settings settings);

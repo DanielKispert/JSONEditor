@@ -18,9 +18,14 @@ import jsoneditor.model.statemachine.StateMachine;
 import jsoneditor.model.statemachine.impl.Event;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
 
 public class ModelImpl implements ReadableModel, WritableModel
 {
+    
     private final StateMachine stateMachine;
     
     private File jsonFile;

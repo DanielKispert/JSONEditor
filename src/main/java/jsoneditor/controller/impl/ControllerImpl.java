@@ -16,12 +16,20 @@ import jsoneditor.model.statemachine.impl.Event;
 import jsoneditor.view.View;
 import jsoneditor.view.impl.ViewImpl;
 
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class ControllerImpl implements Controller, Observer
 {
+    private final static String PROPERTY_LAST_JSON_PATH = "last_json_path";
+    private final static String PROPERTY_LAST_SCHEMA_PATH = "last_schema_path";
+    private final static String PROPERTY_LAST_SETTINGS_PATH = "last_settings_path";
+    
+    private final static String PROPERTY_REMEMBER_PATHS = "remember_paths";
+    
+    private final Properties properties;
     private final WritableModel model;
     
     private final ReadableModel readableModel;
@@ -30,7 +38,21 @@ public class ControllerImpl implements Controller, Observer
     
     private List<Subject> subjects;
     
-    public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage) {
+    public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
+    {
+        properties = new Properties();
+        try (FileInputStream propertiesFile = new FileInputStream("jsoneditor.properties"))
+        {
+            properties.load(propertiesFile);
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println("jsoneditor.properties not found");
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
         this.model = model;
         this.readableModel = readableModel;
         this.subjects = new ArrayList<>();
@@ -56,6 +78,23 @@ public class ControllerImpl implements Controller, Observer
     public void launchFinished()
     {
         model.sendEvent(Event.READ_JSON_AND_SCHEMA);
+    }
+    
+    @Override
+    public void setFileProperties(boolean rememberPaths, String jsonPath, String schemaPath, String settingsPath)
+    {
+        properties.setProperty(PROPERTY_REMEMBER_PATHS, rememberPaths ? "true" : "false");
+        properties.setProperty(PROPERTY_LAST_JSON_PATH, jsonPath);
+        properties.setProperty(PROPERTY_LAST_SCHEMA_PATH, schemaPath);
+        properties.setProperty(PROPERTY_LAST_SETTINGS_PATH, settingsPath);
+        try (FileOutputStream output = new FileOutputStream("jsoneditor.properties"))
+        {
+            properties.store(output, null);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
     
     @Override
@@ -114,6 +153,30 @@ public class ControllerImpl implements Controller, Observer
         JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();
         jsonWriter.writeJsonToFile(readableModel.getRootJson(), readableModel.getCurrentJSONFile());
     
+    }
+    
+    @Override
+    public String getLastJsonPath()
+    {
+        return properties.getProperty(PROPERTY_LAST_JSON_PATH);
+    }
+    
+    @Override
+    public String getLastSchemaPath()
+    {
+        return properties.getProperty(PROPERTY_LAST_SCHEMA_PATH);
+    }
+    
+    @Override
+    public String getLastSettingsPath()
+    {
+        return properties.getProperty(PROPERTY_LAST_SETTINGS_PATH);
+    }
+    
+    @Override
+    public boolean getRememberPaths()
+    {
+        return "true".equalsIgnoreCase(properties.getProperty(PROPERTY_REMEMBER_PATHS));
     }
     
     
