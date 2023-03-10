@@ -3,16 +3,15 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.13'
 }
 
+configurations {
+    javafx
+}
+
 repositories {
     mavenCentral()
 }
 
-mainClassName = 'jsoneditor.Main'
-
-application {
-    mainClass = mainClassName
-}
-
+mainClassName = 'com.daniel.jsoneditor.Main'
 
 javafx {
     version = '19.0.2.1'
@@ -21,4 +20,6 @@ javafx {
 
 dependencies {
     implementation("com.networknt:json-schema-validator:1.0.76")
+    implementation("org.openjfx:javafx-controls:19.0.2.1:win")
+    implementation("org.openjfx:javafx-controls:19.0.2.1:mac")
 }
