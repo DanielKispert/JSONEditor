@@ -31,6 +31,7 @@ public class JsonEditorListView extends ListView<JsonNodeWithPath>
         this.manager = manager;
         this.model = model;
         setCellFactory(jsonNodeWithPathListView -> new JsonEditorListCell(this, model, controller));
+        VBox.setVgrow(this, Priority.ALWAYS);
     }
     
     public void setSelection(JsonNodeWithPath nodeWithPath)

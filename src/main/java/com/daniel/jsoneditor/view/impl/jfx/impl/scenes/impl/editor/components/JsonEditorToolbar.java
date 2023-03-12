@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 public class JsonEditorToolbar extends ToolBar
 {
-    private final Button addItemButton;
     
     private final ReadableModel model;
     
@@ -39,8 +38,6 @@ public class JsonEditorToolbar extends ToolBar
         removeSelectedObjectButton.setDisable(true);
         Button saveButton = new Button("Save to file");
         saveButton.setOnAction(event -> controller.saveToFile());
-        addItemButton = new Button("Add Item");
-        //addItemButton.setOnAction(event -> controller.addNewNodeToArray());
         
         getItems().addAll(saveButton, removeSelectedObjectButton);
         getItems().addAll(makeSearchButtons());
