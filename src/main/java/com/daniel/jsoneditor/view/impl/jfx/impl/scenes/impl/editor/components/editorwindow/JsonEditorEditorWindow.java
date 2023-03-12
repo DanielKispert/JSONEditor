@@ -1,7 +1,11 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.settings.ButtonSetting;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.JsonEditorNamebar;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -22,6 +26,8 @@ public class JsonEditorEditorWindow extends VBox
     
     private final JsonEditorListView editor;
     
+    private final Button addItemButton;
+    
     private final ReadableModel model;
     
     public JsonEditorEditorWindow(EditorWindowManager manager, ReadableModel model, Controller controller)
@@ -29,6 +35,11 @@ public class JsonEditorEditorWindow extends VBox
         this.model = model;
         nameBar = new JsonEditorNamebar();
         editor = new JsonEditorListView(manager, model, controller);
+        addItemButton = new Button("Add Item");
+        addItemButton.setOnAction(event -> controller.addNewNodeToArray(selectedPath));
+        HBox.setHgrow(addItemButton, Priority.ALWAYS);
+        VBox.setVgrow(addItemButton, Priority.NEVER);
+        addItemButton.setMaxWidth(Double.MAX_VALUE);
         VBox.setVgrow(this, Priority.ALWAYS);
         HBox.setHgrow(this, Priority.ALWAYS);
         getChildren().addAll(nameBar, editor);
@@ -40,6 +51,17 @@ public class JsonEditorEditorWindow extends VBox
         JsonNodeWithPath newNode = model.getNodeForPath(path);
         nameBar.setSelection(newNode);
         editor.setSelection(newNode);
+        if (model.canAddMoreItems(path))
+        {
+            if (getChildren().size() == 2)
+            {
+                getChildren().add(addItemButton);
+            }
+        }
+        else
+        {
+            getChildren().remove(addItemButton);
+        }
     }
     
     public String getSelectedPath()

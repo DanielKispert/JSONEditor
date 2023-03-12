@@ -172,7 +172,7 @@ public class ModelImpl implements ReadableModel, WritableModel
         {
             return getNodeForPath(path).getNode().size() < maxItemsNode.intValue();
         }
-        return true;
+        return false;
     }
     
     @Override
