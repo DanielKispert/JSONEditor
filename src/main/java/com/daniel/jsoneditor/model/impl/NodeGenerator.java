@@ -32,6 +32,7 @@ public class NodeGenerator
                 return objectNode;
             case "string":
                 return JsonNodeFactory.instance.textNode("");
+            case "integer":
             case "number":
                 return JsonNodeFactory.instance.numberNode(0);
             case "boolean":
