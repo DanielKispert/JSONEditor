@@ -14,6 +14,7 @@ public class NodeSearcher
     public static List<JsonNodeWithPath> getAllChildNodesFromSchema(JsonSchema rootSchema, JsonNodeWithPath node, JsonNode schema)
     {
         List<JsonNodeWithPath> childNodes = new ArrayList<>();
+        List<String> requiredFields = getRequiredFields(schema);
         JsonNode properties = schema.get("properties");
         properties.fields().forEachRemaining(stringJsonNodeEntry ->
         {
@@ -26,9 +27,29 @@ public class NodeSearcher
             {
                 child = NodeGenerator.generateNodeFromSchema(propertySchema);
             }
-            childNodes.add(new JsonNodeWithPath(child, node.getPath() + "/" + key));
+            String title = node.getPath() + "/" + key;
+            if (requiredFields.contains(key))
+            {
+                title += "*";
+            }
+            childNodes.add(new JsonNodeWithPath(child, title));
         });
         return childNodes;
+    }
+    
+    public static List<String> getRequiredFields(JsonNode schema)
+    {
+        List<String> requiredFields = new ArrayList<>();
+        JsonNode required = schema.get("required");
+        // the "required" node is an array of strings
+        if (required.isArray())
+        {
+            for (JsonNode requiredField : required)
+            {
+                requiredFields.add(requiredField.toString());
+            }
+        }
+        return requiredFields;
     }
     
     

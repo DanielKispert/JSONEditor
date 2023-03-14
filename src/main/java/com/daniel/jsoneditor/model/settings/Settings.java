@@ -7,9 +7,17 @@ public class Settings
     public Settings()
     {
     }
+    
     public Settings(ButtonSetting[] buttons)
     {
-        this.buttons = buttons;
+        if (buttons != null)
+        {
+            this.buttons = buttons;
+        }
+        else
+        {
+            this.buttons = new ButtonSetting[0];
+        }
     }
     
     public ButtonSetting[] getButtons()

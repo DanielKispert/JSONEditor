@@ -123,7 +123,10 @@ public class JSONSelection extends SceneHandlerImpl
         Button okButton = new Button("OK");
         okButton.setOnAction(e ->
         {
-            controller.setFileProperties(rememberCheckBox.isSelected(), selectedJson.getAbsolutePath(), selectedSchema.getAbsolutePath(), selectedSettings.getAbsolutePath());
+            String jsonPath = selectedJson != null ? selectedJson.getAbsolutePath() : "";
+            String schemaPath = selectedSchema != null ? selectedSchema.getAbsolutePath() : "";
+            String settingsPath = selectedSettings != null ? selectedSettings.getAbsolutePath() : "";
+            controller.setFileProperties(rememberCheckBox.isSelected(), jsonPath, schemaPath, settingsPath);
             controller.jsonAndSchemaSelected(selectedJson, selectedSchema, selectedSettings);
         });
         
