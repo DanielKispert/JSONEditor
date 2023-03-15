@@ -1,13 +1,8 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl;
 
 import com.daniel.jsoneditor.model.ReadableModel;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
@@ -15,6 +10,7 @@ import javafx.stage.Stage;
 import com.daniel.jsoneditor.controller.Controller;
 
 import java.io.File;
+import java.util.Optional;
 
 public class JSONSelection extends SceneHandlerImpl
 {
@@ -25,6 +21,8 @@ public class JSONSelection extends SceneHandlerImpl
     private String selectedSettingsPath;
     
     private File lastDirectory;
+    
+    private boolean remember;
     
     public JSONSelection(Controller controller, ReadableModel model)
     {
@@ -133,8 +131,16 @@ public class JSONSelection extends SceneHandlerImpl
         Button okButton = new Button("OK");
         okButton.setOnAction(e ->
         {
-            controller.setFileProperties(rememberCheckBox.isSelected(), selectedJsonPath, selectedSchemaPath, selectedSettingsPath);
-            controller.jsonAndSchemaSelected(new File(selectedJsonPath), new File(selectedSchemaPath), new File(selectedSettingsPath));
+            remember = rememberCheckBox.isSelected();
+            if (selectedJsonPath.isEmpty())
+            {
+                askToGenerateJson(stage);
+            }
+            else
+            {
+                continueToEditor();
+            }
+    
         });
         
         GridPane root = new GridPane();
@@ -145,5 +151,49 @@ public class JSONSelection extends SceneHandlerImpl
         root.addRow(4, okButton);
         
         return new Scene(root, 400, 200);
+    }
+    
+    private void continueToEditor()
+    {
+        controller.setFileProperties(remember, selectedJsonPath, selectedSchemaPath, selectedSettingsPath);
+        controller.jsonAndSchemaSelected(new File(selectedJsonPath), new File(selectedSchemaPath), new File(selectedSettingsPath));
+    }
+    
+    private void askToGenerateJson(Stage stage)
+    {
+        // Create an alert dialog to ask for the JSON path
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("JSON Path");
+        alert.setHeaderText("No JSON path entered");
+        alert.setContentText("Do you want to generate one?");
+        ButtonType yesButton = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+        ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.NO);
+        alert.getButtonTypes().setAll(yesButton, noButton);
+        
+        Optional<ButtonType> result = alert.showAndWait();
+        
+        if (result.isPresent() && result.get() == yesButton)
+        {
+            // Create the file chooser with a default JSON path
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Save As");
+            fileChooser.setInitialDirectory(lastDirectory);
+            fileChooser.setInitialFileName("newfile.json");
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
+            
+            // Show the file chooser dialog
+            File selectedDirectory = fileChooser.showSaveDialog(stage);
+            
+            if (selectedDirectory != null)
+            {
+                // Get the selected file name and directory
+                String fileName = fileChooser.getInitialFileName();
+                File selectedFile = new File(selectedDirectory, fileName);
+                // generate a JSON and save it in the selected file
+                // TODO
+                
+                
+            }
+        }
     }
 }

@@ -2,7 +2,9 @@ package com.daniel.jsoneditor.view.impl;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -11,8 +13,10 @@ import com.daniel.jsoneditor.view.View;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.UIHandlerImpl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ViewImpl implements View
 {
