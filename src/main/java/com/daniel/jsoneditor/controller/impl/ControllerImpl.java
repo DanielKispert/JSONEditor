@@ -183,5 +183,10 @@ public class ControllerImpl implements Controller, Observer
         return "true".equalsIgnoreCase(properties.getProperty(PROPERTY_REMEMBER_PATHS));
     }
     
+    @Override
+    public void generateJson()
+    {
     
+    
+    }
 }

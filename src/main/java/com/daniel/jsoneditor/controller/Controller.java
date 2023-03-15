@@ -29,5 +29,7 @@ public interface Controller
     
     boolean getRememberPaths();
     
+    void generateJson();
+    
 
 }
