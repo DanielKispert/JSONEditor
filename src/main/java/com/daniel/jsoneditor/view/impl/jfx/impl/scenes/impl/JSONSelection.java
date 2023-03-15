@@ -1,6 +1,8 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -16,11 +18,11 @@ import java.io.File;
 
 public class JSONSelection extends SceneHandlerImpl
 {
-    private File selectedJson;
+    private String selectedJsonPath;
     
-    private File selectedSchema;
+    private String selectedSchemaPath;
     
-    private File selectedSettings;
+    private String selectedSettingsPath;
     
     private File lastDirectory;
     
@@ -38,19 +40,21 @@ public class JSONSelection extends SceneHandlerImpl
         String rememberedSettingsPath = controller.getLastSettingsPath();
         if (rememberFiles && rememberedJsonPath != null)
         {
-            selectedJson = new File(rememberedJsonPath);
+            selectedJsonPath = rememberedJsonPath;
         }
         if (rememberFiles && rememberedSchemaPath != null)
         {
-            selectedSchema = new File(rememberedSchemaPath);
+            selectedSchemaPath = rememberedSchemaPath;
         }
         if (rememberFiles && rememberedSettingsPath != null)
         {
-            selectedSettings = new File(rememberedSettingsPath);
+            selectedSettingsPath = rememberedSettingsPath;
         }
         boolean rememberedRememberSettings = controller.getRememberPaths();
+        // JSON
         Label jsonLabel = new Label("JSON to edit:");
         TextField jsonFileField = new TextField(rememberedJsonPath);
+        jsonFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedJsonPath = newValue);
         Button jsonButton = new Button("Select JSON");
         jsonButton.setOnAction(e ->
         {
@@ -63,17 +67,19 @@ public class JSONSelection extends SceneHandlerImpl
             {
                 fileChooser.setInitialDirectory(lastDirectory);
             }
-            selectedJson = fileChooser.showOpenDialog(stage);
+            File selectedJson = fileChooser.showOpenDialog(stage);
             if (selectedJson != null)
             {
-                jsonFileField.setText(selectedJson.getAbsolutePath());
+                selectedJsonPath = selectedJson.getAbsolutePath();
+                jsonFileField.setText(selectedJsonPath);
                 lastDirectory = selectedJson.getParentFile();
             }
         });
         HBox jsonBox = new HBox(jsonLabel, jsonFileField, jsonButton);
-        
+        // SCHEMA
         Label schemaLabel = new Label("Schema:");
         TextField schemaFileField = new TextField(rememberedSchemaPath);
+        schemaFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedSchemaPath = newValue);
         Button schemaButton = new Button("Select Schema");
         schemaButton.setOnAction(e ->
         {
@@ -86,16 +92,19 @@ public class JSONSelection extends SceneHandlerImpl
             {
                 fileChooser.setInitialDirectory(lastDirectory);
             }
-            selectedSchema = fileChooser.showOpenDialog(stage);
+            File selectedSchema = fileChooser.showOpenDialog(stage);
             if (selectedSchema != null)
             {
-                schemaFileField.setText(selectedSchema.getAbsolutePath());
+                selectedSchemaPath = selectedSchema.getAbsolutePath();
+                schemaFileField.setText(selectedSchemaPath);
                 lastDirectory = selectedSchema.getParentFile();
             }
         });
         HBox schemaBox = new HBox(schemaLabel, schemaFileField, schemaButton);
+        // SETTINGS
         Label settingsLabel = new Label("Settings:");
         TextField settingsFileField = new TextField(rememberedSettingsPath);
+        settingsFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedSettingsPath = newValue);
         Button settingsButton = new Button("Select Settings");
         settingsButton.setOnAction(e ->
         {
@@ -108,10 +117,11 @@ public class JSONSelection extends SceneHandlerImpl
             {
                 fileChooser.setInitialDirectory(lastDirectory);
             }
-            selectedSettings = fileChooser.showOpenDialog(stage);
+            File selectedSettings = fileChooser.showOpenDialog(stage);
             if (selectedSettings != null)
             {
-                settingsFileField.setText(selectedSettings.getAbsolutePath());
+                selectedSettingsPath = selectedSettings.getAbsolutePath();
+                settingsFileField.setText(selectedSettingsPath);
                 lastDirectory = selectedSettings.getParentFile();
             }
         });
@@ -123,11 +133,8 @@ public class JSONSelection extends SceneHandlerImpl
         Button okButton = new Button("OK");
         okButton.setOnAction(e ->
         {
-            String jsonPath = selectedJson != null ? selectedJson.getAbsolutePath() : "";
-            String schemaPath = selectedSchema != null ? selectedSchema.getAbsolutePath() : "";
-            String settingsPath = selectedSettings != null ? selectedSettings.getAbsolutePath() : "";
-            controller.setFileProperties(rememberCheckBox.isSelected(), jsonPath, schemaPath, settingsPath);
-            controller.jsonAndSchemaSelected(selectedJson, selectedSchema, selectedSettings);
+            controller.setFileProperties(rememberCheckBox.isSelected(), selectedJsonPath, selectedSchemaPath, selectedSettingsPath);
+            controller.jsonAndSchemaSelected(new File(selectedJsonPath), new File(selectedSchemaPath), new File(selectedSettingsPath));
         });
         
         GridPane root = new GridPane();
