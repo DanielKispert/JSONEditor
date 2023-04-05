@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.field;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
@@ -24,7 +25,8 @@ public class NumberNodeField extends EditorField
     @Override
     protected Node getInputField()
     {
-        TextField fieldInput = new TextField(parent.get(key).asText());
+        JsonNode fieldNode = parent.get(key);
+        TextField fieldInput = new TextField(fieldNode != null ? fieldNode.asText() : "");
         fieldInput.textProperty().addListener((observableValue, s, t1) -> onTextChange(converter.fromString(t1)));
         TextFormatter<Number> formatter = new TextFormatter<>(converter);
         fieldInput.setTextFormatter(formatter);
