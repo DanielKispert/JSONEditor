@@ -50,7 +50,7 @@ public class JsonEditorListView extends ListView<JsonNodeWithPath>
         }
         else if (nodeWithPath.isObject())
         {
-            childNodes = NodeSearcher.getAllChildNodesFromSchema(model.getRootSchema(), nodeWithPath, schema);
+            childNodes = NodeSearcher.getAllChildNodesFromSchema(nodeWithPath, schema);
         }
         getItems().setAll(childNodes);
     }

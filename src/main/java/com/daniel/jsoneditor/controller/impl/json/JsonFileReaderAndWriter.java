@@ -13,7 +13,7 @@ public interface JsonFileReaderAndWriter
     
     <T> T getJsonFromFile(File file, Class<T> classOfObject);
     
-    JsonSchema getSchemaFromFile(File file);
+    JsonSchema getSchemaFromFileResolvingRefs(File file);
     
     boolean writeJsonToFile(JsonNode json, File file);
 }
