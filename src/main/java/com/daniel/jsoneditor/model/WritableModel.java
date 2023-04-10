@@ -19,6 +19,9 @@ public interface WritableModel
     
     void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index);
     
+    /**
+     * @param selectedPath points to the path of the array to which a node should be added
+     */
     void addNodeToArray(String selectedPath);
     
     void removeNode(String path);

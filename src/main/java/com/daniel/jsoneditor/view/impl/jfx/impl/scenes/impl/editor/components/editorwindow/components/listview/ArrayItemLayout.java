@@ -24,7 +24,7 @@ public class ArrayItemLayout extends HBox
         JsonNode schemaOfItem = model.getSubschemaForPath(item.getPath());
         if (item.isObject())
         {
-            for (JsonNodeWithPath child : NodeSearcher.getAllChildNodesFromSchema(model.getRootSchema(), item, schemaOfItem))
+            for (JsonNodeWithPath child : NodeSearcher.getAllChildNodesFromSchema(item, schemaOfItem))
             {
                 if (!child.isObject() && !child.isArray())
                 {

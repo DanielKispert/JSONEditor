@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.controller.impl.json.impl;
 
+import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
@@ -10,6 +11,7 @@ import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
@@ -57,10 +59,10 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     }
     
     @Override
-    public JsonSchema getSchemaFromFile(File file)
+    public JsonSchema getSchemaFromFileResolvingRefs(File file)
     {
         JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
-        return factory.getSchema(getJsonFromFile(file));
+        return SchemaHelper.resolveJsonRefsInSchema(factory.getSchema(getJsonFromFile(file)));
     }
     
     @Override

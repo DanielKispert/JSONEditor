@@ -105,7 +105,7 @@ public class ControllerImpl implements Controller, Observer
             // grab json from files and validate
             JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
             JsonNode json = reader.getJsonFromFile(jsonFile);
-            JsonSchema schema = reader.getSchemaFromFile(schemaFile);
+            JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
             if (reader.validateJsonWithSchema(json, schema))
             {
                 // settings file is optional

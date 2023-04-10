@@ -161,7 +161,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public JsonNode getSubschemaForPath(String path)
     {
-        return SchemaHelper.getSchemaNodeResolvingRefs(rootSchema, getSubschemaNodeForPath(path));
+        return getSubschemaNodeForPath(path).getSchemaNode();
     }
     
     public boolean canAddMoreItems(String path)
@@ -172,13 +172,14 @@ public class ModelImpl implements ReadableModel, WritableModel
         {
             return getNodeForPath(path).getNode().size() < maxItemsNode.intValue();
         }
-        return false;
+        return true;
     }
     
     @Override
     public void addNodeToArray(String selectedPath)
     {
-        JsonNode newItem = NodeGenerator.generateNodeFromSchema(getSubschemaForPath(selectedPath));
+        JsonNode itemsSchema = getSubschemaForPath(selectedPath + "/0");
+        JsonNode newItem = NodeGenerator.generateNodeFromSchema(itemsSchema);
         JsonNodeWithPath parent = getNodeForPath(selectedPath);
         if (parent.isArray())
         {

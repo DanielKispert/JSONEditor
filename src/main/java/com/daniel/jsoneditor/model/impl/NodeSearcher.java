@@ -11,7 +11,7 @@ import java.util.List;
 
 public class NodeSearcher
 {
-    public static List<JsonNodeWithPath> getAllChildNodesFromSchema(JsonSchema rootSchema, JsonNodeWithPath node, JsonNode schema)
+    public static List<JsonNodeWithPath> getAllChildNodesFromSchema(JsonNodeWithPath node, JsonNode schema)
     {
         List<JsonNodeWithPath> childNodes = new ArrayList<>();
         List<String> requiredFields = getRequiredFields(schema);
@@ -19,7 +19,7 @@ public class NodeSearcher
         properties.fields().forEachRemaining(stringJsonNodeEntry ->
         {
             String key = stringJsonNodeEntry.getKey();
-            JsonNode propertySchema = SchemaHelper.getSchemaNodeResolvingRefs(rootSchema, stringJsonNodeEntry.getValue());
+            JsonNode propertySchema = stringJsonNodeEntry.getValue();
             // we look for the property in the node
             JsonNode child = node.getNode().get(key);
             // if no child exists for that schema bit, generate an empty node for it already

@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model.impl;
 
+import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -13,7 +14,7 @@ public class NodeGenerator
         {
             case "array":
                 JsonNode itemSchema = schema.get("items");
-                int maxItems = schema.has("maxItems") ? schema.get("maxItems").asInt() : 10;
+                int maxItems = schema.has("maxItems") ? schema.get("maxItems").asInt() : 0;
                 ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
                 for (int i = 0; i < maxItems; i++)
                 {
