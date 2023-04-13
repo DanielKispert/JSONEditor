@@ -16,10 +16,16 @@ public class NumberNodeField extends EditorField
         converter = new NumberStringConverter();
     }
     
-    
     protected void onTextChange(Number newValue)
     {
-        parent.put(key, newValue.intValue());
+        if (newValue != null)
+        {
+            parent.put(key, newValue.intValue());
+        }
+        else
+        {
+            parent.remove(key);
+        }
     }
     
     @Override
