@@ -55,17 +55,17 @@ public class JsonPrettyPrinter implements PrettyPrinter
     public void writeStartArray(JsonGenerator jsonGenerator) throws IOException
     {
         jsonGenerator.writeRaw("[");
-        jsonGenerator.writeRaw("\n");
-        indentLevel++;
-        indent(jsonGenerator);
     }
     
     @Override
     public void writeEndArray(JsonGenerator jsonGenerator, int i) throws IOException
     {
-        indentLevel--;
-        jsonGenerator.writeRaw("\n");
-        indent(jsonGenerator);
+        if (i > 0)
+        {
+            indentLevel--;
+            jsonGenerator.writeRaw("\n");
+            indent(jsonGenerator);
+        }
         jsonGenerator.writeRaw("]");
     }
     
@@ -78,8 +78,11 @@ public class JsonPrettyPrinter implements PrettyPrinter
     }
     
     @Override
-    public void beforeArrayValues(JsonGenerator jsonGenerator)
+    public void beforeArrayValues(JsonGenerator jsonGenerator) throws IOException
     {
+        jsonGenerator.writeRaw("\n");
+        indentLevel++;
+        indent(jsonGenerator);
     }
     
     @Override
