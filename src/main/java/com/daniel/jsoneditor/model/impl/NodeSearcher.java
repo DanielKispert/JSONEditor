@@ -42,7 +42,7 @@ public class NodeSearcher
         List<String> requiredFields = new ArrayList<>();
         JsonNode required = schema.get("required");
         // the "required" node is an array of strings
-        if (required.isArray())
+        if (required != null && required.isArray())
         {
             for (JsonNode requiredField : required)
             {
@@ -63,6 +63,11 @@ public class NodeSearcher
         }
     
         String prefix = pathParts[0];
+        // we need to format the prefix by removing the last "/" at the end of the string, otherwise it points to the wrong element
+        if (prefix.length() > 0)
+        {
+            prefix = prefix.substring(0, prefix.length() - 1);
+        }
         String suffix = pathParts.length > 1 ? pathParts[1] : "";
     
         JsonNode parentNode = rootNode.at(prefix);
@@ -76,7 +81,7 @@ public class NodeSearcher
             
                 if (doesNodeMatchValue(childNode, suffix, valueAsInt))
                 {
-                    return prefix + "/" + i + suffix;
+                    return prefix + "/" + i;
                 }
             }
         }
@@ -112,11 +117,7 @@ public class NodeSearcher
     private static boolean doesNodeMatchValue(JsonNode rootNode, String jsonPointer, int expectedValue)
     {
         JsonNode node = rootNode.at(JsonPointer.valueOf(jsonPointer));
-        if (node != null && node.isInt() && node.asInt() == expectedValue)
-        {
-            return true;
-        }
-        return false;
+        return node != null && node.isInt() && node.asInt() == expectedValue;
     }
     
 }
