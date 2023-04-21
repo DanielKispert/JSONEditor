@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.controller.impl.json.impl;
 
+import com.daniel.jsoneditor.controller.impl.json.JsonPrettyPrinter;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,7 +72,7 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         ObjectMapper mapper = new ObjectMapper();
         try
         {
-            mapper.writeValue(file, json);
+            mapper.writer(new JsonPrettyPrinter()).writeValue(file, json);
         }
         catch (IOException e)
         {

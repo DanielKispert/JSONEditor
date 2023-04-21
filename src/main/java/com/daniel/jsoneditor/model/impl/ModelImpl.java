@@ -167,12 +167,24 @@ public class ModelImpl implements ReadableModel, WritableModel
     public boolean canAddMoreItems(String path)
     {
         JsonNode node = getSubschemaForPath(path);
-        JsonNode maxItemsNode = node.get("maxItems");
-        if (maxItemsNode != null && maxItemsNode.isInt())
+        if (node != null && node.isArray())
         {
-            return getNodeForPath(path).getNode().size() < maxItemsNode.intValue();
+            JsonNode maxItemsNode = node.get("maxItems");
+            if (maxItemsNode != null && maxItemsNode.isInt())
+            {
+                return getNodeForPath(path).getNode().size() < maxItemsNode.intValue();
+            }
+            else
+            {
+                // the node is an array but has no maxItems, so maxItems is infinite.
+                return true;
+            }
         }
-        return true;
+        else
+        {
+            // either the node doesn't exist or the node is not an array
+            return false;
+        }
     }
     
     @Override
