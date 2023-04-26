@@ -26,7 +26,7 @@ public class EditorScene extends SceneHandlerImpl
     public EditorScene(Controller controller, ReadableModel model)
     {
         super(controller, model);
-        editorWindowManager = new EditorWindowManagerImpl(model, controller);
+        editorWindowManager = new EditorWindowManagerImpl(this, model, controller);
     }
     
     @Override
@@ -39,7 +39,7 @@ public class EditorScene extends SceneHandlerImpl
         Scene scene = new Scene(root, startingSceneWidth, startingSceneHeight);
         
         toolbar = new JsonEditorToolbar(model, controller, editorWindowManager);
-        navbar = new JsonEditorNavbar(model, controller, editorWindowManager);
+        navbar = new JsonEditorNavbar(model, editorWindowManager);
         root.setTop(toolbar);
         root.setLeft(makeSplitPane(scene));
         return scene;
@@ -70,6 +70,11 @@ public class EditorScene extends SceneHandlerImpl
     public void handleMovedSelection()
     {
         navbar.updateTree();
+    }
+    
+    public JsonEditorNavbar getNavbar()
+    {
+        return navbar;
     }
     
     

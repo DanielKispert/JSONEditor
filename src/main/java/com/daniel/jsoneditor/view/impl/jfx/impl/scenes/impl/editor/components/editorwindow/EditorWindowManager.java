@@ -11,5 +11,10 @@ public interface EditorWindowManager
      */
     void selectFromNavbar(String path);
     
+    /**
+     * an editor window requests the navbar to select an item
+     */
+    void selectOnNavbar(String path);
+    
     void updateEditors();
 }
