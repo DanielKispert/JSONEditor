@@ -237,8 +237,6 @@ public class ModelImpl implements ReadableModel, WritableModel
             return;
         }
         sendEvent(Event.REMOVED_SELECTED_JSON_NODE);
-        
-        
     }
     
     private JsonSchema getSubschemaNodeForPath(String path)

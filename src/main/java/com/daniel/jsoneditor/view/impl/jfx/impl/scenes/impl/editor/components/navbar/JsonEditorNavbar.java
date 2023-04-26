@@ -17,17 +17,14 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
 {
     private final ReadableModel model;
     
-    private final Controller controller;
-    
     private final EditorWindowManager editorWindowManager;
     
     private TreeItem<JsonNodeWithPath> selectedItem;
     
-    public JsonEditorNavbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager)
+    public JsonEditorNavbar(ReadableModel model, EditorWindowManager editorWindowManager)
     {
         
         this.model = model;
-        this.controller = controller;
         this.editorWindowManager = editorWindowManager;
         this.selectedItem = null;
         SplitPane.setResizableWithParent(this, false);
@@ -103,17 +100,34 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         }
     }
     
+    public void selectPath(String path)
+    {
+        TreeItem<JsonNodeWithPath> root = getRoot();
+        selectNodeByPath(root, path);
+    }
+    
+    private void selectNodeByPath(TreeItem<JsonNodeWithPath> node, String path)
+    {
+        if (node == null || node.getValue() == null)
+        {
+            return;
+        }
+        if (node.getValue().getPath().equals(path))
+        {
+            getSelectionModel().select(node);
+            selectedItem = node;
+            scrollTo(getRow(selectedItem));
+            return;
+        }
+        for (TreeItem<JsonNodeWithPath> child : node.getChildren())
+        {
+            selectNodeByPath(child, path);
+        }
+    }
+    
     public void updateTree()
     {
         setRoot(makeTree());
-        getSelectionModel().select(selectedItem);
-    }
-    
-    public void updateTreeAndSelectParent()
-    {
-        TreeItem<JsonNodeWithPath> parent = selectedItem.getParent();
-        parent.getChildren().remove(selectedItem);
-        selectedItem = parent;
         getSelectionModel().select(selectedItem);
     }
 }

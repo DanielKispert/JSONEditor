@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -13,14 +14,17 @@ import java.util.List;
 public class EditorWindowManagerImpl implements EditorWindowManager
 {
     
+    private final EditorScene editorScene;
+    
     private List<JsonEditorEditorWindow> windows;
     
     private final Controller controller;
     
     private final ReadableModel model;
     
-    public EditorWindowManagerImpl(ReadableModel model, Controller controller)
+    public EditorWindowManagerImpl(EditorScene scene, ReadableModel model, Controller controller)
     {
+        this.editorScene = scene;
         this.windows = new ArrayList<>();
         this.model = model;
         this.controller = controller;
@@ -42,6 +46,12 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     {
         // for now, we only support one window, so we simply tell the one window to select that path
         windows.get(0).setSelectedPath(path);
+    }
+    
+    @Override
+    public void selectOnNavbar(String path)
+    {
+        editorScene.getNavbar().selectPath(path);
     }
     
     @Override
