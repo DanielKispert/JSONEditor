@@ -32,8 +32,8 @@ public class EditorScene extends SceneHandlerImpl
     @Override
     public Scene getScene(Stage stage)
     {
-        double startingSceneWidth = 800;
-        double startingSceneHeight = 600;
+        double startingSceneWidth = 1400;
+        double startingSceneHeight = 800;
         
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root, startingSceneWidth, startingSceneHeight);
