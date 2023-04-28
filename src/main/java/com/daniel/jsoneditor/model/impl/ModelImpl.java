@@ -166,10 +166,10 @@ public class ModelImpl implements ReadableModel, WritableModel
     
     public boolean canAddMoreItems(String path)
     {
-        JsonNode node = getSubschemaForPath(path);
-        if (node != null && node.isArray())
+        JsonNode subschema = getSubschemaForPath(path);
+        if (subschema != null && subschema.get("type").asText().equals("array"))
         {
-            JsonNode maxItemsNode = node.get("maxItems");
+            JsonNode maxItemsNode = subschema.get("maxItems");
             if (maxItemsNode != null && maxItemsNode.isInt())
             {
                 return getNodeForPath(path).getNode().size() < maxItemsNode.intValue();
@@ -180,11 +180,8 @@ public class ModelImpl implements ReadableModel, WritableModel
                 return true;
             }
         }
-        else
-        {
-            // either the node doesn't exist or the node is not an array
-            return false;
-        }
+        // either the node doesn't exist or the node is not an array
+        return false;
     }
     
     @Override
