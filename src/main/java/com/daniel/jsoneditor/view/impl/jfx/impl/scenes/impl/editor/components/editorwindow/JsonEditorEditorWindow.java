@@ -1,17 +1,15 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
 import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.settings.ButtonSetting;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.JsonEditorNamebar;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.EditorListView;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.JsonEditorListView;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl.EditorListViewImpl;
 
 /*
  * Editor consists of a vbox holding a label and a listview
@@ -24,7 +22,7 @@ public class JsonEditorEditorWindow extends VBox
     
     private final JsonEditorNamebar nameBar;
     
-    private final JsonEditorListView editor;
+    private final EditorListView editor;
     
     private final Button addItemButton;
     
@@ -34,7 +32,7 @@ public class JsonEditorEditorWindow extends VBox
     {
         this.model = model;
         nameBar = new JsonEditorNamebar(manager, this);
-        editor = new JsonEditorListView(manager, model, controller);
+        editor = new EditorListViewImpl(manager, model, controller);
         addItemButton = new Button("Add Item");
         addItemButton.setOnAction(event -> controller.addNewNodeToArray(selectedPath));
         HBox.setHgrow(addItemButton, Priority.ALWAYS);

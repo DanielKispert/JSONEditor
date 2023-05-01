@@ -1,12 +1,14 @@
-package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview;
+package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl;
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.EditorListView;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.JsonEditorListCell;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -18,7 +20,7 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JsonEditorListView extends ListView<JsonNodeWithPath>
+public class EditorListViewImpl extends EditorListView
 {
     private final ReadableModel model;
     
@@ -26,7 +28,7 @@ public class JsonEditorListView extends ListView<JsonNodeWithPath>
     
     private JsonNodeWithPath selection;
     
-    public JsonEditorListView(EditorWindowManager manager, ReadableModel model, Controller controller)
+    public EditorListViewImpl(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
         this.manager = manager;
         this.model = model;
