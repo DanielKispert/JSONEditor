@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl.EditorListViewImpl;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.*;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
@@ -14,9 +15,9 @@ public class JsonEditorListCell extends ListCell<JsonNodeWithPath>
     
     private final ReadableModel model;
     
-    private final JsonEditorListView parent;
+    private final EditorListViewImpl parent;
     
-    public JsonEditorListCell(JsonEditorListView parent, ReadableModel model, Controller controller)
+    public JsonEditorListCell(EditorListViewImpl parent, ReadableModel model, Controller controller)
     {
         this.parent = parent;
         this.model = model;
