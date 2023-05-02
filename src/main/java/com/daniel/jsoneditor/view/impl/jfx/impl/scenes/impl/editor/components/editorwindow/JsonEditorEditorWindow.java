@@ -11,8 +11,11 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl.EditorListViewImpl;
 
-/*
- * Editor consists of a vbox holding a label and a listview
+/**
+ * Editor consists of a vbox holding:
+ * a namebar on top
+ * then a list view (the real editor window)
+ * and then some buttons (if applicable) on the bottom
  *
  */
 public class JsonEditorEditorWindow extends VBox

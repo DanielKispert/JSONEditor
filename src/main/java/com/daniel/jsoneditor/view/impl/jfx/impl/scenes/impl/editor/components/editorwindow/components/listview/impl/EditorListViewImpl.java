@@ -20,6 +20,11 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * shows a list of child objects of a selection. If the selection is an array, it shows a list of its items. If the selection is an
+ * object, it shows the child nodes of the object.
+ */
 public class EditorListViewImpl extends EditorListView
 {
     private final ReadableModel model;
