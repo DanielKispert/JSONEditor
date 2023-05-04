@@ -3,21 +3,21 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl.EditorListViewImpl;
-import javafx.scene.control.ListCell;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl.EditorTableViewImpl;
+import javafx.scene.control.TableCell;
 import javafx.scene.input.*;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 
-public class JsonEditorListCell extends ListCell<JsonNodeWithPath>
+public class JsonEditorListCell extends TableCell<JsonNodeWithPath>
 {
     private boolean draggable;
     private final Controller controller;
     
     private final ReadableModel model;
     
-    private final EditorListViewImpl parent;
+    private final EditorTableViewImpl parent;
     
-    public JsonEditorListCell(EditorListViewImpl parent, ReadableModel model, Controller controller)
+    public JsonEditorListCell(EditorTableViewImpl parent, ReadableModel model, Controller controller)
     {
         this.parent = parent;
         this.model = model;
