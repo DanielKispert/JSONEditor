@@ -4,11 +4,12 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.EditorListView;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.EditorTableView;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.JsonEditorListCell;
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -24,8 +25,9 @@ import java.util.List;
 /**
  * shows a list of child objects of a selection. If the selection is an array, it shows a list of its items. If the selection is an
  * object, it shows the child nodes of the object.
+ * This view consists of two gridpanes, one contains
  */
-public class EditorListViewImpl extends EditorListView
+public class EditorTableViewImpl extends EditorTableView
 {
     private final ReadableModel model;
     
@@ -33,20 +35,21 @@ public class EditorListViewImpl extends EditorListView
     
     private JsonNodeWithPath selection;
     
-    public EditorListViewImpl(EditorWindowManager manager, ReadableModel model, Controller controller)
+    public EditorTableViewImpl(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
         this.manager = manager;
         this.model = model;
-        setCellFactory(jsonNodeWithPathListView -> new JsonEditorListCell(this, model, controller));
+        //setCellFactory(jsonNodeWithPathListView -> new JsonEditorListCell(this, model, controller));
         VBox.setVgrow(this, Priority.ALWAYS);
     }
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
     {
         this.selection = nodeWithPath;
+        //
         JsonNode node = nodeWithPath.getNode();
         JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath());
-        List<JsonNodeWithPath> childNodes = new ArrayList<>(); //either a list of array items or object fields
+        ObservableList<JsonNodeWithPath> childNodes = FXCollections.observableArrayList(); //either a list of array items or object fields
         if (node.isArray())
         {
             int arrayItemIndex = 0;
@@ -57,9 +60,9 @@ public class EditorListViewImpl extends EditorListView
         }
         else if (nodeWithPath.isObject())
         {
-            childNodes = NodeSearcher.getAllChildNodesFromSchema(nodeWithPath, schema);
+            childNodes = FXCollections.observableArrayList(NodeSearcher.getAllChildNodesFromSchema(nodeWithPath, schema));
         }
-        getItems().setAll(childNodes);
+        setItems(childNodes);
     }
     
     public JsonNodeWithPath getSelection()

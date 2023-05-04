@@ -2,7 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.field.EditorTextFieldFactory;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl.EditorListViewImpl;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl.EditorTableViewImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.geometry.Pos;
@@ -24,7 +24,7 @@ public class ObjectFieldLayout extends HBox
     {
         this.editorWindowManager = editorWindowManager;
         setAlignment(Pos.CENTER_LEFT);
-        VBox keyField = EditorListViewImpl.makeFieldWithTitle("Key", node.getDisplayName());
+        VBox keyField = EditorTableViewImpl.makeFieldWithTitle("Key", node.getDisplayName());
         getChildren().add(keyField);
         JsonNode value = node.getNode();
         if (value.isArray() || value.isObject())
