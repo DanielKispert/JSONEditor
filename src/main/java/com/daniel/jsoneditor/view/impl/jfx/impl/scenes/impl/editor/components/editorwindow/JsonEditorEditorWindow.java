@@ -14,7 +14,7 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 /**
  * Editor consists of a vbox holding:
  * a namebar on top
- * then a list view (the real editor window)
+ * then a table view (the real editor window)
  * and then some buttons (if applicable) on the bottom
  *
  */

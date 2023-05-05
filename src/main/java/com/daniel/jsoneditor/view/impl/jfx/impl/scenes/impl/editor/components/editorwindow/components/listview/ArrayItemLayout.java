@@ -30,15 +30,6 @@ public class ArrayItemLayout extends HBox
                 {
                     getChildren().add(EditorTextFieldFactory.makeTextField((ObjectNode) item.getNode(), child.getDisplayName(), child.getNode()));
                 }
-                
-        
-            }
-            Iterator<Map.Entry<String, JsonNode>> fields = item.getNode().fields();
-            while (fields.hasNext())
-            {
-                Map.Entry<String, JsonNode> field = fields.next();
-                JsonNode value = field.getValue();
-
             }
         }
         getChildren().add(makeRemoveButton(item));

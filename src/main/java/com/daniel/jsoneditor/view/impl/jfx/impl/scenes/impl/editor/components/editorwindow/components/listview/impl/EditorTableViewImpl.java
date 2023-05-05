@@ -1,25 +1,27 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.NodeSearcher;
+import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.EditorTableView;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.JsonEditorListCell;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.field.EditorTextFieldFactory;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -60,9 +62,28 @@ public class EditorTableViewImpl extends EditorTableView
         }
         else if (nodeWithPath.isObject())
         {
-            childNodes = FXCollections.observableArrayList(NodeSearcher.getAllChildNodesFromSchema(nodeWithPath, schema));
+            childNodes.addAll(NodeSearcher.getAllChildNodesFromSchema(nodeWithPath, schema));
         }
         setItems(childNodes);
+        getColumns().setAll()
+    }
+    
+    private List<TableColumn> makeTableColumnsForSelection(JsonNodeWithPath selection)
+    {
+        List<TableColumn> tableColumns = new ArrayList<>();
+        JsonNode schemaOfItem = model.getSubschemaForPath(selection.getPath());
+        if (schemaOfItem.isObject())
+        {
+            for (JsonNodeWithPath child : NodeSearcher.getAllChildNodesFromSchema(selection, schemaOfItem))
+            {
+                if (!child.isObject() && !child.isArray())
+                {
+                    getChildren().add(EditorTextFieldFactory.makeTextField((ObjectNode) selection.getNode(), child.getDisplayName(), child.getNode()));
+                }
+            }
+        }
+        getChildren().add(makeRemoveButton(item));
+        
     }
     
     public JsonNodeWithPath getSelection()
