@@ -23,6 +23,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Pair;
 import javafx.util.converter.DefaultStringConverter;
 
 
@@ -43,7 +44,6 @@ public class EditorTableViewImpl extends EditorTableView
     {
         this.manager = manager;
         this.model = model;
-        //setCellFactory(jsonNodeWithPathListView -> new JsonEditorListCell(this, model, controller));
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
     }
@@ -78,37 +78,59 @@ public class EditorTableViewImpl extends EditorTableView
         }
         String typeText = type.asText();
         JsonNode childSchema = parentSchema;
-        
+        List<Pair<String, JsonNode>> properties = new ArrayList<>();
+        List<TableColumn<JsonNodeWithPath, String>> columns;
         if ("array".equals(typeText))
         {
             // Get the array node items and their properties from the schema
             childSchema = childSchema.get("items");
+            Iterator<Entry<String, JsonNode>> iterator = childSchema.get("properties").fields();
+        
+            // Iterate over the properties (the bits the array items consist of). Every valid property will be one column
+            while (iterator.hasNext())
+            {
+                Map.Entry<String, JsonNode> entry = iterator.next();
+                // we only permit non-object and non-array properties in the list.
+                String propertyType = NodeSearcher.getTypeFromNode(entry.getValue());
+                if (propertyType != null && !"object".equals(propertyType) && !"array".equals(propertyType))
+                {
+                    properties.add(new Pair<>(entry.getKey(), entry.getValue()));
+                }
+            }
+            // Create table columns dynamically based on the schema properties
+            columns = createArrayTableColumns(properties);
         }
-        Map<String, JsonNode> properties = new HashMap<>();
-        Iterator<Entry<String, JsonNode>> iterator = childSchema.get("properties").fields();
-    
-        // Iterate over the child nodes
-        while (iterator.hasNext())
+        else if ("object".equals(typeText))
         {
-            Map.Entry<String, JsonNode> entry = iterator.next();
-            properties.put(entry.getKey(), entry.getValue());
+        
         }
         
-        // Create table columns dynamically based on the schema properties
-        List<TableColumn<JsonNodeWithPath, String>> columns = createTableColumns(properties);
         
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
     }
     
+    private List<TableColumn<JsonNodeWithPath, String>> createArrayTableColumns(List<Pair<String, JsonNode>> properties)
+    {
+        List<TableColumn<JsonNodeWithPath, String>> tableColumns = createTableColumns(properties);
+        // we add a column of delete buttons
+        TableColumn<JsonNodeWithPath, String> deleteButtonColumn = new TableColumn<>("");
+        
+        return tableColumns;
+        
+    }
+    
     /**
      * creates columns for the table view
      */
-    private List<TableColumn<JsonNodeWithPath, String>> createTableColumns(Map<String, JsonNode> properties)
+    private List<TableColumn<JsonNodeWithPath, String>> createTableColumns(List<Pair<String, JsonNode>> properties)
     {
         List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>();
-        properties.forEach((propertyName, propertyNode) -> {
+        for (Pair<String, JsonNode> property : properties)
+        {
+            String propertyName = property.getKey();
+            JsonNode propertyNode = property.getValue();
             TableColumn<JsonNodeWithPath, String> column = new TableColumn<>(propertyName);
             column.setCellValueFactory(data -> {
                 JsonNode valueNode = data.getValue().getNode().get(propertyName);
@@ -141,7 +163,7 @@ public class EditorTableViewImpl extends EditorTableView
                 return makeTextFieldTableCell();
             });
             columns.add(column);
-        });
+        }
         return columns;
     }
     

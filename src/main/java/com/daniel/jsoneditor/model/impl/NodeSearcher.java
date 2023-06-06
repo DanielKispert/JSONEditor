@@ -12,6 +12,15 @@ import java.util.List;
 public class NodeSearcher
 {
     
+    public static String getTypeFromNode(JsonNode node)
+    {
+        if (node == null || node.get("type") == null)
+        {
+            return null;
+        }
+        return node.get("type").asText();
+    }
+    
     public static List<JsonNodeWithPath> getAllChildNodesFromSchema(JsonNodeWithPath node, JsonNode schema)
     {
         List<JsonNodeWithPath> childNodes = new ArrayList<>();
