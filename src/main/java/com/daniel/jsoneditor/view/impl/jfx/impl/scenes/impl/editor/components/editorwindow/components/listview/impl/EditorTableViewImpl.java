@@ -1,7 +1,11 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -9,25 +13,23 @@ import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.EditorTableView;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.field.EditorTextFieldFactory;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Label;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
+import javafx.util.converter.DefaultStringConverter;
 
 
 /**
  * shows a list of child objects of a selection. If the selection is an array, it shows a list of its items. If the selection is an
  * object, it shows the child nodes of the object.
- * This view consists of two gridpanes, one contains
+ *
  */
 public class EditorTableViewImpl extends EditorTableView
 {
@@ -43,16 +45,16 @@ public class EditorTableViewImpl extends EditorTableView
         this.model = model;
         //setCellFactory(jsonNodeWithPathListView -> new JsonEditorListCell(this, model, controller));
         VBox.setVgrow(this, Priority.ALWAYS);
+        setEditable(true);
     }
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
     {
         this.selection = nodeWithPath;
-        //
         JsonNode node = nodeWithPath.getNode();
         JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath());
         ObservableList<JsonNodeWithPath> childNodes = FXCollections.observableArrayList(); //either a list of array items or object fields
-        if (node.isArray())
+        if (nodeWithPath.isArray())
         {
             int arrayItemIndex = 0;
             for (JsonNode arrayItem : node)
@@ -62,29 +64,121 @@ public class EditorTableViewImpl extends EditorTableView
         }
         else if (nodeWithPath.isObject())
         {
-            childNodes.addAll(NodeSearcher.getAllChildNodesFromSchema(nodeWithPath, schema));
+            childNodes.add(nodeWithPath);
         }
-        setItems(childNodes);
-        getColumns().setAll()
+        setView(childNodes, schema);
     }
     
-    private List<TableColumn> makeTableColumnsForSelection(JsonNodeWithPath selection)
+    private void setView(ObservableList<JsonNodeWithPath> elements, JsonNode parentSchema)
     {
-        List<TableColumn> tableColumns = new ArrayList<>();
-        JsonNode schemaOfItem = model.getSubschemaForPath(selection.getPath());
-        if (schemaOfItem.isObject())
+        JsonNode type = parentSchema.get("type");
+        if (type == null)
         {
-            for (JsonNodeWithPath child : NodeSearcher.getAllChildNodesFromSchema(selection, schemaOfItem))
-            {
-                if (!child.isObject() && !child.isArray())
+            return;
+        }
+        String typeText = type.asText();
+        JsonNode childSchema = parentSchema;
+        
+        if ("array".equals(typeText))
+        {
+            // Get the array node items and their properties from the schema
+            childSchema = childSchema.get("items");
+        }
+        Map<String, JsonNode> properties = new HashMap<>();
+        Iterator<Entry<String, JsonNode>> iterator = childSchema.get("properties").fields();
+    
+        // Iterate over the child nodes
+        while (iterator.hasNext())
+        {
+            Map.Entry<String, JsonNode> entry = iterator.next();
+            properties.put(entry.getKey(), entry.getValue());
+        }
+        
+        // Create table columns dynamically based on the schema properties
+        List<TableColumn<JsonNodeWithPath, String>> columns = createTableColumns(properties);
+        
+        setItems(elements);
+        getColumns().clear();
+        getColumns().addAll(columns);
+    }
+    
+    /**
+     * creates columns for the table view
+     */
+    private List<TableColumn<JsonNodeWithPath, String>> createTableColumns(Map<String, JsonNode> properties)
+    {
+        List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>();
+        properties.forEach((propertyName, propertyNode) -> {
+            TableColumn<JsonNodeWithPath, String> column = new TableColumn<>(propertyName);
+            column.setCellValueFactory(data -> {
+                JsonNode valueNode = data.getValue().getNode().get(propertyName);
+                if (valueNode != null)
                 {
-                    getChildren().add(EditorTextFieldFactory.makeTextField((ObjectNode) selection.getNode(), child.getDisplayName(), child.getNode()));
+                    return new SimpleStringProperty(valueNode.asText());
+                }
+                else
+                {
+                    return new SimpleStringProperty("");
+                }
+            });
+            column.setCellFactory(column1 -> {
+                if (propertyNode.isObject())
+                {
+                    JsonNode typeNode = propertyNode.get("type");
+                    if (typeNode != null)
+                    {
+                        switch (typeNode.asText())
+                        {
+                            case "array":
+                            case "object":
+                                return makeButtonTableCell(column1.getText());
+                            default:
+                            case "integer":
+                                return makeTextFieldTableCell();
+                        }
+                    }
+                }
+                return makeTextFieldTableCell();
+            });
+            columns.add(column);
+        });
+        return columns;
+    }
+    
+    private TableCell<JsonNodeWithPath, String> makeButtonTableCell(String pathToOpen)
+    {
+        return new TableCell<>()
+        {
+            private final Button button = new Button("Open");
+    
+            {
+                button.setOnAction(event -> {
+                    JsonNodeWithPath item = getTableRow().getItem();
+                    manager.selectOnNavbar(item.getPath() + "/" + pathToOpen);
+                });
+            }
+            
+            @Override
+            protected void updateItem(String item, boolean empty)
+            {
+                super.updateItem(item, empty);
+                if (empty || item == null)
+                {
+                    setGraphic(null);
+                }
+                else
+                {
+                    setGraphic(button);
                 }
             }
-        }
-        getChildren().add(makeRemoveButton(item));
-        
+        };
     }
+    
+    private TextFieldTableCell<JsonNodeWithPath, String> makeTextFieldTableCell()
+    {
+        return new TextFieldTableCell<>(new DefaultStringConverter());
+    }
+    
     
     public JsonNodeWithPath getSelection()
     {
@@ -97,19 +191,4 @@ public class EditorTableViewImpl extends EditorTableView
     }
     
     
-    public static VBox makeFieldWithTitle(String title, String value)
-    {
-        VBox fieldBox = new VBox();
-        Label fieldTitle = new Label(title);
-        fieldTitle.setTextFill(Color.GREY);
-        fieldTitle.setFont(Font.font(null, FontWeight.NORMAL, 12));
-        Label fieldValue = new Label(value);
-        fieldValue.setTextFill(Color.BLACK);
-        fieldValue.setFont(Font.font(null, FontWeight.NORMAL, 16));
-        fieldBox.getChildren().addAll(fieldTitle, fieldValue);
-        HBox.setHgrow(fieldTitle, Priority.ALWAYS);
-        HBox.setHgrow(fieldValue, Priority.ALWAYS);
-        HBox.setHgrow(fieldBox, Priority.ALWAYS);
-        return fieldBox;
-    }
 }
