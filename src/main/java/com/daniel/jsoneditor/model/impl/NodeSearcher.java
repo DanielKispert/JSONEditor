@@ -11,6 +11,7 @@ import java.util.List;
 
 public class NodeSearcher
 {
+    
     public static List<JsonNodeWithPath> getAllChildNodesFromSchema(JsonNodeWithPath node, JsonNode schema)
     {
         List<JsonNodeWithPath> childNodes = new ArrayList<>();

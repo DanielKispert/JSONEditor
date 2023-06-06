@@ -51,7 +51,7 @@ public class JSONSelection extends SceneHandlerImpl
         boolean rememberedRememberSettings = controller.getRememberPaths();
         // JSON
         Label jsonLabel = new Label("JSON to edit:");
-        TextField jsonFileField = new TextField(rememberedJsonPath);
+        TextField jsonFileField = new TextField(selectedJsonPath);
         jsonFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedJsonPath = newValue);
         Button jsonButton = new Button("Select JSON");
         jsonButton.setOnAction(e ->
@@ -76,7 +76,7 @@ public class JSONSelection extends SceneHandlerImpl
         HBox jsonBox = new HBox(jsonLabel, jsonFileField, jsonButton);
         // SCHEMA
         Label schemaLabel = new Label("Schema:");
-        TextField schemaFileField = new TextField(rememberedSchemaPath);
+        TextField schemaFileField = new TextField(selectedSchemaPath);
         schemaFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedSchemaPath = newValue);
         Button schemaButton = new Button("Select Schema");
         schemaButton.setOnAction(e ->
@@ -101,7 +101,7 @@ public class JSONSelection extends SceneHandlerImpl
         HBox schemaBox = new HBox(schemaLabel, schemaFileField, schemaButton);
         // SETTINGS
         Label settingsLabel = new Label("Settings:");
-        TextField settingsFileField = new TextField(rememberedSettingsPath);
+        TextField settingsFileField = new TextField(selectedSettingsPath);
         settingsFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedSettingsPath = newValue);
         Button settingsButton = new Button("Select Settings");
         settingsButton.setOnAction(e ->
@@ -132,7 +132,7 @@ public class JSONSelection extends SceneHandlerImpl
         okButton.setOnAction(e ->
         {
             remember = rememberCheckBox.isSelected();
-            if (selectedJsonPath.isEmpty())
+            if (selectedJsonPath == null || selectedJsonPath.isEmpty())
             {
                 askToGenerateJson(stage);
             }
