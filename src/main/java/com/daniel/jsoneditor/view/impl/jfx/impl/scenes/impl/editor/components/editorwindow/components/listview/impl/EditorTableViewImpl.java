@@ -1,7 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,7 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.EditorTableView;
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -23,6 +23,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import javafx.util.converter.DefaultStringConverter;
 
@@ -38,12 +39,15 @@ public class EditorTableViewImpl extends EditorTableView
     
     private final EditorWindowManager manager;
     
+    private final Controller controller;
+    
     private JsonNodeWithPath selection;
     
     public EditorTableViewImpl(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
         this.manager = manager;
         this.model = model;
+        this.controller = controller;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
     }
@@ -79,7 +83,7 @@ public class EditorTableViewImpl extends EditorTableView
         String typeText = type.asText();
         JsonNode childSchema = parentSchema;
         List<Pair<String, JsonNode>> properties = new ArrayList<>();
-        List<TableColumn<JsonNodeWithPath, String>> columns;
+        List<TableColumn<JsonNodeWithPath, JsonNodeWithPath>> columns;
         if ("array".equals(typeText))
         {
             // Get the array node items and their properties from the schema
@@ -102,7 +106,10 @@ public class EditorTableViewImpl extends EditorTableView
         }
         else if ("object".equals(typeText))
         {
+            columns = new ArrayList<>();
         
+        } else {
+            columns = new ArrayList<>();
         }
         
         
@@ -111,37 +118,72 @@ public class EditorTableViewImpl extends EditorTableView
         getColumns().addAll(columns);
     }
     
-    private List<TableColumn<JsonNodeWithPath, String>> createArrayTableColumns(List<Pair<String, JsonNode>> properties)
+    private List<TableColumn<JsonNodeWithPath, JsonNodeWithPath>> createArrayTableColumns(List<Pair<String, JsonNode>> properties)
     {
-        List<TableColumn<JsonNodeWithPath, String>> tableColumns = createTableColumns(properties);
+        List<TableColumn<JsonNodeWithPath, JsonNodeWithPath>> tableColumns = createTableColumns(properties);
         // we add a column of delete buttons
-        TableColumn<JsonNodeWithPath, String> deleteButtonColumn = new TableColumn<>("");
-        
+        tableColumns.add(createDeleteButtonColumn());
         return tableColumns;
         
     }
     
+    private TableColumn<JsonNodeWithPath, JsonNodeWithPath> createDeleteButtonColumn()
+    {
+        TableColumn<JsonNodeWithPath, JsonNodeWithPath> deleteColumn = new TableColumn<>("Delete");
+        
+        deleteColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue()));
+        
+        deleteColumn.setCellFactory(param -> new TableCell<>()
+        {
+            {
+                setGraphic(makeRemoveButton(getItem().getPath()));
+            }
+    
+            @Override
+            protected void updateItem(JsonNodeWithPath item, boolean empty)
+            {
+                super.updateItem(item, empty);
+                if (empty)
+                {
+                    setGraphic(null);
+                }
+                else
+                {
+                    setGraphic(makeRemoveButton(item.getPath()));
+                }
+            }
+        });
+        
+        return deleteColumn;
+    }
+    
+    
+    
     /**
      * creates columns for the table view
      */
-    private List<TableColumn<JsonNodeWithPath, String>> createTableColumns(List<Pair<String, JsonNode>> properties)
+    private List<TableColumn<JsonNodeWithPath, JsonNodeWithPath>> createTableColumns(List<Pair<String, JsonNode>> properties)
     {
-        List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>();
+        List<TableColumn<JsonNodeWithPath, JsonNodeWithPath>> columns = new ArrayList<>();
         for (Pair<String, JsonNode> property : properties)
         {
             String propertyName = property.getKey();
             JsonNode propertyNode = property.getValue();
-            TableColumn<JsonNodeWithPath, String> column = new TableColumn<>(propertyName);
+            TableColumn<JsonNodeWithPath, JsonNodeWithPath> column = new TableColumn<>(propertyName);
+            // every column holds one property of the array's items
             column.setCellValueFactory(data -> {
-                JsonNode valueNode = data.getValue().getNode().get(propertyName);
+                JsonNodeWithPath jsonNodeWithPath = data.getValue();
+                JsonNode valueNode = jsonNodeWithPath.getNode().get(propertyName);
+                JsonNodeWithPath propertyNodeWithPath;
                 if (valueNode != null)
                 {
-                    return new SimpleStringProperty(valueNode.asText());
+                    propertyNodeWithPath = new JsonNodeWithPath(valueNode, jsonNodeWithPath.getPath() + "/" + propertyName);
                 }
                 else
                 {
-                    return new SimpleStringProperty("");
+                    propertyNodeWithPath = null;
                 }
+                return new SimpleObjectProperty<>(propertyNodeWithPath);
             });
             column.setCellFactory(column1 -> {
                 if (propertyNode.isObject())
@@ -167,7 +209,7 @@ public class EditorTableViewImpl extends EditorTableView
         return columns;
     }
     
-    private TableCell<JsonNodeWithPath, String> makeButtonTableCell(String pathToOpen)
+    private TableCell<JsonNodeWithPath, JsonNodeWithPath> makeButtonTableCell(String pathToOpen)
     {
         return new TableCell<>()
         {
@@ -181,7 +223,7 @@ public class EditorTableViewImpl extends EditorTableView
             }
             
             @Override
-            protected void updateItem(String item, boolean empty)
+            protected void updateItem(JsonNodeWithPath item, boolean empty)
             {
                 super.updateItem(item, empty);
                 if (empty || item == null)
@@ -196,9 +238,10 @@ public class EditorTableViewImpl extends EditorTableView
         };
     }
     
-    private TextFieldTableCell<JsonNodeWithPath, String> makeTextFieldTableCell()
+    
+    private TextFieldTableCell<JsonNodeWithPath, JsonNodeWithPath> makeTextFieldTableCell()
     {
-        return new TextFieldTableCell<>(new DefaultStringConverter());
+        return new TextFieldTableCell<>();
     }
     
     
@@ -210,6 +253,15 @@ public class EditorTableViewImpl extends EditorTableView
     public EditorWindowManager getManager()
     {
         return manager;
+    }
+    
+    private Button makeRemoveButton(String path)
+    {
+        Button removeButton = new Button("X");
+        removeButton.setTextFill(Color.RED);
+        removeButton.setOnAction(event -> controller.removeNode(path));
+        removeButton.setMaxHeight(Double.MAX_VALUE);
+        return removeButton;
     }
     
     
