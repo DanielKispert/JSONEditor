@@ -1,4 +1,4 @@
-package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview;
+package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview;
 
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import javafx.scene.control.TableView;
