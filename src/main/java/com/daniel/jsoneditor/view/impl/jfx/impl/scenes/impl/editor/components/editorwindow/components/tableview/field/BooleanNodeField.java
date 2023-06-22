@@ -1,4 +1,4 @@
-package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.listview.field;
+package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.field;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.beans.value.ObservableValue;
