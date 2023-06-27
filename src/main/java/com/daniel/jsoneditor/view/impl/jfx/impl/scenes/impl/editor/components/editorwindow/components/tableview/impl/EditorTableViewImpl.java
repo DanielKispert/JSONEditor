@@ -57,28 +57,20 @@ public class EditorTableViewImpl extends EditorTableView
         this.selection = nodeWithPath;
         JsonNode node = nodeWithPath.getNode();
         JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath());
-        ObservableList<JsonNodeWithPath> childNodes = FXCollections.observableArrayList(); //either a list of array items or object fields
+        ObservableList<JsonNodeWithPath> nodesToDisplay = FXCollections.observableArrayList(); //either a list of array items or object fields
         if (nodeWithPath.isArray())
         {
             int arrayItemIndex = 0;
             for (JsonNode arrayItem : node)
             {
-                childNodes.add(new JsonNodeWithPath(arrayItem, nodeWithPath.getPath() + "/" + arrayItemIndex++));
+                nodesToDisplay.add(new JsonNodeWithPath(arrayItem, nodeWithPath.getPath() + "/" + arrayItemIndex++));
             }
         }
         else if (nodeWithPath.isObject())
         {
-            ObjectNode objectNode = (ObjectNode) node;
-            Iterator<Map.Entry<String, JsonNode>> fieldsIterator = objectNode.fields();
-            while (fieldsIterator.hasNext())
-            {
-                Map.Entry<String, JsonNode> field = fieldsIterator.next();
-                String propertyName = field.getKey();
-                JsonNode propertyValue = field.getValue();
-                childNodes.add(new JsonNodeWithPath(propertyValue, nodeWithPath.getPath() + "/" + propertyName));
-            }
+            nodesToDisplay.add(nodeWithPath);
         }
-        setView(childNodes, schema);
+        setView(nodesToDisplay, schema);
     }
     
     private void setView(ObservableList<JsonNodeWithPath> elements, JsonNode parentSchema)
@@ -114,9 +106,11 @@ public class EditorTableViewImpl extends EditorTableView
         }
         else if ("object".equals(typeText))
         {
-            columns = new ArrayList<>();
+            columns = createObjectTableColumns(childSchema);
         
-        } else {
+        }
+        else
+        {
             columns = new ArrayList<>();
         }
         
@@ -124,6 +118,52 @@ public class EditorTableViewImpl extends EditorTableView
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
+    }
+    
+    private List<TableColumn<JsonNodeWithPath, String>> createObjectTableColumns(JsonNode objectSchema)
+    {
+        List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>();
+        
+        Iterator<Entry<String, JsonNode>> iterator = objectSchema.get("properties").fields();
+        while (iterator.hasNext())
+        {
+            Map.Entry<String, JsonNode> entry = iterator.next();
+            String propertyName = entry.getKey();
+            JsonNode propertyNode = entry.getValue();
+            
+            TableColumn<JsonNodeWithPath, String> column = new TableColumn<>(propertyName);
+            column.setCellValueFactory(data ->
+            {
+                JsonNodeWithPath jsonNodeWithPath = data.getValue();
+                JsonNode valueNode = jsonNodeWithPath.getNode().get(propertyName);
+                String value = (valueNode != null) ? valueNode.toString() : "";
+                return new SimpleStringProperty(value);
+            });
+            column.setCellFactory(column1 ->
+            {
+                if (propertyNode.isObject())
+                {
+                    JsonNode typeNode = propertyNode.get("type");
+                    if (typeNode != null)
+                    {
+                        switch (typeNode.asText())
+                        {
+                            case "array":
+                            case "object":
+                                return makeButtonTableCell(propertyName);
+                            default:
+                            case "integer":
+                                return makeTextFieldTableCell();
+                        }
+                    }
+                }
+                return makeTextFieldTableCell();
+            });
+            
+            columns.add(column);
+        }
+        
+        return columns;
     }
     
     private List<TableColumn<JsonNodeWithPath, String>> createArrayTableColumns(List<Pair<String, JsonNode>> properties)
