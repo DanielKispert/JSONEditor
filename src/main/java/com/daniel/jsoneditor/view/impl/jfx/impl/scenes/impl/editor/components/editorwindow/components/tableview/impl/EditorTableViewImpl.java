@@ -15,11 +15,13 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
+import javafx.util.StringConverter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -120,50 +122,16 @@ public class EditorTableViewImpl extends EditorTableView
         getColumns().addAll(columns);
     }
     
-    private List<TableColumn<JsonNodeWithPath, String>> createObjectTableColumns(JsonNode objectSchema)
-    {
-        List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>();
-        
+    private List<TableColumn<JsonNodeWithPath, String>> createObjectTableColumns(JsonNode objectSchema) {
+        List<Pair<String, JsonNode>> properties = new ArrayList<>();
         Iterator<Entry<String, JsonNode>> iterator = objectSchema.get("properties").fields();
-        while (iterator.hasNext())
-        {
+        
+        while (iterator.hasNext()) {
             Map.Entry<String, JsonNode> entry = iterator.next();
-            String propertyName = entry.getKey();
-            JsonNode propertyNode = entry.getValue();
-            
-            TableColumn<JsonNodeWithPath, String> column = new TableColumn<>(propertyName);
-            column.setCellValueFactory(data ->
-            {
-                JsonNodeWithPath jsonNodeWithPath = data.getValue();
-                JsonNode valueNode = jsonNodeWithPath.getNode().get(propertyName);
-                String value = (valueNode != null) ? valueNode.toString() : "";
-                return new SimpleStringProperty(value);
-            });
-            column.setCellFactory(column1 ->
-            {
-                if (propertyNode.isObject())
-                {
-                    JsonNode typeNode = propertyNode.get("type");
-                    if (typeNode != null)
-                    {
-                        switch (typeNode.asText())
-                        {
-                            case "array":
-                            case "object":
-                                return makeButtonTableCell(propertyName);
-                            default:
-                            case "integer":
-                                return makeTextFieldTableCell();
-                        }
-                    }
-                }
-                return makeTextFieldTableCell();
-            });
-            
-            columns.add(column);
+            properties.add(new Pair<>(entry.getKey(), entry.getValue()));
         }
         
-        return columns;
+        return createTableColumns(properties);
     }
     
     private List<TableColumn<JsonNodeWithPath, String>> createArrayTableColumns(List<Pair<String, JsonNode>> properties)
@@ -219,14 +187,18 @@ public class EditorTableViewImpl extends EditorTableView
             {
                 JsonNodeWithPath jsonNodeWithPath = data.getValue();
                 JsonNode valueNode = jsonNodeWithPath.getNode().get(propertyName);
-                if (valueNode != null) {
+                if (valueNode != null)
+                {
                     String cellValue = valueNode.asText();
                     return new SimpleStringProperty(cellValue);
-                } else {
+                }
+                else
+                {
                     return new SimpleStringProperty("");
                 }
             });
-            column.setCellFactory(column1 -> {
+            column.setCellFactory(column1 ->
+            {
                 if (propertyNode.isObject())
                 {
                     JsonNode typeNode = propertyNode.get("type");
@@ -238,6 +210,7 @@ public class EditorTableViewImpl extends EditorTableView
                             case "object":
                                 return makeButtonTableCell(column1.getText());
                             default:
+                            case "string":
                             case "integer":
                                 return makeTextFieldTableCell();
                         }
@@ -285,9 +258,67 @@ public class EditorTableViewImpl extends EditorTableView
     }
     
     
-    private TextFieldTableCell<JsonNodeWithPath, String> makeTextFieldTableCell()
+    private TableCell<JsonNodeWithPath, String> makeTextFieldTableCell()
     {
-        return new TextFieldTableCell<>();
+        return new TableCell<>()
+        {
+            private final TextField textField = new TextField();
+    
+            {
+                textField.setOnAction(event ->
+                {
+                    commitEdit(textField.getText());
+                });
+                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) ->
+                {
+                    if (!isNowFocused)
+                    {
+                        commitEdit(textField.getText());
+                    }
+                });
+            }
+    
+            @Override
+            protected void updateItem(String item, boolean empty)
+            {
+                super.updateItem(item, empty);
+    
+                if (empty || item == null)
+                {
+                    setText(null);
+                    setGraphic(null);
+                }
+                else
+                {
+                    setText(null);
+                    textField.setText(item);
+                    setGraphic(textField);
+                }
+            }
+    
+            @Override
+            public void commitEdit(String newValue)
+            {
+                super.commitEdit(newValue);
+                if (getTableRow() != null && getTableRow().getItem() != null)
+                {
+                    JsonNodeWithPath item = getTableRow().getItem();
+                    String propertyName = getTableColumn().getText();
+                    JsonNode jsonNode = item.getNode().get(propertyName);
+                    if (jsonNode != null && jsonNode.isValueNode())
+                    {
+                        ((ObjectNode) item.getNode()).put(propertyName, newValue);
+                    }
+                }
+            }
+    
+            @Override
+            public void cancelEdit()
+            {
+                super.cancelEdit();
+                // Perform any additional handling for canceling the edit, if needed
+            }
+        };
     }
     
     
