@@ -16,6 +16,7 @@ import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
 
 import java.io.File;
+import java.util.List;
 
 public class ModelImpl implements ReadableModel, WritableModel
 {
@@ -197,7 +198,26 @@ public class ModelImpl implements ReadableModel, WritableModel
         }
     }
     
-
+    @Override
+    public void duplicateArrayItem(String pathToItemToDuplicate)
+    {
+        JsonNodeWithPath parentArray = getNodeForPath(SchemaHelper.getParentPath(pathToItemToDuplicate));
+        
+        if (parentArray != null && parentArray.getNode().isArray())
+        {
+            ArrayNode arrayNode = (ArrayNode) parentArray.getNode();
+            
+            // Get the index of the item to be cloned
+            int indexToClone = Integer.parseInt(SchemaHelper.getLastPathSegment(pathToItemToDuplicate));
+            
+            // Clone the item at indexToClone + 1
+            JsonNode clonedNode = arrayNode.get(indexToClone).deepCopy();
+            
+            // Insert the cloned item at indexToClone + 1
+            arrayNode.insert(indexToClone + 1, clonedNode);
+            sendEvent(Event.UPDATED_JSON_STRUCTURE);
+        }
+    }
     
     @Override
     public void removeNode(String path)

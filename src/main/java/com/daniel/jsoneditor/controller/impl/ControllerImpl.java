@@ -152,6 +152,12 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void duplicateArrayNode(String path)
+    {
+        model.duplicateArrayItem(path);
+    }
+    
+    @Override
     public void saveToFile()
     {
         JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();

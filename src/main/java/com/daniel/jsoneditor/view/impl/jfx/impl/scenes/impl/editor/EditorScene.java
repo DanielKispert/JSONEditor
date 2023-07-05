@@ -39,7 +39,7 @@ public class EditorScene extends SceneHandlerImpl
         Scene scene = new Scene(root, startingSceneWidth, startingSceneHeight);
         
         toolbar = new JsonEditorToolbar(model, controller, editorWindowManager);
-        navbar = new JsonEditorNavbar(model, editorWindowManager);
+        navbar = new JsonEditorNavbar(model, controller, editorWindowManager);
         root.setTop(toolbar);
         root.setLeft(makeSplitPane(scene));
         return scene;
@@ -63,6 +63,13 @@ public class EditorScene extends SceneHandlerImpl
     
     public void handleRemovedSelection()
     {
+        editorWindowManager.updateEditors();
+        navbar.updateTree();
+    }
+    
+    public void handleUpdatedStructure()
+    {
+        // we also update the windows because they could show the parent array, which just had something added/removed/changed
         editorWindowManager.updateEditors();
         navbar.updateTree();
     }

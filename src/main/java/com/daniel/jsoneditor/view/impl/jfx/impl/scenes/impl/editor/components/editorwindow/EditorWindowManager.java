@@ -16,5 +16,10 @@ public interface EditorWindowManager
      */
     void selectOnNavbar(String path);
     
+    /**
+     * the navbar item at this path gets updated
+     */
+    void updateNavbarRepresentation(String path);
+    
     void updateEditors();
 }
