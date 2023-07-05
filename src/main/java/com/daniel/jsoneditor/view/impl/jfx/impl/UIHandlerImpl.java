@@ -65,6 +65,15 @@ public class UIHandlerImpl implements UIHandler
     }
     
     @Override
+    public void updateEditorSceneWithUpdatedStructure()
+    {
+        if (editorScene != null)
+        {
+            editorScene.handleUpdatedStructure();
+        }
+    }
+    
+    @Override
     public void updateEditorSceneWithMovedJson()
     {
         if (editorScene != null)

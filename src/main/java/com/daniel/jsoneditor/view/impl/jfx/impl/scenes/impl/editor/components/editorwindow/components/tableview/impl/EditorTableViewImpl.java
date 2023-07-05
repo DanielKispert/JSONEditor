@@ -271,7 +271,7 @@ public class EditorTableViewImpl extends EditorTableView
                 });
                 textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) ->
                 {
-                    if (!isNowFocused)
+                    if (wasFocused && !isNowFocused)
                     {
                         commitEdit(textField.getText());
                     }
@@ -308,6 +308,7 @@ public class EditorTableViewImpl extends EditorTableView
                     if (jsonNode != null && jsonNode.isValueNode())
                     {
                         ((ObjectNode) item.getNode()).put(propertyName, newValue);
+                        manager.updateNavbarRepresentation(item.getPath());
                     }
                 }
             }

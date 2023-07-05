@@ -45,4 +45,40 @@ public class SchemaHelper
             node.elements().forEachRemaining(item -> resolveJsonRefs(rootWithRefs, item));
         }
     }
+    
+    public static String getParentPath(String path)
+    {
+        if (path == null || path.isEmpty())
+        {
+            return null;
+        }
+        
+        // Remove the trailing slash if it exists
+        String trimmedPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+        
+        // Find the last index of '/'
+        int lastIndex = trimmedPath.lastIndexOf('/');
+        if (lastIndex >= 0)
+        {
+            return trimmedPath.substring(0, lastIndex);
+        }
+        
+        return null;
+    }
+    
+    public static String getLastPathSegment(String path)
+    {
+        String[] segments = path.split("/");
+        return segments[segments.length - 1];
+    }
+    
+    public static String incrementLastPathSegment(String path)
+    {
+        String[] segments = path.split("/");
+        int lastSegmentIndex = segments.length - 1;
+        String lastSegment = segments[lastSegmentIndex];
+        int incrementedValue = Integer.parseInt(lastSegment) + 1;
+        segments[lastSegmentIndex] = String.valueOf(incrementedValue);
+        return String.join("/", segments);
+    }
 }

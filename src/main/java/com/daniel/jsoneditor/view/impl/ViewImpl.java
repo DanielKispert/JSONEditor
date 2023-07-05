@@ -55,6 +55,9 @@ public class ViewImpl implements View
             case UPDATED_SELECTED_JSON_NODE:
                 uiHandler.updateEditorSceneWithSelectedJson();
                 break;
+            case UPDATED_JSON_STRUCTURE:
+                uiHandler.updateEditorSceneWithUpdatedStructure();
+                break;
             case REMOVED_SELECTED_JSON_NODE:
                 uiHandler.updateEditorSceneWithRemovedJson();
                 break;

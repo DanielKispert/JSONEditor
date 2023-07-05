@@ -24,5 +24,10 @@ public interface WritableModel
      */
     void addNodeToArray(String selectedPath);
     
+    /**
+     * duplicates the array item the path points to
+     */
+    void duplicateArrayItem(String pathToItemToDuplicate);
+    
     void removeNode(String path);
 }

@@ -1,11 +1,9 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar;
 
+import com.daniel.jsoneditor.controller.Controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
-import com.daniel.jsoneditor.controller.Controller;
+import javafx.scene.control.*;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
@@ -19,18 +17,61 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     
     private final EditorWindowManager editorWindowManager;
     
+    private final Controller controller;
+    
     private TreeItem<JsonNodeWithPath> selectedItem;
     
-    public JsonEditorNavbar(ReadableModel model, EditorWindowManager editorWindowManager)
+    public JsonEditorNavbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager)
     {
         
         this.model = model;
+        this.controller = controller;
         this.editorWindowManager = editorWindowManager;
         this.selectedItem = null;
         SplitPane.setResizableWithParent(this, false);
         setRoot(makeTree());
+        setContextMenu(makeContextMenu());
         getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> JsonEditorNavbar.this.handleNavbarClick(newValue));
         
+    }
+    
+    private ContextMenu makeContextMenu()
+    {
+        ContextMenu contextMenu = new ContextMenu();
+        
+        MenuItem duplicateItem = new MenuItem("Duplicate Item");
+        duplicateItem.setOnAction(event ->
+        {
+            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            if (selectedItem != null && selectedItem.getParent() != null)
+            {
+                TreeItem<JsonNodeWithPath> parentItem = selectedItem.getParent();
+                JsonNodeWithPath selectedNode = selectedItem.getValue();
+                
+                if (parentItem.getValue().isArray())
+                {
+                    controller.duplicateArrayNode(selectedNode.getPath());
+                }
+            }
+        });
+        
+        contextMenu.getItems().add(duplicateItem);
+        
+        this.setOnContextMenuRequested(event ->
+        {
+            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            if (selectedItem != null && selectedItem.getParent() != null)
+            {
+                boolean isArrayItem = selectedItem.getParent().getValue().isArray();
+                duplicateItem.setVisible(isArrayItem);
+            }
+            else
+            {
+                duplicateItem.setVisible(false);
+            }
+        });
+        
+        return contextMenu;
     }
     
     private NavbarItem makeTree()
@@ -100,6 +141,35 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         }
     }
     
+    public void updateNavbarItem(String path)
+    {
+        TreeItem<JsonNodeWithPath> rootItem = getRoot();
+        TreeItem<JsonNodeWithPath> itemToUpdate = findNavbarItem(rootItem, path);
+        if (itemToUpdate != null)
+        {
+            itemToUpdate.setValue(model.getNodeForPath(path));
+        }
+    }
+    
+    private TreeItem<JsonNodeWithPath> findNavbarItem(TreeItem<JsonNodeWithPath> currentItem, String path)
+    {
+        if (currentItem.getValue().getPath().equals(path))
+        {
+            return currentItem;
+        }
+        
+        for (TreeItem<JsonNodeWithPath> childItem : currentItem.getChildren())
+        {
+            TreeItem<JsonNodeWithPath> foundItem = findNavbarItem(childItem, path);
+            if (foundItem != null)
+            {
+                return foundItem;
+            }
+        }
+        
+        return null;
+    }
+    
     public void selectPath(String path)
     {
         TreeItem<JsonNodeWithPath> root = getRoot();
@@ -128,6 +198,6 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     public void updateTree()
     {
         setRoot(makeTree());
-        getSelectionModel().select(selectedItem);
+        selectPath(selectedItem.getValue().getPath());
     }
 }

@@ -19,6 +19,8 @@ public interface Controller
     
     void addNewNodeToArray(String path);
     
+    void duplicateArrayNode(String path);
+    
     void saveToFile();
     
     String getLastJsonPath();

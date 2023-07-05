@@ -55,6 +55,12 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     }
     
     @Override
+    public void updateNavbarRepresentation(String path)
+    {
+        editorScene.getNavbar().updateNavbarItem(path);
+    }
+    
+    @Override
     public void updateEditors()
     {
         for (JsonEditorEditorWindow window : windows)
