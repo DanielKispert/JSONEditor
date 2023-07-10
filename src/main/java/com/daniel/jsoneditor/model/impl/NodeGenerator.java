@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.List;
+
 public class NodeGenerator
 {
     public static JsonNode generateNodeFromSchema(JsonNode schema)
@@ -23,12 +25,16 @@ public class NodeGenerator
                 return arrayNode;
             case "object":
                 ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+                List<String> requiredProperties = SchemaHelper.getRequiredProperties(schema);
                 JsonNode properties = schema.get("properties");
                 properties.fields().forEachRemaining(entry ->
                 {
                     String key = entry.getKey();
                     JsonNode value = entry.getValue();
-                    objectNode.set(key, generateNodeFromSchema(value));
+                    if (requiredProperties.contains(key))
+                    {
+                        objectNode.set(key, generateNodeFromSchema(value));
+                    }
                 });
                 return objectNode;
             case "string":

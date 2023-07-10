@@ -4,6 +4,7 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -83,64 +84,46 @@ public class EditorTableViewImpl extends EditorTableView
             return;
         }
         String typeText = type.asText();
+        boolean isArray = "array".equals(typeText);
         JsonNode childSchema = parentSchema;
-        List<Pair<String, JsonNode>> properties = new ArrayList<>();
-        List<TableColumn<JsonNodeWithPath, String>> columns;
-        if ("array".equals(typeText))
+        List<Pair<Pair<String, Boolean>, JsonNode>> properties = new ArrayList<>();
+        if (isArray)
         {
             // Get the array node items and their properties from the schema
             childSchema = childSchema.get("items");
-            Iterator<Entry<String, JsonNode>> iterator = childSchema.get("properties").fields();
-        
-            // Iterate over the properties (the bits the array items consist of). Every valid property will be one column
-            while (iterator.hasNext())
+        }
+        List<String> requiredProperties = SchemaHelper.getRequiredProperties(childSchema);
+
+        Iterator<Entry<String, JsonNode>> iterator = childSchema.get("properties").fields();
+    
+        while (iterator.hasNext())
+        {
+            Map.Entry<String, JsonNode> entry = iterator.next();
+            String propertyName = entry.getKey();
+            boolean isRequired = requiredProperties.contains(propertyName);
+            if (isArray)
             {
-                Map.Entry<String, JsonNode> entry = iterator.next();
                 // we only permit non-object and non-array properties in the list.
                 String propertyType = NodeSearcher.getTypeFromNode(entry.getValue());
                 if (propertyType != null && !"object".equals(propertyType) && !"array".equals(propertyType))
                 {
-                    properties.add(new Pair<>(entry.getKey(), entry.getValue()));
+                    properties.add(new Pair<>(new Pair<>(propertyName, isRequired), entry.getValue()));
                 }
             }
-            // Create table columns dynamically based on the schema properties
-            columns = createArrayTableColumns(properties);
+            else
+            {
+                properties.add(new Pair<>(new Pair<>(propertyName, isRequired), entry.getValue()));
+            }
         }
-        else if ("object".equals(typeText))
+        List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>(createTableColumns(properties));
+        if (isArray)
         {
-            columns = createObjectTableColumns(childSchema);
-        
+            // we add a column of delete buttons
+            columns.add(createDeleteButtonColumn());
         }
-        else
-        {
-            columns = new ArrayList<>();
-        }
-        
-        
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
-    }
-    
-    private List<TableColumn<JsonNodeWithPath, String>> createObjectTableColumns(JsonNode objectSchema) {
-        List<Pair<String, JsonNode>> properties = new ArrayList<>();
-        Iterator<Entry<String, JsonNode>> iterator = objectSchema.get("properties").fields();
-        
-        while (iterator.hasNext()) {
-            Map.Entry<String, JsonNode> entry = iterator.next();
-            properties.add(new Pair<>(entry.getKey(), entry.getValue()));
-        }
-        
-        return createTableColumns(properties);
-    }
-    
-    private List<TableColumn<JsonNodeWithPath, String>> createArrayTableColumns(List<Pair<String, JsonNode>> properties)
-    {
-        List<TableColumn<JsonNodeWithPath, String>> tableColumns = createTableColumns(properties);
-        // we add a column of delete buttons
-        tableColumns.add(createDeleteButtonColumn());
-        return tableColumns;
-        
     }
     
     private TableColumn<JsonNodeWithPath, String> createDeleteButtonColumn()
@@ -174,14 +157,15 @@ public class EditorTableViewImpl extends EditorTableView
     /**
      * creates columns for the table view
      */
-    private List<TableColumn<JsonNodeWithPath, String>> createTableColumns(List<Pair<String, JsonNode>> properties)
+    private List<EditorTableColumn> createTableColumns(List<Pair<Pair<String, Boolean>, JsonNode>> properties)
     {
-        List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>();
-        for (Pair<String, JsonNode> property : properties)
+        List<EditorTableColumn> columns = new ArrayList<>();
+        for (Pair<Pair<String, Boolean>, JsonNode> property : properties)
         {
-            String propertyName = property.getKey();
+            String propertyName = property.getKey().getKey();
+            boolean isRequired = property.getKey().getValue();
             JsonNode propertyNode = property.getValue();
-            TableColumn<JsonNodeWithPath, String> column = new TableColumn<>(propertyName);
+            EditorTableColumn column = new EditorTableColumn(propertyName, isRequired);
             // every column holds one property of the array's items
             column.setCellValueFactory(data ->
             {
@@ -209,9 +193,10 @@ public class EditorTableViewImpl extends EditorTableView
                             case "array":
                             case "object":
                                 return makeButtonTableCell(column1.getText());
+                            case "integer":
+                                return makeNumberTableCell();
                             default:
                             case "string":
-                            case "integer":
                                 return makeTextFieldTableCell();
                         }
                     }
@@ -258,12 +243,12 @@ public class EditorTableViewImpl extends EditorTableView
     }
     
     
-    private TableCell<JsonNodeWithPath, String> makeTextFieldTableCell()
+    private TextTableCell makeTextFieldTableCell()
     {
-        return new TableCell<>()
+        return new TextTableCell(manager)
         {
             private final TextField textField = new TextField();
-    
+            
             {
                 textField.setOnAction(event ->
                 {
@@ -277,12 +262,12 @@ public class EditorTableViewImpl extends EditorTableView
                     }
                 });
             }
-    
+            
             @Override
             protected void updateItem(String item, boolean empty)
             {
                 super.updateItem(item, empty);
-    
+                
                 if (empty || item == null)
                 {
                     setText(null);
@@ -295,42 +280,57 @@ public class EditorTableViewImpl extends EditorTableView
                     setGraphic(textField);
                 }
             }
-    
-            @Override
-            public void commitEdit(String newValue)
-            {
-                super.commitEdit(newValue);
-                if (getTableRow() != null && getTableRow().getItem() != null)
-                {
-                    JsonNodeWithPath item = getTableRow().getItem();
-                    String propertyName = getTableColumn().getText();
-                    JsonNode jsonNode = item.getNode().get(propertyName);
-                    if (jsonNode != null && jsonNode.isValueNode())
-                    {
-                        ((ObjectNode) item.getNode()).put(propertyName, newValue);
-                        manager.updateNavbarRepresentation(item.getPath());
-                    }
-                }
-            }
-    
-            @Override
-            public void cancelEdit()
-            {
-                super.cancelEdit();
-                // Perform any additional handling for canceling the edit, if needed
-            }
         };
     }
     
-    
-    public JsonNodeWithPath getSelection()
+    private NumberTableCell makeNumberTableCell()
     {
-        return selection;
-    }
-    
-    public EditorWindowManager getManager()
-    {
-        return manager;
+        return new NumberTableCell(manager)
+        {
+            private final TextField textField = new TextField();
+            
+            {
+                // Restrict input to numeric values only
+                textField.textProperty().addListener((observable, oldValue, newValue) ->
+                {
+                    if (!newValue.matches("\\d*"))
+                    {
+                        textField.setText(newValue.replaceAll("[^\\d]", ""));
+                    }
+                });
+                
+                textField.setOnAction(event ->
+                {
+                    commitEdit(textField.getText());
+                });
+                
+                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) ->
+                {
+                    if (wasFocused && !isNowFocused)
+                    {
+                        commitEdit(textField.getText());
+                    }
+                });
+            }
+            
+            @Override
+            protected void updateItem(String item, boolean empty)
+            {
+                super.updateItem(item, empty);
+                
+                if (empty || item == null)
+                {
+                    setText(null);
+                    setGraphic(null);
+                }
+                else
+                {
+                    setText(null);
+                    textField.setText(item);
+                    setGraphic(textField);
+                }
+            }
+        };
     }
     
     private Button makeRemoveButton(String path)

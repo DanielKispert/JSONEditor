@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SchemaHelper
 {
     public static JsonSchema resolveJsonRefsInSchema(JsonSchema root)
@@ -64,6 +67,23 @@ public class SchemaHelper
         }
         
         return null;
+    }
+    
+    public static List<String> getRequiredProperties(JsonNode schemaNode)
+    {
+        List<String> requiredProperties = new ArrayList<>();
+        JsonNode requiredPropertiesNode = schemaNode.get("required");
+        if (requiredPropertiesNode != null && requiredPropertiesNode.isArray())
+        {
+            for (JsonNode requiredProperty : requiredPropertiesNode)
+            {
+                if (requiredProperty.isTextual())
+                {
+                    requiredProperties.add(requiredProperty.asText());
+                }
+            }
+        }
+        return requiredProperties;
     }
     
     public static String getLastPathSegment(String path)
