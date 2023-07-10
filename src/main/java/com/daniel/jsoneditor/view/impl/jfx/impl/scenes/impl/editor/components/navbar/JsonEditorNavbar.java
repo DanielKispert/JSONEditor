@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar;
 
 import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import javafx.scene.control.*;
@@ -148,6 +149,17 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         if (itemToUpdate != null)
         {
             itemToUpdate.setValue(model.getNodeForPath(path));
+        }
+        else
+        {
+            TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(rootItem, SchemaHelper.getParentPath(path));
+            if (parentItem != null)
+            {
+                JsonNodeWithPath newNode = model.getNodeForPath(path);
+                NavbarItem newItem = new NavbarItem(model, newNode.getPath());
+                parentItem.getChildren().add(newItem);
+                parentItem.setExpanded(true);
+            }
         }
     }
     
