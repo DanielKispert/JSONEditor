@@ -12,7 +12,7 @@ public class NodeGenerator
 {
     public static JsonNode generateNodeFromSchema(JsonNode schema)
     {
-        switch (schema.get("type").asText())
+        switch (SchemaHelper.getType(schema))
         {
             case "array":
                 JsonNode itemSchema = schema.get("items");
@@ -30,10 +30,12 @@ public class NodeGenerator
                 properties.fields().forEachRemaining(entry ->
                 {
                     String key = entry.getKey();
-                    JsonNode value = entry.getValue();
-                    if (requiredProperties.contains(key))
+                    JsonNode childSchema = entry.getValue();
+                    String childSchemaType = SchemaHelper.getType(childSchema);
+                    // we want to generate child objects for every node that is either required or also an object or array (because we can't fill those in via fields yet)
+                    if (requiredProperties.contains(key) || "array".equals(childSchemaType) || "object".equals(childSchemaType))
                     {
-                        objectNode.set(key, generateNodeFromSchema(value));
+                        objectNode.set(key, generateNodeFromSchema(childSchema));
                     }
                 });
                 return objectNode;

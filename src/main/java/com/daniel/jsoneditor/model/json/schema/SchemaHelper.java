@@ -92,13 +92,18 @@ public class SchemaHelper
         return segments[segments.length - 1];
     }
     
-    public static String incrementLastPathSegment(String path)
+    public static String getType(JsonNode schema)
     {
-        String[] segments = path.split("/");
-        int lastSegmentIndex = segments.length - 1;
-        String lastSegment = segments[lastSegmentIndex];
-        int incrementedValue = Integer.parseInt(lastSegment) + 1;
-        segments[lastSegmentIndex] = String.valueOf(incrementedValue);
-        return String.join("/", segments);
+        if (schema != null)
+        {
+            JsonNode typeNode = schema.get("type");
+            if (typeNode != null)
+            {
+                return typeNode.asText();
+            }
+        }
+        return null;
     }
+    
+    
 }
