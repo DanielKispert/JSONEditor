@@ -157,8 +157,9 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
             {
                 JsonNodeWithPath newNode = model.getNodeForPath(path);
                 NavbarItem newItem = new NavbarItem(model, newNode.getPath());
+                populateItem(newItem);
                 parentItem.getChildren().add(newItem);
-                parentItem.setExpanded(true);
+                
             }
         }
     }
