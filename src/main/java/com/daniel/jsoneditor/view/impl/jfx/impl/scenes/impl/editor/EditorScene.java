@@ -49,7 +49,7 @@ public class EditorScene extends SceneHandlerImpl
     {
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.HORIZONTAL);
-        splitPane.getItems().addAll(navbar, editorWindowManager.getEditorWindows());
+        splitPane.getItems().addAll(navbar, editorWindowManager.getEditorWindowContainer());
         splitPane.setDividerPositions(0.4);
         splitPane.prefWidthProperty().bind(scene.widthProperty());
         splitPane.prefHeightProperty().bind(scene.heightProperty());
