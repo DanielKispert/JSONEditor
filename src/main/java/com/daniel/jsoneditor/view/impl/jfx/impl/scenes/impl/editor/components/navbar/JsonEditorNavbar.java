@@ -1,13 +1,14 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar;
 
 import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import javafx.scene.control.*;
-import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+import javafx.scene.input.MouseButton;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -24,7 +25,6 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     
     public JsonEditorNavbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager)
     {
-        
         this.model = model;
         this.controller = controller;
         this.editorWindowManager = editorWindowManager;
@@ -32,8 +32,17 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         SplitPane.setResizableWithParent(this, false);
         setRoot(makeTree());
         setContextMenu(makeContextMenu());
-        getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> JsonEditorNavbar.this.handleNavbarClick(newValue));
-        
+        setOnMouseClicked(mouseEvent ->
+        {
+            if (mouseEvent.getButton().equals(MouseButton.PRIMARY) && mouseEvent.getClickCount() == 2)
+            {
+                TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
+                if (selectedItem != null)
+                {
+                    JsonEditorNavbar.this.handleNavbarClick(selectedItem);
+                }
+            }
+        });
     }
     
     private ContextMenu makeContextMenu()
@@ -41,6 +50,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         ContextMenu contextMenu = new ContextMenu();
         
         MenuItem duplicateItem = new MenuItem("Duplicate Item");
+        MenuItem newWindowItem = new MenuItem("Open in new Window");
         duplicateItem.setOnAction(event ->
         {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
@@ -55,8 +65,18 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
                 }
             }
         });
+        newWindowItem.setOnAction(actionEvent ->
+        {
+            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            if (selectedItem != null && selectedItem.getParent() != null)
+            {
+                JsonNodeWithPath selectedNode = selectedItem.getValue();
+                editorWindowManager.selectInNewWindow(selectedNode.getPath());
+            }
+        });
         
         contextMenu.getItems().add(duplicateItem);
+        contextMenu.getItems().add(newWindowItem);
         
         this.setOnContextMenuRequested(event ->
         {
@@ -70,6 +90,9 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
             {
                 duplicateItem.setVisible(false);
             }
+            // only show the prompt to display in a new window if the maximum window amount is not reached
+            newWindowItem.setVisible(editorWindowManager.canAnotherWindowBeAdded());
+    
         });
         
         return contextMenu;

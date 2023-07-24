@@ -2,11 +2,13 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.paint.Color;
 
 
 public class JsonEditorNamebar extends HBox
@@ -14,9 +16,6 @@ public class JsonEditorNamebar extends HBox
     private final EditorWindowManager manager;
     
     private final JsonEditorEditorWindow editorWindow;
-    private final Button selectInListButton;
-    
-    private final Button goUpButton;
     
     private final Label nameLabel;
     
@@ -29,11 +28,10 @@ public class JsonEditorNamebar extends HBox
         super();
         this.manager = manager;
         this.editorWindow = editorWindow;
+        HBox.setHgrow(this, Priority.ALWAYS);
         nameLabel = new Label();
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
-        selectInListButton = makeSelectInNavbarButton();
-        goUpButton = goToParentButton();
-        this.getChildren().addAll(selectInListButton, goUpButton, nameLabel);
+        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, makeCloseWindowButton());
     }
     
     public void setSelection(JsonNodeWithPath selection)
@@ -59,14 +57,23 @@ public class JsonEditorNamebar extends HBox
         return selectInNavbarButton;
     }
     
-    private Button goToParentButton()
+    private Button makeGoToParentButton()
     {
         Button goToParentButton = new Button();
         goToParentButton.setText("^");
 
         goToParentButton.setOnAction(actionEvent -> editorWindow.setSelectedPath(parentPath));
         return goToParentButton;
-        
+    }
+    
+    private Button makeCloseWindowButton()
+    {
+        Button closeWindowButton = new Button();
+        closeWindowButton.setText("X");
+        closeWindowButton.setTextFill(Color.RED);
+        closeWindowButton.setOnAction(actionEvent -> manager.closeWindow(editorWindow));
+        closeWindowButton.setAlignment(Pos.CENTER_RIGHT);
+        return closeWindowButton;
     }
     
     private String makeFancyName(JsonNodeWithPath node)
