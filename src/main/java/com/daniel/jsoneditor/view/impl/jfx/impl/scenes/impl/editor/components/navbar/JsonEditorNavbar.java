@@ -221,8 +221,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         if (node.getValue().getPath().equals(path))
         {
             getSelectionModel().select(node);
-            selectedItem = node;
-            scrollTo(getRow(selectedItem));
+            scrollTo(getRow(node));
             return;
         }
         for (TreeItem<JsonNodeWithPath> child : node.getChildren())
@@ -234,6 +233,5 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     public void updateTree()
     {
         setRoot(makeTree());
-        selectPath(selectedItem.getValue().getPath());
     }
 }

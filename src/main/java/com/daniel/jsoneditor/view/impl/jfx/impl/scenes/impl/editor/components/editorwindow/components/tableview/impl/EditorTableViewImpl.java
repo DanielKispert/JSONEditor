@@ -6,6 +6,7 @@ import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -44,10 +45,11 @@ public class EditorTableViewImpl extends EditorTableView
     
     private final Controller controller;
     
-    private JsonNodeWithPath selection;
+    private final JsonEditorEditorWindow window;
     
-    public EditorTableViewImpl(EditorWindowManager manager, ReadableModel model, Controller controller)
+    public EditorTableViewImpl(EditorWindowManager manager, JsonEditorEditorWindow window, ReadableModel model, Controller controller)
     {
+        this.window = window;
         this.manager = manager;
         this.model = model;
         this.controller = controller;
@@ -57,7 +59,6 @@ public class EditorTableViewImpl extends EditorTableView
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
     {
-        this.selection = nodeWithPath;
         JsonNode node = nodeWithPath.getNode();
         JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath());
         ObservableList<JsonNodeWithPath> nodesToDisplay = FXCollections.observableArrayList(); //either a list of array items or object fields
@@ -221,7 +222,8 @@ public class EditorTableViewImpl extends EditorTableView
                     if (item != null)
                     {
                         JsonNodeWithPath jsonNodeWithPath = getTableRow().getItem();
-                        manager.selectOnNavbar(jsonNodeWithPath.getPath() + "/" + pathToOpen);
+                        // if the "open" button is clicked, we want to open that node in the current window
+                        window.setSelectedPath(jsonNodeWithPath.getPath() + "/" + pathToOpen);
                     }
                 });
             }
