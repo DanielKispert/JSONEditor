@@ -35,7 +35,7 @@ public class JsonEditorEditorWindow extends VBox
     {
         this.model = model;
         nameBar = new JsonEditorNamebar(manager, this);
-        editor = new EditorTableViewImpl(manager, model, controller);
+        editor = new EditorTableViewImpl(manager, this, model, controller);
         addItemButton = new Button("Add Item");
         addItemButton.setOnAction(event -> controller.addNewNodeToArray(selectedPath));
         HBox.setHgrow(addItemButton, Priority.ALWAYS);
