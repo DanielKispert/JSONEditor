@@ -1,6 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor;
 
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.JsonEditorToolbar;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.JsonEditorToolbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;

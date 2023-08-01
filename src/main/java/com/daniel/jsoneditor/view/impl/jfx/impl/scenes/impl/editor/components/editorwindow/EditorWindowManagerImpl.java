@@ -79,10 +79,13 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     @Override
     public void selectInNewWindow(String path)
     {
-        addWindow();
-        // we display it in the new rightermost window
-        Node rightmostNode = editorWindowContainer.getItems().get(editorWindowContainer.getItems().size() - 1);
-        ((JsonEditorEditorWindow) rightmostNode).setSelectedPath(path);
+        if (canAnotherWindowBeAdded())
+        {
+            addWindow();
+            // we display it in the new rightermost window
+            Node rightmostNode = editorWindowContainer.getItems().get(editorWindowContainer.getItems().size() - 1);
+            ((JsonEditorEditorWindow) rightmostNode).setSelectedPath(path);
+        }
     }
     
     @Override

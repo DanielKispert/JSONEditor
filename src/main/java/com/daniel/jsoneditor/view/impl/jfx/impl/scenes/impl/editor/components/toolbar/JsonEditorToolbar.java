@@ -1,4 +1,4 @@
-package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components;
+package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
 
 import javafx.application.Platform;
 import javafx.scene.control.Button;
@@ -63,7 +63,14 @@ public class JsonEditorToolbar extends ToolBar
                 String foundNode = model.searchForNode(buttonSetting.getTarget(), s);
                 if (foundNode != null)
                 {
-                    editorWindowManager.selectFromNavbar(foundNode);
+                    if (editorWindowManager.canAnotherWindowBeAdded())
+                    {
+                        editorWindowManager.selectInNewWindow(foundNode);
+                    }
+                    else
+                    {
+                        editorWindowManager.selectFromNavbar(foundNode);
+                    }
                 }
             });
         });
