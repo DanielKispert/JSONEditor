@@ -16,6 +16,8 @@ import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ModelImpl implements ReadableModel, WritableModel
@@ -163,6 +165,52 @@ public class ModelImpl implements ReadableModel, WritableModel
     public JsonNode getSubschemaForPath(String path)
     {
         return getSubschemaNodeForPath(path).getSchemaNode();
+    }
+    
+    @Override
+    public List<String> getStringExamplesForPath(String path)
+    {
+        JsonNode schema = getSubschemaForPath(path);
+        if (schema != null && schema.has("type") && schema.get("type").asText().equals("string"))
+        {
+            JsonNode examplesNode = schema.get("examples");
+            if (examplesNode != null && examplesNode.isArray())
+            {
+                List<String> examples = new ArrayList<>();
+                for (JsonNode exampleNode : examplesNode)
+                {
+                    if (exampleNode.isTextual())
+                    {
+                        examples.add(exampleNode.asText());
+                    }
+                }
+                return examples;
+            }
+        }
+        return Collections.emptyList();
+    }
+    
+    @Override
+    public List<String> getAllowedStringValuesForPath(String path)
+    {
+        JsonNode schema = getSubschemaForPath(path);
+        if (schema != null && schema.has("type") && schema.get("type").asText().equals("string"))
+        {
+            JsonNode examplesNode = schema.get("enum");
+            if (examplesNode != null && examplesNode.isArray())
+            {
+                List<String> examples = new ArrayList<>();
+                for (JsonNode exampleNode : examplesNode)
+                {
+                    if (exampleNode.isTextual())
+                    {
+                        examples.add(exampleNode.asText());
+                    }
+                }
+                return examples;
+            }
+        }
+        return Collections.emptyList();
     }
     
     public boolean canAddMoreItems(String path)

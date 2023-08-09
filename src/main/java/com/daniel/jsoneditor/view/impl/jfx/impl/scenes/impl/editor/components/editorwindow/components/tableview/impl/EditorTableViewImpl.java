@@ -247,42 +247,7 @@ public class EditorTableViewImpl extends EditorTableView
     
     private TextTableCell makeTextFieldTableCell()
     {
-        return new TextTableCell(manager)
-        {
-            private final TextField textField = new TextField();
-            
-            {
-                textField.setOnAction(event ->
-                {
-                    commitEdit(textField.getText());
-                });
-                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) ->
-                {
-                    if (wasFocused && !isNowFocused)
-                    {
-                        commitEdit(textField.getText());
-                    }
-                });
-            }
-            
-            @Override
-            protected void updateItem(String item, boolean empty)
-            {
-                super.updateItem(item, empty);
-                
-                if (empty || item == null)
-                {
-                    setText(null);
-                    setGraphic(null);
-                }
-                else
-                {
-                    setText(null);
-                    textField.setText(item);
-                    setGraphic(textField);
-                }
-            }
-        };
+        return new TextTableCell(manager, model);
     }
     
     private NumberTableCell makeNumberTableCell()
