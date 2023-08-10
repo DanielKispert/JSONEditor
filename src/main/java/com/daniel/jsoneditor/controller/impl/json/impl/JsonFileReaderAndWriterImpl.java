@@ -28,6 +28,10 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     public boolean validateJsonWithSchema(JsonNode json, JsonSchema schema)
     {
         Set<ValidationMessage> messages = schema.validate(json);
+        for (ValidationMessage message : messages)
+        {
+            System.out.println("Validation Error: " + message.getMessage());
+        }
         return messages.size() == 0;
     }
     

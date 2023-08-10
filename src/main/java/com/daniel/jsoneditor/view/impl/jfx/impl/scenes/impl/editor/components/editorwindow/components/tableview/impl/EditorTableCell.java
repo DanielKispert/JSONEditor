@@ -11,7 +11,6 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     
     private final EditorWindowManager manager;
     
-    
     public EditorTableCell(EditorWindowManager manager)
     {
         this.manager = manager;
