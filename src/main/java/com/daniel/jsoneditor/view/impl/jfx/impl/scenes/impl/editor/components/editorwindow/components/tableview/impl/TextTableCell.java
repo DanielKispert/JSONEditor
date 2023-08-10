@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class TextTableCell extends EditorTableCell
@@ -15,5 +16,20 @@ public class TextTableCell extends EditorTableCell
     protected void saveValue(JsonNodeWithPath item, String propertyName, String newValue)
     {
         ((ObjectNode) item.getNode()).put(propertyName, newValue);
+    }
+    
+    
+    @Override
+    protected void updateItem(String item, boolean empty)
+    {
+        super.updateItem(item, empty);
+        if (empty || item == null)
+        {
+            setGraphic(null);
+        }
+        else
+        {
+            setGraphic(new EditorTextField(this, item));
+        }
     }
 }

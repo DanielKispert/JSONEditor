@@ -198,11 +198,11 @@ public class EditorTableViewImpl extends EditorTableView
                                 return makeNumberTableCell();
                             default:
                             case "string":
-                                return makeTextFieldTableCell();
+                                return new TextTableCell(manager);
                         }
                     }
                 }
-                return makeTextFieldTableCell();
+                return new TextTableCell(manager);
             });
             columns.add(column);
         }
@@ -239,47 +239,6 @@ public class EditorTableViewImpl extends EditorTableView
                 else
                 {
                     setGraphic(button);
-                }
-            }
-        };
-    }
-    
-    
-    private TextTableCell makeTextFieldTableCell()
-    {
-        return new TextTableCell(manager)
-        {
-            private final TextField textField = new TextField();
-            
-            {
-                textField.setOnAction(event ->
-                {
-                    commitEdit(textField.getText());
-                });
-                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) ->
-                {
-                    if (wasFocused && !isNowFocused)
-                    {
-                        commitEdit(textField.getText());
-                    }
-                });
-            }
-            
-            @Override
-            protected void updateItem(String item, boolean empty)
-            {
-                super.updateItem(item, empty);
-                
-                if (empty || item == null)
-                {
-                    setText(null);
-                    setGraphic(null);
-                }
-                else
-                {
-                    setText(null);
-                    textField.setText(item);
-                    setGraphic(textField);
                 }
             }
         };
