@@ -1,15 +1,25 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl;
 
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.AutofillField;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import javafx.util.Pair;
+
+import java.util.Collections;
+import java.util.List;
 
 public class TextTableCell extends EditorTableCell
 {
-    public TextTableCell(EditorWindowManager manager)
+    
+    private final ReadableModel model;
+    
+    public TextTableCell(EditorWindowManager manager, ReadableModel model)
     {
         super(manager);
+        this.model = model;
     }
     
     @Override
@@ -17,7 +27,6 @@ public class TextTableCell extends EditorTableCell
     {
         ((ObjectNode) item.getNode()).put(propertyName, newValue);
     }
-    
     
     @Override
     protected void updateItem(String item, boolean empty)
@@ -29,7 +38,44 @@ public class TextTableCell extends EditorTableCell
         }
         else
         {
-            setGraphic(new EditorTextField(this, item));
+            Pair<Boolean, List<String>> suggestions = getSuggestions();
+            if (suggestions.getValue().isEmpty())
+            {
+                setGraphic(new EditorTextField(this, item));
+            }
+            else
+            {
+                setGraphic(new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey()));
+                
+            }
         }
+    }
+    
+    private Pair<Boolean, List<String>> getSuggestions()
+    {
+        if (getTableRow() == null || getTableRow().getItem() == null)
+        {
+            return new Pair<>(false, Collections.emptyList());
+        }
+        
+        JsonNodeWithPath parentNode = getTableRow().getItem();
+        EditorTableColumn column = ((EditorTableColumn) getTableColumn());
+        String propertyName = column.getPropertyName();
+        String path = parentNode.getPath() + "/" + propertyName;
+        
+        final List<String> examples = model.getStringExamplesForPath(path);
+        final List<String> allowedValues = model.getAllowedStringValuesForPath(path);
+        
+        List<String> suggestions;
+        if (allowedValues.isEmpty())
+        {
+            suggestions = examples;
+        }
+        else
+        {
+            suggestions = allowedValues;
+        }
+        
+        return new Pair<>(allowedValues.isEmpty(), suggestions);
     }
 }
