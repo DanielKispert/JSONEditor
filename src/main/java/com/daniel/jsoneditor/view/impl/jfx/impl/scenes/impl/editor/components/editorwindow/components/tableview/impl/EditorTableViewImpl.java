@@ -198,11 +198,11 @@ public class EditorTableViewImpl extends EditorTableView
                                 return makeNumberTableCell();
                             default:
                             case "string":
-                                return new TextTableCell(manager);
+                                return new TextTableCell(manager, model);
                         }
                     }
                 }
-                return new TextTableCell(manager);
+                return new TextTableCell(manager, model);
             });
             columns.add(column);
         }
