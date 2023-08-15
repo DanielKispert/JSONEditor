@@ -51,6 +51,8 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         
         MenuItem duplicateItem = new MenuItem("Duplicate Item");
         MenuItem newWindowItem = new MenuItem("Open in new Window");
+        MenuItem deleteItem = new MenuItem("Delete");
+        MenuItem sortArray = new MenuItem("Sort");
         duplicateItem.setOnAction(event ->
         {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
@@ -74,17 +76,35 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
                 editorWindowManager.selectInNewWindow(selectedNode.getPath());
             }
         });
-        
-        contextMenu.getItems().add(duplicateItem);
-        contextMenu.getItems().add(newWindowItem);
-        
-        this.setOnContextMenuRequested(event ->
-        {
+        sortArray.setOnAction(actionEvent -> {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem != null && selectedItem.getParent() != null)
+            if (selectedItem != null)
             {
-                boolean isArrayItem = selectedItem.getParent().getValue().isArray();
-                duplicateItem.setVisible(isArrayItem);
+                JsonNodeWithPath selectedNode = selectedItem.getValue();
+                controller.s
+            }
+        });
+        deleteItem.setOnAction(actionEvent -> {
+            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            if (selectedItem != null)
+            {
+                JsonNodeWithPath selectedNode = selectedItem.getValue();
+                controller.removeNode(selectedNode.getPath());
+            }
+        });
+    
+        contextMenu.getItems().addAll(newWindowItem, duplicateItem, sortArray, deleteItem);
+    
+        this.setOnContextMenuRequested(event -> {
+            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            if (selectedItem != null)
+            {
+                if (selectedItem.getParent() != null)
+                {
+                    boolean isArrayItem = selectedItem.getParent().getValue().isArray();
+                    duplicateItem.setVisible(isArrayItem);
+                }
+            
             }
             else
             {
@@ -92,7 +112,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
             }
             // only show the prompt to display in a new window if the maximum window amount is not reached
             newWindowItem.setVisible(editorWindowManager.canAnotherWindowBeAdded());
-    
+        
         });
         
         return contextMenu;

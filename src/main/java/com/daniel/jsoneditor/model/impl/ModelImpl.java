@@ -191,6 +191,22 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public void sortArray(String path)
+    {
+        JsonNodeWithPath array = getNodeForPath(path);
+        if (array == null || !array.isArray())
+        {
+            return;
+        } else {
+            // iterate over the array node and sort the items of the array alphabetically
+            // the identifier of the array items (if applicable) will be used to sort the array in ascending order
+            
+        }
+        
+        
+    }
+    
+    @Override
     public List<String> getAllowedStringValuesForPath(String path)
     {
         JsonNode schema = getSubschemaForPath(path);

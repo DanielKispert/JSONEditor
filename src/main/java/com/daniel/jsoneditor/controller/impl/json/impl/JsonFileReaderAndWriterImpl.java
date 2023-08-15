@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.controller.impl.json.impl;
 
 import com.daniel.jsoneditor.controller.impl.json.JsonPrettyPrinter;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
@@ -22,6 +23,7 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     public JsonFileReaderAndWriterImpl()
     {
         this.mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
     
     @Override
