@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model.impl;
 
+import com.daniel.jsoneditor.model.settings.IdentifierSetting;
 import com.daniel.jsoneditor.model.statemachine.StateMachine;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,14 +15,20 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
+import javafx.util.Pair;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 
 public class ModelImpl implements ReadableModel, WritableModel
 {
+    private static final String NUMBER_REGEX = "-?\\d+(\\.\\d+)?";
     
     private final StateMachine stateMachine;
     
@@ -38,7 +45,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     public ModelImpl(StateMachine stateMachine)
     {
         this.stateMachine = stateMachine;
-        this.settings = new Settings(null);
+        this.settings = new Settings(null, null);
     }
     
     
@@ -85,7 +92,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public String searchForNode(String path, String value)
     {
-        return NodeSearcher.findNodeWithValue(getRootJson(), path, value);
+        return NodeSearcher.findPathWithValue(getRootJson(), path, value);
     }
     
     @Override
@@ -193,16 +200,65 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void sortArray(String path)
     {
-        JsonNodeWithPath array = getNodeForPath(path);
-        if (array == null || !array.isArray())
+        JsonNodeWithPath nodeAtPath = getNodeForPath(path);
+        if (nodeAtPath == null || !nodeAtPath.isArray())
         {
             return;
-        } else {
-            // iterate over the array node and sort the items of the array alphabetically
-            // the identifier of the array items (if applicable) will be used to sort the array in ascending order
-            
         }
-        
+        ArrayNode arrayNode = (ArrayNode) nodeAtPath.getNode();
+        JsonNode schema = getSubschemaForPath(path);
+        JsonNode itemsSchema = schema.get("items");
+        String type = NodeSearcher.getTypeFromNode(itemsSchema);
+        List<JsonNode> items = StreamSupport.stream(arrayNode.spliterator(), false).collect(Collectors.toList());
+        // iterate over the array node and sort the items of the array alphabetically
+        // the identifier of the array items (if applicable) will be used to sort the array in ascending order
+        if (type != null)
+        {
+            switch (type)
+            {
+                case "object":
+                    items.sort((o1, o2) -> {
+                        String identifier1 = getIdentifier(nodeAtPath.getPath(), o1);
+                        String identifier2 = getIdentifier(nodeAtPath.getPath(), o2);
+                        if (identifier1.matches(NUMBER_REGEX))
+                        {
+                            if (identifier2.matches(NUMBER_REGEX))
+                            {
+                                Double id1 = Double.parseDouble(identifier1);
+                                Double id2 = Double.parseDouble(identifier2);
+                                return id1.compareTo(id2);
+                            }
+                            else
+                            {
+                                // numbers always go in front of strings
+                                return 1;
+                            }
+                        }
+                        else
+                        {
+                            if (identifier2.matches(NUMBER_REGEX))
+                            {
+                                // strings always go behind numbers
+                                return -1;
+                            }
+                            else
+                            {
+                                return identifier1.compareTo(identifier2);
+                            }
+                        }
+                    });
+                    break;
+                case "string":
+                    items.sort(Comparator.comparing(JsonNode::asText));
+                    break;
+                case "number":
+                    items.sort(Comparator.comparingDouble(JsonNode::asDouble));
+                    break;
+            }
+        }
+        arrayNode.removeAll();
+        arrayNode.addAll(items);
+        sendEvent(Event.UPDATED_JSON_STRUCTURE);
         
     }
     
@@ -358,5 +414,19 @@ public class ModelImpl implements ReadableModel, WritableModel
             return rootSchema.getRefSchemaNode(ref.textValue());
         }
         return nodeWithRef;
+    }
+    
+    @Override
+    public String getIdentifier(String pathOfParentNode, JsonNode childNode)
+    {
+        for (IdentifierSetting identifier : settings.getIdentifiers())
+        {
+            Pair<String, String> formattedQueryPath = NodeSearcher.formatQueryPath(identifier.getIdentifier());
+            if (pathOfParentNode.contains(formattedQueryPath.getKey()))
+            {
+                return childNode.at(formattedQueryPath.getValue()).asText();
+            }
+        }
+        return null;
     }
 }

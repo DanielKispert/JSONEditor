@@ -23,7 +23,6 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     public JsonFileReaderAndWriterImpl()
     {
         this.mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
     
     @Override
@@ -52,11 +51,20 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     }
     
     @Override
-    public <T> T getJsonFromFile(File file, Class<T> classOfObject)
+    public <T> T getJsonFromFile(File file, Class<T> classOfObject, boolean ignoreUnknownProperties)
     {
         try
         {
-            return mapper.readValue(file, classOfObject);
+            if (ignoreUnknownProperties)
+            {
+                ObjectMapper newMapper = new ObjectMapper();
+                newMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                return newMapper.readValue(file, classOfObject);
+            }
+            else
+            {
+                return mapper.readValue(file, classOfObject);
+            }
         }
         catch (IOException e)
         {

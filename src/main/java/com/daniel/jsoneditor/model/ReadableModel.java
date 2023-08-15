@@ -41,4 +41,6 @@ public interface ReadableModel extends ReadableState
     
     JsonNode getSubschemaForPath(String path);
     
+    String getIdentifier(String pathOfParent, JsonNode child);
+    
 }

@@ -81,7 +81,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
             if (selectedItem != null)
             {
                 JsonNodeWithPath selectedNode = selectedItem.getValue();
-                controller.s
+                controller.sortArray(selectedNode.getPath());
             }
         });
         deleteItem.setOnAction(actionEvent -> {
@@ -104,7 +104,14 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
                     boolean isArrayItem = selectedItem.getParent().getValue().isArray();
                     duplicateItem.setVisible(isArrayItem);
                 }
-            
+                if (selectedItem.getValue().isArray())
+                {
+                    sortArray.setVisible(true);
+                }
+                else
+                {
+                    sortArray.setVisible(false);
+                }
             }
             else
             {

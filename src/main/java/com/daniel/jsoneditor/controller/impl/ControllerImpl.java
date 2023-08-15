@@ -111,7 +111,7 @@ public class ControllerImpl implements Controller, Observer
                 // settings file is optional
                 if (settingsFile != null)
                 {
-                    Settings settingsFromFile = reader.getJsonFromFile(settingsFile, Settings.class);
+                    Settings settingsFromFile = reader.getJsonFromFile(settingsFile, Settings.class, true);
                     if (settingsFromFile != null)
                     {
                         model.setSettings(settingsFromFile);
