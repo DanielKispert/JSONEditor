@@ -4,11 +4,13 @@ public class Settings
 {
     private ButtonSetting[] buttons;
     
+    private IdentifierSetting[] identifiers;
+    
     public Settings()
     {
     }
     
-    public Settings(ButtonSetting[] buttons)
+    public Settings(ButtonSetting[] buttons, IdentifierSetting[] identifiers)
     {
         if (buttons != null)
         {
@@ -18,10 +20,23 @@ public class Settings
         {
             this.buttons = new ButtonSetting[0];
         }
+        if (identifiers != null)
+        {
+            this.identifiers = identifiers;
+        }
+        else
+        {
+            this.identifiers = new IdentifierSetting[0];
+        }
     }
     
     public ButtonSetting[] getButtons()
     {
         return buttons;
+    }
+    
+    public IdentifierSetting[] getIdentifiers()
+    {
+        return identifiers;
     }
 }

@@ -2,9 +2,8 @@ package com.daniel.jsoneditor.model.impl;
 
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.networknt.schema.JsonSchema;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import javafx.util.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,16 +61,15 @@ public class NodeSearcher
         return requiredFields;
     }
     
-    
-    public static String findNodeWithValue(JsonNode rootNode, String path, String value)
+    public static Pair<String, String> formatQueryPath(String queryPath)
     {
-        String[] pathParts = path.split("\\?");
-    
+        String[] pathParts = queryPath.split("\\?");
+        
         if (pathParts.length > 2)
         {
             throw new IllegalArgumentException("Path contains more than one '?'");
         }
-    
+        
         String prefix = pathParts[0];
         // we need to format the prefix by removing the last "/" at the end of the string, otherwise it points to the wrong element
         if (prefix.length() > 0)
@@ -79,6 +77,15 @@ public class NodeSearcher
             prefix = prefix.substring(0, prefix.length() - 1);
         }
         String suffix = pathParts.length > 1 ? pathParts[1] : "";
+        return new Pair<>(prefix, suffix);
+    }
+    
+    
+    public static String findPathWithValue(JsonNode rootNode, String queryPath, String value)
+    {
+        Pair<String, String> formattedQueryPath = formatQueryPath(queryPath);
+        String prefix = formattedQueryPath.getKey();
+        String suffix = formattedQueryPath.getValue();
     
         JsonNode parentNode = rootNode.at(prefix);
     

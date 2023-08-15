@@ -29,17 +29,10 @@ public class JsonEditorToolbar extends ToolBar
         this.controller = controller;
         this.model = model;
         this.editorWindowManager = editorWindowManager;
-        Button removeSelectedObjectButton = new Button("Remove visible object");
-        removeSelectedObjectButton.setOnAction(event ->
-        {
-            // TODO
-            UIHandlerImpl.showConfirmDialog(() -> controller.removeNode(null), "this will remove the json object currently visible in the editor window, not just the selected one!");
-        });
-        removeSelectedObjectButton.setDisable(true);
         Button saveButton = new Button("Save to file");
         saveButton.setOnAction(event -> controller.saveToFile());
         
-        getItems().addAll(saveButton, removeSelectedObjectButton);
+        getItems().addAll(saveButton);
         getItems().addAll(makeSearchButtons());
     }
     
