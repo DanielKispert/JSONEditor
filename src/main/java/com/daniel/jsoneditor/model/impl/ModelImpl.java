@@ -220,6 +220,10 @@ public class ModelImpl implements ReadableModel, WritableModel
                     items.sort((o1, o2) -> {
                         String identifier1 = getIdentifier(nodeAtPath.getPath(), o1);
                         String identifier2 = getIdentifier(nodeAtPath.getPath(), o2);
+                        if (identifier1 == null || identifier2 == null)
+                        {
+                            return 0;
+                        }
                         if (identifier1.matches(NUMBER_REGEX))
                         {
                             if (identifier2.matches(NUMBER_REGEX))

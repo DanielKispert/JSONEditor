@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -70,7 +71,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         newWindowItem.setOnAction(actionEvent ->
         {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem != null && selectedItem.getParent() != null)
+            if (selectedItem != null)
             {
                 JsonNodeWithPath selectedNode = selectedItem.getValue();
                 editorWindowManager.selectInNewWindow(selectedNode.getPath());
@@ -259,6 +260,48 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     
     public void updateTree()
     {
+        TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
+        Map<String, Boolean> expandedStates = storeExpandedStates();
+        
         setRoot(makeTree());
+        
+        if (selectedItem != null)
+        {
+            TreeItem<JsonNodeWithPath> newSelectedItem = findNavbarItem(getRoot(), selectedItem.getValue().getPath());
+            if (newSelectedItem != null)
+            {
+                getSelectionModel().select(newSelectedItem);
+                restoreExpandedStates(newSelectedItem, expandedStates);
+            }
+        }
+    }
+    
+    private Map<String, Boolean> storeExpandedStates()
+    {
+        Map<String, Boolean> expandedStates = new HashMap<>();
+        storeExpandedStatesRecursive(getRoot(), expandedStates);
+        return expandedStates;
+    }
+    
+    private void storeExpandedStatesRecursive(TreeItem<JsonNodeWithPath> item, Map<String, Boolean> expandedStates)
+    {
+        expandedStates.put(item.getValue().getPath(), item.isExpanded());
+        for (TreeItem<JsonNodeWithPath> child : item.getChildren())
+        {
+            storeExpandedStatesRecursive(child, expandedStates);
+        }
+    }
+    
+    private void restoreExpandedStates(TreeItem<JsonNodeWithPath> currentItem, Map<String, Boolean> expandedStates)
+    {
+        Boolean expanded = expandedStates.get(currentItem.getValue().getPath());
+        if (expanded != null)
+        {
+            currentItem.setExpanded(expanded);
+        }
+        for (TreeItem<JsonNodeWithPath> child : currentItem.getChildren())
+        {
+            restoreExpandedStates(child, expandedStates);
+        }
     }
 }

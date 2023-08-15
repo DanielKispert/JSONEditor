@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.AutoAdjustingSplitPane;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.SplitPane;
@@ -17,7 +18,7 @@ import java.util.List;
 // manages the positions of editor windows etc. Right now only 1 is supported so nonfunctional
 public class EditorWindowManagerImpl implements EditorWindowManager
 {
-    private static final int MAX_WINDOWS = 3;
+    private static final int MAX_WINDOWS = 5;
     
     private final EditorScene editorScene;
     
@@ -32,7 +33,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
         this.editorScene = scene;
         this.model = model;
         this.controller = controller;
-        editorWindowContainer = makeEditorWindowContainer();
+        editorWindowContainer = new AutoAdjustingSplitPane();
     }
     
     private void addWindow()
@@ -46,14 +47,6 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     public SplitPane getEditorWindowContainer()
     {
         return editorWindowContainer;
-    }
-    
-    private SplitPane makeEditorWindowContainer()
-    {
-        SplitPane pane = new SplitPane();
-        HBox.setHgrow(pane, Priority.ALWAYS);
-        VBox.setVgrow(pane, Priority.ALWAYS);
-        return pane;
     }
     
     @Override
