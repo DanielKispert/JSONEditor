@@ -152,6 +152,12 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void sortArray(String path)
+    {
+        model.sortArray(path);
+    }
+    
+    @Override
     public void duplicateArrayNode(String path)
     {
         model.duplicateArrayItem(path);

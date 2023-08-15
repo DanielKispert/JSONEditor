@@ -25,6 +25,12 @@ public interface WritableModel
     void addNodeToArray(String selectedPath);
     
     /**
+     * sorts the array node at the given path
+     * @param path
+     */
+    void sortArray(String path);
+    
+    /**
      * duplicates the array item the path points to
      */
     void duplicateArrayItem(String pathToItemToDuplicate);
