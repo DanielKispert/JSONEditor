@@ -37,6 +37,13 @@ public class Settings
     
     public IdentifierSetting[] getIdentifiers()
     {
-        return identifiers;
+        if (identifiers == null)
+        {
+            return new IdentifierSetting[0];
+        }
+        else
+        {
+            return identifiers;
+        }
     }
 }
