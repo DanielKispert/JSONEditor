@@ -48,7 +48,6 @@ public class AutofillField extends ComboBox<String>
                                                    .filter(suggestion -> suggestion.toLowerCase().contains(filterText.toLowerCase()))
                                                    .collect(Collectors.toList());
         getSelectionModel().clearSelection();
-        setVisibleRowCount(filteredSuggestions.size());
         getItems().setAll(filteredSuggestions);
         if (!filteredSuggestions.isEmpty())
         {
