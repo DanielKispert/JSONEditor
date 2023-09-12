@@ -20,6 +20,7 @@ public class TextTableCell extends EditorTableCell
     {
         super(manager);
         this.model = model;
+        setMaxWidth(Double.MAX_VALUE);
     }
     
     @Override
