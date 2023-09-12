@@ -21,6 +21,7 @@ public class AutofillField extends ComboBox<String>
         
         setEditable(!valueMustBeASuggestion);
         setValue(text);
+        setMaxWidth(Double.MAX_VALUE);
         
         setOnAction(event -> parent.commitEdit(getEditor().getText()));
         
