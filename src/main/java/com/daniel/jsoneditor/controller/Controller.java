@@ -15,6 +15,8 @@ public interface Controller
     
     void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index);
     
+    void exportNode(String path);
+    
     void removeNode(String path);
     
     void addNewNodeToArray(String path);

@@ -11,6 +11,7 @@ import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
+import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
@@ -137,6 +138,24 @@ public class ControllerImpl implements Controller, Observer
     public void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index)
     {
         model.moveItemToIndex(newParent, item, index);
+    }
+    
+    @Override
+    public void exportNode(String path)
+    {
+        // exporting a node does not require writing to the model, hence we only need the controller and the readable model
+        JsonNodeWithPath nodeWithPath = readableModel.getNodeForPath(path);
+        if (nodeWithPath != null)
+        {
+            JsonFileReaderAndWriter writer = new JsonFileReaderAndWriterImpl();
+            File directory = readableModel.getCurrentJSONFile().getParentFile();
+            String fileWithEnding = readableModel.getCurrentJSONFile().getName();
+            int lastDotIndex = fileWithEnding.lastIndexOf(".");
+            String fileWithoutEnding = (lastDotIndex != -1) ? fileWithEnding.substring(0, lastDotIndex) : fileWithEnding;
+            String filename = fileWithoutEnding + "_export_" + nodeWithPath.getDisplayName() + ".json";
+            File exportFile = new File(directory, filename);
+            writer.writeJsonToFile(nodeWithPath.getNode(), exportFile);
+        }
     }
     
     @Override
