@@ -10,6 +10,7 @@ import com.daniel.jsoneditor.model.settings.Settings;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
@@ -143,7 +144,14 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void importAtNode(String path, String content)
     {
-        System.out.println(" called import with path " + path + " and content " + content);
+        JsonFileReaderAndWriter jsonReader = new JsonFileReaderAndWriterImpl();
+        JsonNode contentNode = jsonReader.getNodeFromString(content);
+        JsonSchema schemaAtPath = readableModel.getSubschemaForPath(path);
+        if (contentNode != null && jsonReader.validateJsonWithSchema(contentNode, schemaAtPath))
+        {
+            // the node exists and is valid for its current location
+            model.setNode(path, contentNode);
+        }
     }
     
     @Override

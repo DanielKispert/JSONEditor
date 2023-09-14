@@ -11,6 +11,8 @@ public interface JsonFileReaderAndWriter
     
     JsonNode getJsonFromFile(File file);
     
+    JsonNode getNodeFromString(String content);
+    
     <T> T getJsonFromFile(File file, Class<T> classOfObject, boolean ignoreUnknownProperties);
     
     JsonSchema getSchemaFromFileResolvingRefs(File file);

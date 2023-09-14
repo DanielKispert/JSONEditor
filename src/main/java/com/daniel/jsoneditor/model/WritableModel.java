@@ -36,4 +36,9 @@ public interface WritableModel
     void duplicateArrayItem(String pathToItemToDuplicate);
     
     void removeNode(String path);
+    
+    /**
+     * sets a path to a node, replacing everything that was there before
+     */
+    void setNode(String path, JsonNode content);
 }

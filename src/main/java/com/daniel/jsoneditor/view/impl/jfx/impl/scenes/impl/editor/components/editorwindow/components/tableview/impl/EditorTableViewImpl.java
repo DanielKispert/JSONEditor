@@ -60,7 +60,7 @@ public class EditorTableViewImpl extends EditorTableView
     public void setSelection(JsonNodeWithPath nodeWithPath)
     {
         JsonNode node = nodeWithPath.getNode();
-        JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath());
+        JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath()).getSchemaNode();
         ObservableList<JsonNodeWithPath> nodesToDisplay = FXCollections.observableArrayList(); //either a list of array items or object fields
         if (nodeWithPath.isArray())
         {

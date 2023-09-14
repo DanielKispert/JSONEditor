@@ -48,7 +48,6 @@ public class ModelImpl implements ReadableModel, WritableModel
         this.settings = new Settings(null, null);
     }
     
-    
     @Override
     public File getCurrentJSONFile()
     {
@@ -146,7 +145,6 @@ public class ModelImpl implements ReadableModel, WritableModel
                 }
             }
         }
-
         
     }
     
@@ -169,15 +167,9 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public JsonNode getSubschemaForPath(String path)
-    {
-        return getSubschemaNodeForPath(path).getSchemaNode();
-    }
-    
-    @Override
     public List<String> getStringExamplesForPath(String path)
     {
-        JsonNode schema = getSubschemaForPath(path);
+        JsonNode schema = getSubschemaForPath(path).getSchemaNode();
         if (schema != null && schema.has("type") && schema.get("type").asText().equals("string"))
         {
             JsonNode examplesNode = schema.get("examples");
@@ -206,7 +198,7 @@ public class ModelImpl implements ReadableModel, WritableModel
             return;
         }
         ArrayNode arrayNode = (ArrayNode) nodeAtPath.getNode();
-        JsonNode schema = getSubschemaForPath(path);
+        JsonNode schema = getSubschemaForPath(path).getSchemaNode();
         JsonNode itemsSchema = schema.get("items");
         String type = NodeSearcher.getTypeFromNode(itemsSchema);
         List<JsonNode> items = StreamSupport.stream(arrayNode.spliterator(), false).collect(Collectors.toList());
@@ -269,7 +261,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public List<String> getAllowedStringValuesForPath(String path)
     {
-        JsonNode schema = getSubschemaForPath(path);
+        JsonNode schema = getSubschemaForPath(path).getSchemaNode();
         if (schema != null && schema.has("type") && schema.get("type").asText().equals("string"))
         {
             JsonNode examplesNode = schema.get("enum");
@@ -291,7 +283,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     
     public boolean canAddMoreItems(String path)
     {
-        JsonNode subschema = getSubschemaForPath(path);
+        JsonNode subschema = getSubschemaForPath(path).getSchemaNode();
         if (subschema != null && subschema.get("type").asText().equals("array"))
         {
             JsonNode maxItemsNode = subschema.get("maxItems");
@@ -312,7 +304,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void addNodeToArray(String selectedPath)
     {
-        JsonNode itemsSchema = getSubschemaForPath(selectedPath + "/0");
+        JsonNode itemsSchema = getSubschemaForPath(selectedPath + "/0").getSchemaNode();
         JsonNode newItem = NodeGenerator.generateNodeFromSchema(itemsSchema);
         JsonNodeWithPath parent = getNodeForPath(selectedPath);
         if (parent.isArray())
@@ -346,6 +338,11 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void removeNode(String path)
     {
+        removeOrReplaceNode(path, null);
+    }
+    
+    private void removeOrReplaceNode(String path, JsonNode content)
+    {
         String[] pathComponents = path.split("/");
         JsonNode parentNode = rootJson;
         // we go to the parent node of the one we want to remove
@@ -365,22 +362,53 @@ public class ModelImpl implements ReadableModel, WritableModel
         String targetNodeName = pathComponents[pathComponents.length - 1];
         if (parentNode.isObject())
         {
-            // Remove the target JsonNode from its parent ObjectNode
-            ((ObjectNode) parentNode).remove(targetNodeName);
+            if (content == null)
+            {
+                // Remove the target JsonNode from its parent ObjectNode
+                ((ObjectNode) parentNode).remove(targetNodeName);
+            }
+            else
+            {
+                ((ObjectNode) parentNode).set(targetNodeName, content);
+            }
         }
         else if (parentNode.isArray())
         {
             // try to parse targetNodeName into an integer (for an index)
             int index = Integer.parseInt(targetNodeName);
-            ((ArrayNode) parentNode).remove(index);
-        } else {
+            if (content == null)
+            {
+                ((ArrayNode) parentNode).remove(index);
+            }
+            else
+            {
+                ((ArrayNode) parentNode).set(index, content);
+            }
+        }
+        else
+        {
             // TODO make this prettier
             return;
         }
-        sendEvent(Event.REMOVED_SELECTED_JSON_NODE);
+        // both of these events do the same, it's just for cleanliness right now
+        if (content != null)
+        {
+            sendEvent(Event.UPDATED_JSON_STRUCTURE);
+        }
+        else
+        {
+            sendEvent(Event.REMOVED_SELECTED_JSON_NODE);
+        }
     }
     
-    private JsonSchema getSubschemaNodeForPath(String path)
+    @Override
+    public void setNode(String path, JsonNode content)
+    {
+        removeOrReplaceNode(path, content);
+    }
+    
+    @Override
+    public JsonSchema getSubschemaForPath(String path)
     {
         // this will be an array like ["", "addresses" "1" "street"]
         String[] pathParts = path.split("/");
