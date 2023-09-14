@@ -166,7 +166,7 @@ public class ControllerImpl implements Controller, Observer
             String fileWithEnding = readableModel.getCurrentJSONFile().getName();
             int lastDotIndex = fileWithEnding.lastIndexOf(".");
             String fileWithoutEnding = (lastDotIndex != -1) ? fileWithEnding.substring(0, lastDotIndex) : fileWithEnding;
-            String filename = fileWithoutEnding + "_export_" + nodeWithPath.getDisplayName() + ".json";
+            String filename = fileWithoutEnding + "_export" + nodeWithPath.getPath().replace("/", "_") + ".json";
             File exportFile = new File(directory, filename);
             writer.writeJsonToFile(nodeWithPath.getNode(), exportFile);
         }
