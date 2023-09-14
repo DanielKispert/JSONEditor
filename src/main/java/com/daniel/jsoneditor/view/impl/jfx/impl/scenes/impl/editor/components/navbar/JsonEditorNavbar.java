@@ -1,20 +1,26 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.ImportDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.scene.control.*;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseButton;
+import javafx.stage.Stage;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
 {
@@ -24,11 +30,15 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     
     private final Controller controller;
     
-    public JsonEditorNavbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager)
+    // reference to the stage is required to post a dialog
+    private final Stage stage;
+    
+    public JsonEditorNavbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager, Stage stage)
     {
         this.model = model;
         this.controller = controller;
         this.editorWindowManager = editorWindowManager;
+        this.stage = stage;
         SplitPane.setResizableWithParent(this, false);
         setRoot(makeTree());
         setContextMenu(makeContextMenu());
@@ -53,8 +63,8 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         MenuItem newWindowItem = new MenuItem("Open in new Window");
         MenuItem deleteItem = new MenuItem("Delete");
         MenuItem sortArray = new MenuItem("Sort");
-        MenuItem exportItem = new MenuItem("Export");
         MenuItem importItem = new MenuItem("Import");
+        MenuItem exportItem = new MenuItem("Export");
         duplicateItem.setOnAction(event ->
         {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
@@ -94,12 +104,15 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
                 controller.removeNode(selectedNode.getPath());
             }
         });
-        importItem.setOnAction(new EventHandler<ActionEvent>()
-        {
-            @Override
-            public void handle(ActionEvent event)
+        importItem.setOnAction(event -> {
+            ImportDialog importDialog = new ImportDialog(stage);
+            Optional<String> importResult = importDialog.showAndWait();
+            if (importResult.isPresent())
             {
-        
+                String jsonToImport = importResult.get();
+                TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+                JsonNodeWithPath selectedNode = selectedItem.getValue();
+                controller.importAtNode(selectedNode.getPath(), jsonToImport);
             }
         });
         exportItem.setOnAction(event -> {

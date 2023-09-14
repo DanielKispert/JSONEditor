@@ -141,6 +141,12 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void importAtNode(String path, String content)
+    {
+        System.out.println(" called import with path " + path + " and content " + content);
+    }
+    
+    @Override
     public void exportNode(String path)
     {
         // exporting a node does not require writing to the model, hence we only need the controller and the readable model

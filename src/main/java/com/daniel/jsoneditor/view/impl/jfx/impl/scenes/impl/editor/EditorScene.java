@@ -39,7 +39,7 @@ public class EditorScene extends SceneHandlerImpl
         Scene scene = new Scene(root, startingSceneWidth, startingSceneHeight);
         
         toolbar = new JsonEditorToolbar(model, controller, editorWindowManager);
-        navbar = new JsonEditorNavbar(model, controller, editorWindowManager);
+        navbar = new JsonEditorNavbar(model, controller, editorWindowManager, stage);
         root.setTop(toolbar);
         root.setLeft(makeSplitPane(scene));
         return scene;
