@@ -51,6 +51,24 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     }
     
     @Override
+    public JsonNode getNodeFromString(String content)
+    {
+        // we validate that the content is a proper JsonNode, and transform it into that
+        try
+        {
+            ObjectMapper objectMapper = new ObjectMapper();
+            
+            return objectMapper.readTree(content);
+            
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    @Override
     public <T> T getJsonFromFile(File file, Class<T> classOfObject, boolean ignoreUnknownProperties)
     {
         try

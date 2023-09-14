@@ -39,7 +39,7 @@ public interface ReadableModel extends ReadableState
      */
     List<String> getAllowedStringValuesForPath(String path);
     
-    JsonNode getSubschemaForPath(String path);
+    JsonSchema getSubschemaForPath(String path);
     
     String getIdentifier(String pathOfParent, JsonNode child);
     
