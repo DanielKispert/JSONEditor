@@ -2,6 +2,8 @@
 
 allows editing JSON files to certain json schemas in a kind of more streamlined UI
 
+supports basic JSON schemas and the unique keys vocabulary https://docs.json-everything.net/schema/vocabs/uniquekeys/
+
 will maybe become a website/server at some point, javafx UI as a placeholder until then
 
 workflow:

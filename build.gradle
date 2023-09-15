@@ -19,5 +19,5 @@ javafx {
 }
 
 dependencies {
-    implementation('com.networknt:json-schema-validator:1.0.82')
+    implementation('com.networknt:json-schema-validator:1.0.87')
 }
