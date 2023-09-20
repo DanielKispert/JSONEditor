@@ -14,6 +14,6 @@ public class NumberTableCell extends EditorTableCell
     @Override
     protected void saveValue(JsonNodeWithPath item, String propertyName, String newValue)
     {
-        ((ObjectNode) item.getNode()).put(propertyName, Integer.parseInt(newValue));
+        ((ObjectNode) item.getNode()).put(propertyName, Double.parseDouble(newValue));
     }
 }

@@ -36,8 +36,16 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
                 {
                     saveValue(item, propertyName, newValue);
                 }
-                manager.updateNavbarRepresentation(item.getPath());
+            } else {
+                // the node does not yet exist, so we do not need to remove it if we save an empty value. We just need to save something
+                // in case there is a value.
+                if (!newValue.isEmpty() || column.isRequired())
+                {
+                    saveValue(item, propertyName, newValue);
+                }
+    
             }
+            manager.updateNavbarRepresentation(item.getPath());
         }
     }
     

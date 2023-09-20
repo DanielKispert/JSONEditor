@@ -97,12 +97,17 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     @Override
     public JsonSchema getSchemaFromFileResolvingRefs(File file)
     {
+        /*
         JsonSchemaVersion version = VersionFlag.V202012;
         InputStream metaSchemaStream = getClass().getClassLoader().getResourceAsStream("metaschema.json");
         JsonMetaSchema metaSchema = new JsonMetaSchema.Builder()
         JsonSchemaFactory factory =
                 JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012))..build();
         return SchemaHelper.resolveJsonRefsInSchema(factory.getSchema(getJsonFromFile(file)));
+         */
+        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+        return SchemaHelper.resolveJsonRefsInSchema(factory.getSchema(getJsonFromFile(file)));
+    
     }
     
     @Override
