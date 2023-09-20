@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
 
 public class SchemaHelper
 {
@@ -92,18 +94,29 @@ public class SchemaHelper
         return segments[segments.length - 1];
     }
     
-    public static String getType(JsonNode schema)
+    public static List<String> getTypes(JsonNode schema)
     {
         if (schema != null)
         {
             JsonNode typeNode = schema.get("type");
             if (typeNode != null)
             {
-                return typeNode.asText();
+                if (typeNode.isArray())
+                {
+                    List<String> types = new ArrayList<>();
+                    for (JsonNode type : typeNode)
+                    {
+                        types.add(type.asText());
+                    }
+                    return types;
+                }
+                else
+                {
+                    return new ArrayList<>(Collections.singleton(typeNode.asText()));
+                }
             }
         }
         return null;
     }
-    
     
 }

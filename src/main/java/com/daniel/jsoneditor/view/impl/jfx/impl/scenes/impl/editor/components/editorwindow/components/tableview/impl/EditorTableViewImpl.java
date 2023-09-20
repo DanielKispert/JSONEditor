@@ -182,27 +182,40 @@ public class EditorTableViewImpl extends EditorTableView
                     return new SimpleStringProperty("");
                 }
             });
-            column.setCellFactory(column1 ->
-            {
+            column.setCellFactory(column1 -> {
                 if (propertyNode.isObject())
                 {
-                    JsonNode typeNode = propertyNode.get("type");
-                    if (typeNode != null)
+                    List<String> types = SchemaHelper.getTypes(propertyNode);
+                    if (types != null)
                     {
-                        switch (typeNode.asText())
+                        // TODO refactor to allow the user to choose what to display
+                        if (types.contains("array") || types.contains("object"))
                         {
-                            case "array":
-                            case "object":
-                                return makeButtonTableCell(column1.getText());
-                            case "integer":
-                                return makeNumberTableCell();
-                            default:
-                            case "string":
-                                return new TextTableCell(manager, model);
+                            return makeButtonTableCell(column1.getText());
+                        }
+                        else if (types.contains("string"))
+                        {
+        
+                            if (types.contains("integer") || types.contains("number"))
+                            {
+                                // display a TextTableCell that can also save itself as a number and not as a string if the user enters a
+                                // number
+                                return new TextTableCell(manager, model, true);
+                            }
+                            else
+                            {
+                                // a normal TextTableCell is enough. One that should save itself as string and not a number
+                                return new TextTableCell(manager, model, false);
+                            }
+        
+                        }
+                        else if (types.contains("integer") || types.contains("number"))
+                        {
+                            return makeNumberTableCell();
                         }
                     }
                 }
-                return new TextTableCell(manager, model);
+                return new TextTableCell(manager, model, false);
             });
             columns.add(column);
         }

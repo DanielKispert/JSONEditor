@@ -16,15 +16,43 @@ public class TextTableCell extends EditorTableCell
     
     private final ReadableModel model;
     
-    public TextTableCell(EditorWindowManager manager, ReadableModel model)
+    private final boolean alsoAllowNumbers;
+    
+    public TextTableCell(EditorWindowManager manager, ReadableModel model, boolean alsoAllowNumbers)
     {
         super(manager);
         this.model = model;
         setMaxWidth(Double.MAX_VALUE);
+        this.alsoAllowNumbers = alsoAllowNumbers;
+    }
+    
+    public TextTableCell(EditorWindowManager manager, ReadableModel model)
+    {
+        this(manager, model, false);
     }
     
     @Override
     protected void saveValue(JsonNodeWithPath item, String propertyName, String newValue)
+    {
+        if (alsoAllowNumbers)
+        {
+            try
+            {
+                double valueAsDouble = Double.parseDouble(newValue);
+                ((ObjectNode) item.getNode()).put(propertyName, valueAsDouble);
+            }
+            catch (NumberFormatException e)
+            {
+                saveAsString(item, propertyName, newValue);
+            }
+        }
+        else
+        {
+            saveAsString(item, propertyName, newValue);
+        }
+    }
+    
+    private void saveAsString(JsonNodeWithPath item, String propertyName, String newValue)
     {
         ((ObjectNode) item.getNode()).put(propertyName, newValue);
     }
