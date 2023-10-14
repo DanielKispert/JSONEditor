@@ -173,6 +173,12 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void exportNodeWithDependencies(String path)
+    {
+    
+    }
+    
+    @Override
     public void removeNode(String path)
     {
         model.removeNode(path);

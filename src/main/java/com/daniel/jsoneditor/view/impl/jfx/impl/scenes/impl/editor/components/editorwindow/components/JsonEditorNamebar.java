@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components;
 
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import javafx.geometry.Pos;
@@ -23,11 +24,14 @@ public class JsonEditorNamebar extends HBox
     
     private String selectedPath;
     
-    public JsonEditorNamebar(EditorWindowManager manager, JsonEditorEditorWindow editorWindow)
+    private final ReadableModel model;
+    
+    public JsonEditorNamebar(EditorWindowManager manager, JsonEditorEditorWindow editorWindow, ReadableModel model)
     {
         super();
         this.manager = manager;
         this.editorWindow = editorWindow;
+        this.model = model;
         HBox.setHgrow(this, Priority.ALWAYS);
         nameLabel = new Label();
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
@@ -79,18 +83,24 @@ public class JsonEditorNamebar extends HBox
     private String makeFancyName(JsonNodeWithPath node)
     {
         String path = node.getPath();
-        String displayName = node.getDisplayName();
-        String[] nameParts = path.split("/");
-        nameParts[nameParts.length - 1] = displayName;
-        StringBuilder newName = new StringBuilder();
-        for (int i = 0; i < nameParts.length; i++)
+        StringBuilder fancyName = new StringBuilder();
+        int startIndex = 0;
+        int nextIndex;
+        // first we grab the first path bit, then the first and second, and so on
+        while ((nextIndex = path.indexOf("/", startIndex)) != -1)
         {
-            if (i != 0)
-            {
-                newName.append(" > ");
-            }
-            newName.append(nameParts[i]);
+            String partialPath = path.substring(0, nextIndex);
+            JsonNodeWithPath pathNode = model.getNodeForPath(partialPath);
+            String displayName = pathNode.getDisplayName();
+            fancyName.append(displayName);
+            fancyName.append(" > ");
+            startIndex = nextIndex + 1;
         }
-        return newName.toString();
+    
+        // the last part of the path has to be handled separately
+        JsonNodeWithPath lastPathNode = model.getNodeForPath(path);
+        fancyName.append(lastPathNode.getDisplayName());
+    
+        return fancyName.toString();
     }
 }

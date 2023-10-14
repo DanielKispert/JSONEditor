@@ -13,6 +13,8 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.ImportDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
@@ -59,12 +61,24 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     {
         ContextMenu contextMenu = new ContextMenu();
         
+        MenuItem addItemItem = new MenuItem("Add Item");
         MenuItem duplicateItem = new MenuItem("Duplicate Item");
         MenuItem newWindowItem = new MenuItem("Open in new Window");
         MenuItem deleteItem = new MenuItem("Delete");
         MenuItem sortArray = new MenuItem("Sort");
         MenuItem importItem = new MenuItem("Import");
         MenuItem exportItem = new MenuItem("Export");
+        MenuItem exportWithDependenciesItem = new MenuItem("Export with Dependencies");
+        addItemItem.setOnAction(event ->
+        {
+            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            if (selectedItem != null)
+            {
+                JsonNodeWithPath selectedNode = selectedItem.getValue();
+                controller.addNewNodeToArray(selectedNode.getPath());
+            
+            }
+        });
         duplicateItem.setOnAction(event ->
         {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
@@ -120,8 +134,14 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
             JsonNodeWithPath selectedNode = selectedItem.getValue();
             controller.exportNode(selectedNode.getPath());
         });
+        exportWithDependenciesItem.setOnAction(event ->
+        {
+            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            JsonNodeWithPath selectedNode = selectedItem.getValue();
+            controller.exportNodeWithDependencies(selectedNode.getPath());
+        });
     
-        contextMenu.getItems().addAll(newWindowItem, duplicateItem, sortArray, importItem, exportItem, deleteItem);
+        contextMenu.getItems().addAll(newWindowItem, addItemItem, duplicateItem, sortArray, importItem, exportItem, exportWithDependenciesItem, deleteItem);
     
         this.setOnContextMenuRequested(event -> {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
@@ -134,10 +154,12 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
                 }
                 if (selectedItem.getValue().isArray())
                 {
+                    addItemItem.setVisible(true);
                     sortArray.setVisible(true);
                 }
                 else
                 {
+                    addItemItem.setVisible(false);
                     sortArray.setVisible(false);
                 }
             }
