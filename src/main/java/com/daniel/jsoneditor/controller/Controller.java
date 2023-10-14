@@ -19,6 +19,8 @@ public interface Controller
     
     void exportNode(String path);
     
+    void exportNodeWithDependencies(String path);
+    
     void removeNode(String path);
     
     void addNewNodeToArray(String path);

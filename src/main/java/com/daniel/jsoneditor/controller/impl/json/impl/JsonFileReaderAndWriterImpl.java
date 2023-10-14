@@ -104,7 +104,8 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         JsonSchemaFactory factory =
                 JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012))..build();
         return SchemaHelper.resolveJsonRefsInSchema(factory.getSchema(getJsonFromFile(file)));
-         */
+        
+        */
         JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
         return SchemaHelper.resolveJsonRefsInSchema(factory.getSchema(getJsonFromFile(file)));
     

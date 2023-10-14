@@ -34,7 +34,7 @@ public class JsonEditorEditorWindow extends VBox
     public JsonEditorEditorWindow(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
         this.model = model;
-        nameBar = new JsonEditorNamebar(manager, this);
+        nameBar = new JsonEditorNamebar(manager, this, model);
         editor = new EditorTableViewImpl(manager, this, model, controller);
         addItemButton = new Button("Add Item");
         addItemButton.setOnAction(event -> controller.addNewNodeToArray(selectedPath));
