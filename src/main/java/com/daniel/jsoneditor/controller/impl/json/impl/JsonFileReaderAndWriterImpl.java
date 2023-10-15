@@ -7,17 +7,13 @@ import java.util.Set;
 
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 import com.daniel.jsoneditor.controller.impl.json.JsonPrettyPrinter;
+import com.daniel.jsoneditor.model.json.schema.CustomSchemaFactory;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonMetaSchema;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.JsonSchemaVersion;
-import com.networknt.schema.SpecVersion;
+import com.networknt.schema.*;
 import com.networknt.schema.SpecVersion.VersionFlag;
-import com.networknt.schema.ValidationMessage;
 
 public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
 {
@@ -97,18 +93,7 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     @Override
     public JsonSchema getSchemaFromFileResolvingRefs(File file)
     {
-        /*
-        JsonSchemaVersion version = VersionFlag.V202012;
-        InputStream metaSchemaStream = getClass().getClassLoader().getResourceAsStream("metaschema.json");
-        JsonMetaSchema metaSchema = new JsonMetaSchema.Builder()
-        JsonSchemaFactory factory =
-                JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012))..build();
-        return SchemaHelper.resolveJsonRefsInSchema(factory.getSchema(getJsonFromFile(file)));
-        
-        */
-        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
-        return SchemaHelper.resolveJsonRefsInSchema(factory.getSchema(getJsonFromFile(file)));
-    
+        return SchemaHelper.resolveJsonRefsInSchema(CustomSchemaFactory.makeCustomFactory().getSchema(getJsonFromFile(file)));
     }
     
     @Override

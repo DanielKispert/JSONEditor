@@ -1,5 +1,7 @@
 package com.daniel.jsoneditor.model;
 
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
@@ -25,21 +27,25 @@ public interface ReadableModel extends ReadableState
      */
     boolean canAddMoreItems(String path);
     
+    ReferenceToObject getReferenceToObject(String path);
+    
     String searchForNode(String path, String value);
     
     JsonNodeWithPath getNodeForPath(String path);
     
     /**
      * returns the given nodes in a JSON structure based on their parts. All other nodes are empty.
-     * @param nodes the nodes which should be put into the empty structure
+     * @param paths the paths which should be put into the empty structure
      * @return a JsonNode with the given nodes as its children (as much as possible)
      */
-    JsonNode getExportStructureForNodes(List<JsonNodeWithPath> nodes);
+    JsonNode getExportStructureForNodes(List<String> paths);
     
     /**
      * returns the "dependent nodes" of a node, which is references to other object nodes
      */
-    List<JsonNodeWithPath> getDependentNodes(JsonNodeWithPath node);
+    List<String> getDependentPaths(JsonNodeWithPath node);
+    
+    List<ReferenceableObject> getReferenceableObjects();
     
     /**
      * @return a list of strings that holds example values that could be filled into the TextNode at the path. Only makes sense if the path is a TextNode, otherwise nothing is returned

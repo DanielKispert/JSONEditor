@@ -10,11 +10,7 @@ import com.daniel.jsoneditor.model.settings.Settings;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
-import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
@@ -178,14 +174,14 @@ public class ControllerImpl implements Controller, Observer
         if (nodeWithPath != null)
         {
             // we want to export the node and all parent nodes of the node (but no other child nodes of the parent nodes)
-            List<JsonNodeWithPath> nodesToExport = readableModel.getDependentNodes(nodeWithPath);// TODO fill list with dependent nodes
-            nodesToExport.add(readableModel.getNodeForPath(path));
+            List<String> pathsToExport = readableModel.getDependentPaths(nodeWithPath);// TODO fill list with dependent nodes
+            pathsToExport.add(readableModel.getNodeForPath(path).getPath());
         
             String fileWithEnding = readableModel.getCurrentJSONFile().getName();
             int lastDotIndex = fileWithEnding.lastIndexOf(".");
             String fileWithoutEnding = (lastDotIndex != -1) ? fileWithEnding.substring(0, lastDotIndex) : fileWithEnding;
             String filename = fileWithoutEnding + "_export_with_dependencies" + nodeWithPath.getPath().replace("/", "_") + ".json";
-            exportJsonNode(filename, readableModel.getExportStructureForNodes(nodesToExport));
+            exportJsonNode(filename, readableModel.getExportStructureForNodes(pathsToExport));
         }
     }
     

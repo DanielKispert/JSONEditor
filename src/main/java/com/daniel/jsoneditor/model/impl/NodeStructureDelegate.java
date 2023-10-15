@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model.impl;
 
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -14,24 +15,24 @@ public abstract class NodeStructureDelegate
 {
     private static final String INTEGER_REGEX = "^\\d+$";
     
-    public static JsonNode getExportStructureForNodes(List<JsonNodeWithPath> nodes)
+    public static JsonNode getExportStructureForNodes(ReadableModel model, List<String> paths)
     {
-        if (nodes == null || nodes.isEmpty())
+        if (paths == null || paths.isEmpty())
         {
             return null;
         }
         JsonNode structure = null;
-        for (JsonNodeWithPath node : nodes)
+        for (String path : paths)
         {
-            String cleanedPath = node.getPath().substring(1); // the first slash is not needed
+            String cleanedPath = path.substring(1); // the first slash is not needed
             String[] pathElements = cleanedPath.split("/");
             Iterator<String> elementsIterator = Arrays.stream(pathElements).iterator();
-            structure = getPartialStructure(structure, node, elementsIterator);
+            structure = getPartialStructure(model, structure, path, elementsIterator);
         }
         return structure;
     }
     
-    private static JsonNode getPartialStructure(JsonNode existingStructure, JsonNodeWithPath node, Iterator<String> elementsIterator)
+    private static JsonNode getPartialStructure(ReadableModel model, JsonNode existingStructure, String path, Iterator<String> elementsIterator)
     {
         if (elementsIterator.hasNext())
         {
@@ -49,7 +50,7 @@ public abstract class NodeStructureDelegate
                 {
                     parentOfPath = factory.arrayNode();
                 }
-                ((ArrayNode) parentOfPath).add(getPartialStructure(parentOfPath.get(Integer.parseInt(nextElement)), node, elementsIterator));
+                ((ArrayNode) parentOfPath).add(getPartialStructure(model, parentOfPath.get(Integer.parseInt(nextElement)), path, elementsIterator));
             }
             else
             {
@@ -61,10 +62,10 @@ public abstract class NodeStructureDelegate
                 {
                     parentOfPath = factory.objectNode();
                 }
-                ((ObjectNode) parentOfPath).set(nextElement, getPartialStructure(parentOfPath.get(nextElement), node, elementsIterator));
+                ((ObjectNode) parentOfPath).set(nextElement, getPartialStructure(model, parentOfPath.get(nextElement), path, elementsIterator));
             }
             return parentOfPath;
         }
-        return node.getNode();
+        return model.getNodeForPath(path).getNode();
     }
 }
