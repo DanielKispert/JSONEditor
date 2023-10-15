@@ -41,15 +41,27 @@ public abstract class NodeStructureDelegate
             // Check if the element is an integer (array index)
             if (nextElement.matches(INTEGER_REGEX))
             {
-                // the first node must be an array then
-                parentOfPath = factory.arrayNode();
-                ((ArrayNode) parentOfPath).add(getPartialStructure(node, elementsIterator));
+                if (existingStructure != null && existingStructure.isArray())
+                {
+                    parentOfPath = existingStructure;
+                }
+                else
+                {
+                    parentOfPath = factory.arrayNode();
+                }
+                ((ArrayNode) parentOfPath).add(getPartialStructure(parentOfPath.get(Integer.parseInt(nextElement)), node, elementsIterator));
             }
             else
             {
-                // the parent of this path is an object
-                parentOfPath = factory.objectNode();
-                ((ObjectNode) parentOfPath).set(nextElement, getPartialStructure(node, elementsIterator));
+                if (existingStructure != null && existingStructure.isObject())
+                {
+                    parentOfPath = existingStructure;
+                }
+                else
+                {
+                    parentOfPath = factory.objectNode();
+                }
+                ((ObjectNode) parentOfPath).set(nextElement, getPartialStructure(parentOfPath.get(nextElement), node, elementsIterator));
             }
             return parentOfPath;
         }

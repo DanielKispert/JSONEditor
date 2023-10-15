@@ -177,6 +177,8 @@ public class ControllerImpl implements Controller, Observer
         // we want to export the node and all parent nodes of the node (but no other child nodes of the parent nodes)
         List<JsonNodeWithPath> dependentNodes = new ArrayList<>();// TODO fill list with dependent nodes
         dependentNodes.add(readableModel.getNodeForPath(path));
+        dependentNodes.add(readableModel.getNodeForPath("/persons/1"));
+        dependentNodes.add(readableModel.getNodeForPath("/hobbies/1"));
         exportJsonNode("test123.json", readableModel.getExportStructureForNodes(dependentNodes));
     }
     
