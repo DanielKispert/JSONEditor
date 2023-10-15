@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.model.statemachine.StateMachine;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
@@ -164,6 +165,12 @@ public class ModelImpl implements ReadableModel, WritableModel
     public JsonNodeWithPath getNodeForPath(String path)
     {
         return new JsonNodeWithPath(getRootJson().at(path), path);
+    }
+    
+    @Override
+    public JsonNode getExportStructureForNodes(List<JsonNodeWithPath> nodes)
+    {
+        return NodeStructureDelegate.getExportStructureForNodes(nodes);
     }
     
     @Override

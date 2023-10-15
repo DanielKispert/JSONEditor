@@ -11,6 +11,8 @@ import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
@@ -161,21 +163,29 @@ public class ControllerImpl implements Controller, Observer
         JsonNodeWithPath nodeWithPath = readableModel.getNodeForPath(path);
         if (nodeWithPath != null)
         {
-            JsonFileReaderAndWriter writer = new JsonFileReaderAndWriterImpl();
-            File directory = readableModel.getCurrentJSONFile().getParentFile();
             String fileWithEnding = readableModel.getCurrentJSONFile().getName();
             int lastDotIndex = fileWithEnding.lastIndexOf(".");
             String fileWithoutEnding = (lastDotIndex != -1) ? fileWithEnding.substring(0, lastDotIndex) : fileWithEnding;
             String filename = fileWithoutEnding + "_export" + nodeWithPath.getPath().replace("/", "_") + ".json";
-            File exportFile = new File(directory, filename);
-            writer.writeJsonToFile(nodeWithPath.getNode(), exportFile);
+            exportJsonNode(filename, nodeWithPath.getNode());
         }
     }
     
     @Override
     public void exportNodeWithDependencies(String path)
     {
+        // we want to export the node and all parent nodes of the node (but no other child nodes of the parent nodes)
+        List<JsonNodeWithPath> dependentNodes = new ArrayList<>();// TODO fill list with dependent nodes
+        dependentNodes.add(readableModel.getNodeForPath(path));
+        exportJsonNode("test123.json", readableModel.getExportStructureForNodes(dependentNodes));
+    }
     
+    private void exportJsonNode(String exportFilename, JsonNode node)
+    {
+        File directory = readableModel.getCurrentJSONFile().getParentFile();
+        File exportFile = new File(directory, exportFilename);
+        JsonFileReaderAndWriter writer = new JsonFileReaderAndWriterImpl();
+        writer.writeJsonToFile(node, exportFile);
     }
     
     @Override

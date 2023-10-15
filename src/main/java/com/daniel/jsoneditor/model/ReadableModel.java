@@ -30,6 +30,13 @@ public interface ReadableModel extends ReadableState
     JsonNodeWithPath getNodeForPath(String path);
     
     /**
+     * returns the given nodes in a JSON structure based on their parts. All other nodes are empty.
+     * @param nodes the nodes which should be put into the empty structure
+     * @return a JsonNode with the given nodes as its children (as much as possible)
+     */
+    JsonNode getExportStructureForNodes(List<JsonNodeWithPath> nodes);
+    
+    /**
      * @return a list of strings that holds example values that could be filled into the TextNode at the path. Only makes sense if the path is a TextNode, otherwise nothing is returned
      */
     List<String> getStringExamplesForPath(String path);
