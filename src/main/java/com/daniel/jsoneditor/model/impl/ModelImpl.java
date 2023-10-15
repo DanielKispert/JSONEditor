@@ -1,5 +1,8 @@
 package com.daniel.jsoneditor.model.impl;
 
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.settings.IdentifierSetting;
 import com.daniel.jsoneditor.model.statemachine.StateMachine;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
@@ -168,15 +171,67 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public JsonNode getExportStructureForNodes(List<JsonNodeWithPath> nodes)
+    public JsonNode getExportStructureForNodes(List<String> paths)
     {
-        return NodeStructureDelegate.getExportStructureForNodes(nodes);
+        return NodeStructureDelegate.getExportStructureForNodes(this, paths);
     }
     
     @Override
-    public List<JsonNodeWithPath> getDependentNodes(JsonNodeWithPath node)
+    public List<String> getDependentPaths(JsonNodeWithPath node)
     {
-        return null;
+        // the dependent nodes of an item are the references that it or its child objects have
+        List<String> referencedNodes = new ArrayList<>();
+        collectReferencesRecursively(node, referencedNodes);
+        return referencedNodes;
+    }
+    
+    @Override
+    public List<ReferenceableObject> getReferenceableObjects()
+    {
+        List<ReferenceableObject> referenceableObjects = new ArrayList<>();
+        JsonNode rootSchema = getRootSchema().getSchemaNode();
+        JsonNode objectsArray = rootSchema.get("referenceableObjects");
+        if (objectsArray != null && objectsArray.isArray())
+        {
+            for (JsonNode item : objectsArray)
+            {
+                String referencingKey = item.get("referencingKey").asText();
+                String path = item.get("path").asText();
+                String key = item.get("key").asText();
+                referenceableObjects.add(new ReferenceableObject(referencingKey, path, key));
+            }
+        }
+        return referenceableObjects;
+    }
+    
+    private void collectReferencesRecursively(JsonNodeWithPath node, List<String> referencedNodes)
+    {
+        // first we check if the node itself has a reference to another object
+        ReferenceToObject reference = getReferenceToObject(node.getPath());
+        if (reference != null)
+        {
+            referencedNodes.add(ReferenceHelper.resolveReference(node, reference, this));
+        }
+    
+        if (node.isObject())
+        {
+            node.getNode().fields().forEachRemaining(entry ->
+            {
+                JsonNodeWithPath childNode = new JsonNodeWithPath(entry.getValue(), node.getPath() + "/" + entry.getKey());
+                collectReferencesRecursively(childNode, referencedNodes);
+            });
+        }
+        else if (node.isArray())
+        {
+            int index = 0;
+            for (JsonNode child : node.getNode())
+            {
+                String path = node.getPath() + "/" + index;
+                JsonNodeWithPath childNode = new JsonNodeWithPath(child, path);
+                collectReferencesRecursively(childNode, referencedNodes);
+                index++;
+            }
+        }
     }
     
     @Override
@@ -312,6 +367,21 @@ public class ModelImpl implements ReadableModel, WritableModel
         }
         // either the node doesn't exist or the node is not an array
         return false;
+    }
+    
+    @Override
+    public ReferenceToObject getReferenceToObject(String path)
+    {
+        JsonNode subschema = getSubschemaForPath(path).getSchemaNode();
+        JsonNode referenceNode = subschema.get("referenceToObject");
+        if (referenceNode == null)
+        {
+            return null;
+        }
+        // TODO add error handling here
+        String objectReferencingKey = referenceNode.get("objectReferencingKey").asText();
+        String objectKey = referenceNode.get("objectKey").asText();
+        return new ReferenceToObject(objectReferencingKey, objectKey);
     }
     
     @Override

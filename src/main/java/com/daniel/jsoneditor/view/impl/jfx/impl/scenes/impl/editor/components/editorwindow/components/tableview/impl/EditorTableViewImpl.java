@@ -9,8 +9,6 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -18,12 +16,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
-import javafx.util.StringConverter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -191,7 +187,7 @@ public class EditorTableViewImpl extends EditorTableView
                         // TODO refactor to allow the user to choose what to display
                         if (types.contains("array") || types.contains("object"))
                         {
-                            return makeButtonTableCell(column1.getText());
+                            return makeOpenButtonTableCell(((EditorTableColumn) column1).getPropertyName());
                         }
                         else if (types.contains("string"))
                         {
@@ -222,7 +218,7 @@ public class EditorTableViewImpl extends EditorTableView
         return columns;
     }
     
-    private TableCell<JsonNodeWithPath, String> makeButtonTableCell(String pathToOpen)
+    private TableCell<JsonNodeWithPath, String> makeOpenButtonTableCell(String pathToOpen)
     {
         return new TableCell<>()
         {
