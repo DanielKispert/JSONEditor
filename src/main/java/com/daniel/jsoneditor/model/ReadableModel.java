@@ -37,6 +37,11 @@ public interface ReadableModel extends ReadableState
     JsonNode getExportStructureForNodes(List<JsonNodeWithPath> nodes);
     
     /**
+     * returns the "dependent nodes" of a node, which is references to other object nodes
+     */
+    List<JsonNodeWithPath> getDependentNodes(JsonNodeWithPath node);
+    
+    /**
      * @return a list of strings that holds example values that could be filled into the TextNode at the path. Only makes sense if the path is a TextNode, otherwise nothing is returned
      */
     List<String> getStringExamplesForPath(String path);

@@ -174,12 +174,19 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void exportNodeWithDependencies(String path)
     {
-        // we want to export the node and all parent nodes of the node (but no other child nodes of the parent nodes)
-        List<JsonNodeWithPath> dependentNodes = new ArrayList<>();// TODO fill list with dependent nodes
-        dependentNodes.add(readableModel.getNodeForPath(path));
-        dependentNodes.add(readableModel.getNodeForPath("/persons/1"));
-        dependentNodes.add(readableModel.getNodeForPath("/hobbies/1"));
-        exportJsonNode("test123.json", readableModel.getExportStructureForNodes(dependentNodes));
+        JsonNodeWithPath nodeWithPath = readableModel.getNodeForPath(path);
+        if (nodeWithPath != null)
+        {
+            // we want to export the node and all parent nodes of the node (but no other child nodes of the parent nodes)
+            List<JsonNodeWithPath> nodesToExport = readableModel.getDependentNodes(nodeWithPath);// TODO fill list with dependent nodes
+            nodesToExport.add(readableModel.getNodeForPath(path));
+        
+            String fileWithEnding = readableModel.getCurrentJSONFile().getName();
+            int lastDotIndex = fileWithEnding.lastIndexOf(".");
+            String fileWithoutEnding = (lastDotIndex != -1) ? fileWithEnding.substring(0, lastDotIndex) : fileWithEnding;
+            String filename = fileWithoutEnding + "_export_with_dependencies" + nodeWithPath.getPath().replace("/", "_") + ".json";
+            exportJsonNode(filename, readableModel.getExportStructureForNodes(nodesToExport));
+        }
     }
     
     private void exportJsonNode(String exportFilename, JsonNode node)

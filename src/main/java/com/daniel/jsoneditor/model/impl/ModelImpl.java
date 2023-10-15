@@ -174,6 +174,12 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public List<JsonNodeWithPath> getDependentNodes(JsonNodeWithPath node)
+    {
+        return null;
+    }
+    
+    @Override
     public List<String> getStringExamplesForPath(String path)
     {
         JsonNode schema = getSubschemaForPath(path).getSchemaNode();
