@@ -42,7 +42,7 @@ public class NodeGenerator
     private static JsonNode generateArrayNode(JsonNode schema)
     {
         JsonNode itemSchema = schema.get("items");
-        int maxItems = schema.has("maxItems") ? schema.get("maxItems").asInt() : 0;
+        int maxItems = schema.has("minItems") ? schema.get("minItems").asInt() : 0;
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for (int i = 0; i < maxItems; i++)
         {

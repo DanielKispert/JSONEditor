@@ -8,6 +8,10 @@ public class ReferenceHelper
 {
     public static String resolveReference(JsonNodeWithPath node, ReferenceToObject reference, ReadableModel model)
     {
+        if (node == null || reference == null || model == null)
+        {
+            return null;
+        }
         String objectReferencingKey = node.getNode().at(reference.getObjectReferencingKey()).asText();
         String id = node.getNode().at(reference.getObjectKey()).asText();
         for (ReferenceableObject object : model.getReferenceableObjects())
