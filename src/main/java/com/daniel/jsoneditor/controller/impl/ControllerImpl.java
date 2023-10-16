@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.controller.impl;
 
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
+import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.observe.Observer;
@@ -36,7 +37,7 @@ public class ControllerImpl implements Controller, Observer
     
     private final View view;
     
-    private List<Subject> subjects;
+    private final List<Subject> subjects;
     
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
     {
@@ -143,12 +144,14 @@ public class ControllerImpl implements Controller, Observer
     public void importAtNode(String path, String content)
     {
         JsonFileReaderAndWriter jsonReader = new JsonFileReaderAndWriterImpl();
+        JsonNode existingNodeAtPath = readableModel.getRootJson().at(path); // we intentionally ignore JsonNodeWithPath in case its null
         JsonNode contentNode = jsonReader.getNodeFromString(content);
+        JsonNode mergedNode = JsonNodeMerger.createMergedNode(existingNodeAtPath, contentNode);
         JsonSchema schemaAtPath = readableModel.getSubschemaForPath(path);
-        if (contentNode != null && jsonReader.validateJsonWithSchema(contentNode, schemaAtPath))
+        if (mergedNode != null && jsonReader.validateJsonWithSchema(mergedNode, schemaAtPath))
         {
             // the node exists and is valid for its current location
-            model.setNode(path, contentNode);
+            model.setNode(path, mergedNode);
         }
     }
     

@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model.impl;
 
+import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
@@ -8,7 +9,6 @@ import com.daniel.jsoneditor.model.statemachine.StateMachine;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
@@ -421,51 +421,49 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void removeNode(String path)
     {
-        removeOrReplaceNode(path, null);
+        removeOrSetNode(path, null);
     }
     
-    private void removeOrReplaceNode(String path, JsonNode content)
+    private void removeOrSetNode(String path, JsonNode content)
     {
-        String[] pathComponents = path.split("/");
-        JsonNode parentNode = rootJson;
-        // we go to the parent node of the one we want to remove
-        for (int i = 1; i < pathComponents.length - 1; i++)
+        if (path == null || path.length() == 0)
         {
-            String nextPath = pathComponents[i];
-            if (parentNode.isArray())
-            {
-                parentNode = parentNode.get(Integer.parseInt(nextPath));
-            }
-            else
-            {
-                parentNode = parentNode.get(nextPath);
-            }
+            // we are attempting to insert at the root node
+            setRootJson(content);
         }
-        // Get the name of the target node
-        String targetNodeName = pathComponents[pathComponents.length - 1];
-        if (parentNode.isObject())
+        int lastSlashIndex = path.lastIndexOf('/');
+        if (lastSlashIndex != -1)
         {
-            if (content == null)
+            String parentPath = path.substring(0, lastSlashIndex);
+            String targetNodeName = path.substring(lastSlashIndex + 1);
+            JsonNode parentNode = rootJson.at(parentPath);
+            if (parentNode.isObject())
             {
-                // Remove the target JsonNode from its parent ObjectNode
-                ((ObjectNode) parentNode).remove(targetNodeName);
+                if (content == null)
+                {
+                    ((ObjectNode) parentNode).remove(targetNodeName);
+                }
+                else
+                {
+                    ((ObjectNode) parentNode).set(targetNodeName, content);
+                }
+            }
+            else if (parentNode.isArray())
+            {
+                // we try to parse targetNodeName into an integer (for an index)
+                int index = Integer.parseInt(targetNodeName);
+                if (content == null)
+                {
+                    ((ArrayNode) parentNode).remove(index);
+                }
+                else
+                {
+                    ((ArrayNode) parentNode).set(index, content);
+                }
             }
             else
             {
-                ((ObjectNode) parentNode).set(targetNodeName, content);
-            }
-        }
-        else if (parentNode.isArray())
-        {
-            // try to parse targetNodeName into an integer (for an index)
-            int index = Integer.parseInt(targetNodeName);
-            if (content == null)
-            {
-                ((ArrayNode) parentNode).remove(index);
-            }
-            else
-            {
-                ((ArrayNode) parentNode).set(index, content);
+                return;
             }
         }
         else
@@ -487,7 +485,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void setNode(String path, JsonNode content)
     {
-        removeOrReplaceNode(path, content);
+        removeOrSetNode(path, content);
     }
     
     @Override

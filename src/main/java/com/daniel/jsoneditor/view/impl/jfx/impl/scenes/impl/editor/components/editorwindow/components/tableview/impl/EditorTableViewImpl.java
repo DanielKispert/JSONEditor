@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
@@ -112,15 +113,53 @@ public class EditorTableViewImpl extends EditorTableView
                 properties.add(new Pair<>(new Pair<>(propertyName, isRequired), entry.getValue()));
             }
         }
+    
         List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>(createTableColumns(properties));
         if (isArray)
         {
+            columns.add(createFollowReferenceButtonColumn());
             // we add a column of delete buttons
             columns.add(createDeleteButtonColumn());
         }
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
+    }
+    
+    private TableColumn<JsonNodeWithPath, String> createFollowReferenceButtonColumn()
+    {
+        TableColumn<JsonNodeWithPath, String> followReferenceColumn = new TableColumn<>();
+        
+        followReferenceColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getPath()));
+    
+        followReferenceColumn.setCellFactory(param -> new TableCell<>()
+        {
+            @Override
+            protected void updateItem(String path, boolean empty)
+            {
+                super.updateItem(path, empty);
+            
+                if (empty || path == null)
+                {
+                    setGraphic(null);
+                }
+                else
+                {
+                    JsonNodeWithPath nodeAtPath = model.getNodeForPath(path);
+                    String referencedPath = ReferenceHelper.resolveReference(nodeAtPath, model.getReferenceToObject(path), model);
+                    if (referencedPath != null)
+                    {
+                        setGraphic(makeFollowReferenceButton(referencedPath));
+                    }
+                    else
+                    {
+                        setGraphic(null);
+                    }
+                }
+            }
+        });
+    
+        return followReferenceColumn;
     }
     
     private TableColumn<JsonNodeWithPath, String> createDeleteButtonColumn()
@@ -301,6 +340,14 @@ public class EditorTableViewImpl extends EditorTableView
                 }
             }
         };
+    }
+    
+    private Button makeFollowReferenceButton(String path)
+    {
+        Button removeButton = new Button("Follow Reference");
+        removeButton.setOnAction(event -> manager.selectInNewWindow(path));
+        removeButton.setMaxHeight(Double.MAX_VALUE);
+        return removeButton;
     }
     
     private Button makeRemoveButton(String path)
