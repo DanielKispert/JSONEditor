@@ -38,12 +38,20 @@ public class TextTableCell extends EditorTableCell
         {
             try
             {
-                double valueAsDouble = Double.parseDouble(newValue);
-                ((ObjectNode) item.getNode()).put(propertyName, valueAsDouble);
+                int valueAsInt = Integer.parseInt(newValue);
+                ((ObjectNode) item.getNode()).put(propertyName, valueAsInt);
             }
             catch (NumberFormatException e)
             {
-                saveAsString(item, propertyName, newValue);
+                try
+                {
+                    double valueAsDouble = Double.parseDouble(newValue);
+                    ((ObjectNode) item.getNode()).put(propertyName, valueAsDouble);
+                }
+                catch (NumberFormatException f)
+                {
+                    saveAsString(item, propertyName, newValue);
+                }
             }
         }
         else
