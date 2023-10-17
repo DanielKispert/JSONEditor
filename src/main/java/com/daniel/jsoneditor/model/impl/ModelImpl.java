@@ -430,6 +430,8 @@ public class ModelImpl implements ReadableModel, WritableModel
         {
             // we are attempting to insert at the root node
             setRootJson(content);
+            sendEvent(Event.UPDATED_JSON_STRUCTURE);
+            return;
         }
         int lastSlashIndex = path.lastIndexOf('/');
         if (lastSlashIndex != -1)
