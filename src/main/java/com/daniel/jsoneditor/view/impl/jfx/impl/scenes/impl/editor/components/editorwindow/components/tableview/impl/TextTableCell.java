@@ -26,11 +26,6 @@ public class TextTableCell extends EditorTableCell
         this.alsoAllowNumbers = alsoAllowNumbers;
     }
     
-    public TextTableCell(EditorWindowManager manager, ReadableModel model)
-    {
-        this(manager, model, false);
-    }
-    
     @Override
     protected void saveValue(JsonNodeWithPath item, String propertyName, String newValue)
     {
