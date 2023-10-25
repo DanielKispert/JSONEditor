@@ -29,6 +29,7 @@ public abstract class NodeStructureDelegate
             Iterator<String> elementsIterator = Arrays.stream(pathElements).iterator();
             structure = getPartialStructure(model, structure, path, elementsIterator);
         }
+        System.out.println("Created export structure for " + paths.size() + " nodes");
         return structure;
     }
     

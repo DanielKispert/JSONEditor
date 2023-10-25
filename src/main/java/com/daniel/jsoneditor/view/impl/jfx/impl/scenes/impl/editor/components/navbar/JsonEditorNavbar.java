@@ -13,8 +13,6 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.ImportDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
@@ -310,17 +308,11 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
     {
         TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
         Map<String, Boolean> expandedStates = storeExpandedStates();
-        
         setRoot(makeTree());
-        
+        restoreExpandedStates(getRoot(), expandedStates);
         if (selectedItem != null)
         {
-            TreeItem<JsonNodeWithPath> newSelectedItem = findNavbarItem(getRoot(), selectedItem.getValue().getPath());
-            if (newSelectedItem != null)
-            {
-                getSelectionModel().select(newSelectedItem);
-                restoreExpandedStates(newSelectedItem, expandedStates);
-            }
+            selectNodeByPath(getRoot(), selectedItem.getValue().getPath());
         }
     }
     

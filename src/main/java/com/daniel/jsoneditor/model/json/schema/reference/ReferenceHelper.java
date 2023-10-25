@@ -38,6 +38,8 @@ public class ReferenceHelper
                 break;
             }
         }
+        System.out.println(
+                "Could not find a referenceable object for reference " + node.getDisplayName());
         return null;
     }
 }
