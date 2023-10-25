@@ -91,12 +91,11 @@ public class NodeSearcher
     
         if (parentNode.isArray())
         {
-            int valueAsInt = Integer.parseInt(value);
             for (int i = 0; i < parentNode.size(); i++)
             {
                 JsonNode childNode = parentNode.get(i);
             
-                if (doesNodeMatchValue(childNode, suffix, valueAsInt))
+                if (doesNodeMatchValue(childNode, suffix, value))
                 {
                     return prefix + "/" + i;
                 }
@@ -124,17 +123,11 @@ public class NodeSearcher
     private static boolean doesNodeMatchValue(JsonNode rootNode, String jsonPointer, String expectedValue)
     {
         JsonNode node = rootNode.at(JsonPointer.valueOf(jsonPointer));
-        if (node != null && node.isTextual() && node.asText().equals(expectedValue))
+        if (node != null && node.asText().equals(expectedValue))
         {
             return true;
         }
         return false;
-    }
-    
-    private static boolean doesNodeMatchValue(JsonNode rootNode, String jsonPointer, int expectedValue)
-    {
-        JsonNode node = rootNode.at(JsonPointer.valueOf(jsonPointer));
-        return node != null && node.isInt() && node.asInt() == expectedValue;
     }
     
 }
