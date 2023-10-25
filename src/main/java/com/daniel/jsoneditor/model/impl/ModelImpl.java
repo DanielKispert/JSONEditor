@@ -210,7 +210,11 @@ public class ModelImpl implements ReadableModel, WritableModel
         ReferenceToObject reference = getReferenceToObject(node.getPath());
         if (reference != null)
         {
-            referencedNodes.add(ReferenceHelper.resolveReference(node, reference, this));
+            String referencePath = ReferenceHelper.resolveReference(node, reference, this);
+            if (referencePath != null)
+            {
+                referencedNodes.add(referencePath);
+            }
         }
     
         if (node.isObject())
