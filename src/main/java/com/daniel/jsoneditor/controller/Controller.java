@@ -33,6 +33,10 @@ public interface Controller
     
     void refreshFromFile();
     
+    String searchForReferenceableObject(String identifier);
+    
+    String searchForNode(String path, String value);
+    
     void openNewJson();
     
     String getLastJsonPath();

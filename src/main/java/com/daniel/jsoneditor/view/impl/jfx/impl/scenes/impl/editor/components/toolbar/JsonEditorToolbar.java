@@ -50,7 +50,7 @@ public class JsonEditorToolbar extends ToolBar
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(s ->
             {
-                String foundNode = model.searchForNode(buttonSetting.getTarget(), s);
+                String foundNode = controller.searchForNode(buttonSetting.getTarget(), s);
                 if (foundNode != null)
                 {
                     if (editorWindowManager.canAnotherWindowBeAdded())
