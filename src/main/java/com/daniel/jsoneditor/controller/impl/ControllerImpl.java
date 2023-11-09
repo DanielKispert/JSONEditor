@@ -107,8 +107,7 @@ public class ControllerImpl implements Controller, Observer
             JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
             JsonNode json = reader.getJsonFromFile(jsonFile);
             JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
-            if (reader.validateJsonWithSchema(json, schema))
-            {
+            handleJsonValidation(json, schema, () -> {
                 // settings file is optional
                 if (settingsFile != null)
                 {
@@ -119,11 +118,7 @@ public class ControllerImpl implements Controller, Observer
                     }
                 }
                 model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
-            }
-            else
-            {
-                view.cantValidateJson();
-            }
+            });
     
         }
         else
@@ -225,7 +220,34 @@ public class ControllerImpl implements Controller, Observer
     {
         JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();
         jsonWriter.writeJsonToFile(readableModel.getRootJson(), readableModel.getCurrentJSONFile());
+    }
     
+    @Override
+    public void refreshFromFile()
+    {
+        // TODO we can add a dialog to ask the user if they're really sure here
+        JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
+        JsonNode json = reader.getJsonFromFile(readableModel.getCurrentJSONFile());
+        handleJsonValidation(json, readableModel.getRootSchema(), () -> model.refreshJsonNode(json));
+    }
+    
+    private void handleJsonValidation(JsonNode json, JsonSchema schema, Runnable onSuccess)
+    {
+        JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
+        if (reader.validateJsonWithSchema(json, schema))
+        {
+            onSuccess.run();
+        }
+        else
+        {
+            view.cantValidateJson();
+        }
+    }
+    
+    @Override
+    public void openNewJson()
+    {
+        launchFinished();
     }
     
     @Override

@@ -31,6 +31,10 @@ public interface Controller
     
     void saveToFile();
     
+    void refreshFromFile();
+    
+    void openNewJson();
+    
     String getLastJsonPath();
     
     String getLastSchemaPath();

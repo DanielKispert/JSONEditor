@@ -12,7 +12,7 @@ import com.daniel.jsoneditor.controller.Controller;
 import java.io.File;
 import java.util.Optional;
 
-public class JSONSelection extends SceneHandlerImpl
+public class JSONSelectionScene extends SceneHandlerImpl
 {
     private String selectedJsonPath;
     
@@ -24,7 +24,7 @@ public class JSONSelection extends SceneHandlerImpl
     
     private boolean remember;
     
-    public JSONSelection(Controller controller, ReadableModel model)
+    public JSONSelectionScene(Controller controller, ReadableModel model)
     {
         super(controller, model);
     }

@@ -13,6 +13,8 @@ public interface WritableModel
     
     void jsonAndSchemaSuccessfullyValidated(File jsonFile, File schemaFile, JsonNode json, JsonSchema schema);
     
+    void refreshJsonNode(JsonNode jsonNode);
+    
     void setSettings(Settings settings);
     
     void sendEvent(Event state);

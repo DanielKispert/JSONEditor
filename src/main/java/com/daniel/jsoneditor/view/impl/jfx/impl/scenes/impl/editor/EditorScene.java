@@ -1,11 +1,13 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor;
 
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.menubar.JsonEditorMenuBar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.JsonEditorToolbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -17,8 +19,6 @@ public class EditorScene extends SceneHandlerImpl
 {
     
     private JsonEditorNavbar navbar;
-    
-    private JsonEditorToolbar toolbar;
     
     private final EditorWindowManager editorWindowManager;
     
@@ -37,10 +37,9 @@ public class EditorScene extends SceneHandlerImpl
         
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root, startingSceneWidth, startingSceneHeight);
-        
-        toolbar = new JsonEditorToolbar(model, controller, editorWindowManager);
         navbar = new JsonEditorNavbar(model, controller, editorWindowManager, stage);
-        root.setTop(toolbar);
+        VBox bars = new VBox(new JsonEditorMenuBar(controller), new JsonEditorToolbar(model, controller, editorWindowManager));
+        root.setTop(bars);
         root.setLeft(makeSplitPane(scene));
         return scene;
     }

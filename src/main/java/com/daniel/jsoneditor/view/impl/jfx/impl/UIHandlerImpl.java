@@ -3,15 +3,12 @@ package com.daniel.jsoneditor.view.impl.jfx.impl;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelection;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelectionScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import java.io.File;
 import java.util.Optional;
 
 public class UIHandlerImpl implements UIHandler
@@ -34,7 +31,7 @@ public class UIHandlerImpl implements UIHandler
     @Override
     public void showSelectJsonAndSchema()
     {
-        stage.setScene(new JSONSelection(controller, model).getScene(stage));
+        stage.setScene(new JSONSelectionScene(controller, model).getScene(stage));
         stage.show();
     }
     

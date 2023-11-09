@@ -93,6 +93,14 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public void refreshJsonNode(JsonNode jsonNode)
+    {
+        setRootJson(jsonNode);
+        // TODO can be improved
+        sendEvent(Event.MAIN_EDITOR);
+    }
+    
+    @Override
     public String searchForNode(String path, String value)
     {
         return NodeSearcher.findPathWithValue(getRootJson(), path, value);
