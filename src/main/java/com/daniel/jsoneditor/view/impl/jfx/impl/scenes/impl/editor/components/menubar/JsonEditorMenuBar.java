@@ -24,6 +24,7 @@ public class JsonEditorMenuBar extends MenuBar
         fileMenu.getItems().addAll(openItem, saveItem, refreshItem);
         Menu helpMenu = new Menu("Help");
         MenuItem aboutItem = new MenuItem("About");
+        aboutItem.setOnAction(event -> new AboutDialog().showAndWait());
         helpMenu.getItems().add(aboutItem);
         getMenus().addAll(fileMenu, helpMenu);
     }
