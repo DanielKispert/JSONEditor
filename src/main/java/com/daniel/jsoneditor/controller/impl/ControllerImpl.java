@@ -192,6 +192,12 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public String searchForReferenceableObject(String identifier)
+    {
+        return null;
+    }
+    
+    @Override
     public void removeNode(String path)
     {
         model.removeNode(path);
@@ -229,6 +235,12 @@ public class ControllerImpl implements Controller, Observer
         JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
         JsonNode json = reader.getJsonFromFile(readableModel.getCurrentJSONFile());
         handleJsonValidation(json, readableModel.getRootSchema(), () -> model.refreshJsonNode(json));
+    }
+    
+    @Override
+    public String searchForNode(String path, String value)
+    {
+        return readableModel.searchForNode(path, value);
     }
     
     private void handleJsonValidation(JsonNode json, JsonSchema schema, Runnable onSuccess)
