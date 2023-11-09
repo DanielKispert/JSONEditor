@@ -29,10 +29,7 @@ public class JsonEditorToolbar extends ToolBar
         this.controller = controller;
         this.model = model;
         this.editorWindowManager = editorWindowManager;
-        Button saveButton = new Button("Save to file");
-        saveButton.setOnAction(event -> controller.saveToFile());
         
-        getItems().addAll(saveButton);
         getItems().addAll(makeSearchButtons());
     }
     
