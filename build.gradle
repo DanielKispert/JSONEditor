@@ -20,5 +20,4 @@ javafx {
 
 dependencies {
     implementation 'com.networknt:json-schema-validator:1.0.87'
-    implementation 'org.controlsfx:controlsfx:11.2.0'
 }

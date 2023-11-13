@@ -38,7 +38,8 @@ public class EditorScene extends SceneHandlerImpl
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root, startingSceneWidth, startingSceneHeight);
         navbar = new JsonEditorNavbar(model, controller, editorWindowManager, stage);
-        VBox bars = new VBox(new JsonEditorMenuBar(controller), new JsonEditorToolbar(model, controller, editorWindowManager));
+        VBox bars = new VBox(new JsonEditorMenuBar(model, controller, editorWindowManager), new JsonEditorToolbar(model, controller,
+                editorWindowManager));
         root.setTop(bars);
         root.setLeft(makeSplitPane(scene));
         return scene;

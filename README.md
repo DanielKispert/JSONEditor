@@ -38,4 +38,6 @@ at the root of the schema, add an array of referenceable objects like this:
         }
     ]
 
+you should only use text or numbers for key nodes for now 
+
 

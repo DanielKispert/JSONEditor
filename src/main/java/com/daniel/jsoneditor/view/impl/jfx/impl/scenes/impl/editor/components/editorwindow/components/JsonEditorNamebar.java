@@ -50,7 +50,7 @@ public class JsonEditorNamebar extends HBox
         {
             parentPath = selectedPath;
         }
-        nameLabel.setText(makeFancyName(selection));
+        nameLabel.setText(selection.makeNameIncludingPath(model));
     }
     
     private Button makeSelectInNavbarButton()
@@ -78,29 +78,5 @@ public class JsonEditorNamebar extends HBox
         closeWindowButton.setOnAction(actionEvent -> manager.closeWindow(editorWindow));
         closeWindowButton.setAlignment(Pos.CENTER_RIGHT);
         return closeWindowButton;
-    }
-    
-    private String makeFancyName(JsonNodeWithPath node)
-    {
-        String path = node.getPath();
-        StringBuilder fancyName = new StringBuilder();
-        int startIndex = 0;
-        int nextIndex;
-        // first we grab the first path bit, then the first and second, and so on
-        while ((nextIndex = path.indexOf("/", startIndex)) != -1)
-        {
-            String partialPath = path.substring(0, nextIndex);
-            JsonNodeWithPath pathNode = model.getNodeForPath(partialPath);
-            String displayName = pathNode.getDisplayName();
-            fancyName.append(displayName);
-            fancyName.append(" > ");
-            startIndex = nextIndex + 1;
-        }
-    
-        // the last part of the path has to be handled separately
-        JsonNodeWithPath lastPathNode = model.getNodeForPath(path);
-        fancyName.append(lastPathNode.getDisplayName());
-    
-        return fancyName.toString();
     }
 }
