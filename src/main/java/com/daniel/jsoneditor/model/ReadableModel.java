@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.settings.Settings;
+import javafx.util.Pair;
 
 import java.io.File;
 import java.util.List;
@@ -28,6 +29,11 @@ public interface ReadableModel extends ReadableState
     boolean canAddMoreItems(String path);
     
     ReferenceToObject getReferenceToObject(String path);
+    
+    /**
+     * @return the keys of all json nodes that are referencable objects
+     */
+    List<Pair<String, String>> getReferenceableObjectKeys();
     
     String searchForNode(String path, String value);
     

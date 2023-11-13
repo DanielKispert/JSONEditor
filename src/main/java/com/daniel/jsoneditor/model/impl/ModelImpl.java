@@ -1,6 +1,5 @@
 package com.daniel.jsoneditor.model.impl;
 
-import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
@@ -212,6 +211,17 @@ public class ModelImpl implements ReadableModel, WritableModel
         return referenceableObjects;
     }
     
+    @Override
+    public List<Pair<String, String>> getReferenceableObjectKeys()
+    {
+        List<Pair<String, String>> keys = new ArrayList<>();
+        for (ReferenceableObject object : getReferenceableObjects())
+        {
+            keys.addAll(ReferenceHelper.getKeyOfReferenceableObjectInstances(this, object));
+        }
+        return keys;
+    }
+    
     private void collectReferencesRecursively(JsonNodeWithPath node, List<String> referencedNodes)
     {
         // first we check if the node itself has a reference to another object
@@ -395,6 +405,8 @@ public class ModelImpl implements ReadableModel, WritableModel
         String objectKey = referenceNode.get("objectKey").asText();
         return new ReferenceToObject(objectReferencingKey, objectKey);
     }
+    
+
     
     @Override
     public void addNodeToArray(String selectedPath)

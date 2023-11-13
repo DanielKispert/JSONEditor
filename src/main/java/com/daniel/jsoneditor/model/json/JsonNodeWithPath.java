@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model.json;
 
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.Iterator;
@@ -113,6 +114,30 @@ public final class JsonNodeWithPath
     public boolean isObject()
     {
         return node.isObject();
+    }
+    
+    public String makeNameIncludingPath(ReadableModel model)
+    {
+        String path = getPath();
+        StringBuilder fancyName = new StringBuilder();
+        int startIndex = 0;
+        int nextIndex;
+        // first we grab the first path bit, then the first and second, and so on
+        while ((nextIndex = path.indexOf("/", startIndex)) != -1)
+        {
+            String partialPath = path.substring(0, nextIndex);
+            JsonNodeWithPath pathNode = model.getNodeForPath(partialPath);
+            String displayName = pathNode.getDisplayName();
+            fancyName.append(displayName);
+            fancyName.append(" > ");
+            startIndex = nextIndex + 1;
+        }
+        
+        // the last part of the path has to be handled separately
+        JsonNodeWithPath lastPathNode = model.getNodeForPath(path);
+        fancyName.append(lastPathNode.getDisplayName());
+        
+        return fancyName.toString();
     }
     
 }

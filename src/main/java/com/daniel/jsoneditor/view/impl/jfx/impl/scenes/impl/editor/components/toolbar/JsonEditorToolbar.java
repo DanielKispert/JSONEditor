@@ -44,9 +44,7 @@ public class JsonEditorToolbar extends ToolBar
     
         button.setOnAction(actionEvent ->
         {
-            TextInputDialog dialog = new TextInputDialog("");
-            dialog.setHeaderText("Enter Search Term:");
-            Platform.runLater(() -> dialog.getEditor().requestFocus());
+            FindDialog dialog = new FindDialog(null);
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(s ->
             {
