@@ -36,21 +36,18 @@ public class JsonEditorMenuBar extends MenuBar
         Menu inspectMenu = new Menu("Inspect");
         MenuItem findItem = new MenuItem("Find anything");
         findItem.setOnAction(event -> {
-            FindDialog dialog = new FindDialog(model.getReferenceableObjectKeys());
+            FindDialog dialog = new FindDialog(model.getReferenceableObjectInstances());
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(s -> {
-                String foundNode = controller.searchForReferenceableObject(s);
-                if (foundNode != null)
+                if (manager.canAnotherWindowBeAdded())
                 {
-                    if (manager.canAnotherWindowBeAdded())
-                    {
-                        manager.selectInNewWindow(foundNode);
-                    }
-                    else
-                    {
-                        manager.selectFromNavbar(foundNode);
-                    }
+                    manager.selectInNewWindow(s);
                 }
+                else
+                {
+                    manager.selectFromNavbar(s);
+                }
+        
             });
         });
         findItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN));

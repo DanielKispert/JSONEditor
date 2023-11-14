@@ -192,12 +192,6 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
-    public String searchForReferenceableObject(String identifier)
-    {
-        return null;
-    }
-    
-    @Override
     public void removeNode(String path)
     {
         model.removeNode(path);

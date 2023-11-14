@@ -44,36 +44,31 @@ public class ReferenceHelper
                 break;
             }
         }
-        System.out.println(
-                "Could not find a referenceable object for reference " + node.getDisplayName());
+        System.out.println("Could not find a referenceable object for reference " + node.getDisplayName());
         return null;
     }
     
-    public static List<Pair<String, String>> getKeyOfReferenceableObjectInstances(ReadableModel model, ReferenceableObject referenceableObject)
+    public static List<ReferenceableObjectInstance> getReferenceableObjectInstances(ReadableModel model,
+            ReferenceableObject referenceableObject)
     {
         JsonNodeWithPath objectInstance = model.getNodeForPath(referenceableObject.getPath());
         if (objectInstance.isArray())
         {
-            List<Pair<String, String>> keys = new ArrayList<>();
+            List<ReferenceableObjectInstance> instances = new ArrayList<>();
             JsonNode arrayNode = objectInstance.getNode();
             for (int index = 0; index < arrayNode.size(); index++)
             {
                 String itemPath = objectInstance.getPath() + "/" + index;
                 
                 // the array items are the referenceable objects
-                Pair<String, String> details = referenceableObject.getDetailsOfInstance(model, model.getNodeForPath(itemPath));
-                if (details != null)
-                {
-                    keys.add(details);
-                }
+                instances.add(new ReferenceableObjectInstance(model, referenceableObject, model.getNodeForPath(itemPath)));
             }
-            return keys;
+            return instances;
         }
         else
         {
             // the referenceable object is the object itself, so we get its key
-            return Collections.singletonList(referenceableObject.getDetailsOfInstance(model, objectInstance));
+            return Collections.singletonList(new ReferenceableObjectInstance(model, referenceableObject, objectInstance));
         }
-        
     }
 }
