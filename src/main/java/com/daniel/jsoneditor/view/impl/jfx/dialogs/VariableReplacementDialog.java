@@ -38,7 +38,7 @@ public class VariableReplacementDialog
         for (String variable : variables)
         {
             Label label = new Label(variable);
-            TextField textField = new TextField("<" + variable + ">");
+            TextField textField = new TextField(variable);
             fields.put(variable, textField);
             
             grid.addRow(row++, label, textField);
