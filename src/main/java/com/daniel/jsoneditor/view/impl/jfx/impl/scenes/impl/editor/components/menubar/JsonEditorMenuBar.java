@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.FindDialog;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;

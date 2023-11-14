@@ -1,13 +1,11 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
 
-import javafx.application.Platform;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.settings.ButtonSetting;
-import com.daniel.jsoneditor.view.impl.jfx.impl.UIHandlerImpl;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 
 import java.util.Arrays;

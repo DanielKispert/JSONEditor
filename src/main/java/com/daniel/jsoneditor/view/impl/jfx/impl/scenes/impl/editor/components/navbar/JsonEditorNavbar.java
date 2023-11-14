@@ -122,6 +122,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
             if (importResult.isPresent())
             {
                 String jsonToImport = importResult.get();
+                jsonToImport = controller.resolveVariablesInJson(jsonToImport);
                 TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
                 JsonNodeWithPath selectedNode = selectedItem.getValue();
                 controller.importAtNode(selectedNode.getPath(), jsonToImport);

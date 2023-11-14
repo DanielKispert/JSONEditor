@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.controller.impl;
 
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
+import com.daniel.jsoneditor.controller.impl.json.VariableHelper;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -10,6 +11,7 @@ import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import javafx.stage.Stage;
@@ -20,7 +22,10 @@ import com.daniel.jsoneditor.view.View;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+
 
 public class ControllerImpl implements Controller, Observer
 {
@@ -133,6 +138,24 @@ public class ControllerImpl implements Controller, Observer
     public void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index)
     {
         model.moveItemToIndex(newParent, item, index);
+    }
+    
+    @Override
+    public String resolveVariablesInJson(String text)
+    {
+        Set<String> variables = VariableHelper.findVariables(text);
+    
+        if (variables.size() > 0)
+        {
+            VariableReplacementDialog dialog = new VariableReplacementDialog();
+            Map<String, String> replacements = dialog.showAndWait(variables);
+        
+            if (replacements != null)
+            {
+                return VariableHelper.replaceVariables(text, replacements);
+            }
+        }
+        return null;
     }
     
     @Override

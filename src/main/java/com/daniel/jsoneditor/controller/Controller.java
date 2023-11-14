@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.controller;
 
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.File;
 
@@ -14,6 +15,8 @@ public interface Controller
     void jsonAndSchemaSelected(File json, File schema, File settings);
     
     void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index);
+    
+    String resolveVariablesInJson(String json);
     
     void importAtNode(String path, String content);
     
