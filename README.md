@@ -38,6 +38,13 @@ at the root of the schema, add an array of referenceable objects like this:
         }
     ]
 
-you should only use text or numbers for key nodes for now 
+you should only use text or numbers for key nodes for now
+
+# Templates
+
+you can import existing JSON documents into any point of your json tree (given that the schema supports it).
+You can also use a special syntax to mark variables in a json document and the editor will help you fill them out!
+e.g. if you have a person object with name: <personname> and then somewhere else you would like to enter that as well then you can use <personname> again.
+Any string in <> will be assumed to be a variable and can be filled out by the json editor. That allows you to do predetermined mass-replacement!
 
 

@@ -1,4 +1,4 @@
-package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
+package com.daniel.jsoneditor.view.impl.jfx.dialogs;
 
 import java.util.List;
 import java.util.stream.Collectors;
