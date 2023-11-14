@@ -1,9 +1,6 @@
 package com.daniel.jsoneditor.model.json.schema.reference;
 
-import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.fasterxml.jackson.databind.JsonNode;
-import javafx.util.Pair;
 
 
 public class ReferenceableObject
@@ -52,19 +49,6 @@ public class ReferenceableObject
             }
         }
         
-        return null;
-    }
-    
-    /**
-     * @return first part of the pair is the key (that identifies this referenceable object), the second part is info for the UI
-     */
-    public Pair<String, String> getDetailsOfInstance(ReadableModel model, JsonNodeWithPath nodeWithPath)
-    {
-        String key = getKeyOfInstance(nodeWithPath.getNode());
-        if (key != null)
-        {
-            return new Pair<>(key, nodeWithPath.makeNameIncludingPath(model));
-        }
         return null;
     }
 }

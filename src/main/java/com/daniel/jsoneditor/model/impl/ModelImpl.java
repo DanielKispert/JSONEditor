@@ -6,6 +6,7 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.settings.IdentifierSetting;
 import com.daniel.jsoneditor.model.statemachine.StateMachine;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -212,14 +213,14 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public List<Pair<String, String>> getReferenceableObjectKeys()
+    public List<ReferenceableObjectInstance> getReferenceableObjectInstances()
     {
-        List<Pair<String, String>> keys = new ArrayList<>();
+        List<ReferenceableObjectInstance> items = new ArrayList<>();
         for (ReferenceableObject object : getReferenceableObjects())
         {
-            keys.addAll(ReferenceHelper.getKeyOfReferenceableObjectInstances(this, object));
+            items.addAll(ReferenceHelper.getReferenceableObjectInstances(this, object));
         }
-        return keys;
+        return items;
     }
     
     private void collectReferencesRecursively(JsonNodeWithPath node, List<String> referencedNodes)

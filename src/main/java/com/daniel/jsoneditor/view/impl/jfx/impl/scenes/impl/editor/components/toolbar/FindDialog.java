@@ -1,19 +1,29 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.*;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
-import javafx.util.Pair;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class FindDialog extends Dialog<String>
@@ -21,13 +31,13 @@ public class FindDialog extends Dialog<String>
     
     private final TextField searchField;
     
-    private final ListView<Pair<String, String>> suggestionListView;
+    private final ListView<ReferenceableObjectInstance> suggestionListView;
     
-    private final List<Pair<String, String>> suggestions;
+    private final List<ReferenceableObjectInstance> suggestions;
     
     private ButtonType searchButtonType;
     
-    public FindDialog(List<Pair<String, String>> suggestions)
+    public FindDialog(List<ReferenceableObjectInstance> suggestions)
     {
         this.suggestions = suggestions;
         
@@ -59,32 +69,46 @@ public class FindDialog extends Dialog<String>
     
     private String convertDialogResult(ButtonType dialogButton)
     {
-        ButtonType searchButtonType = this.getDialogPane().getButtonTypes().get(0);
-        return dialogButton == searchButtonType ? this.searchField.getText() : null;
+        if (dialogButton == searchButtonType)
+        {
+            return suggestionListView.getSelectionModel().getSelectedItem().getPath();
+        }
+        return null;
     }
     
-    private ListView<Pair<String, String>> createSuggestionListView()
+    private ListView<ReferenceableObjectInstance> createSuggestionListView()
     {
-        ListView<Pair<String, String>> listView = new ListView<>();
-        listView.setCellFactory(param -> new ListCell<>()
-        {
-            @Override
-            protected void updateItem(Pair<String, String> item, boolean empty)
+        ListView<ReferenceableObjectInstance> listView = new ListView<>();
+        listView.setCellFactory(param -> {
+            ListCell<ReferenceableObjectInstance> cell = new ListCell<>()
             {
-                super.updateItem(item, empty);
-                setGraphic(item != null ? createSuggestionBox(item) : null);
-            }
+                @Override
+                protected void updateItem(ReferenceableObjectInstance item, boolean empty)
+                {
+                    super.updateItem(item, empty);
+                    setGraphic(item != null ? createSuggestionBox(item) : null);
+                }
+            };
+            // Adding mouse double click event
+            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, click -> {
+                if (click.getClickCount() == 2 && (!cell.isEmpty()))
+                {
+                    searchField.setText(cell.getItem().getKey());
+                    submitSearch();
+                }
+            });
+            return cell;
         });
         return listView;
     }
     
-    private HBox createSuggestionBox(Pair<String, String> suggestion)
+    private HBox createSuggestionBox(ReferenceableObjectInstance suggestion)
     {
         HBox hbox = new HBox();
         Region spacer = new Region();
         
         Text suggestedText = new Text(suggestion.getKey());
-        Text extraInfo = new Text(suggestion.getValue());
+        Text extraInfo = new Text(suggestion.getFancyName());
         
         extraInfo.setFill(Color.GRAY);
         extraInfo.setOpacity(0.5);
@@ -103,7 +127,7 @@ public class FindDialog extends Dialog<String>
      */
     private void filterSuggestionsBasedOn(String currentText)
     {
-        List<Pair<String, String>> filteredSuggestions = suggestions.stream().filter(
+        List<ReferenceableObjectInstance> filteredSuggestions = suggestions.stream().filter(
                 suggestion -> suggestion.getKey().toLowerCase().startsWith(currentText.toLowerCase())).collect(Collectors.toList());
         
         suggestionListView.setItems(FXCollections.observableArrayList(filteredSuggestions));
@@ -121,13 +145,39 @@ public class FindDialog extends Dialog<String>
     {
         if (keyEvent.getCode().equals(KeyCode.TAB))
         {
-            autoFill();
+            autofillText();
             keyEvent.consume();
         }
         else if (keyEvent.getCode().equals(KeyCode.ENTER))
         {
             submitSearch();
             keyEvent.consume();
+        }
+        else if (keyEvent.getCode().equals(KeyCode.UP))
+        {
+            navigateSuggestions(-1);
+            keyEvent.consume();
+        }
+        else if (keyEvent.getCode().equals(KeyCode.DOWN))
+        {
+            navigateSuggestions(1);
+            keyEvent.consume();
+        }
+    }
+    
+    /**
+     * Navigates through the list of suggestions
+     *
+     * @param offset
+     *         - indicates the number of positions to navigate. Positive for down and negative for up.
+     */
+    private void navigateSuggestions(int offset)
+    {
+        int currentIndex = suggestionListView.getSelectionModel().getSelectedIndex();
+        int newIndex = currentIndex + offset;
+        if (newIndex >= 0 && newIndex < suggestionListView.getItems().size())
+        {
+            suggestionListView.getSelectionModel().select(newIndex);
         }
     }
     
@@ -141,12 +191,12 @@ public class FindDialog extends Dialog<String>
     }
     
     /**
-     * Auto-fills the search field with the longest common prefix from the suggestions
+     * Autofills the search field with the longest common prefix from the suggestions
      */
-    private void autoFill()
+    private void autofillText()
     {
         String currentText = searchField.getText().toLowerCase();
-        List<String> matchingSuggestions = suggestions.stream().map(Pair::getKey).filter(
+        List<String> matchingSuggestions = suggestions.stream().map(ReferenceableObjectInstance::getKey).filter(
                 suggestion -> suggestion.toLowerCase().startsWith(currentText)).collect(Collectors.toList());
         
         if (!matchingSuggestions.isEmpty())

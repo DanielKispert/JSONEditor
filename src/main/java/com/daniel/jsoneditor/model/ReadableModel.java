@@ -2,11 +2,11 @@ package com.daniel.jsoneditor.model;
 
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.settings.Settings;
-import javafx.util.Pair;
 
 import java.io.File;
 import java.util.List;
@@ -31,9 +31,9 @@ public interface ReadableModel extends ReadableState
     ReferenceToObject getReferenceToObject(String path);
     
     /**
-     * @return the keys of all json nodes that are referencable objects
+     * @return prepared referenceable object instances
      */
-    List<Pair<String, String>> getReferenceableObjectKeys();
+    List<ReferenceableObjectInstance> getReferenceableObjectInstances();
     
     String searchForNode(String path, String value);
     
