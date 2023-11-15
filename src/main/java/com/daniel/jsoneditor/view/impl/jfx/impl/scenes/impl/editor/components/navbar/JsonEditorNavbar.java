@@ -11,11 +11,14 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ImportDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tooltip;
+import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseButton;
@@ -50,6 +53,31 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
                 if (selectedItem != null)
                 {
                     JsonEditorNavbar.this.handleNavbarClick(selectedItem);
+                }
+            }
+        });
+        setCellFactory(tv -> new TreeCell<>()
+        {
+            private Tooltip tooltip = null;
+            @Override
+            public void updateItem(JsonNodeWithPath item, boolean empty)
+            {
+                super.updateItem(item, empty);
+                if (empty)
+                {
+                    setText(null);
+                    setTooltip(null);
+                }
+                else
+                {
+                    setText(item.toString());
+                    hoverProperty().addListener((observable, wasHovered, isNowHovered) -> {
+                        if (isNowHovered && (tooltip == null || !tooltip.getText().equals(item.getDisplayName())))
+                        {
+                            tooltip = TooltipHelper.makeTooltipFromJsonNode(item.getNode());
+                            setTooltip(tooltip);
+                        }
+                    });
                 }
             }
         });
