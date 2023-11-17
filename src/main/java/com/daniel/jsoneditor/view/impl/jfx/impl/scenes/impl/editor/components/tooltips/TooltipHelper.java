@@ -22,7 +22,16 @@ public class TooltipHelper
             while (fields.hasNext())
             {
                 Map.Entry<String, JsonNode> field = fields.next();
-                Tooltip childTooltip = makeTooltipFromJsonNode(field.getValue());
+                JsonNode childNode = field.getValue();
+                Tooltip childTooltip;
+                if (childNode.isContainerNode())
+                {
+                    childTooltip = new Tooltip(jsonNode.asText());
+                }
+                else
+                {
+                    childTooltip = makeTooltipFromJsonNode(field.getValue());
+                }
                 tooltipText.append(String.format("%s : %s\n", field.getKey(), childTooltip.getText()));
             }
         }
