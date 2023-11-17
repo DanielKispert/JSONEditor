@@ -128,7 +128,7 @@ public class FindDialog extends Dialog<String>
     private void filterSuggestionsBasedOn(String currentText)
     {
         List<ReferenceableObjectInstance> filteredSuggestions = suggestions.stream().filter(
-                suggestion -> suggestion.getKey().toLowerCase().startsWith(currentText.toLowerCase())).collect(Collectors.toList());
+                suggestion -> suggestion.getKey().toLowerCase().contains(currentText.toLowerCase())).collect(Collectors.toList());
         
         suggestionListView.setItems(FXCollections.observableArrayList(filteredSuggestions));
         
