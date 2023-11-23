@@ -35,6 +35,8 @@ public interface ReadableModel extends ReadableState
      */
     List<ReferenceableObjectInstance> getReferenceableObjectInstances();
     
+    List<ReferenceableObjectInstance> getInstancesOfReferenceableObjectAtPath(String path);
+    
     String searchForNode(String path, String value);
     
     JsonNodeWithPath getNodeForPath(String path);

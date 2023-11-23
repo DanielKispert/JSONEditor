@@ -223,6 +223,19 @@ public class ModelImpl implements ReadableModel, WritableModel
         return items;
     }
     
+    @Override
+    public List<ReferenceableObjectInstance> getInstancesOfReferenceableObjectAtPath(String path)
+    {
+        for (ReferenceableObject object : getReferenceableObjects())
+        {
+            if (NodeSearcher.formatQueryPath(path).getKey().equals(object.getPath()))
+            {
+                return ReferenceHelper.getReferenceableObjectInstances(this, object);
+            }
+        }
+        return new ArrayList<>();
+    }
+    
     private void collectReferencesRecursively(JsonNodeWithPath node, List<String> referencedNodes)
     {
         // first we check if the node itself has a reference to another object

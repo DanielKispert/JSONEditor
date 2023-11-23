@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
 
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
@@ -40,23 +41,17 @@ public class JsonEditorToolbar extends ToolBar
     {
         Button button = new Button(buttonSetting.getTitle());
     
-        button.setOnAction(actionEvent ->
-        {
-            FindDialog dialog = new FindDialog(null);
+        button.setOnAction(actionEvent -> {
+            FindDialog dialog = new FindDialog(model.getInstancesOfReferenceableObjectAtPath(buttonSetting.getTarget()));
             Optional<String> result = dialog.showAndWait();
-            result.ifPresent(s ->
-            {
-                String foundNode = controller.searchForNode(buttonSetting.getTarget(), s);
-                if (foundNode != null)
+            result.ifPresent(s -> {
+                if (editorWindowManager.canAnotherWindowBeAdded())
                 {
-                    if (editorWindowManager.canAnotherWindowBeAdded())
-                    {
-                        editorWindowManager.selectInNewWindow(foundNode);
-                    }
-                    else
-                    {
-                        editorWindowManager.selectFromNavbar(foundNode);
-                    }
+                    editorWindowManager.selectInNewWindow(s);
+                }
+                else
+                {
+                    editorWindowManager.selectFromNavbar(s);
                 }
             });
         });
