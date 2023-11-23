@@ -1,56 +1,71 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
 
 
 public class TooltipHelper
 {
+    
     public static Tooltip makeTooltipFromJsonNode(JsonNode jsonNode)
     {
-        StringBuilder tooltipText = new StringBuilder();
-    
-        if (jsonNode.isObject())
-        {
-            Iterator<Entry<String, JsonNode>> fields = jsonNode.fields();
-            while (fields.hasNext())
-            {
-                Map.Entry<String, JsonNode> field = fields.next();
-                JsonNode childNode = field.getValue();
-                Tooltip childTooltip;
-                if (childNode.isContainerNode())
-                {
-                    childTooltip = new Tooltip(jsonNode.asText());
-                }
-                else
-                {
-                    childTooltip = makeTooltipFromJsonNode(field.getValue());
-                }
-                tooltipText.append(String.format("%s : %s\n", field.getKey(), childTooltip.getText()));
-            }
-        }
-        else if (jsonNode.isArray())
-        {
-            ArrayNode arrayNode = (ArrayNode) jsonNode;
-            for (int i = 0; i < arrayNode.size(); i++)
-            {
-                Tooltip childTooltip = makeTooltipFromJsonNode(arrayNode.get(i));
-                tooltipText.append(String.format("Item %d: %s\n", i + 1, childTooltip.getText()));
-            }
-        }
-        else
-        {
-            tooltipText.append(jsonNode);
-        }
-    
-        Tooltip tooltip = new Tooltip(tooltipText.toString());
+        String tooltipText = getTooltipTextFromJsonNode(jsonNode);
+        Tooltip tooltip = new Tooltip(tooltipText);
         tooltip.setShowDuration(Duration.INDEFINITE);
         return tooltip;
     }
+    
+    private static boolean objectHasOnlyValueNodes(JsonNode jsonNode)
+    {
+        Iterable<Map.Entry<String, JsonNode>> fields = jsonNode::fields;
+        return StreamSupport.stream(fields.spliterator(), false).noneMatch(field -> field.getValue().isContainerNode());
+    }
+    
+    private static String getTooltipTextFromJsonNode(JsonNode jsonNode)
+    {
+        if (jsonNode.isValueNode())
+        {
+            return jsonNode.asText();
+        }
+        else if (jsonNode.isObject() && objectHasOnlyValueNodes(jsonNode))
+        {
+            return getTooltipFromObjectNodeWithOnlyValueNodes(jsonNode);
+        }
+        else if (jsonNode.isObject())
+        {
+            return getTooltipFromObjectNode(jsonNode);
+        }
+        else if (jsonNode.isArray())
+        {
+            return getTooltipFromArrayNode(jsonNode);
+        }
+        return "";
+    }
+    
+    private static String getTooltipFromObjectNodeWithOnlyValueNodes(JsonNode jsonNode)
+    {
+        Iterable<Map.Entry<String, JsonNode>> fields = jsonNode::fields;
+        return StreamSupport.stream(fields.spliterator(), false).map(field -> field.getValue().asText()).collect(Collectors.joining(" | "));
+    }
+    
+    private static String getTooltipFromObjectNode(JsonNode jsonNode)
+    {
+        StringBuilder sb = new StringBuilder();
+        jsonNode.fields().forEachRemaining(field -> sb.append("---").append(field.getKey()).append("---\n")
+                .append(getTooltipTextFromJsonNode(field.getValue())).append("\n\n"));
+        return sb.toString().trim();
+    }
+    
+    private static String getTooltipFromArrayNode(JsonNode jsonNode)
+    {
+        StringBuilder sb = new StringBuilder();
+        jsonNode.iterator().forEachRemaining(arrayItem -> sb.append(getTooltipTextFromJsonNode(arrayItem)).append("\n"));
+        return sb.toString().trim();
+    }
+    
 }
