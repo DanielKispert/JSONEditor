@@ -9,6 +9,7 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -16,10 +17,14 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.util.Callback;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
@@ -30,9 +35,9 @@ import java.util.Map.Entry;
 
 
 /**
- * shows a list of child objects of a selection. If the selection is an array, every array item is one child node (= one row in the table). If the selection is an
+ * shows a list of child objects of a selection. If the selection is an array, every array item is one child node (= one row in the table).
+ * If the selection is an
  * object, every child node of the object is one row in the table.
- *
  */
 public class EditorTableViewImpl extends EditorTableView
 {
@@ -52,6 +57,29 @@ public class EditorTableViewImpl extends EditorTableView
         this.controller = controller;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
+        setRowFactory(new Callback<>()
+        {
+            @Override
+            public TableRow<JsonNodeWithPath> call(TableView<JsonNodeWithPath> param)
+            {
+                return new TableRow<>()
+                {
+                    @Override
+                    protected void updateItem(JsonNodeWithPath item, boolean empty)
+                    {
+                        super.updateItem(item, empty);
+                        if (item == null)
+                        {
+                            setTooltip(null);
+                        }
+                        else
+                        {
+                            setTooltip(TooltipHelper.makeTooltipFromJsonNode(item.getNode()));
+                        }
+                    }
+                };
+            }
+        });
     }
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
@@ -91,9 +119,9 @@ public class EditorTableViewImpl extends EditorTableView
             childSchema = childSchema.get("items");
         }
         List<String> requiredProperties = SchemaHelper.getRequiredProperties(childSchema);
-
+        
         Iterator<Entry<String, JsonNode>> iterator = childSchema.get("properties").fields();
-    
+        
         while (iterator.hasNext())
         {
             Map.Entry<String, JsonNode> entry = iterator.next();
@@ -113,7 +141,7 @@ public class EditorTableViewImpl extends EditorTableView
                 properties.add(new Pair<>(new Pair<>(propertyName, isRequired), entry.getValue()));
             }
         }
-    
+        
         List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>(createTableColumns(properties));
         if (isArray)
         {
@@ -131,14 +159,14 @@ public class EditorTableViewImpl extends EditorTableView
         TableColumn<JsonNodeWithPath, String> followReferenceColumn = new TableColumn<>();
         
         followReferenceColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getPath()));
-    
+        
         followReferenceColumn.setCellFactory(param -> new TableCell<>()
         {
             @Override
             protected void updateItem(String path, boolean empty)
             {
                 super.updateItem(path, empty);
-            
+                
                 if (empty || path == null)
                 {
                     setGraphic(null);
@@ -158,7 +186,7 @@ public class EditorTableViewImpl extends EditorTableView
                 }
             }
         });
-    
+        
         return followReferenceColumn;
     }
     
@@ -188,8 +216,6 @@ public class EditorTableViewImpl extends EditorTableView
         return deleteColumn;
     }
     
-    
-    
     /**
      * creates columns for the table view
      */
@@ -203,8 +229,7 @@ public class EditorTableViewImpl extends EditorTableView
             JsonNode propertyNode = property.getValue();
             EditorTableColumn column = new EditorTableColumn(propertyName, isRequired);
             // every column holds one property of the array's items
-            column.setCellValueFactory(data ->
-            {
+            column.setCellValueFactory(data -> {
                 JsonNodeWithPath jsonNodeWithPath = data.getValue();
                 JsonNode valueNode = jsonNodeWithPath.getNode().get(propertyName);
                 if (valueNode != null)
@@ -230,7 +255,7 @@ public class EditorTableViewImpl extends EditorTableView
                         }
                         else if (types.contains("string"))
                         {
-        
+                            
                             if (types.contains("integer") || types.contains("number"))
                             {
                                 // display a TextTableCell that can also save itself as a number and not as a string if the user enters a
@@ -242,7 +267,7 @@ public class EditorTableViewImpl extends EditorTableView
                                 // a normal TextTableCell is enough. One that should save itself as string and not a number
                                 return new TextTableCell(manager, model, false);
                             }
-        
+                            
                         }
                         else if (types.contains("integer") || types.contains("number"))
                         {
@@ -264,8 +289,7 @@ public class EditorTableViewImpl extends EditorTableView
             private final Button button = new Button("Open");
             
             {
-                button.setOnAction(event ->
-                {
+                button.setOnAction(event -> {
                     String item = getItem();
                     if (item != null)
                     {
@@ -300,21 +324,18 @@ public class EditorTableViewImpl extends EditorTableView
             
             {
                 // Restrict input to numeric values only
-                textField.textProperty().addListener((observable, oldValue, newValue) ->
-                {
+                textField.textProperty().addListener((observable, oldValue, newValue) -> {
                     if (!newValue.matches("\\d*"))
                     {
                         textField.setText(newValue.replaceAll("[^\\d]", ""));
                     }
                 });
                 
-                textField.setOnAction(event ->
-                {
+                textField.setOnAction(event -> {
                     commitEdit(textField.getText());
                 });
                 
-                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) ->
-                {
+                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
                     if (wasFocused && !isNowFocused)
                     {
                         commitEdit(textField.getText());
@@ -358,6 +379,5 @@ public class EditorTableViewImpl extends EditorTableView
         removeButton.setMaxHeight(Double.MAX_VALUE);
         return removeButton;
     }
-    
     
 }
