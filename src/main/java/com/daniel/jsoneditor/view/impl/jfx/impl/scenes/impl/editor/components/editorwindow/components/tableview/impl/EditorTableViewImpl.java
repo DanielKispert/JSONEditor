@@ -57,29 +57,6 @@ public class EditorTableViewImpl extends EditorTableView
         this.controller = controller;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
-        setRowFactory(new Callback<>()
-        {
-            @Override
-            public TableRow<JsonNodeWithPath> call(TableView<JsonNodeWithPath> param)
-            {
-                return new TableRow<>()
-                {
-                    @Override
-                    protected void updateItem(JsonNodeWithPath item, boolean empty)
-                    {
-                        super.updateItem(item, empty);
-                        if (item == null)
-                        {
-                            setTooltip(null);
-                        }
-                        else
-                        {
-                            setTooltip(TooltipHelper.makeTooltipFromJsonNode(item.getNode()));
-                        }
-                    }
-                };
-            }
-        });
     }
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
@@ -286,34 +263,36 @@ public class EditorTableViewImpl extends EditorTableView
     {
         return new TableCell<>()
         {
-            private final Button button = new Button("Open");
-            
-            {
-                button.setOnAction(event -> {
-                    String item = getItem();
-                    if (item != null)
-                    {
-                        JsonNodeWithPath jsonNodeWithPath = getTableRow().getItem();
-                        // if the "open" button is clicked, we want to open that node in the current window
-                        window.setSelectedPath(jsonNodeWithPath.getPath() + "/" + pathToOpen);
-                    }
-                });
-            }
             
             @Override
             protected void updateItem(String item, boolean empty)
             {
                 super.updateItem(item, empty);
-                if (empty || item == null)
+                JsonNodeWithPath currentNode = getTableRow().getItem();
+                if (empty || item == null || currentNode == null)
                 {
                     setGraphic(null);
                 }
                 else
                 {
-                    setGraphic(button);
+                    setGraphic(makeOpenButton(currentNode.getPath() + "/" + pathToOpen));
                 }
             }
         };
+    }
+    
+    private Button makeOpenButton(String pathToOpen)
+    {
+        Button button = new Button("Open");
+        button.setOnAction(event -> {
+            if (pathToOpen != null)
+            {
+                // if the "open" button is clicked, we want to open that node in the current window
+                window.setSelectedPath(pathToOpen);
+            }
+        });
+        button.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(pathToOpen).getNode()));
+        return button;
     }
     
     private NumberTableCell makeNumberTableCell()
@@ -367,6 +346,7 @@ public class EditorTableViewImpl extends EditorTableView
     {
         Button removeButton = new Button("Follow Reference");
         removeButton.setOnAction(event -> manager.selectInNewWindow(path));
+        removeButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
         removeButton.setMaxHeight(Double.MAX_VALUE);
         return removeButton;
     }
