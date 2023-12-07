@@ -129,6 +129,31 @@ public class EditorTableViewImpl extends EditorTableView
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
+        if (isArray)
+        {
+            // Hide empty columns
+            for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
+            {
+                if (column instanceof EditorTableColumn)
+                {
+                    boolean required = ((EditorTableColumn) column).isRequired();
+                    if (!required)
+                    {
+                        boolean empty = true;
+                        
+                        for (int i = 0; i < getItems().size(); i++)
+                        {
+                            if (column.getCellData(i) != null && !column.getCellData(i).toString().isEmpty())
+                            {
+                                empty = false;
+                                break;
+                            }
+                        }
+                        column.setVisible(!empty);
+                    }
+                }
+            }
+        }
     }
     
     private TableColumn<JsonNodeWithPath, String> createFollowReferenceButtonColumn()

@@ -2,7 +2,6 @@ package com.daniel.jsoneditor.controller.impl.json.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Set;
 
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
@@ -12,8 +11,8 @@ import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.*;
-import com.networknt.schema.SpecVersion.VersionFlag;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.ValidationMessage;
 
 public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
 {
@@ -32,7 +31,7 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         {
             System.out.println("Validation Error: " + message.getMessage());
         }
-        return messages.size() == 0;
+        return messages.isEmpty();
     }
     
     @Override

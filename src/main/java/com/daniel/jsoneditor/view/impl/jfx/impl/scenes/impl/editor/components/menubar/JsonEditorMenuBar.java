@@ -6,6 +6,7 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -34,6 +35,25 @@ public class JsonEditorMenuBar extends MenuBar
         fileMenu.getItems().addAll(openItem, saveItem, refreshItem);
     
         Menu inspectMenu = new Menu("Inspect");
+        MenuItem findItem = makeFindAnythingItem(model, manager);
+        inspectMenu.getItems().add(findItem);
+        
+        Menu viewMenu = new Menu("View");
+        CheckMenuItem hideEmptyColumnsItem = new CheckMenuItem("Automatically hide empty, non-required columns in arrays");
+        hideEmptyColumnsItem.setSelected(controller.getAutomaticallyHideEmptyColumns());
+        hideEmptyColumnsItem.selectedProperty().addListener(
+                (observable, oldValue, newValue) -> controller.setAutomaticallyHideEmptyColumns(newValue));
+        viewMenu.getItems().add(hideEmptyColumnsItem);
+        
+        Menu helpMenu = new Menu("Help");
+        MenuItem aboutItem = new MenuItem("About");
+        aboutItem.setOnAction(event -> new AboutDialog().showAndWait());
+        helpMenu.getItems().add(aboutItem);
+        getMenus().addAll(fileMenu, inspectMenu, viewMenu, helpMenu);
+    }
+    
+    private static MenuItem makeFindAnythingItem(ReadableModel model, EditorWindowManager manager)
+    {
         MenuItem findItem = new MenuItem("Find anything");
         findItem.setOnAction(event -> {
             FindDialog dialog = new FindDialog(model.getReferenceableObjectInstances());
@@ -51,12 +71,6 @@ public class JsonEditorMenuBar extends MenuBar
             });
         });
         findItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN));
-        inspectMenu.getItems().add(findItem);
-        
-        Menu helpMenu = new Menu("Help");
-        MenuItem aboutItem = new MenuItem("About");
-        aboutItem.setOnAction(event -> new AboutDialog().showAndWait());
-        helpMenu.getItems().add(aboutItem);
-        getMenus().addAll(fileMenu, inspectMenu, helpMenu);
+        return findItem;
     }
 }

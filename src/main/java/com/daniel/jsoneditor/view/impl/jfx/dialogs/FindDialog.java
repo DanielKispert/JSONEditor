@@ -71,7 +71,11 @@ public class FindDialog extends Dialog<String>
     {
         if (dialogButton == searchButtonType)
         {
-            return suggestionListView.getSelectionModel().getSelectedItem().getPath();
+            ReferenceableObjectInstance selectedItem = suggestionListView.getSelectionModel().getSelectedItem();
+            if (selectedItem != null)
+            {
+                return selectedItem.getPath();
+            }
         }
         return null;
     }

@@ -4,6 +4,7 @@ import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 import com.daniel.jsoneditor.controller.impl.json.VariableHelper;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
+import com.daniel.jsoneditor.controller.properties.PropertiesHelper;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.observe.Observer;
@@ -46,19 +47,7 @@ public class ControllerImpl implements Controller, Observer
     
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
     {
-        properties = new Properties();
-        try (FileInputStream propertiesFile = new FileInputStream("jsoneditor.properties"))
-        {
-            properties.load(propertiesFile);
-        }
-        catch (FileNotFoundException e)
-        {
-            System.out.println("jsoneditor.properties not found");
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        properties = PropertiesHelper.readPropertiesFromFile();
         this.model = model;
         this.readableModel = readableModel;
         this.subjects = new ArrayList<>();
@@ -93,13 +82,28 @@ public class ControllerImpl implements Controller, Observer
         properties.setProperty(PROPERTY_LAST_JSON_PATH, jsonPath);
         properties.setProperty(PROPERTY_LAST_SCHEMA_PATH, schemaPath);
         properties.setProperty(PROPERTY_LAST_SETTINGS_PATH, settingsPath);
-        try (FileOutputStream output = new FileOutputStream("jsoneditor.properties"))
+        PropertiesHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public void setAutomaticallyHideEmptyColumns(boolean automaticallyHideEmptyColumns)
+    {
+        properties.setProperty("automatically_hide_empty_columns", automaticallyHideEmptyColumns ? "true" : "false");
+        PropertiesHelper.writePropertiesToFile(properties);
+        view.update();
+    }
+    
+    @Override
+    public boolean getAutomaticallyHideEmptyColumns()
+    {
+        String property = properties.getProperty("automatically_hide_empty_columns");
+        if (property == null)
         {
-            properties.store(output, null);
+            return true;
         }
-        catch (IOException e)
+        else
         {
-            e.printStackTrace();
+            return "true".equalsIgnoreCase(property);
         }
     }
     
@@ -195,7 +199,7 @@ public class ControllerImpl implements Controller, Observer
         if (nodeWithPath != null)
         {
             // we want to export the node and all parent nodes of the node (but no other child nodes of the parent nodes)
-            List<String> pathsToExport = readableModel.getDependentPaths(nodeWithPath);// TODO fill list with dependent nodes
+            List<String> pathsToExport = readableModel.getDependentPaths(nodeWithPath);
             pathsToExport.add(readableModel.getNodeForPath(path).getPath());
         
             String fileWithEnding = readableModel.getCurrentJSONFile().getName();
