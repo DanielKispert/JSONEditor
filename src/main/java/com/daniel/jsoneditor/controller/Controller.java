@@ -9,6 +9,10 @@ public interface Controller
 {
     
     void setFileProperties(boolean rememberPaths, String jsonPath, String schemaPath, String settingsPath);
+    
+    void setAutomaticallyHideEmptyColumns(boolean automaticallyHideEmptyColumns);
+    
+    boolean getAutomaticallyHideEmptyColumns();
 
     void launchFinished();
     

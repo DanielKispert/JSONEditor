@@ -245,29 +245,35 @@ public class ModelImpl implements ReadableModel, WritableModel
             String referencePath = ReferenceHelper.resolveReference(node, reference, this);
             if (referencePath != null)
             {
+                // this node is a dependency
                 referencedNodes.add(referencePath);
+                // we also need to add all of its dependencies
+                collectReferencesRecursively(getNodeForPath(referencePath), referencedNodes);
             }
         }
-    
-        if (node.isObject())
+        else
         {
-            node.getNode().fields().forEachRemaining(entry ->
+            // if the node itself doesn't have a reference, we check if any of its children have a reference
+            if (node.isObject())
             {
-                JsonNodeWithPath childNode = new JsonNodeWithPath(entry.getValue(), node.getPath() + "/" + entry.getKey());
-                collectReferencesRecursively(childNode, referencedNodes);
-            });
-        }
-        else if (node.isArray())
-        {
-            int index = 0;
-            for (JsonNode child : node.getNode())
+                node.getNode().fields().forEachRemaining(entry -> {
+                    JsonNodeWithPath childNode = new JsonNodeWithPath(entry.getValue(), node.getPath() + "/" + entry.getKey());
+                    collectReferencesRecursively(childNode, referencedNodes);
+                });
+            }
+            else if (node.isArray())
             {
-                String path = node.getPath() + "/" + index;
-                JsonNodeWithPath childNode = new JsonNodeWithPath(child, path);
-                collectReferencesRecursively(childNode, referencedNodes);
-                index++;
+                int index = 0;
+                for (JsonNode child : node.getNode())
+                {
+                    String path = node.getPath() + "/" + index;
+                    JsonNodeWithPath childNode = new JsonNodeWithPath(child, path);
+                    collectReferencesRecursively(childNode, referencedNodes);
+                    index++;
+                }
             }
         }
+        
     }
     
     @Override
@@ -419,8 +425,6 @@ public class ModelImpl implements ReadableModel, WritableModel
         String objectKey = referenceNode.get("objectKey").asText();
         return new ReferenceToObject(objectReferencingKey, objectKey);
     }
-    
-
     
     @Override
     public void addNodeToArray(String selectedPath)

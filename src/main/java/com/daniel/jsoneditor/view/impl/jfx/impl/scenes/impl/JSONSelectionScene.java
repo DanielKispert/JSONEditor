@@ -53,78 +53,18 @@ public class JSONSelectionScene extends SceneHandlerImpl
         Label jsonLabel = new Label("JSON to edit:");
         TextField jsonFileField = new TextField(selectedJsonPath);
         jsonFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedJsonPath = newValue);
-        Button jsonButton = new Button("Select JSON");
-        jsonButton.setOnAction(e ->
-        {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Select JSON file");
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
-            );
-            if (lastDirectory != null)
-            {
-                fileChooser.setInitialDirectory(lastDirectory);
-            }
-            File selectedJson = fileChooser.showOpenDialog(stage);
-            if (selectedJson != null)
-            {
-                selectedJsonPath = selectedJson.getAbsolutePath();
-                jsonFileField.setText(selectedJsonPath);
-                lastDirectory = selectedJson.getParentFile();
-            }
-        });
-        HBox jsonBox = new HBox(jsonLabel, jsonFileField, jsonButton);
+        HBox jsonBox = getJsonBox(stage, jsonFileField, jsonLabel);
         // SCHEMA
         Label schemaLabel = new Label("Schema:");
         TextField schemaFileField = new TextField(selectedSchemaPath);
         schemaFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedSchemaPath = newValue);
-        Button schemaButton = new Button("Select Schema");
-        schemaButton.setOnAction(e ->
-        {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Select Schema file");
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
-            );
-            if (lastDirectory != null)
-            {
-                fileChooser.setInitialDirectory(lastDirectory);
-            }
-            File selectedSchema = fileChooser.showOpenDialog(stage);
-            if (selectedSchema != null)
-            {
-                selectedSchemaPath = selectedSchema.getAbsolutePath();
-                schemaFileField.setText(selectedSchemaPath);
-                lastDirectory = selectedSchema.getParentFile();
-            }
-        });
-        HBox schemaBox = new HBox(schemaLabel, schemaFileField, schemaButton);
+        HBox schemaBox = getSchemaBox(stage, schemaFileField, schemaLabel);
         // SETTINGS
         Label settingsLabel = new Label("Settings:");
         TextField settingsFileField = new TextField(selectedSettingsPath);
         settingsFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedSettingsPath = newValue);
-        Button settingsButton = new Button("Select Settings");
-        settingsButton.setOnAction(e ->
-        {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Select Settings file");
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
-            );
-            if (lastDirectory != null)
-            {
-                fileChooser.setInitialDirectory(lastDirectory);
-            }
-            File selectedSettings = fileChooser.showOpenDialog(stage);
-            if (selectedSettings != null)
-            {
-                selectedSettingsPath = selectedSettings.getAbsolutePath();
-                settingsFileField.setText(selectedSettingsPath);
-                lastDirectory = selectedSettings.getParentFile();
-            }
-        });
-        HBox settingsBox = new HBox(settingsLabel, settingsFileField, settingsButton);
-    
+        HBox settingsBox = getSettingsBox(stage, settingsFileField, settingsLabel);
+        
         CheckBox rememberCheckBox = new CheckBox("Remember");
         rememberCheckBox.setSelected(rememberedRememberSettings);
         
@@ -151,6 +91,81 @@ public class JSONSelectionScene extends SceneHandlerImpl
         root.addRow(4, okButton);
         
         return new Scene(root, 400, 200);
+    }
+    
+    private HBox getSettingsBox(Stage stage, TextField settingsFileField, Label settingsLabel)
+    {
+        Button settingsButton = new Button("Select Settings");
+        settingsButton.setOnAction(e ->
+        {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select Settings file");
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
+            );
+            if (lastDirectory != null)
+            {
+                fileChooser.setInitialDirectory(lastDirectory);
+            }
+            File selectedSettings = fileChooser.showOpenDialog(stage);
+            if (selectedSettings != null)
+            {
+                selectedSettingsPath = selectedSettings.getAbsolutePath();
+                settingsFileField.setText(selectedSettingsPath);
+                lastDirectory = selectedSettings.getParentFile();
+            }
+        });
+        return new HBox(settingsLabel, settingsFileField, settingsButton);
+    }
+    
+    private HBox getSchemaBox(Stage stage, TextField schemaFileField, Label schemaLabel)
+    {
+        Button schemaButton = new Button("Select Schema");
+        schemaButton.setOnAction(e ->
+        {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select Schema file");
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
+            );
+            if (lastDirectory != null)
+            {
+                fileChooser.setInitialDirectory(lastDirectory);
+            }
+            File selectedSchema = fileChooser.showOpenDialog(stage);
+            if (selectedSchema != null)
+            {
+                selectedSchemaPath = selectedSchema.getAbsolutePath();
+                schemaFileField.setText(selectedSchemaPath);
+                lastDirectory = selectedSchema.getParentFile();
+            }
+        });
+        return new HBox(schemaLabel, schemaFileField, schemaButton);
+    }
+    
+    private HBox getJsonBox(Stage stage, TextField jsonFileField, Label jsonLabel)
+    {
+        Button jsonButton = new Button("Select JSON");
+        jsonButton.setOnAction(e ->
+        {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select JSON file");
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
+            );
+            if (lastDirectory != null)
+            {
+                fileChooser.setInitialDirectory(lastDirectory);
+            }
+            File selectedJson = fileChooser.showOpenDialog(stage);
+            if (selectedJson != null)
+            {
+                selectedJsonPath = selectedJson.getAbsolutePath();
+                jsonFileField.setText(selectedJsonPath);
+                lastDirectory = selectedJson.getParentFile();
+            }
+        });
+        return new HBox(jsonLabel, jsonFileField, jsonButton);
     }
     
     private void continueToEditor()
