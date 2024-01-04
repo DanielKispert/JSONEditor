@@ -28,14 +28,27 @@ public interface ReadableModel extends ReadableState
      */
     boolean canAddMoreItems(String path);
     
+    /**
+     * @return if the node at the given path has a ReferenceToObject, return it, otherwise return null.
+     * If the node is an element of an array, the referenceToObject's path will refer to the array, so we must adjust the path
+     */
     ReferenceToObject getReferenceToObject(String path);
+    
+    ReferenceableObject getReferenceableObject(String path);
+    
+    /**
+     * @param path this points to the path of a json node inside our currently selected json. It can match an existing node, or it doesn't.
+     * It can also be a referenceable object or not.
+     * @return the paths of all nodes that are a ReferenceToObject of the referenceableObjectInstance at that path
+     */
+    List<String> getReferencesToObjectForPath(String path);
     
     /**
      * @return prepared referenceable object instances
      */
     List<ReferenceableObjectInstance> getReferenceableObjectInstances();
     
-    List<ReferenceableObjectInstance> getInstancesOfReferenceableObjectAtPath(String path);
+    List<ReferenceableObjectInstance> getInstancesOfReferenceableObjectAtPath(String referenceableObjectPath);
     
     String searchForNode(String path, String value);
     

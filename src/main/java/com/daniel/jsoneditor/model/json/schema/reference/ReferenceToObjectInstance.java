@@ -5,9 +5,9 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 
 
 /**
- * a node in a json file that at the same time represents a ReferenceableObject
+ * a node in a json file that at the same time represents a ReferenceToObject
  */
-public class ReferenceableObjectInstance
+public class ReferenceToObjectInstance
 {
     private final String key;
     
@@ -15,7 +15,7 @@ public class ReferenceableObjectInstance
     
     private final String fancyName;
     
-    public ReferenceableObjectInstance(ReadableModel model, ReferenceableObject object, JsonNodeWithPath node)
+    public ReferenceToObjectInstance(ReadableModel model, ReferenceToObject object, JsonNodeWithPath node)
     {
         this.path = node.getPath();
         this.fancyName = node.makeNameIncludingPath(model);

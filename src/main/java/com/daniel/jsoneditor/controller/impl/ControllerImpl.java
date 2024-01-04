@@ -90,7 +90,6 @@ public class ControllerImpl implements Controller, Observer
     {
         properties.setProperty("automatically_hide_empty_columns", automaticallyHideEmptyColumns ? "true" : "false");
         PropertiesHelper.writePropertiesToFile(properties);
-        view.update();
     }
     
     @Override

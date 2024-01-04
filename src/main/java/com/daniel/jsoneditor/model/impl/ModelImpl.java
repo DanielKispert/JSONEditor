@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model.impl;
 
+import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
@@ -224,11 +225,11 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public List<ReferenceableObjectInstance> getInstancesOfReferenceableObjectAtPath(String path)
+    public List<ReferenceableObjectInstance> getInstancesOfReferenceableObjectAtPath(String referenceableObjectPath)
     {
         for (ReferenceableObject object : getReferenceableObjects())
         {
-            if (NodeSearcher.formatQueryPath(path).getKey().equals(object.getPath()))
+            if (NodeSearcher.formatQueryPath(referenceableObjectPath).getKey().equals(object.getPath()))
             {
                 return ReferenceHelper.getReferenceableObjectInstances(this, object);
             }
@@ -238,18 +239,13 @@ public class ModelImpl implements ReadableModel, WritableModel
     
     private void collectReferencesRecursively(JsonNodeWithPath node, List<String> referencedNodes)
     {
-        // first we check if the node itself has a reference to another object
-        ReferenceToObject reference = getReferenceToObject(node.getPath());
-        if (reference != null)
+        String referencePath = ReferenceHelper.resolveReference(node, this);
+        if (referencePath != null)
         {
-            String referencePath = ReferenceHelper.resolveReference(node, reference, this);
-            if (referencePath != null)
-            {
-                // this node is a dependency
-                referencedNodes.add(referencePath);
-                // we also need to add all of its dependencies
-                collectReferencesRecursively(getNodeForPath(referencePath), referencedNodes);
-            }
+            // this node is a dependency
+            referencedNodes.add(referencePath);
+            // we also need to add all of its dependencies
+            collectReferencesRecursively(getNodeForPath(referencePath), referencedNodes);
         }
         else
         {
@@ -414,16 +410,27 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public ReferenceToObject getReferenceToObject(String path)
     {
-        JsonNode subschema = getSubschemaForPath(path).getSchemaNode();
-        JsonNode referenceNode = subschema.get("referenceToObject");
-        if (referenceNode == null)
+        List<ReferenceToObject> references = ReferenceHelper.getReferenceToObjectNodes(this);
+        for (ReferenceToObject reference : references)
         {
-            return null;
+            if (PathHelper.pathsMatch(path, reference.getPath()))
+            {
+                return reference;
+            }
         }
-        // TODO add error handling here
-        String objectReferencingKey = referenceNode.get("objectReferencingKey").asText();
-        String objectKey = referenceNode.get("objectKey").asText();
-        return new ReferenceToObject(objectReferencingKey, objectKey);
+        return null;
+    }
+    
+    @Override
+    public ReferenceableObject getReferenceableObject(String path)
+    {
+        return ReferenceHelper.getReferenceableObjectOfPath(this, path);
+    }
+    
+    @Override
+    public List<String> getReferencesToObjectForPath(String path)
+    {
+        return null;
     }
     
     @Override
