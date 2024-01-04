@@ -21,12 +21,15 @@ you can configure extra buttons in the toolbar by writing a settings json and ad
 
 # How to use "referenceToObject"
 
-at the reference, add a "referenceToObject": object like this:
+at the root of the schema, add a "referencesToObjects" array like this:
 
-                            "referenceToObject": {
-                                "objectReferencingKey": "/type",
-                                "objectKey": "/identifier"
-                            }
+    "referencesToObjects": [
+        {
+            "path": "/persons/*/references",
+            "objectReferencingKey": "/type",
+            "objectKey": "/identifier"
+        }
+    ]
 
 at the root of the schema, add an array of referenceable objects like this:
 

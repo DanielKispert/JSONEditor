@@ -17,14 +17,10 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.util.Callback;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
@@ -122,16 +118,18 @@ public class EditorTableViewImpl extends EditorTableView
         List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>(createTableColumns(properties));
         if (isArray)
         {
-            columns.add(createFollowReferenceButtonColumn());
+            // we add a column that either holds the "follow reference" or "open array element" button
+            columns.add(createFollowReferenceOrOpenElementButtonColumn());
             // we add a column of delete buttons
             columns.add(createDeleteButtonColumn());
         }
+        
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
-        if (isArray)
+        if (isArray && controller.getAutomaticallyHideEmptyColumns())
         {
-            // Hide empty columns
+            
             for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
             {
                 if (column instanceof EditorTableColumn)
@@ -156,13 +154,13 @@ public class EditorTableViewImpl extends EditorTableView
         }
     }
     
-    private TableColumn<JsonNodeWithPath, String> createFollowReferenceButtonColumn()
+    private TableColumn<JsonNodeWithPath, String> createFollowReferenceOrOpenElementButtonColumn()
     {
-        TableColumn<JsonNodeWithPath, String> followReferenceColumn = new TableColumn<>();
+        TableColumn<JsonNodeWithPath, String> followReferenceOrOpenColumn = new TableColumn<>();
         
-        followReferenceColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getPath()));
+        followReferenceOrOpenColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getPath()));
         
-        followReferenceColumn.setCellFactory(param -> new TableCell<>()
+        followReferenceOrOpenColumn.setCellFactory(param -> new TableCell<>()
         {
             @Override
             protected void updateItem(String path, boolean empty)
@@ -176,20 +174,20 @@ public class EditorTableViewImpl extends EditorTableView
                 else
                 {
                     JsonNodeWithPath nodeAtPath = model.getNodeForPath(path);
-                    String referencedPath = ReferenceHelper.resolveReference(nodeAtPath, model.getReferenceToObject(path), model);
+                    String referencedPath = ReferenceHelper.resolveReference(nodeAtPath, model);
                     if (referencedPath != null)
                     {
                         setGraphic(makeFollowReferenceButton(referencedPath));
                     }
                     else
                     {
-                        setGraphic(null);
+                        setGraphic(makeOpenArrayElementButton(path));
                     }
                 }
             }
         });
         
-        return followReferenceColumn;
+        return followReferenceOrOpenColumn;
     }
     
     private TableColumn<JsonNodeWithPath, String> createDeleteButtonColumn()
@@ -217,6 +215,8 @@ public class EditorTableViewImpl extends EditorTableView
         
         return deleteColumn;
     }
+    
+    
     
     /**
      * creates columns for the table view
@@ -374,6 +374,15 @@ public class EditorTableViewImpl extends EditorTableView
         removeButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
         removeButton.setMaxHeight(Double.MAX_VALUE);
         return removeButton;
+    }
+    
+    private Button makeOpenArrayElementButton(String path)
+    {
+        Button openArrayElementButton = new Button("🔍");
+        openArrayElementButton.setOnAction(event -> manager.selectInNewWindow(path));
+        openArrayElementButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
+        openArrayElementButton.setMaxHeight(Double.MAX_VALUE);
+        return openArrayElementButton;
     }
     
     private Button makeRemoveButton(String path)

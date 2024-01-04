@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.ShowUsagesButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import javafx.geometry.Pos;
@@ -26,6 +27,8 @@ public class JsonEditorNamebar extends HBox
     
     private final ReadableModel model;
     
+    private final ShowUsagesButton showUsagesButton;
+    
     public JsonEditorNamebar(EditorWindowManager manager, JsonEditorEditorWindow editorWindow, ReadableModel model)
     {
         super();
@@ -35,7 +38,9 @@ public class JsonEditorNamebar extends HBox
         HBox.setHgrow(this, Priority.ALWAYS);
         nameLabel = new Label();
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
-        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, makeCloseWindowButton());
+        showUsagesButton = new ShowUsagesButton(model, manager);
+        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showUsagesButton,
+                makeCloseWindowButton());
     }
     
     public void setSelection(JsonNodeWithPath selection)
@@ -51,6 +56,7 @@ public class JsonEditorNamebar extends HBox
             parentPath = selectedPath;
         }
         nameLabel.setText(selection.makeNameIncludingPath(model));
+        showUsagesButton.setSelection(selection);
     }
     
     private Button makeSelectInNavbarButton()

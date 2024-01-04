@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.controller.impl.json.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
@@ -29,9 +30,14 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         Set<ValidationMessage> messages = schema.validate(json);
         for (ValidationMessage message : messages)
         {
-            System.out.println("Validation Error: " + message.getMessage());
+            System.out.println("Validation Error: " + message.getMessage() + " with element content " + json.at(convertToJSONPointer(message.getPath())));
         }
         return messages.isEmpty();
+    }
+    
+    private String convertToJSONPointer(String path)
+    {
+        return path.replace("$", "").replace("[", "/").replace("]", "").replaceAll("\\.", "/");
     }
     
     @Override
