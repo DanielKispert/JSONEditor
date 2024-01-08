@@ -7,7 +7,7 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 /**
  * a node in a json file that at the same time represents a ReferenceableObject
  */
-public class ReferenceableObjectInstance
+public class ReferenceableObjectInstance implements HasKeyAndFancyName
 {
     private final String key;
     
@@ -22,16 +22,19 @@ public class ReferenceableObjectInstance
         this.key = object.getKeyOfInstance(node.getNode());
     }
     
+    @Override
     public String getKey()
     {
         return key;
     }
     
+    @Override
     public String getPath()
     {
         return path;
     }
     
+    @Override
     public String getFancyName()
     {
         return fancyName;
