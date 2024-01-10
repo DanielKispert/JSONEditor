@@ -2,7 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs.listview;
 
 import java.util.List;
 
-import com.daniel.jsoneditor.model.json.schema.reference.HasKeyAndFancyName;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferencingInstance;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -22,7 +22,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
 
-public abstract class DialogWithListView<T extends HasKeyAndFancyName> extends Dialog<String>
+public abstract class DialogWithListView<T extends ReferencingInstance> extends Dialog<String>
 {
     protected ListView<T> listView;
     

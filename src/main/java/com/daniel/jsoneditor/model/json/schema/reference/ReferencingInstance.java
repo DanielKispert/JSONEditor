@@ -1,6 +1,6 @@
 package com.daniel.jsoneditor.model.json.schema.reference;
 
-public interface HasKeyAndFancyName
+public interface ReferencingInstance
 {
     String getKey();
     

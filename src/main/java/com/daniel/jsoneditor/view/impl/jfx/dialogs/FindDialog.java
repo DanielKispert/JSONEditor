@@ -24,8 +24,11 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
     {
         super(suggestions);
         this.suggestions = suggestions;
+        this.setTitle("Find Node");
         
         searchField = createSearchField();
+        
+        setResultConverter(this::convertResult);
         
         VBox layout = new VBox(listView, searchField);
         layout.setSpacing(5);

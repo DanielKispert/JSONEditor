@@ -7,8 +7,8 @@ import java.util.List;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.fasterxml.jackson.databind.JsonNode;
-import javafx.util.Pair;
 
 
 public class ReferenceHelper
@@ -153,21 +153,88 @@ public class ReferenceHelper
     /**
      * put in a path of a node, get a list of all paths that reference this node if its a ReferenceableObject
      */
-    public static List<String> getPathsOfReferencesToObject(ReadableModel model, String pathToReferenceableObject)
+    public static List<ReferenceToObjectInstance> getReferencesOfObject(ReadableModel model, String pathToReferenceableObject)
     {
-        List<String> paths = new ArrayList<>();
-        List<ReferenceToObject> references = getReferenceToObjectNodes(model);
-        
-        for (ReferenceToObject ref : references) {
-            /*String resolvedPath = resolveReference(new JsonNodeWithPath(model.getNodeForPath(ref.getPath()), ref.getPath()), model);
-            
-            if (resolvedPath != null && resolvedPath.equals(pathToReferenceableObject)) {
-                paths.add(ref.getPath());
-            }
-            
-             */
+        List<ReferenceToObjectInstance> refs = new ArrayList<>();
+        if (model == null || pathToReferenceableObject == null)
+        {
+            return refs;
         }
-        return paths;
+        JsonNode node = model.getNodeForPath(pathToReferenceableObject).getNode();
+        if (node == null)
+        {
+            return refs;
+        }
+        // first we find out if the node is a Referenceable Object
+        ReferenceableObject referenceableObject = getReferenceableObjectOfPath(model, pathToReferenceableObject);
+        if (referenceableObject == null)
+        {
+            return refs;
+        }
+        ReferenceableObjectInstance referenceableObjectInstance = new ReferenceableObjectInstance(model, referenceableObject,
+                model.getNodeForPath(pathToReferenceableObject));
+        // then we find out if there are any ReferenceToObjects that reference this object
+        // we do this by iterating over all possible ReferenceToObject locations until we
+        for (ReferenceToObject referenceToObject : getReferenceToObjectNodes(model))
+        {
+            for (ReferenceToObjectInstance instance : getInstancesOfReferenceToObject(model, referenceToObject))
+            {
+                if (instance.refersToObject(referenceableObjectInstance))
+                {
+                    refs.add(instance);
+                }
+            }
+        }
+        return refs;
+    }
     
+    private static List<ReferenceToObjectInstance> getInstancesOfReferenceToObject(ReadableModel model, ReferenceToObject object)
+    {
+        List<ReferenceToObjectInstance> instances = new ArrayList<>();
+        if (object == null)
+        {
+            return instances;
+        }
+        // first we figure out which Json Nodes are the "nodes" of the reference
+        // if the path of the reference contains a * then we need to take care. Otherwise we can just use the path as it is
+        if (!object.getPath().contains("*"))
+        {
+            instances.addAll(getReferenceInstancesAtPath(model, object, object.getPath()));
+        }
+        else
+        {
+            // we have to resolve the path into the actual paths it entails
+            for (String path : PathHelper.resolvePathWithWildcard(model, object.getPath()))
+            {
+                instances.addAll(getReferenceInstancesAtPath(model, object, path));
+            }
+        }
+        return instances;
+    }
+    
+    private static List<ReferenceToObjectInstance> getReferenceInstancesAtPath(ReadableModel model, ReferenceToObject object, String path)
+    {
+        List<ReferenceToObjectInstance> instances = new ArrayList<>();
+        JsonNodeWithPath node = model.getNodeForPath(path);
+        if (node == null)
+        {
+            return instances;
+        }
+        if (node.isArray())
+        {
+            // if the node is an array, we need to iterate over all items, because they are the references
+            for (int index = 0; index < node.getNode().size(); index++)
+            {
+                String itemPath = node.getPath() + "/" + index;
+                instances.add(new ReferenceToObjectInstance(model, object, model.getNodeForPath(itemPath)));
+            }
+        }
+        else
+        {
+            // if the node is not an array, we just add it
+            instances.add(new ReferenceToObjectInstance(model, object, node));
+        }
+        return instances;
+        
     }
 }
