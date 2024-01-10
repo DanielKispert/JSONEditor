@@ -5,7 +5,9 @@ import java.util.Optional;
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ShowUsagesDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import javafx.scene.control.Button;
@@ -38,8 +40,7 @@ public class ShowUsagesButton extends Button
     
     private void handleClick()
     {
-        List<String> usagesOfThisReferencedObjectInstance = model.getReferencesToObjectForPath(selection.getPath());
-        ShowUsagesDialog dialog = new ShowUsagesDialog(null, selection);
+        ShowUsagesDialog dialog = new ShowUsagesDialog(model.getReferencesToObjectForPath(selection.getPath()), selection);
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(s -> {
             if (manager.canAnotherWindowBeAdded())
@@ -52,8 +53,5 @@ public class ShowUsagesButton extends Button
             }
             
         });
-    
-    
-    
     }
 }

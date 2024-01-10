@@ -18,12 +18,8 @@ public class ShowUsagesDialog extends DialogWithListView<ReferenceToObjectInstan
         super(items);
         this.setTitle("Usages of " + jsonNodeWithPath.getDisplayName());
         
-        setResultConverter(this::convertResult);
-        
         listView.getSelectionModel().selectFirst();
         getDialogPane().setContent(listView);
-        getDialogPane().setPrefWidth(500);
-        getDialogPane().setPrefHeight(400);
     }
     
     @Override
@@ -35,6 +31,6 @@ public class ShowUsagesDialog extends DialogWithListView<ReferenceToObjectInstan
     @Override
     protected void onListItemDoubleClick(ReferenceToObjectInstance item)
     {
-    
+        handleDialogOk();
     }
 }

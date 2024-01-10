@@ -1,6 +1,13 @@
 package com.daniel.jsoneditor.model.json.schema.paths;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.IntStream;
+
+import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.fasterxml.jackson.databind.JsonNode;
 
 
 public class PathHelper
@@ -30,6 +37,45 @@ public class PathHelper
             }
         }
         return true;
+    }
+    
+    public static List<String> resolvePathWithWildcard(ReadableModel model, String pathWithWildcard)
+    {
+        // TODO we support only a single wildcard right now
+        List<String> paths = new ArrayList<>();
+        
+        List<String> pathParts = Arrays.asList(pathWithWildcard.split("/\\*"));
+        if (pathParts.size() != 2)
+        {
+            return paths;
+        }
+        for (JsonNodeWithPath child : getAllChildrenOfPath(model, pathParts.get(0)))
+        {
+            String pathWithoutWildcard = child.getPath() + pathParts.get(1);
+            paths.add(pathWithoutWildcard);
+        }
+        
+        return paths;
+    }
+    
+    private static List<JsonNodeWithPath> getAllChildrenOfPath(ReadableModel model, String path)
+    {
+        List<JsonNodeWithPath> children = new ArrayList<>();
+        JsonNode parent = model.getNodeForPath(path).getNode();
+        
+        if (parent != null)
+        {
+            if (parent.isObject())
+            {
+                parent.fieldNames().forEachRemaining(
+                        fieldName -> children.add(new JsonNodeWithPath(parent.get(fieldName), path + "/" + fieldName)));
+            }
+            else if (parent.isArray())
+            {
+                IntStream.range(0, parent.size()).forEach(i -> children.add(new JsonNodeWithPath(parent.get(i), path + "/" + i)));
+            }
+        }
+        return children;
     }
     
     private static String[] formatPathToCheck(String pathToCheck)

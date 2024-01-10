@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.model.impl;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.settings.IdentifierSetting;
 import com.daniel.jsoneditor.model.statemachine.StateMachine;
@@ -428,9 +429,9 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public List<String> getReferencesToObjectForPath(String path)
+    public List<ReferenceToObjectInstance> getReferencesToObjectForPath(String path)
     {
-        return null;
+        return ReferenceHelper.getReferencesOfObject(this, path);
     }
     
     @Override
