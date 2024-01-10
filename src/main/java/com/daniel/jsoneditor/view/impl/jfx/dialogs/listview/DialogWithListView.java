@@ -119,6 +119,7 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends 
             return cell;
         });
         listView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPress);
+        listView.setPrefWidth(800);
     }
     
     protected abstract void onListItemDoubleClick(T item);
