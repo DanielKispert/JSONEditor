@@ -4,7 +4,9 @@ import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 import com.daniel.jsoneditor.controller.impl.json.VariableHelper;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
-import com.daniel.jsoneditor.controller.properties.PropertiesHelper;
+import com.daniel.jsoneditor.controller.settings.SettingsController;
+import com.daniel.jsoneditor.controller.settings.impl.PropertiesFileHelper;
+import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.observe.Observer;
@@ -30,13 +32,7 @@ import java.util.Set;
 
 public class ControllerImpl implements Controller, Observer
 {
-    private final static String PROPERTY_LAST_JSON_PATH = "last_json_path";
-    private final static String PROPERTY_LAST_SCHEMA_PATH = "last_schema_path";
-    private final static String PROPERTY_LAST_SETTINGS_PATH = "last_settings_path";
     
-    private final static String PROPERTY_REMEMBER_PATHS = "remember_paths";
-    
-    private final Properties properties;
     private final WritableModel model;
     
     private final ReadableModel readableModel;
@@ -45,9 +41,11 @@ public class ControllerImpl implements Controller, Observer
     
     private final List<Subject> subjects;
     
+    private final SettingsController settingsController;
+    
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
     {
-        properties = PropertiesHelper.readPropertiesFromFile();
+        this.settingsController = new SettingsControllerImpl();
         this.model = model;
         this.readableModel = readableModel;
         this.subjects = new ArrayList<>();
@@ -55,6 +53,11 @@ public class ControllerImpl implements Controller, Observer
         this.view.observe(this.readableModel.getForObservation());
     }
     
+    @Override
+    public SettingsController getSettingsController()
+    {
+        return settingsController;
+    }
     
     @Override
     public void update()
@@ -73,37 +76,6 @@ public class ControllerImpl implements Controller, Observer
     public void launchFinished()
     {
         model.sendEvent(Event.READ_JSON_AND_SCHEMA);
-    }
-    
-    @Override
-    public void setFileProperties(boolean rememberPaths, String jsonPath, String schemaPath, String settingsPath)
-    {
-        properties.setProperty(PROPERTY_REMEMBER_PATHS, rememberPaths ? "true" : "false");
-        properties.setProperty(PROPERTY_LAST_JSON_PATH, jsonPath);
-        properties.setProperty(PROPERTY_LAST_SCHEMA_PATH, schemaPath);
-        properties.setProperty(PROPERTY_LAST_SETTINGS_PATH, settingsPath);
-        PropertiesHelper.writePropertiesToFile(properties);
-    }
-    
-    @Override
-    public void setAutomaticallyHideEmptyColumns(boolean automaticallyHideEmptyColumns)
-    {
-        properties.setProperty("automatically_hide_empty_columns", automaticallyHideEmptyColumns ? "true" : "false");
-        PropertiesHelper.writePropertiesToFile(properties);
-    }
-    
-    @Override
-    public boolean getAutomaticallyHideEmptyColumns()
-    {
-        String property = properties.getProperty("automatically_hide_empty_columns");
-        if (property == null)
-        {
-            return true;
-        }
-        else
-        {
-            return "true".equalsIgnoreCase(property);
-        }
     }
     
     @Override
@@ -280,30 +252,6 @@ public class ControllerImpl implements Controller, Observer
     public void openNewJson()
     {
         launchFinished();
-    }
-    
-    @Override
-    public String getLastJsonPath()
-    {
-        return properties.getProperty(PROPERTY_LAST_JSON_PATH);
-    }
-    
-    @Override
-    public String getLastSchemaPath()
-    {
-        return properties.getProperty(PROPERTY_LAST_SCHEMA_PATH);
-    }
-    
-    @Override
-    public String getLastSettingsPath()
-    {
-        return properties.getProperty(PROPERTY_LAST_SETTINGS_PATH);
-    }
-    
-    @Override
-    public boolean getRememberPaths()
-    {
-        return "true".equalsIgnoreCase(properties.getProperty(PROPERTY_REMEMBER_PATHS));
     }
     
     @Override

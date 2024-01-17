@@ -127,7 +127,7 @@ public class EditorTableViewImpl extends EditorTableView
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
-        if (isArray && controller.getAutomaticallyHideEmptyColumns())
+        if (isArray && controller.getSettingsController().getHideEmptyColumns())
         {
             
             for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
