@@ -1,4 +1,4 @@
-package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.menubar;
+package com.daniel.jsoneditor.view.impl.jfx.dialogs;
 
 import java.io.IOException;
 import java.io.InputStream;

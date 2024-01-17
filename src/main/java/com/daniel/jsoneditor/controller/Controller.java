@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.controller;
 
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -7,12 +8,14 @@ import java.io.File;
 
 public interface Controller
 {
+    /*
+     * Other controller methods for nested controllers
+     */
+    SettingsController getSettingsController();
     
-    void setFileProperties(boolean rememberPaths, String jsonPath, String schemaPath, String settingsPath);
-    
-    void setAutomaticallyHideEmptyColumns(boolean automaticallyHideEmptyColumns);
-    
-    boolean getAutomaticallyHideEmptyColumns();
+    /*
+     * Methods for the view to call
+     */
 
     void launchFinished();
     
@@ -43,14 +46,6 @@ public interface Controller
     String searchForNode(String path, String value);
     
     void openNewJson();
-    
-    String getLastJsonPath();
-    
-    String getLastSchemaPath();
-    
-    String getLastSettingsPath();
-    
-    boolean getRememberPaths();
     
     void generateJson();
     

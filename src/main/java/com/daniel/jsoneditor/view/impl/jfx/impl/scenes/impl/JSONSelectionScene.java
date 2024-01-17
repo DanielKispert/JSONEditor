@@ -1,16 +1,24 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl;
 
+import java.io.File;
+import java.util.Optional;
+
+import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.ReadableModel;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import com.daniel.jsoneditor.controller.Controller;
 
-import java.io.File;
-import java.util.Optional;
 
 public class JSONSelectionScene extends SceneHandlerImpl
 {
@@ -32,10 +40,11 @@ public class JSONSelectionScene extends SceneHandlerImpl
     @Override
     public Scene getScene(Stage stage)
     {
-        boolean rememberFiles = controller.getRememberPaths();
-        String rememberedJsonPath = controller.getLastJsonPath();
-        String rememberedSchemaPath = controller.getLastSchemaPath();
-        String rememberedSettingsPath = controller.getLastSettingsPath();
+        SettingsController settingsController = controller.getSettingsController();
+        boolean rememberFiles = settingsController.getRememberPaths();
+        String rememberedJsonPath = settingsController.getLastJsonPath();
+        String rememberedSchemaPath = settingsController.getLastSchemaPath();
+        String rememberedSettingsPath = settingsController.getLastSettingsPath();
         if (rememberFiles && rememberedJsonPath != null)
         {
             selectedJsonPath = rememberedJsonPath;
@@ -48,7 +57,7 @@ public class JSONSelectionScene extends SceneHandlerImpl
         {
             selectedSettingsPath = rememberedSettingsPath;
         }
-        boolean rememberedRememberSettings = controller.getRememberPaths();
+        boolean rememberedRememberSettings = settingsController.getRememberPaths();
         // JSON
         Label jsonLabel = new Label("JSON to edit:");
         TextField jsonFileField = new TextField(selectedJsonPath);
@@ -170,7 +179,7 @@ public class JSONSelectionScene extends SceneHandlerImpl
     
     private void continueToEditor()
     {
-        controller.setFileProperties(remember, selectedJsonPath, selectedSchemaPath, selectedSettingsPath);
+        controller.getSettingsController().setFileProperties(remember, selectedJsonPath, selectedSchemaPath, selectedSettingsPath);
         controller.jsonAndSchemaSelected(new File(selectedJsonPath), new File(selectedSchemaPath), new File(selectedSettingsPath));
     }
     

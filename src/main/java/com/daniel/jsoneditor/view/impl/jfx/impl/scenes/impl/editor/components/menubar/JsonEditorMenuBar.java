@@ -4,9 +4,10 @@ import java.util.Optional;
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.AboutDialog;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.SettingsDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
-import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -32,24 +33,19 @@ public class JsonEditorMenuBar extends MenuBar
         MenuItem refreshItem = new MenuItem("Refresh");
         refreshItem.setOnAction(event -> controller.refreshFromFile());
         refreshItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN));
-        fileMenu.getItems().addAll(openItem, saveItem, refreshItem);
-    
+        MenuItem settingsItem = new MenuItem("Settings...");
+        settingsItem.setOnAction(event -> new SettingsDialog(controller.getSettingsController()).showAndWait());
+        fileMenu.getItems().addAll(openItem, saveItem, refreshItem, settingsItem);
+        
         Menu inspectMenu = new Menu("Inspect");
         MenuItem findItem = makeFindAnythingItem(model, manager);
         inspectMenu.getItems().add(findItem);
-        
-        Menu viewMenu = new Menu("View");
-        CheckMenuItem hideEmptyColumnsItem = new CheckMenuItem("Automatically hide empty, non-required columns in arrays");
-        hideEmptyColumnsItem.setSelected(controller.getAutomaticallyHideEmptyColumns());
-        hideEmptyColumnsItem.selectedProperty().addListener(
-                (observable, oldValue, newValue) -> controller.setAutomaticallyHideEmptyColumns(newValue));
-        viewMenu.getItems().add(hideEmptyColumnsItem);
         
         Menu helpMenu = new Menu("Help");
         MenuItem aboutItem = new MenuItem("About");
         aboutItem.setOnAction(event -> new AboutDialog().showAndWait());
         helpMenu.getItems().add(aboutItem);
-        getMenus().addAll(fileMenu, inspectMenu, viewMenu, helpMenu);
+        getMenus().addAll(fileMenu, inspectMenu, helpMenu);
     }
     
     private static MenuItem makeFindAnythingItem(ReadableModel model, EditorWindowManager manager)
@@ -67,7 +63,7 @@ public class JsonEditorMenuBar extends MenuBar
                 {
                     manager.selectFromNavbar(s);
                 }
-        
+                
             });
         });
         findItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN));
