@@ -27,14 +27,15 @@ public class SettingsControllerImpl implements SettingsController
     @Override
     public void setHideEmptyColumns(boolean automaticallyHideEmptyColumns)
     {
-        properties.setProperty("automatically_hide_empty_columns", automaticallyHideEmptyColumns ? "true" : "false");
+        properties.setProperty(PropertyFileKeys.PROPERTY_HIDE_EMPTY_COLUMNS, automaticallyHideEmptyColumns ? "true" : "false");
         PropertiesFileHelper.writePropertiesToFile(properties);
     }
     
     @Override
     public boolean getHideEmptyColumns()
     {
-        String property = properties.getProperty("automatically_hide_empty_columns");
+        // default is true
+        String property = properties.getProperty(PropertyFileKeys.PROPERTY_HIDE_EMPTY_COLUMNS);
         if (property == null)
         {
             return true;
@@ -55,7 +56,16 @@ public class SettingsControllerImpl implements SettingsController
     @Override
     public boolean getRenameReferencesWhenRenamingObject()
     {
-        return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_RENAME_REFERENCES_WHEN_RENAMING_OBJECT));
+        // default is true
+        String property = properties.getProperty(PropertyFileKeys.PROPERTY_RENAME_REFERENCES_WHEN_RENAMING_OBJECT);
+        if (property == null)
+        {
+            return true;
+        }
+        else
+        {
+            return "true".equalsIgnoreCase(property);
+        }
     }
     
     @Override
@@ -79,6 +89,7 @@ public class SettingsControllerImpl implements SettingsController
     @Override
     public boolean getRememberPaths()
     {
+        // default is false
         return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_REMEMBER_PATHS));
     }
 }

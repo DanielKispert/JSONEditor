@@ -6,6 +6,7 @@ import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
@@ -45,12 +46,15 @@ public class EditorTableViewImpl extends EditorTableView
     
     private final JsonEditorEditorWindow window;
     
+    private ReferenceableObject displayedObject;
+    
     public EditorTableViewImpl(EditorWindowManager manager, JsonEditorEditorWindow window, ReadableModel model, Controller controller)
     {
         this.window = window;
         this.manager = manager;
         this.model = model;
         this.controller = controller;
+        displayedObject = null;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
     }
@@ -63,6 +67,8 @@ public class EditorTableViewImpl extends EditorTableView
         if (nodeWithPath.isArray())
         {
             int arrayItemIndex = 0;
+            // it should also be fine to get the object of a non-existing node
+            displayedObject = model.getReferenceableObject(nodeWithPath.getPath() + "/" + arrayItemIndex);
             for (JsonNode arrayItem : node)
             {
                 nodesToDisplay.add(new JsonNodeWithPath(arrayItem, nodeWithPath.getPath() + "/" + arrayItemIndex++));
@@ -70,6 +76,7 @@ public class EditorTableViewImpl extends EditorTableView
         }
         else if (nodeWithPath.isObject())
         {
+            displayedObject = model.getReferenceableObject(nodeWithPath.getPath());
             nodesToDisplay.add(nodeWithPath);
         }
         setView(nodesToDisplay, schema);
@@ -228,144 +235,15 @@ public class EditorTableViewImpl extends EditorTableView
         {
             String propertyName = property.getKey().getKey();
             boolean isRequired = property.getKey().getValue();
+            boolean isKeyOfReferenceableObject = displayedObject != null && ("/" + propertyName).equals(displayedObject.getKey());
             JsonNode propertyNode = property.getValue();
-            EditorTableColumn column = new EditorTableColumn(propertyName, isRequired);
-            // every column holds one property of the array's items
-            column.setCellValueFactory(data -> {
-                JsonNodeWithPath jsonNodeWithPath = data.getValue();
-                JsonNode valueNode = jsonNodeWithPath.getNode().get(propertyName);
-                if (valueNode != null)
-                {
-                    String cellValue = valueNode.asText();
-                    return new SimpleStringProperty(cellValue);
-                }
-                else
-                {
-                    return new SimpleStringProperty("");
-                }
-            });
-            column.setCellFactory(column1 -> {
-                if (propertyNode.isObject())
-                {
-                    List<String> types = SchemaHelper.getTypes(propertyNode);
-                    if (types != null)
-                    {
-                        // TODO refactor to allow the user to choose what to display
-                        if (types.contains("array") || types.contains("object"))
-                        {
-                            return makeOpenButtonTableCell(((EditorTableColumn) column1).getPropertyName());
-                        }
-                        else if (types.contains("string"))
-                        {
-                            
-                            if (types.contains("integer") || types.contains("number"))
-                            {
-                                // display a TextTableCell that can also save itself as a number and not as a string if the user enters a
-                                // number
-                                return new TextTableCell(manager, model, true);
-                            }
-                            else
-                            {
-                                // a normal TextTableCell is enough. One that should save itself as string and not a number
-                                return new TextTableCell(manager, model, false);
-                            }
-                            
-                        }
-                        else if (types.contains("integer") || types.contains("number"))
-                        {
-                            return makeNumberTableCell();
-                        }
-                    }
-                }
-                return new TextTableCell(manager, model, false);
-            });
+            EditorTableColumn column = new EditorTableColumn(manager, model, window, propertyNode, propertyName, isRequired, isKeyOfReferenceableObject);
+            
             columns.add(column);
         }
         return columns;
     }
     
-    private TableCell<JsonNodeWithPath, String> makeOpenButtonTableCell(String pathToOpen)
-    {
-        return new TableCell<>()
-        {
-            
-            @Override
-            protected void updateItem(String item, boolean empty)
-            {
-                super.updateItem(item, empty);
-                JsonNodeWithPath currentNode = getTableRow().getItem();
-                if (empty || item == null || currentNode == null)
-                {
-                    setGraphic(null);
-                }
-                else
-                {
-                    setGraphic(makeOpenButton(currentNode.getPath() + "/" + pathToOpen));
-                }
-            }
-        };
-    }
-    
-    private Button makeOpenButton(String pathToOpen)
-    {
-        Button button = new Button("Open");
-        button.setOnAction(event -> {
-            if (pathToOpen != null)
-            {
-                // if the "open" button is clicked, we want to open that node in the current window
-                window.setSelectedPath(pathToOpen);
-            }
-        });
-        button.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(pathToOpen).getNode()));
-        return button;
-    }
-    
-    private NumberTableCell makeNumberTableCell()
-    {
-        return new NumberTableCell(manager)
-        {
-            private final TextField textField = new TextField();
-            
-            {
-                // Restrict input to numeric values only
-                textField.textProperty().addListener((observable, oldValue, newValue) -> {
-                    if (!newValue.matches("\\d*"))
-                    {
-                        textField.setText(newValue.replaceAll("[^\\d]", ""));
-                    }
-                });
-                
-                textField.setOnAction(event -> {
-                    commitEdit(textField.getText());
-                });
-                
-                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-                    if (wasFocused && !isNowFocused)
-                    {
-                        commitEdit(textField.getText());
-                    }
-                });
-            }
-            
-            @Override
-            protected void updateItem(String item, boolean empty)
-            {
-                super.updateItem(item, empty);
-                
-                if (empty || item == null)
-                {
-                    setText(null);
-                    setGraphic(null);
-                }
-                else
-                {
-                    setText(null);
-                    textField.setText(item);
-                    setGraphic(textField);
-                }
-            }
-        };
-    }
     
     private Button makeFollowReferenceButton(String path)
     {

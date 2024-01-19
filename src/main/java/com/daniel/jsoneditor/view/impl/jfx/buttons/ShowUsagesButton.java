@@ -1,13 +1,10 @@
 package com.daniel.jsoneditor.view.impl.jfx.buttons;
 
-import java.util.List;
 import java.util.Optional;
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ShowUsagesDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import javafx.scene.control.Button;
@@ -33,9 +30,9 @@ public class ShowUsagesButton extends Button
     {
         this.selection = selection;
         String path = selection.getPath();
-        ReferenceableObject object = model.getReferenceableObject(path);
-        this.setVisible(object != null);
-        this.setManaged(object != null);
+        boolean visible = model.getReferenceableObject(path) != null && !selection.isArray();
+        this.setVisible(visible);
+        this.setManaged(visible);
     }
     
     private void handleClick()

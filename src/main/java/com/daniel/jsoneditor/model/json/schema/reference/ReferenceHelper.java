@@ -166,6 +166,7 @@ public class ReferenceHelper
             return refs;
         }
         // first we find out if the node is a Referenceable Object
+        // TODO maybe add an array exemption here
         ReferenceableObject referenceableObject = getReferenceableObjectOfPath(model, pathToReferenceableObject);
         if (referenceableObject == null)
         {
