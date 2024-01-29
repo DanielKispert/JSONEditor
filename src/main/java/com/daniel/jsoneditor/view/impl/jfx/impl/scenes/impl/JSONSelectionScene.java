@@ -41,7 +41,7 @@ public class JSONSelectionScene extends SceneHandlerImpl
     public Scene getScene(Stage stage)
     {
         SettingsController settingsController = controller.getSettingsController();
-        boolean rememberFiles = settingsController.getRememberPaths();
+        boolean rememberFiles = settingsController.rememberPaths();
         String rememberedJsonPath = settingsController.getLastJsonPath();
         String rememberedSchemaPath = settingsController.getLastSchemaPath();
         String rememberedSettingsPath = settingsController.getLastSettingsPath();
@@ -57,7 +57,7 @@ public class JSONSelectionScene extends SceneHandlerImpl
         {
             selectedSettingsPath = rememberedSettingsPath;
         }
-        boolean rememberedRememberSettings = settingsController.getRememberPaths();
+        boolean rememberedRememberSettings = settingsController.rememberPaths();
         // JSON
         Label jsonLabel = new Label("JSON to edit:");
         TextField jsonFileField = new TextField(selectedJsonPath);

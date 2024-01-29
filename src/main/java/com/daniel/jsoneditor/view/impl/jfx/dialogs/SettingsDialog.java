@@ -24,8 +24,8 @@ public class SettingsDialog extends Dialog<Void>
         super();
         this.settingsController = controller;
         
-        this.tmpHideEmptyColumns = settingsController.getHideEmptyColumns();
-        this.tmpRenameReferences = settingsController.getRenameReferencesWhenRenamingObject();
+        this.tmpHideEmptyColumns = settingsController.hideEmptyColumns();
+        this.tmpRenameReferences = settingsController.renameReferencesWhenRenamingObject();
         
         setTitle("Settings");
         getDialogPane().getButtonTypes().setAll(new ButtonType("Save", ButtonType.OK.getButtonData()), ButtonType.CANCEL);

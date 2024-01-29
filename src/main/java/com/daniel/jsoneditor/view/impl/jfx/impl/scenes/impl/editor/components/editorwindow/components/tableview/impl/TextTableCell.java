@@ -1,11 +1,11 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl;
 
+import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.AutofillField;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.util.Pair;
 
 import java.util.Collections;
@@ -18,9 +18,9 @@ public class TextTableCell extends EditorTableCell
     
     private final boolean alsoAllowNumbers;
     
-    public TextTableCell(EditorWindowManager manager, ReadableModel model, boolean alsoAllowNumbers)
+    public TextTableCell(EditorWindowManager manager, Controller controller, ReadableModel model, boolean alsoAllowNumbers, boolean holdsObjectKey)
     {
-        super(manager);
+        super(manager, controller, model, holdsObjectKey);
         this.model = model;
         setMaxWidth(Double.MAX_VALUE);
         this.alsoAllowNumbers = alsoAllowNumbers;
@@ -34,30 +34,25 @@ public class TextTableCell extends EditorTableCell
             try
             {
                 int valueAsInt = Integer.parseInt(newValue);
-                ((ObjectNode) item.getNode()).put(propertyName, valueAsInt);
+                item.setProperty(propertyName, valueAsInt);
             }
             catch (NumberFormatException e)
             {
                 try
                 {
                     double valueAsDouble = Double.parseDouble(newValue);
-                    ((ObjectNode) item.getNode()).put(propertyName, valueAsDouble);
+                    item.setProperty(propertyName, valueAsDouble);
                 }
                 catch (NumberFormatException f)
                 {
-                    saveAsString(item, propertyName, newValue);
+                    item.setProperty(propertyName, newValue);
                 }
             }
         }
         else
         {
-            saveAsString(item, propertyName, newValue);
+            item.setProperty(propertyName, newValue);
         }
-    }
-    
-    private void saveAsString(JsonNodeWithPath item, String propertyName, String newValue)
-    {
-        ((ObjectNode) item.getNode()).put(propertyName, newValue);
     }
     
     @Override

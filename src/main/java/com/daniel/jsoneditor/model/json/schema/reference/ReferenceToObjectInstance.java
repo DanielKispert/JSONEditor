@@ -17,18 +17,26 @@ public class ReferenceToObjectInstance implements ReferencingInstance
     
     private final String referencingKey;
     
+    private final ReferenceToObject reference;
+    
     public ReferenceToObjectInstance(ReadableModel model, ReferenceToObject object, JsonNodeWithPath node)
     {
         this.path = node.getPath();
+        this.reference = object;
         this.fancyName = node.makeNameIncludingPath(model);
-        this.key = object.getKeyOfInstance(node.getNode());
-        this.referencingKey = node.getNode().at(object.getObjectReferencingKey()).asText();
+        this.key = reference.getKeyOfInstance(node.getNode());
+        this.referencingKey = node.getNode().at(reference.getObjectReferencingKey()).asText();
     }
     
     @Override
     public String getKey()
     {
         return key;
+    }
+    
+    public ReferenceToObject getReference()
+    {
+        return reference;
     }
     
     @Override

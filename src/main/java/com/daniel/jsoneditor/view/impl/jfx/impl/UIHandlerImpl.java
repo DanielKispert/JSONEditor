@@ -57,7 +57,7 @@ public class UIHandlerImpl implements UIHandler
     {
         if (editorScene != null)
         {
-            editorScene.handleRemovedSelection();
+            editorScene.handleJsonUpdate();
         }
     }
     
@@ -66,7 +66,7 @@ public class UIHandlerImpl implements UIHandler
     {
         if (editorScene != null)
         {
-            editorScene.handleUpdatedStructure();
+            editorScene.handleJsonUpdate();
         }
     }
     

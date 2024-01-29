@@ -5,11 +5,11 @@ public interface SettingsController
     void setFileProperties(boolean rememberPaths, String jsonPath, String schemaPath, String settingsPath);
     void setHideEmptyColumns(boolean automaticallyHideEmptyColumns);
     
-    boolean getHideEmptyColumns();
+    boolean hideEmptyColumns();
     
     void setRenameReferencesWhenRenamingObject(boolean renameReferences);
     
-    boolean getRenameReferencesWhenRenamingObject();
+    boolean renameReferencesWhenRenamingObject();
     
     String getLastJsonPath();
     
@@ -17,5 +17,5 @@ public interface SettingsController
     
     String getLastSettingsPath();
     
-    boolean getRememberPaths();
+    boolean rememberPaths();
 }

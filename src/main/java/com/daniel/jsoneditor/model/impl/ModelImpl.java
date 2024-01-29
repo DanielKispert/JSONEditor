@@ -99,7 +99,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     {
         setRootJson(jsonNode);
         // TODO can be improved
-        sendEvent(Event.MAIN_EDITOR);
+        sendEvent(Event.UPDATED_JSON_STRUCTURE);
     }
     
     @Override

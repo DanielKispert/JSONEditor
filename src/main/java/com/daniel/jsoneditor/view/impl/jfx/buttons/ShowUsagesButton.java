@@ -8,6 +8,7 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ShowUsagesDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 
 
 public class ShowUsagesButton extends Button
@@ -24,6 +25,7 @@ public class ShowUsagesButton extends Button
         this.model = model;
         this.manager = manager;
         setOnAction(actionEvent -> handleClick());
+        setTooltip(new Tooltip("Show usages"));
     }
     
     public void setSelection(JsonNodeWithPath selection)

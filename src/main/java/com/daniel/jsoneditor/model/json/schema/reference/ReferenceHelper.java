@@ -103,7 +103,12 @@ public class ReferenceHelper
             }
         }
         // then we need to check whether the path leads to an array item (because if the referenceable object is an array, its items will be the "real" referenceable objects)
-        JsonNodeWithPath parent = model.getNodeForPath(SchemaHelper.getParentPath(path));
+        String parentPath = SchemaHelper.getParentPath(path);
+        if (parentPath == null)
+        {
+            return null;
+        }
+        JsonNodeWithPath parent = model.getNodeForPath(parentPath);
         if (parent != null && parent.isArray())
         {
             // if our parent is an array, we check if it matches one of the referenceable objects

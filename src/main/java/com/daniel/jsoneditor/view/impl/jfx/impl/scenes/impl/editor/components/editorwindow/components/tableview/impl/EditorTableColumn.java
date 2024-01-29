@@ -2,9 +2,11 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import java.util.List;
 
+import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
@@ -20,9 +22,12 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
 {
     
     private final String propertyName;
+    
     private final boolean isRequired;
     
     private final EditorWindowManager manager;
+    
+    private final Controller controller;
     
     private final ReadableModel model;
     
@@ -33,14 +38,17 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
      */
     private final boolean holdsKeyOfReferenceableObject;
     
-    public EditorTableColumn(EditorWindowManager manager, ReadableModel model, JsonEditorEditorWindow window, JsonNode propertyNode, String propertyName, boolean isRequired, boolean holdsKey)
+    public EditorTableColumn(EditorWindowManager manager, Controller controller, ReadableModel model, JsonEditorEditorWindow window, JsonNode propertyNode, String propertyName, boolean isRequired)
     {
         super();
         this.manager = manager;
         this.model = model;
         this.window = window;
+        this.controller = controller;
+        ReferenceableObject objectOfParent = window.getDisplayedObject();
+        this.holdsKeyOfReferenceableObject = objectOfParent != null && ("/" + propertyName).equals(objectOfParent.getKey());
         String columnName = propertyName;
-        if (holdsKey)
+        if (holdsKeyOfReferenceableObject)
         {
             columnName = "🔑 " + columnName;
         }
@@ -51,7 +59,6 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         setText(columnName);
         this.propertyName = propertyName;
         this.isRequired = isRequired;
-        this.holdsKeyOfReferenceableObject = holdsKey;
         
         // every column holds one property of the array's items
         setCellValueFactory(data -> {
@@ -85,12 +92,12 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
                         {
                             // display a TextTableCell that can also save itself as a number and not as a string if the user enters a
                             // number
-                            return new TextTableCell(manager, model, true);
+                            return new TextTableCell(manager, controller, model, true, holdsKeyOfReferenceableObject);
                         }
                         else
                         {
                             // a normal TextTableCell is enough. One that should save itself as string and not a number
-                            return new TextTableCell(manager, model, false);
+                            return new TextTableCell(manager, controller, model, false, holdsKeyOfReferenceableObject);
                         }
                         
                     }
@@ -100,7 +107,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
                     }
                 }
             }
-            return new TextTableCell(manager, model, false);
+            return new TextTableCell(manager, controller, model, false, holdsKeyOfReferenceableObject);
         });
     }
     
@@ -143,7 +150,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     
     private NumberTableCell makeNumberTableCell()
     {
-        return new NumberTableCell(manager)
+        return new NumberTableCell(manager, controller, model, holdsKeyOfReferenceableObject)
         {
             private final TextField textField = new TextField();
             
@@ -198,10 +205,5 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     public boolean isRequired()
     {
         return isRequired;
-    }
-    
-    public boolean holdsKeyProperty()
-    {
-        return holdsKeyOfReferenceableObject;
     }
 }
