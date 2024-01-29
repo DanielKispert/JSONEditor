@@ -61,13 +61,8 @@ public class EditorScene extends SceneHandlerImpl
         editorWindowManager.updateEditors();
     }
     
-    public void handleRemovedSelection()
-    {
-        editorWindowManager.updateEditors();
-        navbar.updateTree();
-    }
     
-    public void handleUpdatedStructure()
+    public void handleJsonUpdate()
     {
         // we also update the windows because they could show the parent array, which just had something added/removed/changed
         editorWindowManager.updateEditors();

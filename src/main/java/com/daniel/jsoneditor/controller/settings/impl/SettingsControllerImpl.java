@@ -32,7 +32,7 @@ public class SettingsControllerImpl implements SettingsController
     }
     
     @Override
-    public boolean getHideEmptyColumns()
+    public boolean hideEmptyColumns()
     {
         // default is true
         String property = properties.getProperty(PropertyFileKeys.PROPERTY_HIDE_EMPTY_COLUMNS);
@@ -54,7 +54,7 @@ public class SettingsControllerImpl implements SettingsController
     }
     
     @Override
-    public boolean getRenameReferencesWhenRenamingObject()
+    public boolean renameReferencesWhenRenamingObject()
     {
         // default is true
         String property = properties.getProperty(PropertyFileKeys.PROPERTY_RENAME_REFERENCES_WHEN_RENAMING_OBJECT);
@@ -87,7 +87,7 @@ public class SettingsControllerImpl implements SettingsController
     }
     
     @Override
-    public boolean getRememberPaths()
+    public boolean rememberPaths()
     {
         // default is false
         return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_REMEMBER_PATHS));

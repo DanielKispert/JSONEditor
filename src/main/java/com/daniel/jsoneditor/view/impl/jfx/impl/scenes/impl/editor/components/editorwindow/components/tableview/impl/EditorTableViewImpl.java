@@ -6,7 +6,6 @@ import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
@@ -18,7 +17,6 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -46,15 +44,12 @@ public class EditorTableViewImpl extends EditorTableView
     
     private final JsonEditorEditorWindow window;
     
-    private ReferenceableObject displayedObject;
-    
     public EditorTableViewImpl(EditorWindowManager manager, JsonEditorEditorWindow window, ReadableModel model, Controller controller)
     {
         this.window = window;
         this.manager = manager;
         this.model = model;
         this.controller = controller;
-        displayedObject = null;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
     }
@@ -67,8 +62,6 @@ public class EditorTableViewImpl extends EditorTableView
         if (nodeWithPath.isArray())
         {
             int arrayItemIndex = 0;
-            // it should also be fine to get the object of a non-existing node
-            displayedObject = model.getReferenceableObject(nodeWithPath.getPath() + "/" + arrayItemIndex);
             for (JsonNode arrayItem : node)
             {
                 nodesToDisplay.add(new JsonNodeWithPath(arrayItem, nodeWithPath.getPath() + "/" + arrayItemIndex++));
@@ -76,7 +69,6 @@ public class EditorTableViewImpl extends EditorTableView
         }
         else if (nodeWithPath.isObject())
         {
-            displayedObject = model.getReferenceableObject(nodeWithPath.getPath());
             nodesToDisplay.add(nodeWithPath);
         }
         setView(nodesToDisplay, schema);
@@ -134,7 +126,7 @@ public class EditorTableViewImpl extends EditorTableView
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
-        if (isArray && controller.getSettingsController().getHideEmptyColumns())
+        if (isArray && controller.getSettingsController().hideEmptyColumns())
         {
             
             for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
@@ -235,11 +227,8 @@ public class EditorTableViewImpl extends EditorTableView
         {
             String propertyName = property.getKey().getKey();
             boolean isRequired = property.getKey().getValue();
-            boolean isKeyOfReferenceableObject = displayedObject != null && ("/" + propertyName).equals(displayedObject.getKey());
             JsonNode propertyNode = property.getValue();
-            EditorTableColumn column = new EditorTableColumn(manager, model, window, propertyNode, propertyName, isRequired, isKeyOfReferenceableObject);
-            
-            columns.add(column);
+            columns.add(new EditorTableColumn(manager, controller, model, window, propertyNode, propertyName, isRequired));
         }
         return columns;
     }

@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.JsonEditorNamebar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import javafx.scene.control.Button;
@@ -31,9 +32,12 @@ public class JsonEditorEditorWindow extends VBox
     
     private final ReadableModel model;
     
+    private ReferenceableObject displayedObject;
+    
     public JsonEditorEditorWindow(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
         this.model = model;
+        displayedObject = null;
         nameBar = new JsonEditorNamebar(manager, this, model);
         editor = new EditorTableViewImpl(manager, this, model, controller);
         addItemButton = new Button("Add Item");
@@ -50,6 +54,15 @@ public class JsonEditorEditorWindow extends VBox
     {
         this.selectedPath = path;
         JsonNodeWithPath newNode = model.getNodeForPath(path);
+        if (newNode.isArray())
+        {
+            // it should also be fine to get the object of a non-existing node
+            displayedObject = model.getReferenceableObject(newNode.getPath() + "/0");
+        }
+        else if (newNode.isObject())
+        {
+            displayedObject = model.getReferenceableObject(newNode.getPath());
+        }
         nameBar.setSelection(newNode);
         editor.setSelection(newNode);
         if (model.canAddMoreItems(path))
@@ -68,5 +81,10 @@ public class JsonEditorEditorWindow extends VBox
     public String getSelectedPath()
     {
         return selectedPath;
+    }
+    
+    public ReferenceableObject getDisplayedObject()
+    {
+        return displayedObject;
     }
 }

@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.json;
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -108,12 +109,12 @@ public final class JsonNodeWithPath
     
     public boolean isArray()
     {
-        return node.isArray();
+        return node != null && node.isArray();
     }
     
     public boolean isObject()
     {
-        return node.isObject();
+        return node != null && node.isObject();
     }
     
     public String makeNameIncludingPath(ReadableModel model)
@@ -138,6 +139,41 @@ public final class JsonNodeWithPath
         fancyName.append(lastPathNode.getDisplayName());
         
         return fancyName.toString();
+    }
+    
+    public void removeProperty(String propertyName)
+    {
+        if (node != null && node.isObject())
+        {
+            ObjectNode node = (ObjectNode) this.node;
+            node.remove(propertyName);
+        }
+    }
+    
+    public void setProperty(String propertyName, Object value)
+    {
+        if (node != null && node.isObject())
+        {
+            ObjectNode node = (ObjectNode) this.node;
+            // if the property name starts with / we remove that
+            // TODO add proper path handling here for nested children
+            if (propertyName.startsWith("/"))
+            {
+                propertyName = propertyName.substring(1);
+            }
+            if (value instanceof String)
+            {
+                node.put(propertyName, (String) value);
+            }
+            else if (value instanceof Integer)
+            {
+                node.put(propertyName, (Integer) value);
+            }
+            else if (value instanceof Double)
+            {
+                node.put(propertyName, (Double) value);
+            }
+        }
     }
     
 }

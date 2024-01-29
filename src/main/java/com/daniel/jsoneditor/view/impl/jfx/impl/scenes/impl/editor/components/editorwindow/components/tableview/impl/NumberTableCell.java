@@ -1,16 +1,16 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl;
 
-import java.math.BigDecimal;
-
+import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+
 
 public class NumberTableCell extends EditorTableCell
 {
-    public NumberTableCell(EditorWindowManager manager)
+    public NumberTableCell(EditorWindowManager manager, Controller controller, ReadableModel model, boolean holdsObjectKey)
     {
-        super(manager);
+        super(manager, controller, model, holdsObjectKey);
     }
     
     @Override
@@ -19,14 +19,14 @@ public class NumberTableCell extends EditorTableCell
         try
         {
             int valueAsInt = Integer.parseInt(newValue);
-            ((ObjectNode) item.getNode()).put(propertyName, valueAsInt);
+            item.setProperty(propertyName, valueAsInt);
         }
         catch (NumberFormatException e)
         {
             try
             {
                 double valueAsDouble = Double.parseDouble(newValue);
-                ((ObjectNode) item.getNode()).put(propertyName, valueAsDouble);
+                item.setProperty(propertyName, valueAsDouble);
             }
             catch (NumberFormatException f)
             {
