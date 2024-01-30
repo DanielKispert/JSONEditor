@@ -119,7 +119,7 @@ public class EditorTableViewImpl extends EditorTableView
         {
             // we add a column that either holds the "follow reference" or "open array element" button
             columns.add(createFollowReferenceOrOpenElementButtonColumn());
-            // we add a column of delete buttons
+            // we add a column of delete buttons.css
             columns.add(createDeleteButtonColumn());
         }
         

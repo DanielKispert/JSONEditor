@@ -7,6 +7,8 @@ public interface UIHandler
     
     void showMainEditor();
     
+    void handleAddedArrayItem(String pathOfArrayItem);
+    
     void updateEditorSceneWithSelectedJson();
     
     void updateEditorSceneWithRemovedJson();

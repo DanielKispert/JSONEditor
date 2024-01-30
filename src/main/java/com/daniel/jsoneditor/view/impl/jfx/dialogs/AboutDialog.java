@@ -7,7 +7,7 @@ import java.util.Properties;
 import javafx.scene.control.Alert;
 
 
-public class AboutDialog extends Alert
+public class AboutDialog extends ThemedAlert
 {
     public AboutDialog()
     {

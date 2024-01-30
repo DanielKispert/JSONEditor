@@ -1,18 +1,31 @@
 package com.daniel.jsoneditor.model.statemachine.impl;
 
-public enum Event
+public class Event
 {
+    private final String path;
     
-    LAUNCHING,
-    READ_JSON_AND_SCHEMA,
+    private final EventEnum eventEnum;
     
-    MAIN_EDITOR,
+    public Event(EventEnum eventEnum)
+    {
+        this.eventEnum = eventEnum;
+        this.path = null;
+    }
     
-    UPDATED_SELECTED_JSON_NODE,
+    public Event(EventEnum eventEnum, String path)
+    {
+        this.eventEnum = eventEnum;
+        this.path = path;
+    }
     
-    UPDATED_JSON_STRUCTURE,
+    public EventEnum getEvent()
+    {
+        return eventEnum;
+    }
     
-    MOVED_CHILD_OF_SELECTED_JSON_NODE,
+    public String getPath()
+    {
+        return path;
+    }
     
-    REMOVED_SELECTED_JSON_NODE
 }

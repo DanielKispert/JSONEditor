@@ -5,7 +5,6 @@ import com.daniel.jsoneditor.controller.impl.json.VariableHelper;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
-import com.daniel.jsoneditor.controller.settings.impl.PropertiesFileHelper;
 import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
@@ -13,7 +12,11 @@ import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
+import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.SelectReferenceDialog;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceType;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceTypeDialog;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
@@ -26,7 +29,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -75,7 +78,7 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void launchFinished()
     {
-        model.sendEvent(Event.READ_JSON_AND_SCHEMA);
+        model.sendEvent(new Event(EventEnum.READ_JSON_AND_SCHEMA));
     }
     
     @Override
@@ -99,14 +102,13 @@ public class ControllerImpl implements Controller, Observer
                 }
                 model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
             });
-    
+            
         }
         else
         {
             view.selectJsonAndSchema();
         }
-    
-    
+        
     }
     
     @Override
@@ -119,12 +121,12 @@ public class ControllerImpl implements Controller, Observer
     public String resolveVariablesInJson(String text)
     {
         Set<String> variables = VariableHelper.findVariables(text);
-    
-        if (variables.size() > 0)
+        
+        if (!variables.isEmpty())
         {
             VariableReplacementDialog dialog = new VariableReplacementDialog();
             Map<String, String> replacements = dialog.showAndWait(variables);
-        
+            
             if (replacements != null)
             {
                 return VariableHelper.replaceVariables(text, replacements);
@@ -172,7 +174,7 @@ public class ControllerImpl implements Controller, Observer
             // we want to export the node and all parent nodes of the node (but no other child nodes of the parent nodes)
             List<String> pathsToExport = readableModel.getDependentPaths(nodeWithPath);
             pathsToExport.add(readableModel.getNodeForPath(path).getPath());
-        
+            
             String fileWithEnding = readableModel.getCurrentJSONFile().getName();
             int lastDotIndex = fileWithEnding.lastIndexOf(".");
             String fileWithoutEnding = (lastDotIndex != -1) ? fileWithEnding.substring(0, lastDotIndex) : fileWithEnding;
@@ -198,7 +200,53 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void addNewNodeToArray(String path)
     {
-        model.addNodeToArray(path);
+        // we check whether the array holds ReferencesToObjects or referenceable objects. In these cases, we do some additional steps
+        
+        if (false && readableModel.getReferenceToObject(path) != null)
+        {
+            ReferenceTypeDialog dialog = new ReferenceTypeDialog();
+            Optional<ReferenceType> result = dialog.showAndWait();
+            if (result.isPresent())
+            {
+                ReferenceType referenceType = result.get();
+                if (ReferenceType.REFERENCE_TO_OBJECT.equals(referenceType))
+                {
+                    Optional<String> dialogResult = new SelectReferenceDialog(
+                            readableModel.getReferenceableObjectInstances()).showAndWait();
+                    if (dialogResult.isPresent())
+                    {
+                        String resultString = dialogResult.get();
+                        if (ReferenceType.CREATE_NEW_REFERENCE.name().equals(resultString))
+                        {
+                            // show the dialog to create a new reference
+                        } else {
+                            // the user selected an existing object, so we now need to make a reference to that object and add that one to
+                            // the array
+                            
+                            
+                        }
+                        
+                    }
+                }
+                else if (ReferenceType.MANUAL_REFERENCE.equals(referenceType))
+                {
+                    // the user wants to manually add a reference so we simply create a new object
+                    model.addNodeToArray(path);
+                }
+            }
+        }
+        else
+        {
+            if (false)
+            {
+                // TODO handle referenceable objects
+            }
+            else
+            {
+                // the array contains neither references nor objects
+                model.addNodeToArray(path);
+            }
+        }
     }
     
     @Override
@@ -257,7 +305,6 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void generateJson()
     {
-    
     
     }
 }

@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs.listview;
 import java.util.List;
 
 import com.daniel.jsoneditor.model.json.schema.reference.ReferencingInstance;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.ThemedDialog;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -22,7 +23,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
 
-public abstract class DialogWithListView<T extends ReferencingInstance> extends Dialog<String>
+public abstract class DialogWithListView<T extends ReferencingInstance> extends ThemedDialog<String>
 {
     protected ListView<T> listView;
     
@@ -47,9 +48,10 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends 
         Region spacer = new Region();
         
         Text suggestedText = new Text(item.getKey());
+        suggestedText.getStyleClass().add("dialog-list-cell-text");
+        
         Text extraInfo = new Text(item.getFancyName());
-        extraInfo.setFill(Color.GRAY);
-        extraInfo.setOpacity(0.5);
+        extraInfo.getStyleClass().add("dialog-list-cell-extra");
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
         hbox.getChildren().addAll(suggestedText, spacer, extraInfo);

@@ -16,9 +16,9 @@ import javafx.scene.layout.VBox;
 public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
 {
     
-    private final TextField searchField;
+    protected final TextField searchField;
     
-    private final List<ReferenceableObjectInstance> suggestions;
+    protected final List<ReferenceableObjectInstance> suggestions;
     
     public FindDialog(List<ReferenceableObjectInstance> suggestions)
     {
