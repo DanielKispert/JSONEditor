@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.model;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
+import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
@@ -25,6 +26,8 @@ public interface WritableModel
      * @param selectedPath points to the path of the array to which a node should be added
      */
     void addNodeToArray(String selectedPath);
+    
+    void addNodeToArray(String arrayPath, JsonNode nodeToAdd);
     
     /**
      * sorts the array node at the given path

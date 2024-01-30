@@ -1,0 +1,86 @@
+.root {
+    -fx-base: #282a36;
+    -fx-background: #282a36;
+    -fx-control-inner-background: #282a36;
+    -fx-accent: #6272a4;
+    -fx-default-button: -fx-accent;
+    -fx-focus-color: #6272a4;
+    -fx-faint-focus-color: #6272a422;
+}
+
+.button {
+    -fx-text-fill: white;
+    -fx-background-color: #44475a;
+    -fx-border-width: 0;
+    -fx-border-radius: 15;
+}
+
+.button:hover {
+    -fx-background-color: #6272a4;
+}
+
+.dialog-pane .button-bar .button {
+    -fx-background-color: #44475a;
+    -fx-border-width: 0;
+    -fx-text-fill: white;
+}
+
+.dialog-pane .button-bar .button:hover {
+    -fx-background-color: #6272a4;
+}
+
+.label {
+    -fx-text-fill: white;
+}
+
+.text-field {
+    -fx-background-color: #44475a;
+    -fx-text-fill: white;
+    -fx-border-color: #6272a4;
+}
+
+.text-area {
+    -fx-background-color: #44475a;
+    -fx-text-fill: white;
+}
+
+.list-view {
+    -fx-background-color: #282a36;
+}
+
+.dialog-list-cell-text {
+    -fx-fill: white;
+}
+
+.dialog-list-cell-extra {
+    -fx-fill: grey;
+    -fx-opacity: 0.5;
+}
+
+.list-cell:filled:selected .dialog-list-cell-text,
+.list-cell:filled:selected:hover .dialog-list-cell-text,
+.list-cell:filled:selected .dialog-list-cell-extra,
+.list-cell:filled:selected:hover .dialog-list-cell-extra {
+    -fx-fill: white;
+}
+
+.alert > .dialog-pane {
+    -fx-background-color: #282a36;
+}
+
+.alert > .dialog-pane .content.label {
+    -fx-font-size: 15pt;
+    -fx-font-weight: Bold;
+    -fx-text-fill: white;
+}
+
+.alert > .dialog-pane .button-bar .button {
+    -fx-font-size: 12pt;
+    -fx-font-weight: Bold;
+    -fx-text-fill: white;
+    -fx-background-color: #44475a;
+}
+
+.alert > .dialog-pane .button-bar .button:hover {
+    -fx-background-color: #6272a4;
+}

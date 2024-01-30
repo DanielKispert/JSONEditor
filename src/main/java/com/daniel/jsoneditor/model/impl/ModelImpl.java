@@ -8,6 +8,7 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.settings.IdentifierSetting;
 import com.daniel.jsoneditor.model.statemachine.StateMachine;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
+import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -73,7 +74,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public Event getCurrentState()
+    public Event getLatestEvent()
     {
         return stateMachine.getState();
     }
@@ -91,7 +92,7 @@ public class ModelImpl implements ReadableModel, WritableModel
         setCurrentSchemaFile(schemaFile);
         setRootJson(json);
         setRootSchema(schema);
-        sendEvent(Event.MAIN_EDITOR);
+        sendEvent(new Event(EventEnum.MAIN_EDITOR));
     }
     
     @Override
@@ -99,7 +100,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     {
         setRootJson(jsonNode);
         // TODO can be improved
-        sendEvent(Event.UPDATED_JSON_STRUCTURE);
+        sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
     }
     
     @Override
@@ -154,7 +155,7 @@ public class ModelImpl implements ReadableModel, WritableModel
                 {
                     arrayNode.remove(i);
                     arrayNode.insert(index, itemNode);
-                    sendEvent(Event.MOVED_CHILD_OF_SELECTED_JSON_NODE);
+                    sendEvent(new Event(EventEnum.MOVED_CHILD_OF_SELECTED_JSON_NODE));
                     break;
                 }
             }
@@ -361,7 +362,7 @@ public class ModelImpl implements ReadableModel, WritableModel
         }
         arrayNode.removeAll();
         arrayNode.addAll(items);
-        sendEvent(Event.UPDATED_JSON_STRUCTURE);
+        sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
         
     }
     
@@ -439,12 +440,22 @@ public class ModelImpl implements ReadableModel, WritableModel
     {
         JsonNode itemsSchema = getSubschemaForPath(selectedPath + "/0").getSchemaNode();
         JsonNode newItem = NodeGenerator.generateNodeFromSchema(itemsSchema);
-        JsonNodeWithPath parent = getNodeForPath(selectedPath);
+        addNodeToArray(selectedPath, newItem);
+        
+    }
+    
+    @Override
+    public void addNodeToArray(String arrayPath, JsonNode nodeToAdd)
+    {
+        JsonNodeWithPath parent = getNodeForPath(arrayPath);
         if (parent.isArray())
         {
-            ((ArrayNode) parent.getNode()).add(newItem);
-            sendEvent(Event.UPDATED_SELECTED_JSON_NODE);
+            // we need the parents size to get the index of the newly added item
+            int indexOfNewItem = parent.getNode().size();
+            ((ArrayNode) parent.getNode()).add(nodeToAdd);
+            sendEvent(new Event(EventEnum.ADDED_ITEM_TO_ARRAY, arrayPath + "/" + indexOfNewItem));
         }
+        
     }
     
     @Override
@@ -464,7 +475,7 @@ public class ModelImpl implements ReadableModel, WritableModel
             
             // Insert the cloned item at indexToClone + 1
             arrayNode.insert(indexToClone + 1, clonedNode);
-            sendEvent(Event.UPDATED_JSON_STRUCTURE);
+            sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
         }
     }
     
@@ -476,11 +487,11 @@ public class ModelImpl implements ReadableModel, WritableModel
     
     private void removeOrSetNode(String path, JsonNode content)
     {
-        if (path == null || path.length() == 0)
+        if (path == null || path.isEmpty())
         {
             // we are attempting to insert at the root node
             setRootJson(content);
-            sendEvent(Event.UPDATED_JSON_STRUCTURE);
+            sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
             return;
         }
         int lastSlashIndex = path.lastIndexOf('/');
@@ -526,11 +537,11 @@ public class ModelImpl implements ReadableModel, WritableModel
         // both of these events do the same, it's just for cleanliness right now
         if (content != null)
         {
-            sendEvent(Event.UPDATED_JSON_STRUCTURE);
+            sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
         }
         else
         {
-            sendEvent(Event.REMOVED_SELECTED_JSON_NODE);
+            sendEvent(new Event(EventEnum.REMOVED_SELECTED_JSON_NODE));
         }
     }
     

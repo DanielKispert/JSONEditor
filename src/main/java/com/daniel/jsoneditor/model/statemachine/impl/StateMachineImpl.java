@@ -16,7 +16,7 @@ public class StateMachineImpl implements StateMachine
     public StateMachineImpl()
     {
         this.observers = new ArrayList<>();
-        setState(Event.LAUNCHING);
+        setState(new Event(EventEnum.LAUNCHING));
     }
     
     @Override

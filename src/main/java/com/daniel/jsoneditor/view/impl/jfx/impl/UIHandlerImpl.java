@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 
 import java.util.Optional;
 
+
 public class UIHandlerImpl implements UIHandler
 {
     private final Controller controller;
@@ -44,11 +45,20 @@ public class UIHandlerImpl implements UIHandler
     }
     
     @Override
+    public void handleAddedArrayItem(String pathOfArrayItem)
+    {
+        if (editorScene != null)
+        {
+            editorScene.handleAddedArrayItem(pathOfArrayItem);
+        }
+    }
+    
+    @Override
     public void updateEditorSceneWithSelectedJson()
     {
         if (editorScene != null)
         {
-            editorScene.handleUpdatedSelection();
+            editorScene.updateEverything();
         }
     }
     
@@ -57,7 +67,7 @@ public class UIHandlerImpl implements UIHandler
     {
         if (editorScene != null)
         {
-            editorScene.handleJsonUpdate();
+            editorScene.updateEverything();
         }
     }
     
@@ -66,7 +76,7 @@ public class UIHandlerImpl implements UIHandler
     {
         if (editorScene != null)
         {
-            editorScene.handleJsonUpdate();
+            editorScene.updateEverything();
         }
     }
     
@@ -84,7 +94,7 @@ public class UIHandlerImpl implements UIHandler
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Are you sure?");
         alert.setHeaderText(text);
-    
+        
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK)
         {

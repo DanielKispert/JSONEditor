@@ -99,7 +99,9 @@ public class JSONSelectionScene extends SceneHandlerImpl
         root.addRow(3, rememberCheckBox);
         root.addRow(4, okButton);
         
-        return new Scene(root, 400, 200);
+        Scene scene = new Scene(root, 400, 200);
+        scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
+        return scene;
     }
     
     private HBox getSettingsBox(Stage stage, TextField settingsFileField, Label settingsLabel)

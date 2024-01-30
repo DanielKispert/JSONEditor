@@ -1,10 +1,9 @@
 package com.daniel.jsoneditor.view.impl;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.ThemedAlert;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -13,10 +12,9 @@ import com.daniel.jsoneditor.view.View;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.UIHandlerImpl;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
 
 public class ViewImpl implements View
 {
@@ -40,8 +38,8 @@ public class ViewImpl implements View
     @Override
     public void update()
     {
-        Event newState = model.getCurrentState();
-        switch (newState)
+        Event newState = model.getLatestEvent();
+        switch (newState.getEvent())
         {
             case LAUNCHING:
                 controller.launchFinished();
@@ -52,8 +50,8 @@ public class ViewImpl implements View
             case MAIN_EDITOR:
                 uiHandler.showMainEditor();
                 break;
-            case UPDATED_SELECTED_JSON_NODE:
-                uiHandler.updateEditorSceneWithSelectedJson();
+            case ADDED_ITEM_TO_ARRAY:
+                uiHandler.handleAddedArrayItem(newState.getPath());
                 break;
             case UPDATED_JSON_STRUCTURE:
                 uiHandler.updateEditorSceneWithUpdatedStructure();
@@ -79,7 +77,7 @@ public class ViewImpl implements View
     @Override
     public void cantValidateJson()
     {
-        Alert alert = new Alert(Alert.AlertType.ERROR, "Can't validate JSON using selected Schema. See the console for details",
+        Alert alert = new ThemedAlert(Alert.AlertType.ERROR, "Can't validate JSON using selected Schema. See the console for details",
                 ButtonType.OK);
         alert.showAndWait();
     }
@@ -87,7 +85,7 @@ public class ViewImpl implements View
     @Override
     public void selectJsonAndSchema()
     {
-        Alert alert = new Alert(Alert.AlertType.ERROR, "Select a JSON and a Schema!", ButtonType.OK);
+        Alert alert = new ThemedAlert(Alert.AlertType.ERROR, "Select a JSON and a Schema!", ButtonType.OK);
         alert.showAndWait();
     }
 }
