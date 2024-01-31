@@ -21,6 +21,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 
@@ -48,6 +49,16 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         setOnMouseClicked(mouseEvent ->
         {
             if (mouseEvent.getButton().equals(MouseButton.PRIMARY) && mouseEvent.getClickCount() == 2)
+            {
+                TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
+                if (selectedItem != null)
+                {
+                    JsonEditorNavbar.this.handleNavbarClick(selectedItem);
+                }
+            }
+        });
+        setOnKeyReleased(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER)
             {
                 TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
                 if (selectedItem != null)

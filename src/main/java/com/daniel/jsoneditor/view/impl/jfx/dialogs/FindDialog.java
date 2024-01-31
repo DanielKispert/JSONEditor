@@ -46,7 +46,7 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
         textField.setPrefWidth(800);
         // Filtering the suggestions as the user types
         textField.textProperty().addListener((observableValue, oldValue, newValue) -> filterSuggestionsBasedOn(newValue));
-        textField.addEventHandler(KeyEvent.KEY_PRESSED, this::handleKeyPress);
+        textField.addEventHandler(KeyEvent.KEY_PRESSED, this::handleTextFieldKeyPress);
         return textField;
     }
     
@@ -69,15 +69,18 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
     /**
      * Handles KeyEvents - Autocompletes on TAB key press, and Submits the form on ENTER key press
      */
-    @Override
-    protected void handleKeyPress(KeyEvent keyEvent)
+    private void handleTextFieldKeyPress(KeyEvent keyEvent)
     {
-        super.handleKeyPress(keyEvent);
         if (!keyEvent.isConsumed())
         {
             if (keyEvent.getCode().equals(KeyCode.TAB))
             {
                 autofillText();
+                keyEvent.consume();
+            }
+            if (keyEvent.getCode() == KeyCode.UP || keyEvent.getCode() == KeyCode.DOWN)
+            {
+                listView.fireEvent(keyEvent);
                 keyEvent.consume();
             }
         }
