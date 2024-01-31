@@ -10,7 +10,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
@@ -19,7 +18,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
 
@@ -62,19 +60,9 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends 
         return hbox;
     }
     
-    protected void handleKeyPress(KeyEvent keyEvent)
+    private void handleListViewKeyPress(KeyEvent keyEvent)
     {
-        if (keyEvent.getCode() == KeyCode.DOWN)
-        {
-            navigateSuggestions(1);
-            keyEvent.consume();
-        }
-        else if (keyEvent.getCode() == KeyCode.UP)
-        {
-            navigateSuggestions(-1);
-            keyEvent.consume();
-        }
-        else if (keyEvent.getCode().equals(KeyCode.ENTER))
+        if (keyEvent.getCode().equals(KeyCode.ENTER))
         {
             handleDialogOk();
             keyEvent.consume();
@@ -120,25 +108,9 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends 
             });
             return cell;
         });
-        listView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPress);
+        listView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleListViewKeyPress);
         listView.setPrefWidth(800);
     }
     
     protected abstract void onListItemDoubleClick(T item);
-    
-    /**
-     * Navigates through the list of suggestions
-     *
-     * @param offset
-     *         - indicates the number of positions to navigate. Positive for down and negative for up.
-     */
-    protected final void navigateSuggestions(int offset)
-    {
-        int currentIndex = listView.getSelectionModel().getSelectedIndex();
-        int newIndex = currentIndex + offset;
-        if (newIndex >= 0 && newIndex < listView.getItems().size())
-        {
-            listView.getSelectionModel().select(newIndex);
-        }
-    }
 }
