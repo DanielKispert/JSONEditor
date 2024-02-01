@@ -1,32 +1,40 @@
 .root {
-    -fx-base: #282a36;
-    -fx-background: #282a36;
-    -fx-control-inner-background: #282a36;
-    -fx-accent: #6272a4;
+    /* color definitions */
+    -base-color: rgb(40, 40, 45);
+    -accent-color: rgb(100, 100, 105);
+    -background-color: rgb(72, 72, 80);
+    -text-color: white;
+    -selection-color: rgb(80, 80, 85);
+    /* color definitions end */
+
+    -fx-base: -base-color;
+    -fx-background: -base-color;
+    -fx-control-inner-background: -base-color;
+    -fx-accent: -accent-color;
     -fx-default-button: -fx-accent;
-    -fx-focus-color: #6272a4;
+    -fx-focus-color: -accent-color;
     -fx-faint-focus-color: #6272a422;
 }
 
 .button {
     -fx-text-fill: white;
-    -fx-background-color: #44475a;
+    -fx-background-color: -background-color;
     -fx-border-width: 0;
     -fx-border-radius: 15;
 }
 
 .button:hover {
-    -fx-background-color: #6272a4;
+    -fx-background-color: -accent-color;
 }
 
 .dialog-pane .button-bar .button {
-    -fx-background-color: #44475a;
+    -fx-background-color: -background-color;
     -fx-border-width: 0;
     -fx-text-fill: white;
 }
 
 .dialog-pane .button-bar .button:hover {
-    -fx-background-color: #6272a4;
+    -fx-background-color: -accent-color;
 }
 
 .label {
@@ -34,18 +42,18 @@
 }
 
 .text-field {
-    -fx-background-color: #44475a;
+    -fx-background-color: -background-color;
     -fx-text-fill: white;
-    -fx-border-color: #6272a4;
+    -fx-border-color: -accent-color;
 }
 
 .text-area {
-    -fx-background-color: #44475a;
+    -fx-background-color: -background-color;
     -fx-text-fill: white;
 }
 
 .list-view {
-    -fx-background-color: #282a36;
+    -fx-background-color: -base-color;
 }
 
 .dialog-list-cell-text {
@@ -64,8 +72,16 @@
     -fx-fill: white;
 }
 
+.list-view .list-cell:filled:selected, .table-view .table-row-cell:filled:selected {
+    -fx-background-color: -selection-color;
+}
+
+.list-view:focused .list-cell:filled:selected:focused, .table-view:focused .table-row-cell:filled:selected:focused {
+    -fx-background-color: -accent-color;
+}
+
 .alert > .dialog-pane {
-    -fx-background-color: #282a36;
+    -fx-background-color: -base-color;
 }
 
 .alert > .dialog-pane .content.label {
@@ -78,9 +94,9 @@
     -fx-font-size: 12pt;
     -fx-font-weight: Bold;
     -fx-text-fill: white;
-    -fx-background-color: #44475a;
+    -fx-background-color: -background-color;
 }
 
 .alert > .dialog-pane .button-bar .button:hover {
-    -fx-background-color: #6272a4;
+    -fx-background-color: -accent-color;
 }
