@@ -20,7 +20,8 @@ public class ShowUsagesButton extends Button
     
     public ShowUsagesButton(ReadableModel model, EditorWindowManager manager)
     {
-        super("🔍"); // heck yeah, unicode magnifying glass so I don't need icons
+        super();
+        ButtonHelper.setButtonImage(this, "/icons/material/darkmode/outline_pageview_white_24dp.png");
         this.model = model;
         this.manager = manager;
         setOnAction(actionEvent -> handleClick());

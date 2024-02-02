@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ShowUsagesButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
@@ -10,7 +11,6 @@ import javafx.scene.control.Label;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.paint.Color;
 
 
 public class JsonEditorNamebar extends HBox
@@ -62,7 +62,7 @@ public class JsonEditorNamebar extends HBox
     private Button makeSelectInNavbarButton()
     {
         Button selectInNavbarButton = new Button();
-        selectInNavbarButton.setText("<-");
+        ButtonHelper.setButtonImage(selectInNavbarButton, "/icons/material/darkmode/outline_adjust_white_24dp.png");
         selectInNavbarButton.setOnAction(actionEvent -> manager.selectOnNavbar(selectedPath));
         return selectInNavbarButton;
     }
@@ -70,8 +70,7 @@ public class JsonEditorNamebar extends HBox
     private Button makeGoToParentButton()
     {
         Button goToParentButton = new Button();
-        goToParentButton.setText("^");
-
+        ButtonHelper.setButtonImage(goToParentButton, "/icons/material/darkmode/outline_arrow_upward_white_24dp.png");
         goToParentButton.setOnAction(actionEvent -> editorWindow.setSelectedPath(parentPath));
         return goToParentButton;
     }
@@ -79,8 +78,7 @@ public class JsonEditorNamebar extends HBox
     private Button makeCloseWindowButton()
     {
         Button closeWindowButton = new Button();
-        closeWindowButton.setText("X");
-        closeWindowButton.setTextFill(Color.RED);
+        ButtonHelper.setButtonImage(closeWindowButton, "/icons/material/darkmode/outline_close_white_24dp.png");
         closeWindowButton.setOnAction(actionEvent -> manager.closeWindow(editorWindow));
         closeWindowButton.setAlignment(Pos.CENTER_RIGHT);
         return closeWindowButton;
