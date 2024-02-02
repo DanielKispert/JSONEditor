@@ -50,4 +50,7 @@ You can also use a special syntax to mark variables in a json document and the e
 e.g. if you have a person object with name: <personname> and then somewhere else you would like to enter that as well then you can use <personname> again.
 Any string in <> will be assumed to be a variable and can be filled out by the json editor. That allows you to do predetermined mass-replacement!
 
+# Icons
 
+This project is using the google material icons (https://fonts.google.com/icons?icon.set=Material+Icons), which are licensed under the Apache License.
+You can find the license in the resources folder or in their Github repository (https://github.com/google/material-design-icons/blob/master/LICENSE).
