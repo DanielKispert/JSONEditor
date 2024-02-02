@@ -6,6 +6,7 @@ import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
@@ -19,7 +20,6 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
@@ -245,7 +245,8 @@ public class EditorTableViewImpl extends EditorTableView
     
     private Button makeOpenArrayElementButton(String path)
     {
-        Button openArrayElementButton = new Button("🔍");
+        Button openArrayElementButton = new Button();
+        ButtonHelper.setButtonImage(openArrayElementButton, "/icons/material/darkmode/outline_open_in_new_white_24dp.png");
         openArrayElementButton.setOnAction(event -> manager.selectInNewWindow(path));
         openArrayElementButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
         openArrayElementButton.setMaxHeight(Double.MAX_VALUE);
@@ -254,8 +255,8 @@ public class EditorTableViewImpl extends EditorTableView
     
     private Button makeRemoveButton(String path)
     {
-        Button removeButton = new Button("X");
-        removeButton.setTextFill(Color.RED);
+        Button removeButton = new Button();
+        ButtonHelper.setButtonImage(removeButton, "/icons/material/darkmode/outline_close_white_24dp.png");
         removeButton.setOnAction(event -> controller.removeNode(path));
         removeButton.setMaxHeight(Double.MAX_VALUE);
         return removeButton;
