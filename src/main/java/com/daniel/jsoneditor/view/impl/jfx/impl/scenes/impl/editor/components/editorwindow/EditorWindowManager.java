@@ -16,6 +16,12 @@ public interface EditorWindowManager
     void closeWindow(JsonEditorEditorWindow windowToClose);
     
     /**
+     * focuses the windows with the parent array onto this item. If no window has the array open, opens a new window with the array and
+     * scrolls to the item
+     */
+    void focusOnArrayItem(String pathOfArrayItem);
+    
+    /**
      * an editor window requests the navbar to select an item
      */
     void selectOnNavbar(String path);

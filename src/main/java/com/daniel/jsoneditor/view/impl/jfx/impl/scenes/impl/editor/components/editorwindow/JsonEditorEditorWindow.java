@@ -78,6 +78,11 @@ public class JsonEditorEditorWindow extends VBox
         }
     }
     
+    public void focusArrayItem(String itemPath)
+    {
+        editor.focusItem(itemPath);
+    }
+    
     public String getSelectedPath()
     {
         return selectedPath;

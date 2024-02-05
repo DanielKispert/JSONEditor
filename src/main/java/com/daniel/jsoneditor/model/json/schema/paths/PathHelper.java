@@ -92,4 +92,24 @@ public class PathHelper
     {
         return str.matches("^\\d+$");
     }
+    
+    public static String getParentPath(String path)
+    {
+        if (path == null || path.isEmpty())
+        {
+            return null;
+        }
+        
+        // Remove the trailing slash if it exists
+        String trimmedPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+        
+        // Find the last index of '/'
+        int lastIndex = trimmedPath.lastIndexOf('/');
+        if (lastIndex >= 0)
+        {
+            return trimmedPath.substring(0, lastIndex);
+        }
+        
+        return null;
+    }
 }
