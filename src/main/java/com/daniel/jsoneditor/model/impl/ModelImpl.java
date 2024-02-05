@@ -461,7 +461,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void duplicateArrayItem(String pathToItemToDuplicate)
     {
-        JsonNodeWithPath parentArray = getNodeForPath(SchemaHelper.getParentPath(pathToItemToDuplicate));
+        JsonNodeWithPath parentArray = getNodeForPath(PathHelper.getParentPath(pathToItemToDuplicate));
         
         if (parentArray != null && parentArray.getNode().isArray())
         {

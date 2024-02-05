@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -103,7 +102,7 @@ public class ReferenceHelper
             }
         }
         // then we need to check whether the path leads to an array item (because if the referenceable object is an array, its items will be the "real" referenceable objects)
-        String parentPath = SchemaHelper.getParentPath(path);
+        String parentPath = PathHelper.getParentPath(path);
         if (parentPath == null)
         {
             return null;

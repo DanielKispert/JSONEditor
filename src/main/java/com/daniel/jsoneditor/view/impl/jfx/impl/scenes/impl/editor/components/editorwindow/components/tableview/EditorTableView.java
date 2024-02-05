@@ -11,4 +11,6 @@ public abstract class EditorTableView extends TableView<JsonNodeWithPath>
      * @param selection
      */
     public abstract void setSelection(JsonNodeWithPath selection);
+    
+    public abstract void focusItem(String itemPath);
 }

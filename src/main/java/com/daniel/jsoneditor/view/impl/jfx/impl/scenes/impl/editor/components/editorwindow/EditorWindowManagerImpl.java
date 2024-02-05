@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.AutoAdjustingSplitPane;
 import javafx.collections.ObservableList;
@@ -36,11 +37,12 @@ public class EditorWindowManagerImpl implements EditorWindowManager
         editorWindowContainer = new AutoAdjustingSplitPane();
     }
     
-    private void addWindow()
+    private JsonEditorEditorWindow addWindow()
     {
         JsonEditorEditorWindow window = new JsonEditorEditorWindow(this, model, controller);
         // add to the right
         editorWindowContainer.getItems().add(window);
+        return window;
     }
     
     @Override
@@ -53,7 +55,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     public void selectFromNavbar(String path)
     {
         ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
-        if (windowsAsNodes.size() > 0)
+        if (!windowsAsNodes.isEmpty())
         {
             Node firstWindowAsNode = windowsAsNodes.get(0);
             if (firstWindowAsNode instanceof JsonEditorEditorWindow)
@@ -74,10 +76,38 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     {
         if (canAnotherWindowBeAdded())
         {
-            addWindow();
-            // we display it in the new rightermost window
-            Node rightmostNode = editorWindowContainer.getItems().get(editorWindowContainer.getItems().size() - 1);
-            ((JsonEditorEditorWindow) rightmostNode).setSelectedPath(path);
+            addWindow().setSelectedPath(path);
+        }
+    }
+    
+    @Override
+    public void focusOnArrayItem(String pathOfArrayItem)
+    {
+        String parentPath = PathHelper.getParentPath(pathOfArrayItem);
+        if (parentPath == null)
+        {
+            return;
+        }
+        // first we check if a window already has the array open
+        boolean atLeastOneArrayInWindow = false;
+        for (Node windowNode : editorWindowContainer.getItems())
+        {
+            if (windowNode instanceof JsonEditorEditorWindow)
+            {
+                JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+                if (parentPath.equals(window.getSelectedPath()))
+                {
+                    atLeastOneArrayInWindow = true;
+                    window.focusArrayItem(pathOfArrayItem);
+                }
+            }
+        }
+        // if that was not successful, we open it in another window
+        if (!atLeastOneArrayInWindow && canAnotherWindowBeAdded())
+        {
+            JsonEditorEditorWindow newWindow = addWindow();
+            newWindow.setSelectedPath(parentPath);
+            newWindow.focusArrayItem(pathOfArrayItem);
         }
     }
     
@@ -86,6 +116,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     {
         editorWindowContainer.getItems().remove(windowToClose);
     }
+    
     
     @Override
     public void selectOnNavbar(String path)

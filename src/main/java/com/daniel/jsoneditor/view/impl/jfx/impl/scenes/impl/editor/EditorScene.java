@@ -61,8 +61,10 @@ public class EditorScene extends SceneHandlerImpl
     {
         editorWindowManager.updateEditors();
         navbar.updateTree();
+        // desired navbar behavior: select the item that we just added if it's not already selected
         navbar.selectPath(pathOfAddedArrayItem);
-        editorWindowManager.selectInNewWindow(pathOfAddedArrayItem);
+        // desired editor behavior: if array is already open, scroll to the added item. If no array is open, open an array and scroll
+        editorWindowManager.focusOnArrayItem(pathOfAddedArrayItem);
     }
     
     

@@ -74,6 +74,34 @@ public class EditorTableViewImpl extends EditorTableView
         setView(nodesToDisplay, schema);
     }
     
+    @Override
+    public void focusItem(String itemPath)
+    {
+        if (itemPath != null && !itemPath.isEmpty())
+        {
+            String[] pathSplit = itemPath.split("/");
+            String name = pathSplit[pathSplit.length - 1];
+            
+            int index;
+            try
+            {
+                index = Integer.parseInt(name);
+            }
+            catch (NumberFormatException e)
+            {
+                System.err.println("Couldn't parse index from path: " + itemPath);
+                return;
+            }
+            
+            // Check if the index is within the bounds of TableView's items
+            if (index >= 0 && index < getItems().size())
+            {
+                scrollTo(index);
+                getSelectionModel().select(index);
+            }
+        }
+    }
+    
     private void setView(ObservableList<JsonNodeWithPath> elements, JsonNode parentSchema)
     {
         JsonNode type = parentSchema.get("type");

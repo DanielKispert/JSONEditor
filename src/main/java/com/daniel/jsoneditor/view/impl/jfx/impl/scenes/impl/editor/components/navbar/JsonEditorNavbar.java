@@ -8,7 +8,7 @@ import java.util.Optional;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ImportDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
@@ -289,7 +289,7 @@ public class JsonEditorNavbar extends TreeView<JsonNodeWithPath>
         }
         else
         {
-            TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(rootItem, SchemaHelper.getParentPath(path));
+            TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(rootItem, PathHelper.getParentPath(path));
             if (parentItem != null)
             {
                 JsonNodeWithPath newNode = model.getNodeForPath(path);
