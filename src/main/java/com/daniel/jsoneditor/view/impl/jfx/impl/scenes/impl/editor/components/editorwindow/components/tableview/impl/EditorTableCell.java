@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import com.daniel.jsoneditor.controller.Controller;
@@ -23,6 +24,8 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     
     protected final boolean holdsKeyOfReferenceableObject;
     
+    private String previouslyCommittedValue;
+    
     public EditorTableCell(EditorWindowManager manager, Controller controller, ReadableModel model, boolean holdsObjectKey)
     {
         this.manager = manager;
@@ -34,13 +37,18 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     @Override
     public final void commitEdit(String newValue)
     {
+        if (Objects.equals(newValue, previouslyCommittedValue))
+        {
+            return; //in case the value is already committed, we don't need to change anything
+        }
         super.commitEdit(newValue);
         EditorTableColumn column = ((EditorTableColumn) getTableColumn());
         if (getTableRow() == null || getTableRow().getItem() == null)
         {
             return;
-            
         }
+        // from this point on we likely will save the value, so we remember it for next time
+        previouslyCommittedValue = newValue;
         JsonNodeWithPath item = getTableRow().getItem();
         String propertyName = column.getPropertyName();
         JsonNode jsonNode = item.getNode().get(propertyName);

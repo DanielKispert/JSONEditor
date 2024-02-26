@@ -4,6 +4,7 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.input.KeyCode;
 import javafx.util.Callback;
 
 import java.util.List;
@@ -28,6 +29,12 @@ public class AutofillField extends ComboBox<String>
         focusedProperty().addListener((obs, wasFocused, isNowFocused) ->
         {
             if (wasFocused && !isNowFocused)
+            {
+                parent.commitEdit(getEditor().getText());
+            }
+        });
+        getEditor().setOnKeyReleased(t -> {
+            if (t.getCode() == KeyCode.ENTER)
             {
                 parent.commitEdit(getEditor().getText());
             }
