@@ -132,7 +132,7 @@ public class ControllerImpl implements Controller, Observer
                 return VariableHelper.replaceVariables(text, replacements);
             }
         }
-        return null;
+        return text;
     }
     
     @Override
