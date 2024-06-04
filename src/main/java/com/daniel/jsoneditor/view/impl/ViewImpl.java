@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ThemedAlert;
+import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
@@ -38,8 +39,8 @@ public class ViewImpl implements View
     @Override
     public void update()
     {
-        Event newState = model.getLatestEvent();
-        switch (newState.getEvent())
+        Event newEvent = model.getLatestEvent();
+        switch (newEvent.getEvent())
         {
             case LAUNCHING:
                 controller.launchFinished();
@@ -51,7 +52,7 @@ public class ViewImpl implements View
                 uiHandler.showMainEditor();
                 break;
             case ADDED_ITEM_TO_ARRAY:
-                uiHandler.handleAddedArrayItem(newState.getPath());
+                uiHandler.handleAddedArrayItem(newEvent.getPath());
                 break;
             case UPDATED_JSON_STRUCTURE:
                 uiHandler.updateEditorSceneWithUpdatedStructure();
@@ -62,7 +63,9 @@ public class ViewImpl implements View
             case MOVED_CHILD_OF_SELECTED_JSON_NODE:
                 uiHandler.updateEditorSceneWithMovedJson();
                 break;
-            
+            case SAVING_SUCCESSFUL:
+                uiHandler.showToast(Toasts.SAVE_SUCCESSFUL_TOAST);
+                break;
         }
     
     }

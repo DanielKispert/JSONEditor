@@ -266,6 +266,7 @@ public class ControllerImpl implements Controller, Observer
     {
         JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();
         jsonWriter.writeJsonToFile(readableModel.getRootJson(), readableModel.getCurrentJSONFile());
+        model.sendEvent(new Event(EventEnum.SAVING_SUCCESSFUL));
     }
     
     @Override
