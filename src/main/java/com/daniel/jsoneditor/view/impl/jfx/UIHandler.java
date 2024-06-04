@@ -1,5 +1,10 @@
 package com.daniel.jsoneditor.view.impl.jfx;
 
+import javax.annotation.processing.SupportedAnnotationTypes;
+
+import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
+
+
 public interface UIHandler
 {
     
@@ -16,5 +21,7 @@ public interface UIHandler
     void updateEditorSceneWithUpdatedStructure();
     
     void updateEditorSceneWithMovedJson();
+    
+    void showToast(Toasts toast);
     
 }

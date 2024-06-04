@@ -5,6 +5,8 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelectionScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
+import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
+import com.daniel.jsoneditor.view.impl.jfx.toast.impl.ToastImpl;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
@@ -87,6 +89,12 @@ public class UIHandlerImpl implements UIHandler
         {
             editorScene.handleMovedSelection();
         }
+    }
+    
+    @Override
+    public void showToast(Toasts toast)
+    {
+        new ToastImpl().show(stage.getScene(), toast.getMessage(), toast.getColor(), toast.getDuration());
     }
     
     public static void showConfirmDialog(Runnable onContinue, String text)
