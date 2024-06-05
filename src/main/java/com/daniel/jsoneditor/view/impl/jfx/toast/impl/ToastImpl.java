@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.view.impl.jfx.toast.impl;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toast;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
+import javafx.animation.ParallelTransition;
 import javafx.animation.Timeline;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -14,6 +15,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
@@ -22,45 +24,38 @@ import javafx.util.Duration;
 public class ToastImpl implements Toast
 {
     private static final int SLIDE_DURATION = 250;
+    private static final int FADE_DURATION = 150;
     
-    /**
-     * display toast message with slide-in and slide-out
-     *
-     * @param ownerStage
-     *         The stage that owns this toast.
-     * @param message
-     *         The message to be displayed in the toast.
-     * @param color
-     *         The color of the toast.
-     * @param duration
-     *         The duration for which the toast is displayed.
-     */
     @Override
     public void show(Stage ownerStage, String message, Color color, int duration)
     {
-        Stage toastStage = new Stage();
-        toastStage.initOwner(ownerStage);
-        toastStage.setResizable(false);
-        toastStage.initStyle(StageStyle.TRANSPARENT);
+        Popup toastPopup = new Popup();
         
         StackPane root = createToastView(message, color);
         Scene scene = new Scene(root);
         scene.setFill(Color.TRANSPARENT);
         scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
-        toastStage.setScene(scene);
-        toastStage.show();
+        toastPopup.getContent().add(root);
         
-        toastStage.setX(ownerStage.getX() + ownerStage.getWidth() / 2 - root.getWidth() / 2);
-        toastStage.setY(ownerStage.getY() + ownerStage.getHeight() - root.getHeight() - 10);
+        toastPopup.show(ownerStage,
+                ownerStage.getX() + (ownerStage.getWidth() - root.getWidth()) / 2,
+                ownerStage.getY() + ownerStage.getHeight() - root.getHeight());
         
         root.setTranslateY(root.getHeight());
+        root.setOpacity(1);
         
         Timeline moveUpTimeline = new Timeline();
         KeyFrame moveUpKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), 0));
         moveUpTimeline.getKeyFrames().add(moveUpKey);
-        moveUpTimeline.play();
         
-        moveUpTimeline.setOnFinished((ae) -> {
+        Timeline fadeInTimeline = new Timeline();
+        KeyFrame fadeInKey = new KeyFrame(Duration.millis(FADE_DURATION), new KeyValue(root.opacityProperty(), 0.8));
+        fadeInTimeline.getKeyFrames().add(fadeInKey);
+        
+        ParallelTransition showTransition = new ParallelTransition(moveUpTimeline, fadeInTimeline);
+        showTransition.play();
+        
+        showTransition.setOnFinished((ae) -> {
             new Thread(() -> {
                 try
                 {
@@ -73,8 +68,14 @@ public class ToastImpl implements Toast
                 Timeline moveDownTimeline = new Timeline();
                 KeyFrame moveDownKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), root.getHeight()));
                 moveDownTimeline.getKeyFrames().add(moveDownKey);
-                moveDownTimeline.setOnFinished((aeb) -> toastStage.close());
-                moveDownTimeline.play();
+                
+                Timeline fadeOutTimeline = new Timeline();
+                KeyFrame fadeOutKey = new KeyFrame(Duration.millis(FADE_DURATION), new KeyValue(root.opacityProperty(), 0));
+                fadeOutTimeline.getKeyFrames().add(fadeOutKey);
+                
+                ParallelTransition hideTransition = new ParallelTransition(moveDownTimeline, fadeOutTimeline);
+                hideTransition.setOnFinished((aeb) -> toastPopup.hide());
+                hideTransition.play();
             }).start();
         });
     }
@@ -82,7 +83,7 @@ public class ToastImpl implements Toast
     private StackPane createToastView(String message, Color color)
     {
         Text text = new Text(message);
-        text.setFill(color);
+        text.setFill(Color.WHITE); // Set the text color to white directly
         text.getStyleClass().add("toast");
         
         ImageView icon;
