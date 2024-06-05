@@ -6,6 +6,7 @@ import javafx.animation.KeyValue;
 import javafx.animation.ParallelTransition;
 import javafx.animation.Timeline;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -24,14 +25,14 @@ import javafx.util.Duration;
 public class ToastImpl implements Toast
 {
     private static final int SLIDE_DURATION = 250;
-    private static final int FADE_DURATION = 150;
+    private static final int FADE_DURATION = 250;
     
     @Override
     public void show(Stage ownerStage, String message, Color color, int duration)
     {
         Popup toastPopup = new Popup();
         
-        StackPane root = createToastView(message, color);
+        HBox root = createToastView(message, color);
         Scene scene = new Scene(root);
         scene.setFill(Color.TRANSPARENT);
         scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
@@ -39,10 +40,10 @@ public class ToastImpl implements Toast
         
         toastPopup.show(ownerStage,
                 ownerStage.getX() + (ownerStage.getWidth() - root.getWidth()) / 2,
-                ownerStage.getY() + ownerStage.getHeight() - root.getHeight());
+                ownerStage.getY() + ownerStage.getHeight() - 55);
         
-        root.setTranslateY(root.getHeight());
-        root.setOpacity(1);
+        root.setTranslateY(10);
+        root.setOpacity(0);
         
         Timeline moveUpTimeline = new Timeline();
         KeyFrame moveUpKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), 0));
@@ -66,7 +67,7 @@ public class ToastImpl implements Toast
                     e.printStackTrace();
                 }
                 Timeline moveDownTimeline = new Timeline();
-                KeyFrame moveDownKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), root.getHeight()));
+                KeyFrame moveDownKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), 10));
                 moveDownTimeline.getKeyFrames().add(moveDownKey);
                 
                 Timeline fadeOutTimeline = new Timeline();
@@ -80,10 +81,10 @@ public class ToastImpl implements Toast
         });
     }
     
-    private StackPane createToastView(String message, Color color)
+    private HBox createToastView(String message, Color color)
     {
         Text text = new Text(message);
-        text.setFill(Color.WHITE); // Set the text color to white directly
+        text.setFill(color);
         text.getStyleClass().add("toast");
         
         ImageView icon;
@@ -101,14 +102,15 @@ public class ToastImpl implements Toast
         Label iconArea = new Label("", icon);
         iconArea.setStyle("-fx-background-color: " + toRgbString(color) + ";");
         iconArea.getStyleClass().add("toast-icon-area");
+        iconArea.setMaxSize(20, 20);
         
-        HBox hbox = new HBox(iconArea, text);
-        hbox.setStyle("-fx-border-color: " + toRgbString(color) + ";");
-        hbox.getStyleClass().add("toast");
-        hbox.setAlignment(Pos.CENTER);
-        hbox.setSpacing(5);
+        HBox borderBox = new HBox(iconArea, text);
+        borderBox.setStyle("-fx-border-color: " + toRgbString(color) + ";");
+        borderBox.getStyleClass().add("toast");
+        borderBox.setAlignment(Pos.CENTER);
+        borderBox.setSpacing(5);
         
-        return new StackPane(hbox);
+        return borderBox;
     }
     
     private String toRgbString(Color color)
