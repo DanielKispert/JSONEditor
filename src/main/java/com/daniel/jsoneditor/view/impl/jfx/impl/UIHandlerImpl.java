@@ -94,7 +94,7 @@ public class UIHandlerImpl implements UIHandler
     @Override
     public void showToast(Toasts toast)
     {
-        new ToastImpl().show(stage.getScene(), toast.getMessage(), toast.getColor(), toast.getDuration());
+        new ToastImpl().show(stage, toast.getMessage(), toast.getColor(), toast.getDuration());
     }
     
     public static void showConfirmDialog(Runnable onContinue, String text)

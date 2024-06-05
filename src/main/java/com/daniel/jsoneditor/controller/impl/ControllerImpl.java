@@ -147,6 +147,7 @@ public class ControllerImpl implements Controller, Observer
         {
             // the node exists and is valid for its current location
             model.setNode(path, mergedNode);
+            model.sendEvent(new Event(EventEnum.IMPORT_SUCCESSFUL));
         }
     }
     
@@ -189,6 +190,8 @@ public class ControllerImpl implements Controller, Observer
         File exportFile = new File(directory, exportFilename);
         JsonFileReaderAndWriter writer = new JsonFileReaderAndWriterImpl();
         writer.writeJsonToFile(node, exportFile);
+        model.sendEvent(new Event(EventEnum.EXPORT_SUCCESSFUL));
+        
     }
     
     @Override

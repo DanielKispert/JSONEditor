@@ -1,12 +1,19 @@
 package com.daniel.jsoneditor.view.impl.jfx.toast.impl;
 
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toast;
-import javafx.animation.PauseTransition;
-import javafx.animation.TranslateTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
@@ -14,41 +21,98 @@ import javafx.util.Duration;
 
 public class ToastImpl implements Toast
 {
+    private static final int SLIDE_DURATION = 250;
+    
+    /**
+     * display toast message with slide-in and slide-out
+     *
+     * @param ownerStage
+     *         The stage that owns this toast.
+     * @param message
+     *         The message to be displayed in the toast.
+     * @param color
+     *         The color of the toast.
+     * @param duration
+     *         The duration for which the toast is displayed.
+     */
     @Override
-    public void show(Scene scene, String message, Color color, int duration)
+    public void show(Stage ownerStage, String message, Color color, int duration)
     {
-        // Create a new stage for the toast
         Stage toastStage = new Stage();
+        toastStage.initOwner(ownerStage);
+        toastStage.setResizable(false);
         toastStage.initStyle(StageStyle.TRANSPARENT);
         
-        // Create a label for the toast message
-        Label toastLabel = new Label(message);
-        toastLabel.setWrapText(true);
-        
-        // Create a stack pane for the label
-        StackPane root = new StackPane(toastLabel);
-        root.setOpacity(0.5);
-        
-        // Create a scene for the stage
-        Scene toastScene = new Scene(root);
-        toastScene.setFill(Color.TRANSPARENT);
-        toastStage.setScene(toastScene);
-        
-        // Position the toast in the bottom middle of the scene
-        toastStage.setX(scene.getWindow().getX() + scene.getWidth() / 2 - toastStage.getWidth() / 2);
-        toastStage.setY(scene.getWindow().getY() + scene.getHeight() - toastStage.getHeight() - 50);
-        
-        // Create a moving animation
-        TranslateTransition tt = new TranslateTransition(Duration.seconds(0.5), root);
-        tt.setByY(-100);
-        tt.play();
-        
-        // Show the toast and wait for it to close
+        StackPane root = createToastView(message, color);
+        Scene scene = new Scene(root);
+        scene.setFill(Color.TRANSPARENT);
+        scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
+        toastStage.setScene(scene);
         toastStage.show();
         
-        // Set a pause transition to hide the toast after the given time
-        PauseTransition delay = new PauseTransition(Duration.seconds(duration));
-        delay.setOnFinished(e -> toastStage.close());
-        delay.play();
+        toastStage.setX(ownerStage.getX() + ownerStage.getWidth() / 2 - root.getWidth() / 2);
+        toastStage.setY(ownerStage.getY() + ownerStage.getHeight() - root.getHeight() - 10);
+        
+        root.setTranslateY(root.getHeight());
+        
+        Timeline moveUpTimeline = new Timeline();
+        KeyFrame moveUpKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), 0));
+        moveUpTimeline.getKeyFrames().add(moveUpKey);
+        moveUpTimeline.play();
+        
+        moveUpTimeline.setOnFinished((ae) -> {
+            new Thread(() -> {
+                try
+                {
+                    Thread.sleep(duration * 1000L);
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+                Timeline moveDownTimeline = new Timeline();
+                KeyFrame moveDownKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), root.getHeight()));
+                moveDownTimeline.getKeyFrames().add(moveDownKey);
+                moveDownTimeline.setOnFinished((aeb) -> toastStage.close());
+                moveDownTimeline.play();
+            }).start();
+        });
+    }
+    
+    private StackPane createToastView(String message, Color color)
+    {
+        Text text = new Text(message);
+        text.setFill(color);
+        text.getStyleClass().add("toast");
+        
+        ImageView icon;
+        if (color.equals(Color.GREEN))
+        {
+            icon = new ImageView(new Image("/icons/material/darkmode/outline_checkmark_24dp.png"));
+        }
+        else
+        {
+            icon = new ImageView(new Image("/icons/material/darkmode/outline_close_24dp.png"));
+        }
+        icon.setFitHeight(15);
+        icon.setFitWidth(15);
+        
+        Label iconArea = new Label("", icon);
+        iconArea.setStyle("-fx-background-color: " + toRgbString(color) + ";");
+        iconArea.getStyleClass().add("toast-icon-area");
+        
+        HBox hbox = new HBox(iconArea, text);
+        hbox.setStyle("-fx-border-color: " + toRgbString(color) + ";");
+        hbox.getStyleClass().add("toast");
+        hbox.setAlignment(Pos.CENTER);
+        hbox.setSpacing(5);
+        
+        return new StackPane(hbox);
+    }
+    
+    private String toRgbString(Color color)
+    {
+        return String.format("rgba(%d, %d, %d, %f)", (int) (color.getRed() * 255), (int) (color.getGreen() * 255),
+                (int) (color.getBlue() * 255), color.getOpacity());
     }
 }

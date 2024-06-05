@@ -1,10 +1,10 @@
 package com.daniel.jsoneditor.view.impl.jfx.toast;
 
-import javafx.scene.Scene;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 
 
 public interface Toast
 {
-    void show(Scene scene, String message, Color color, int duration);
+    void show(Stage stage, String message, Color color, int duration);
 }
