@@ -66,6 +66,12 @@ public class ViewImpl implements View
             case SAVING_SUCCESSFUL:
                 uiHandler.showToast(Toasts.SAVE_SUCCESSFUL_TOAST);
                 break;
+            case EXPORT_SUCCESSFUL:
+                uiHandler.showToast(Toasts.EXPORT_SUCCESSFUL_TOAST);
+                break;
+            case IMPORT_SUCCESSFUL:
+                uiHandler.showToast(Toasts.IMPORT_SUCCESSFUL_TOAST);
+                break;
         }
     
     }

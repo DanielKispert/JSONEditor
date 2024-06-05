@@ -5,7 +5,9 @@ import javafx.scene.paint.Color;
 
 public enum Toasts
 {
-    SAVE_SUCCESSFUL_TOAST("Save successful", Color.GREEN, 3),
+    SAVE_SUCCESSFUL_TOAST("saved", Color.GREEN, 2),
+    IMPORT_SUCCESSFUL_TOAST("Import successful", Color.GREEN, 2),
+    EXPORT_SUCCESSFUL_TOAST("Export succeessful", Color.GREEN, 2),
     SAVE_FAILED_TOAST("Save failed", Color.RED, 3);
     
     private final String message;

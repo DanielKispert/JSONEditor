@@ -18,5 +18,9 @@ public enum EventEnum
     
     SAVING_SUCCESSFUL,
     
+    EXPORT_SUCCESSFUL,
+    
+    IMPORT_SUCCESSFUL,
+    
     SAVING_FAILED
 }
