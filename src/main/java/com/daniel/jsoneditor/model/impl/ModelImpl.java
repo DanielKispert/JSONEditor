@@ -244,6 +244,12 @@ public class ModelImpl implements ReadableModel, WritableModel
         String referencePath = ReferenceHelper.resolveReference(node, this);
         if (referencePath != null)
         {
+            if (referencedNodes.contains(referencePath))
+            {
+                // if the referenced nodes already contain the reference path then we found a circular dependency (a -> b -> a and so on)
+                // in this case we skip collecting references for this node and don't add it because it already happened before
+                return;
+            }
             // this node is a dependency
             referencedNodes.add(referencePath);
             // we also need to add all of its dependencies

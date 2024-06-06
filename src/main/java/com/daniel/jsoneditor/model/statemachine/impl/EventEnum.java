@@ -20,6 +20,8 @@ public enum EventEnum
     
     EXPORT_SUCCESSFUL,
     
+    EXPORT_FAILED_DEPENDENCY_LOOP,
+    
     IMPORT_SUCCESSFUL,
     
     SAVING_FAILED

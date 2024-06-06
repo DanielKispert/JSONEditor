@@ -174,7 +174,11 @@ public class ControllerImpl implements Controller, Observer
         {
             // we want to export the node and all parent nodes of the node (but no other child nodes of the parent nodes)
             List<String> pathsToExport = readableModel.getDependentPaths(nodeWithPath);
-            pathsToExport.add(readableModel.getNodeForPath(path).getPath());
+            String selectedNode = readableModel.getNodeForPath(path).getPath();
+            if (!pathsToExport.contains(selectedNode))
+            {
+                pathsToExport.add(selectedNode);
+            }
             
             String fileWithEnding = readableModel.getCurrentJSONFile().getName();
             int lastDotIndex = fileWithEnding.lastIndexOf(".");
