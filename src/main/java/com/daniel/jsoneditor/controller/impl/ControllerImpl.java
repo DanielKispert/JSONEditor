@@ -124,8 +124,8 @@ public class ControllerImpl implements Controller, Observer
         
         if (!variables.isEmpty())
         {
-            VariableReplacementDialog dialog = new VariableReplacementDialog();
-            Map<String, String> replacements = dialog.showAndWait(variables);
+            VariableReplacementDialog dialog = new VariableReplacementDialog(variables);
+            Map<String, String> replacements = dialog.showAndWait().orElse(null);
             
             if (replacements != null)
             {
