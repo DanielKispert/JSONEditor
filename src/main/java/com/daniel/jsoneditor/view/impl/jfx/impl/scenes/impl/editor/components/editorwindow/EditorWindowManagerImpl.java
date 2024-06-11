@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.AutoAdjustingSplitPane;
+import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.SplitPane;
@@ -144,5 +145,11 @@ public class EditorWindowManagerImpl implements EditorWindowManager
             JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
             window.setSelectedPath(window.getSelectedPath());
         }
+    }
+    
+    @Override
+    public void showToast(Toasts toast)
+    {
+        editorScene.getHandlerForToasting().showToast(toast);
     }
 }

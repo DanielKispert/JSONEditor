@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.controller;
 
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.File;
@@ -13,9 +14,6 @@ public interface Controller
      */
     SettingsController getSettingsController();
     
-    /*
-     * Methods for the view to call
-     */
 
     void launchFinished();
     
