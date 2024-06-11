@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor;
 
+import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.menubar.JsonEditorMenuBar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.JsonEditorToolbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
@@ -23,9 +24,9 @@ public class EditorScene extends SceneHandlerImpl
     private final EditorWindowManager editorWindowManager;
     
     
-    public EditorScene(Controller controller, ReadableModel model)
+    public EditorScene(UIHandler handler, Controller controller, ReadableModel model)
     {
-        super(controller, model);
+        super(handler, controller, model);
         editorWindowManager = new EditorWindowManagerImpl(this, model, controller);
     }
     

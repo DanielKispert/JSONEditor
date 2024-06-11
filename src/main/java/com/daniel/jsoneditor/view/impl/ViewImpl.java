@@ -19,7 +19,7 @@ import java.util.List;
 
 public class ViewImpl implements View
 {
-    private List<Subject> subjects;
+    private final List<Subject> subjects;
     
     private final ReadableModel model;
     

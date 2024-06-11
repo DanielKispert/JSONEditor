@@ -32,6 +32,7 @@ public class JsonEditorEditorWindow extends VBox
     
     private final ReadableModel model;
     
+    // reference so we don't always have to get it from the path
     private ReferenceableObject displayedObject;
     
     public JsonEditorEditorWindow(EditorWindowManager manager, ReadableModel model, Controller controller)
@@ -50,8 +51,13 @@ public class JsonEditorEditorWindow extends VBox
         getChildren().addAll(nameBar, editor);
     }
     
+    /**
+     * selects a json node in this window
+     */
     public void setSelectedPath(String path)
     {
+        //before we select the object, we divert in case it's an array item and has no object children (we can't drill down more)
+        
         this.selectedPath = path;
         JsonNodeWithPath newNode = model.getNodeForPath(path);
         if (newNode.isArray())

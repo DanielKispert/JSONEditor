@@ -9,7 +9,8 @@ public enum Toasts
     IMPORT_SUCCESSFUL_TOAST("Import successful", Color.GREEN, 2),
     EXPORT_SUCCESSFUL_TOAST("Export succeessful", Color.GREEN, 2),
     EXPORT_FAILED_DEPENDENCY_LOOP_TOAST("Export failed, resolve circular dependencies first", Color.RED, 4),
-    SAVE_FAILED_TOAST("Save failed", Color.RED, 3);
+    SAVE_FAILED_TOAST("Save failed", Color.RED, 3),
+    NO_REFERENCES_TOAST("No references found", Color.RED, 2);
     
     private final String message;
     

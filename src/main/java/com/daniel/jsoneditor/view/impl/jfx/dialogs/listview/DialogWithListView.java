@@ -74,6 +74,7 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends 
         Button okButton = (Button) getDialogPane().lookupButton(okButtonType);
         okButton.fire();
     }
+    
     protected String convertResult(ButtonType buttonType)
     {
         if (buttonType.getButtonData().isCancelButton())

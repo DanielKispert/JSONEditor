@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
+import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.scene.control.SplitPane;
 
 public interface EditorWindowManager
@@ -34,4 +35,6 @@ public interface EditorWindowManager
     void updateNavbarRepresentation(String path);
     
     void updateEditors();
+    
+    void showToast(Toasts toast);
 }

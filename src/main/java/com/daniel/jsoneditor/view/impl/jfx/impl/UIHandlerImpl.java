@@ -34,14 +34,14 @@ public class UIHandlerImpl implements UIHandler
     @Override
     public void showSelectJsonAndSchema()
     {
-        stage.setScene(new JSONSelectionScene(controller, model).getScene(stage));
+        stage.setScene(new JSONSelectionScene(this, controller, model).getScene(stage));
         stage.show();
     }
     
     @Override
     public void showMainEditor()
     {
-        this.editorScene = new EditorScene(controller, model);
+        this.editorScene = new EditorScene(this, controller, model);
         stage.setScene(editorScene.getScene(stage));
         stage.show();
     }

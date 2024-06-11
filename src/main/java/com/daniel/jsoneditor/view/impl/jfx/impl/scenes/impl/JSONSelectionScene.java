@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -32,9 +33,9 @@ public class JSONSelectionScene extends SceneHandlerImpl
     
     private boolean remember;
     
-    public JSONSelectionScene(Controller controller, ReadableModel model)
+    public JSONSelectionScene(UIHandler handler, Controller controller, ReadableModel model)
     {
-        super(controller, model);
+        super(handler, controller, model);
     }
     
     @Override

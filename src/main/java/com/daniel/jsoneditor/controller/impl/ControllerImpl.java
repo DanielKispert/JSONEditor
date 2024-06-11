@@ -18,6 +18,7 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.SelectReferenceDi
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceType;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceTypeDialog;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
+import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import javafx.stage.Stage;
@@ -61,6 +62,7 @@ public class ControllerImpl implements Controller, Observer
     {
         return settingsController;
     }
+    
     
     @Override
     public void update()
