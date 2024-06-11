@@ -15,14 +15,12 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 
-public class VariableReplacementDialog
+public class VariableReplacementDialog extends ThemedDialog<Map<String, String>>
 {
-    public Map<String, String> showAndWait(Collection<String> variables)
+    public VariableReplacementDialog(Collection<String> variables)
     {
-        Dialog<Map<String, String>> dialog = new Dialog<>();
-        dialog.setTitle("Replace Variables");
-        
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        setTitle("Replace Variables");
+        getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         
         VBox vbox = new VBox();
         vbox.setPadding(new Insets(10));
@@ -46,9 +44,9 @@ public class VariableReplacementDialog
         vbox.getChildren().add(grid);
         
         ScrollPane scroll = new ScrollPane(vbox);
-        dialog.getDialogPane().setContent(scroll);
+        getDialogPane().setContent(scroll);
         
-        dialog.setResultConverter(btn -> {
+        setResultConverter(btn -> {
             if (btn == ButtonType.OK)
             {
                 Map<String, String> result = new HashMap<>();
@@ -60,9 +58,5 @@ public class VariableReplacementDialog
             }
             return null;
         });
-        
-        Optional<Map<String, String>> result = dialog.showAndWait();
-        
-        return result.orElse(null);
     }
 }
