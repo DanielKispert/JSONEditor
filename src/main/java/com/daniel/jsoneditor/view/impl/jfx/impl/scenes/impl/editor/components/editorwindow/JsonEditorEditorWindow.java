@@ -1,9 +1,12 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.JsonEditorNamebar;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.TableViewWithCompactNamebar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
+import com.fasterxml.jackson.databind.JsonNode;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -12,12 +15,16 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.EditorTableViewImpl;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Editor consists of a vbox holding:
  * a namebar on top
  * then a table view (the real editor window)
  * and then some buttons.css (if applicable) on the bottom
- *
  */
 public class JsonEditorEditorWindow extends VBox
 {
@@ -27,6 +34,10 @@ public class JsonEditorEditorWindow extends VBox
     private final JsonEditorNamebar nameBar;
     
     private final EditorTableView editor;
+    
+    private final EditorWindowManager manager;
+    
+    private final Controller controller;
     
     private final Button addItemButton;
     
@@ -39,6 +50,8 @@ public class JsonEditorEditorWindow extends VBox
     {
         this.model = model;
         displayedObject = null;
+        this.manager = manager;
+        this.controller = controller;
         nameBar = new JsonEditorNamebar(manager, this, model);
         editor = new EditorTableViewImpl(manager, this, model, controller);
         addItemButton = new Button("Add Item");
@@ -56,13 +69,10 @@ public class JsonEditorEditorWindow extends VBox
      */
     public void setSelectedPath(String path)
     {
-        //before we select the object, we divert in case it's an array item and has no object children (we can't drill down more)
-        
-        this.selectedPath = path;
-        JsonNodeWithPath newNode = model.getNodeForPath(path);
+        this.selectedPath = divertPathToSelect(path);
+        JsonNodeWithPath newNode = model.getNodeForPath(selectedPath);
         if (newNode.isArray())
         {
-            // it should also be fine to get the object of a non-existing node
             displayedObject = model.getReferenceableObject(newNode.getPath() + "/0");
         }
         else if (newNode.isObject())
@@ -71,7 +81,9 @@ public class JsonEditorEditorWindow extends VBox
         }
         nameBar.setSelection(newNode);
         editor.setSelection(newNode);
-        if (model.canAddMoreItems(path))
+        // for every child node of type array we add a compact child view
+        getChildren().addAll(getCompactChildViews(newNode));
+        if (model.canAddMoreItems(selectedPath))
         {
             if (getChildren().size() == 2)
             {
@@ -82,6 +94,68 @@ public class JsonEditorEditorWindow extends VBox
         {
             getChildren().remove(addItemButton);
         }
+        if (!selectedPath.equals(path))
+        {
+            //if we show a different path than the one that was requested, we show an array. In that case, we focus the item that was requested
+            focusArrayItem(path);
+        }
+    }
+    
+    private List<TableViewWithCompactNamebar> getCompactChildViews(JsonNodeWithPath node)
+    {
+        List<TableViewWithCompactNamebar> childViews = new ArrayList<>();
+        Iterator<Map.Entry<String, JsonNode>> fieldsIterator = node.getNode().fields();
+        while (fieldsIterator.hasNext())
+        {
+            Map.Entry<String, JsonNode> entry = fieldsIterator.next();
+            if (entry.getValue().isArray())
+            {
+                TableViewWithCompactNamebar childView = new TableViewWithCompactNamebar(manager, this, model, controller);
+                childView.setSelection(new JsonNodeWithPath(entry.getValue(), node.getPath() + "/" + entry.getKey() ));
+                childViews.add(childView);
+            }
+        }
+        return childViews;
+    }
+    
+    /**
+     * select the array parent if the node to select is either no object or an object with only non-openable children
+     */
+    private String divertPathToSelect(String path)
+    {
+        String pathToSelect = path;
+        JsonNodeWithPath nodeAtPath = model.getNodeForPath(path);
+        String parentPath = PathHelper.getParentPath(path);
+        if (parentPath != null)
+        {
+            JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
+            if (parentNode.isArray())
+            {
+                if (!nodeAtPath.isObject())
+                {
+                    pathToSelect = parentPath;
+                }
+                else
+                {
+                    boolean hasObjectOrArrayChildren = false;
+                    Iterator<Map.Entry<String, JsonNode>> fieldsIterator = nodeAtPath.getNode().fields();
+                    while (fieldsIterator.hasNext())
+                    {
+                        Map.Entry<String, JsonNode> entry = fieldsIterator.next();
+                        if (entry.getValue().isObject() || entry.getValue().isArray())
+                        {
+                            hasObjectOrArrayChildren = true;
+                            break;
+                        }
+                    }
+                    if (!hasObjectOrArrayChildren)
+                    {
+                        pathToSelect = parentPath;
+                    }
+                }
+            }
+        }
+        return pathToSelect;
     }
     
     public void focusArrayItem(String itemPath)
