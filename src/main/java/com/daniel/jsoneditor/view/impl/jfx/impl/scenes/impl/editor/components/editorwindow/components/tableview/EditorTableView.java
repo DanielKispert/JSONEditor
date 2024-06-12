@@ -13,4 +13,10 @@ public abstract class EditorTableView extends TableView<JsonNodeWithPath>
     public abstract void setSelection(JsonNodeWithPath selection);
     
     public abstract void focusItem(String itemPath);
+    
+    @Override
+    protected double computePrefHeight(double v)
+    {
+        return super.computePrefHeight(v);
+    }
 }

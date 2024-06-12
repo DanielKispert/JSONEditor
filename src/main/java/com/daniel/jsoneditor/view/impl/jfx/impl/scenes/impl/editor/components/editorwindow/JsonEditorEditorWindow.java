@@ -3,11 +3,13 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.AutoAdjustingSplitPane;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.JsonEditorNamebar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.TableViewWithCompactNamebar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.scene.control.Button;
+import javafx.scene.control.SplitPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -33,7 +35,9 @@ public class JsonEditorEditorWindow extends VBox
     
     private final JsonEditorNamebar nameBar;
     
-    private final EditorTableView editor;
+    private final AutoAdjustingSplitPane editorTables;
+    
+    private final EditorTableView mainTableView;
     
     private final EditorWindowManager manager;
     
@@ -53,7 +57,9 @@ public class JsonEditorEditorWindow extends VBox
         this.manager = manager;
         this.controller = controller;
         nameBar = new JsonEditorNamebar(manager, this, model);
-        editor = new EditorTableViewImpl(manager, this, model, controller);
+        editorTables = new AutoAdjustingSplitPane();
+        editorTables.setOrientation(javafx.geometry.Orientation.VERTICAL);
+        mainTableView = new EditorTableViewImpl(manager, this, model, controller);
         addItemButton = new Button("Add Item");
         addItemButton.setOnAction(event -> controller.addNewNodeToArray(selectedPath));
         HBox.setHgrow(addItemButton, Priority.ALWAYS);
@@ -61,7 +67,7 @@ public class JsonEditorEditorWindow extends VBox
         addItemButton.setMaxWidth(Double.MAX_VALUE);
         VBox.setVgrow(this, Priority.ALWAYS);
         HBox.setHgrow(this, Priority.ALWAYS);
-        getChildren().addAll(nameBar, editor);
+        getChildren().addAll(nameBar, editorTables);
     }
     
     /**
@@ -80,9 +86,11 @@ public class JsonEditorEditorWindow extends VBox
             displayedObject = model.getReferenceableObject(newNode.getPath());
         }
         nameBar.setSelection(newNode);
-        editor.setSelection(newNode);
+        mainTableView.setSelection(newNode);
         // for every child node of type array we add a compact child view
-        getChildren().addAll(getCompactChildViews(newNode));
+        editorTables.getItems().clear();
+        editorTables.getItems().add(mainTableView);
+        editorTables.getItems().addAll(getCompactChildViews(newNode));
         if (model.canAddMoreItems(selectedPath))
         {
             if (getChildren().size() == 2)
@@ -160,7 +168,7 @@ public class JsonEditorEditorWindow extends VBox
     
     public void focusArrayItem(String itemPath)
     {
-        editor.focusItem(itemPath);
+        mainTableView.focusItem(itemPath);
     }
     
     public String getSelectedPath()
@@ -171,5 +179,10 @@ public class JsonEditorEditorWindow extends VBox
     public ReferenceableObject getDisplayedObject()
     {
         return displayedObject;
+    }
+    
+    public SplitPane getTablesSplitPane()
+    {
+        return editorTables;
     }
 }
