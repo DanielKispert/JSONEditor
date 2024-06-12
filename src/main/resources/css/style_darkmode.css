@@ -27,6 +27,14 @@
     -fx-background-color: -accent-color;
 }
 
+.split-pane:horizontal > .split-pane-divider {
+    -fx-pref-width: 10;
+}
+
+.auto-adjusting-split-pane:horizontal > .split-pane-divider {
+    -fx-pref-width: 7;
+}
+
 .dialog-pane .button-bar .button {
     -fx-background-color: -background-color;
     -fx-border-width: 0;
