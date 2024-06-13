@@ -16,12 +16,6 @@ public abstract class EditorTableView extends TableView<JsonNodeWithPath> implem
     public abstract void focusItem(String itemPath);
     
     @Override
-    protected double computePrefHeight(double v)
-    {
-        return super.computePrefHeight(v);
-    }
-    
-    @Override
     public void collapse()
     {
         // do nothing intentionally

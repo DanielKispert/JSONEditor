@@ -114,6 +114,12 @@ public class JsonEditorEditorWindow extends VBox
         }
     }
     
+    @Override
+    protected double computePrefWidth(double v)
+    {
+        return mainTableView.getPrefWidth();
+    }
+    
     private List<TableViewWithCompactNamebar> getCompactChildViews(JsonNodeWithPath node)
     {
         List<TableViewWithCompactNamebar> childViews = new ArrayList<>();
@@ -214,7 +220,7 @@ public class JsonEditorEditorWindow extends VBox
         return displayedObject;
     }
     
-    public SplitPane getTablesSplitPane()
+    public AutoAdjustingSplitPane getTablesSplitPane()
     {
         return editorTables;
     }
