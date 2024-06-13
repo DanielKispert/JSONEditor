@@ -31,8 +31,6 @@ import java.util.Map;
 public class JsonEditorEditorWindow extends VBox
 {
     
-    private String selectedPath;
-    
     private final JsonEditorNamebar nameBar;
     
     private final AutoAdjustingSplitPane editorTables;
@@ -47,6 +45,11 @@ public class JsonEditorEditorWindow extends VBox
     
     private final ReadableModel model;
     
+    private String selectedPath;
+    
+    
+    private List<TableViewWithCompactNamebar> childTableViews;
+    
     // reference so we don't always have to get it from the path
     private ReferenceableObject displayedObject;
     
@@ -57,6 +60,7 @@ public class JsonEditorEditorWindow extends VBox
         this.manager = manager;
         this.controller = controller;
         nameBar = new JsonEditorNamebar(manager, this, model);
+        childTableViews = new ArrayList<>();
         editorTables = new AutoAdjustingSplitPane();
         editorTables.setOrientation(javafx.geometry.Orientation.VERTICAL);
         mainTableView = new EditorTableViewImpl(manager, this, model, controller);
@@ -90,7 +94,8 @@ public class JsonEditorEditorWindow extends VBox
         // for every child node of type array we add a compact child view
         editorTables.getItems().clear();
         editorTables.getItems().add(mainTableView);
-        editorTables.getItems().addAll(getCompactChildViews(newNode));
+        childTableViews = getCompactChildViews(newNode);
+        editorTables.getItems().addAll(childTableViews);
         if (model.canAddMoreItems(selectedPath))
         {
             if (getChildren().size() == 2)
@@ -168,12 +173,40 @@ public class JsonEditorEditorWindow extends VBox
     
     public void focusArrayItem(String itemPath)
     {
-        mainTableView.focusItem(itemPath);
+        if (model.getNodeForPath(selectedPath).isObject())
+        {
+            String parentArrayPath = PathHelper.getParentPath(itemPath);
+            for (TableViewWithCompactNamebar childTable : childTableViews)
+            {
+                if (childTable.getSelectedPath().equals(parentArrayPath))
+                {
+                    childTable.focusItem(itemPath);
+                    return;
+                }
+            }
+        }
+        else
+        {
+            mainTableView.focusItem(itemPath);
+        }
     }
     
     public String getSelectedPath()
     {
         return selectedPath;
+    }
+    
+    /**
+     * @return the additional tables which are open
+     */
+    public List<String> getOpenChildPaths()
+    {
+        List<String> selectedChildPaths = new ArrayList<>();
+        for (TableViewWithCompactNamebar childView : childTableViews)
+        {
+            selectedChildPaths.add(childView.getSelectedPath());
+        }
+        return selectedChildPaths;
     }
     
     public ReferenceableObject getDisplayedObject()
