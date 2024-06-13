@@ -24,16 +24,15 @@ public class CollapseButton extends Button
     
     private void handleClick()
     {
-        boolean clickCollapses = !tableView.isCollapsed();
+        TableViewWithCompactNamebar parentView = (TableViewWithCompactNamebar) tableView.getParent();
+        boolean clickCollapses = !parentView.isCollapsed();
         ButtonHelper.setButtonImage(this, clickCollapses ? "/icons/material/darkmode/outline_expand_white_24dp.png" : "/icons/material/darkmode/outline_collapse_white_24dp.png");
         SplitPane tableContainer = window.getTablesSplitPane();
-        TableViewWithCompactNamebar parentView = (TableViewWithCompactNamebar) tableView.getParent();
         
         if (clickCollapses)
         {
             parentView.collapse();
             //the next click collapses the table, so we want to collapse to the bottom
-            parentView.setPrefHeight(40);
             // Find the index of the parentView in the SplitPane
             int dividerAbove = tableContainer.getItems().indexOf(parentView) - 1;
             if (dividerAbove != -1 && dividerAbove < tableContainer.getDividers().size())

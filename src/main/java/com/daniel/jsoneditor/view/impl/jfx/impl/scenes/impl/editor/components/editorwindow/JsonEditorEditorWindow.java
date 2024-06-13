@@ -95,7 +95,7 @@ public class JsonEditorEditorWindow extends VBox
         editorTables.getItems().clear();
         editorTables.getItems().add(mainTableView);
         childTableViews = getCompactChildViews(newNode);
-        editorTables.getItems().addAll(childTableViews);
+        childTableViews.forEach(childTable -> editorTables.getItems().add(childTable)); //intentionally so we send a new event for every add
         if (model.canAddMoreItems(selectedPath))
         {
             if (getChildren().size() == 2)
