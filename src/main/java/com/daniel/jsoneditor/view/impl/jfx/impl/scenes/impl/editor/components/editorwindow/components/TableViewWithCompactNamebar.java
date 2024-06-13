@@ -36,13 +36,14 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
     
     public TableViewWithCompactNamebar(EditorWindowManager manager, JsonEditorEditorWindow window, ReadableModel model, Controller controller)
     {
+        HBox.setHgrow(this, Priority.ALWAYS);
+        VBox.setVgrow(this, Priority.ALWAYS);
         this.tableView = new EditorTableViewImpl(manager, window, model, controller);
         this.nameBar = new HBox();
         this.controller = controller;
         this.model = model;
         this.collapseButton = createCollapseButton(window);
         addItemButton = new Button("Add Item");
-        this.setPrefHeight(5);
         this.getChildren().addAll(nameBar, tableView);
     }
     
@@ -83,13 +84,7 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
     @Override
     protected double computePrefHeight(double v)
     {
-        return super.computePrefHeight(v);
-    }
-    
-    @Override
-    protected double computePrefWidth(double v)
-    {
-        return super.computePrefWidth(v);
+        return nameBar.prefHeight(v) + tableView.prefHeight(v);
     }
     
     private CollapseButton createCollapseButton(JsonEditorEditorWindow window)
@@ -113,14 +108,12 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
     public void collapse()
     {
         collapsed = true;
-        tableView.setVisible(false);
     }
     
     @Override
     public void expand()
     {
         collapsed = false;
-        tableView.setVisible(true);
     }
     
     @Override

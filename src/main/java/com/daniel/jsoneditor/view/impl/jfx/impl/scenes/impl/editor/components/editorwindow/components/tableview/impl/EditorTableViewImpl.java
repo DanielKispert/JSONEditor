@@ -50,8 +50,14 @@ public class EditorTableViewImpl extends EditorTableView
         this.manager = manager;
         this.model = model;
         this.controller = controller;
-        //VBox.setVgrow(this, Priority.ALWAYS);
+        VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
+    }
+    
+    @Override
+    protected double computePrefHeight(double v)
+    {
+        return (getItems().size() + 1) * 24;
     }
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
