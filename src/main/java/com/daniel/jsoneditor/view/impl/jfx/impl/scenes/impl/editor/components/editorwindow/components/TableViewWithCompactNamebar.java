@@ -62,7 +62,8 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
         }
         // the namebar gets the fancy name of the selected node
         nameBar.getChildren().clear();
-        nameBar.getChildren().addAll(collapseButton, createNameLabel(selection.getDisplayName()));
+        nameBar.getChildren().add(createNameLabel(selection.getDisplayName()));
+        //nameBar.getChildren().addAll(collapseButton, createNameLabel(selection.getDisplayName()));
     }
     
     private Label createNameLabel(String displayName)

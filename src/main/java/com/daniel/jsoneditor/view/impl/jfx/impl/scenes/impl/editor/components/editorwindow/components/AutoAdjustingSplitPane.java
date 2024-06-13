@@ -40,6 +40,8 @@ public class AutoAdjustingSplitPane extends SplitPane
                         double positionOfDividerBeforeLastItem = i != 0 ? newPositions[i - 1] : 0;
                         double preferredSpaceForLastItem = getPreferredDimension(getItems().get(numberOfItems - 2));
                         double preferredSpaceForNewItem = getPreferredDimension(getItems().get(numberOfItems - 1));
+                        preferredSpaceForNewItem = preferredSpaceForNewItem == 0 ? preferredSpaceForLastItem : preferredSpaceForNewItem;
+                        //fallback, we use half the space if the new item doesn't have a preferred dimension yet
                         double positionOfNewDivider = positionOfDividerBeforeLastItem
                                 + (preferredSpaceForLastItem / (preferredSpaceForLastItem + preferredSpaceForNewItem)) * (1
                                 - positionOfDividerBeforeLastItem);
