@@ -24,34 +24,35 @@ public class CollapseButton extends Button
     
     private void handleClick()
     {
-        boolean clickCollapses = tableView.isVisible();
-        tableView.setVisible(!clickCollapses);
+        boolean clickCollapses = !tableView.isCollapsed();
         ButtonHelper.setButtonImage(this, clickCollapses ? "/icons/material/darkmode/outline_expand_white_24dp.png" : "/icons/material/darkmode/outline_collapse_white_24dp.png");
         SplitPane tableContainer = window.getTablesSplitPane();
         TableViewWithCompactNamebar parentView = (TableViewWithCompactNamebar) tableView.getParent();
         
         if (clickCollapses)
         {
+            parentView.collapse();
             //the next click collapses the table, so we want to collapse to the bottom
             parentView.setPrefHeight(40);
             // Find the index of the parentView in the SplitPane
-            int dividerIndex = tableContainer.getItems().indexOf(parentView) - 1;
-            if (dividerIndex != -1 && dividerIndex < tableContainer.getDividers().size())
+            int dividerAbove = tableContainer.getItems().indexOf(parentView) - 1;
+            if (dividerAbove != -1 && dividerAbove < tableContainer.getDividers().size())
             {
                 // Set the position of the divider to 1, effectively collapsing the parentView
-                tableContainer.setDividerPosition(dividerIndex, 1.0);
+                tableContainer.setDividerPosition(dividerAbove, 1.0);
             }
         }
         else
         {
+            parentView.expand();
             //the next click expands the table, so we want to expand to the original size
             parentView.setPrefHeight(Region.USE_COMPUTED_SIZE);
             // Find the index of the parentView in the SplitPane
-            int dividerIndex = tableContainer.getItems().indexOf(parentView) - 1;
-            if (dividerIndex != -1 && dividerIndex < tableContainer.getDividers().size())
+            int dividerAbove = tableContainer.getItems().indexOf(parentView) - 1;
+            if (dividerAbove != -1 && dividerAbove < tableContainer.getDividers().size())
             {
                 // Set the position of the divider to 0.5, effectively expanding the parentView
-                tableContainer.setDividerPosition(dividerIndex, 0.5);
+                tableContainer.setDividerPosition(dividerAbove, 0.5);
             }
         }
     }

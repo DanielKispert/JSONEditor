@@ -89,14 +89,14 @@ public class EditorWindowManagerImpl implements EditorWindowManager
         {
             return;
         }
-        // first we check if a window already has the array open
+        // first we check if a window already has the array open (or the parent object)
         boolean atLeastOneArrayInWindow = false;
         for (Node windowNode : editorWindowContainer.getItems())
         {
             if (windowNode instanceof JsonEditorEditorWindow)
             {
                 JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
-                if (parentPath.equals(window.getSelectedPath()))
+                if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
                 {
                     atLeastOneArrayInWindow = true;
                     window.focusArrayItem(pathOfArrayItem);
