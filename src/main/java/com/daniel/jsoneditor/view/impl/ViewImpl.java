@@ -54,6 +54,8 @@ public class ViewImpl implements View
             case ADDED_ITEM_TO_ARRAY:
                 uiHandler.handleAddedArrayItem(newEvent.getPath());
                 break;
+            case REFRESH_SUCCESSFUL:
+                uiHandler.showToast(Toasts.REFRESH_SUCCESSFUL_TOAST);
             case UPDATED_JSON_STRUCTURE:
                 uiHandler.updateEditorSceneWithUpdatedStructure();
                 break;
