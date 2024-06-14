@@ -9,6 +9,9 @@ configurations {
 
 repositories {
     mavenCentral()
+    flatDir {
+        dirs 'lib'
+    }
 }
 
 mainClassName = 'com.daniel.jsoneditor.Main'
@@ -20,5 +23,5 @@ javafx {
 
 dependencies {
     implementation 'com.networknt:json-schema-validator:1.0.87'
-    implementation 'com.brunomnsilva:smartgraph:2.0.0'
+    implementation 'smartgraph-2.0.0' //local jar that has been recompiled to run on java 11
 }
