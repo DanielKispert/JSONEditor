@@ -90,7 +90,7 @@ public class ToastImpl implements Toast
         }
         else
         {
-            icon = new ImageView(new Image("/icons/material/darkmode/outline_close_24dp.png"));
+            icon = new ImageView(new Image("/icons/material/darkmode/outline_close_white_24dp.png"));
         }
         icon.setFitHeight(15);
         icon.setFitWidth(15);
