@@ -10,7 +10,7 @@ configurations {
 repositories {
     mavenCentral()
     flatDir {
-        dirs 'lib'
+        dirs 'directLibs'
     }
 }
 
