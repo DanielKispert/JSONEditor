@@ -20,4 +20,5 @@ javafx {
 
 dependencies {
     implementation 'com.networknt:json-schema-validator:1.0.87'
+    implementation 'com.brunomnsilva:smartgraph:2.0.0'
 }

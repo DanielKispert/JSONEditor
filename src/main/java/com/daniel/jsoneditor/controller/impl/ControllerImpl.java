@@ -1,5 +1,13 @@
 package com.daniel.jsoneditor.controller.impl;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 import com.daniel.jsoneditor.controller.impl.json.VariableHelper;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
@@ -8,30 +16,21 @@ import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
+import com.daniel.jsoneditor.view.View;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
-import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.SelectReferenceDialog;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceType;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceTypeDialog;
-import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
-import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.SelectReferenceDialog;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import javafx.stage.Stage;
-import com.daniel.jsoneditor.controller.Controller;
-import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.view.View;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 
 public class ControllerImpl implements Controller, Observer
