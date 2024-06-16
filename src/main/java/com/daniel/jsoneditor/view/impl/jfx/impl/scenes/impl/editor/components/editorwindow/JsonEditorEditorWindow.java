@@ -1,11 +1,13 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
+import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.AutoAdjustingSplitPane;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.JsonEditorNamebar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.TableViewWithCompactNamebar;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph.NodeGraph;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.scene.control.Button;
@@ -74,6 +76,15 @@ public class JsonEditorEditorWindow extends VBox
         getChildren().addAll(nameBar, editorTables);
     }
     
+    public void showAsGraph()
+    {
+        getChildren().remove(editorTables);
+        NodeGraph graph = new NodeGraph();
+        SmartGraphPanel<String, String> graphView = graph.makeView();
+        getChildren().add(graphView);
+        graphView.init();
+    }
+    
     /**
      * selects a json node in this window
      */
@@ -113,6 +124,8 @@ public class JsonEditorEditorWindow extends VBox
             focusArrayItem(path);
         }
     }
+    
+    
     
     @Override
     protected double computePrefWidth(double v)
