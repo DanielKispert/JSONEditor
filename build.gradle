@@ -23,5 +23,5 @@ javafx {
 
 dependencies {
     implementation 'com.networknt:json-schema-validator:1.0.87'
-    implementation 'smartgraph-2.0.0' //local jar that has been recompiled to run on java 11
+    implementation name: 'smartgraph-2.0.0' //local jar that has been recompiled to run on java 11
 }
