@@ -2,7 +2,6 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
-import com.daniel.jsoneditor.view.impl.jfx.buttons.ShowAsGraphButton;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ShowUsagesButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
@@ -30,8 +29,6 @@ public class JsonEditorNamebar extends HBox
     
     private final ShowUsagesButton showUsagesButton;
     
-    private final ShowAsGraphButton showAsGraphButton;
-    
     public JsonEditorNamebar(EditorWindowManager manager, JsonEditorEditorWindow editorWindow, ReadableModel model)
     {
         super();
@@ -42,8 +39,7 @@ public class JsonEditorNamebar extends HBox
         nameLabel = new Label();
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
         showUsagesButton = new ShowUsagesButton(model, manager);
-        showAsGraphButton = new ShowAsGraphButton(model, editorWindow);
-        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showAsGraphButton, showUsagesButton,
+        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showUsagesButton,
                 makeCloseWindowButton());
     }
     
@@ -61,7 +57,6 @@ public class JsonEditorNamebar extends HBox
         }
         nameLabel.setText(selection.makeNameIncludingPath(model));
         showUsagesButton.setSelection(selection);
-        showAsGraphButton.setSelection(selection);
     }
     
     private Button makeSelectInNavbarButton()
