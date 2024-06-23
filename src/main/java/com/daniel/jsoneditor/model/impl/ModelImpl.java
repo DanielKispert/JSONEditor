@@ -443,6 +443,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     {
         // TODO
         Digraph<String, String> g = new DigraphEdgeList<>();
+        /*
         getReferenceableObjectInstances().forEach(referenceableObjectInstance -> g.insertVertex(referenceableObjectInstance.getPath()));
         if (path == null)
         {
@@ -466,6 +467,8 @@ public class ModelImpl implements ReadableModel, WritableModel
             g.insertVertex(outgoingReference.getPath());
             g.insertEdge(path, outgoingReference.getPath(), outgoingReference.getFancyName());
         }
+        
+         */
         return g;
     }
     
