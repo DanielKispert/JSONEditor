@@ -1,5 +1,7 @@
 package com.daniel.jsoneditor.model.impl;
 
+import com.brunomnsilva.smartgraph.graph.Digraph;
+import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
@@ -433,6 +435,32 @@ public class ModelImpl implements ReadableModel, WritableModel
     public ReferenceableObject getReferenceableObject(String path)
     {
         return ReferenceHelper.getReferenceableObjectOfPath(this, path);
+    }
+    
+    @Override
+    public Digraph<String, String> getJsonAsGraph()
+    {
+        // TODO
+        Digraph<String, String> g = new DigraphEdgeList<>();
+        g.insertVertex("A");
+        g.insertVertex("B");
+        g.insertVertex("C");
+        g.insertVertex("D");
+        g.insertVertex("E");
+        g.insertVertex("F");
+        
+        g.insertEdge("A", "B", "AB");
+        g.insertEdge("B", "A", "AB2");
+        g.insertEdge("A", "C", "AC");
+        g.insertEdge("A", "D", "AD");
+        g.insertEdge("B", "C", "BC");
+        g.insertEdge("C", "D", "CD");
+        g.insertEdge("B", "E", "BE");
+        g.insertEdge("F", "D", "DF");
+        g.insertEdge("F", "D", "DF2");
+        
+        g.insertEdge("A", "A", "Loop");
+        return g;
     }
     
     @Override

@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model;
 
+import com.brunomnsilva.smartgraph.graph.Digraph;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
@@ -36,6 +37,8 @@ public interface ReadableModel extends ReadableState
     ReferenceToObject getReferenceToObject(String path);
     
     ReferenceableObject getReferenceableObject(String path);
+    
+    Digraph<String, String> getJsonAsGraph();
     
     /**
      * @param path this points to the path of a json node inside our currently selected json. It can match an existing node, or it doesn't.
