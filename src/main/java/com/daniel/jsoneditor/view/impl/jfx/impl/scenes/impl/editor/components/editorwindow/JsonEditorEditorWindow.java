@@ -10,6 +10,7 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph.NodeGraph;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.HBox;
@@ -74,15 +75,6 @@ public class JsonEditorEditorWindow extends VBox
         VBox.setVgrow(this, Priority.ALWAYS);
         HBox.setHgrow(this, Priority.ALWAYS);
         getChildren().addAll(nameBar, editorTables);
-    }
-    
-    public void showAsGraph()
-    {
-        getChildren().remove(editorTables);
-        NodeGraph graph = new NodeGraph();
-        SmartGraphPanel<String, String> graphView = graph.makeView();
-        getChildren().add(graphView);
-        graphView.init();
     }
     
     /**

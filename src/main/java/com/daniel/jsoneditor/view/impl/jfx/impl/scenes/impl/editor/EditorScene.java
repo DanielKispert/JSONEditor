@@ -2,8 +2,9 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor;
 
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.menubar.JsonEditorMenuBar;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.JsonEditorToolbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.JsonEditorToolbar;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.EditorNavTree;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
@@ -61,7 +62,7 @@ public class EditorScene extends SceneHandlerImpl
     public void handleAddedArrayItem(String pathOfAddedArrayItem)
     {
         editorWindowManager.updateEditors();
-        navbar.updateTree();
+        navbar.handleUpdate();
         // desired navbar behavior: select the item that we just added if it's not already selected
         navbar.selectPath(pathOfAddedArrayItem);
         // desired editor behavior: if array is already open, scroll to the added item. If no array is open, open an array and scroll
@@ -73,12 +74,12 @@ public class EditorScene extends SceneHandlerImpl
     {
         // we also update the windows because they could show the parent array, which just had something added/removed/changed
         editorWindowManager.updateEditors();
-        navbar.updateTree();
+        navbar.handleUpdate();
     }
     
     public void handleMovedSelection()
     {
-        navbar.updateTree();
+        navbar.handleUpdate();
     }
     
     public JsonEditorNavbar getNavbar()

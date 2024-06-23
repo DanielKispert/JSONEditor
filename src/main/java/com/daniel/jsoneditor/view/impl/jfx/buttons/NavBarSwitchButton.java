@@ -2,21 +2,24 @@ package com.daniel.jsoneditor.view.impl.jfx.buttons;
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 
-public class ShowAsGraphButton extends Button
+public class NavBarSwitchButton extends Button
 {
-    private final JsonEditorEditorWindow editorWindow;
     
     private final ReadableModel model;
     
-    public ShowAsGraphButton(ReadableModel model, JsonEditorEditorWindow editorWindow)
+    private JsonEditorNavbar navbar;
+    
+    private boolean showsGraph = false;
+    
+    public NavBarSwitchButton(ReadableModel model, JsonEditorNavbar navbar)
     {
         super();
-        this.editorWindow = editorWindow;
         this.model = model;
+        this.navbar = navbar;
         ButtonHelper.setButtonImage(this, "/icons/material/darkmode/outline_graph_white_24dp.png");
         setOnAction(actionEvent -> handleClick());
         setTooltip(new Tooltip("Show as graph"));
@@ -32,6 +35,18 @@ public class ShowAsGraphButton extends Button
     
     private void handleClick()
     {
-        editorWindow.showAsGraph();
+        if (showsGraph)
+        {
+            navbar.showNavTreeView();
+            ButtonHelper.setButtonImage(this, "/icons/material/darkmode/outline_graph_white_24dp.png");
+            setTooltip(new Tooltip("Show as graph"));
+        }
+        else
+        {
+            navbar.showGraphView();
+            ButtonHelper.setButtonImage(this, "/icons/material/darkmode/outline_menu_white_24dp.png");
+            setTooltip(new Tooltip("Show as tree"));
+        }
+        showsGraph = !showsGraph;
     }
 }
