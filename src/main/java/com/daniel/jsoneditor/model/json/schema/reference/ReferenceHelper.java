@@ -123,6 +123,50 @@ public class ReferenceHelper
     }
     
     /**
+     * @return the next object node that is above the ReferenceToObjectInstance
+     */
+    public static String getParentObjectOfReference(ReadableModel model, String referencePath)
+    {
+        //iterate over the JSON and return the path of the next json node that is an object
+        String parentPath = PathHelper.getParentPath(referencePath);
+        if (parentPath == null)
+        {
+            return null;
+        }
+        // check if the node at the parent is an object
+        JsonNodeWithPath parent = model.getNodeForPath(parentPath);
+        if (parent != null && parent.getNode().isObject())
+        {
+            return parent.getPath();
+        }
+        return getParentObjectOfReference(model, parentPath);
+    }
+    
+    /**
+     * @return check all children of the given path, if its an object node, and return the ReferenceToObjectInstances that this object points to
+     */
+    public static List<ReferenceToObjectInstance> getReferencesBelowObject(ReadableModel model, String pathToObjectNode)
+    {
+        List<ReferenceToObjectInstance> references = new ArrayList<>();
+        JsonNodeWithPath node = model.getNodeForPath(pathToObjectNode);
+        
+        if (node != null && node.getNode().isObject())
+        {
+            for (JsonNode field : node.getNode())
+            {
+                String fieldPath = node.getPath() + "/" + field.asText();
+                ReferenceToObject referenceToObject = model.getReferenceToObject(fieldPath);
+                if (referenceToObject != null)
+                {
+                    references.add(new ReferenceToObjectInstance(model, referenceToObject, model.getNodeForPath(fieldPath)));
+                }
+            }
+        }
+        
+        return references;
+    }
+    
+    /**
      * returns the ReferenceToObject objects that are saved in our json schema
      */
     public static List<ReferenceToObject> getReferenceToObjectNodes(ReadableModel model)

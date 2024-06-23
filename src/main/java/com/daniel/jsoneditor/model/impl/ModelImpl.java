@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -438,28 +439,33 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public Digraph<String, String> getJsonAsGraph()
+    public Digraph<String, String> getJsonAsGraph(String path)
     {
         // TODO
         Digraph<String, String> g = new DigraphEdgeList<>();
-        g.insertVertex("A");
-        g.insertVertex("B");
-        g.insertVertex("C");
-        g.insertVertex("D");
-        g.insertVertex("E");
-        g.insertVertex("F");
-        
-        g.insertEdge("A", "B", "AB");
-        g.insertEdge("B", "A", "AB2");
-        g.insertEdge("A", "C", "AC");
-        g.insertEdge("A", "D", "AD");
-        g.insertEdge("B", "C", "BC");
-        g.insertEdge("C", "D", "CD");
-        g.insertEdge("B", "E", "BE");
-        g.insertEdge("F", "D", "DF");
-        g.insertEdge("F", "D", "DF2");
-        
-        g.insertEdge("A", "A", "Loop");
+        getReferenceableObjectInstances().forEach(referenceableObjectInstance -> g.insertVertex(referenceableObjectInstance.getPath()));
+        if (path == null)
+        {
+            // if the path is null we start at the root element
+            path = "";
+        }
+        g.insertVertex(path);
+        //incoming references
+        for (ReferenceToObjectInstance incomingReference : getReferencesToObjectForPath(path))
+        {
+            String parentObjectPath = ReferenceHelper.getParentObjectOfReference(this, incomingReference.getPath());
+            if (parentObjectPath != null)
+            {
+                g.insertVertex(parentObjectPath);
+                g.insertEdge(parentObjectPath, path, incomingReference.getFancyName());
+            }
+        }
+        //outgoing references
+        for (ReferenceToObjectInstance outgoingReference : ReferenceHelper.getReferencesBelowObject(this, path))
+        {
+            g.insertVertex(outgoingReference.getPath());
+            g.insertEdge(path, outgoingReference.getPath(), outgoingReference.getFancyName());
+        }
         return g;
     }
     
