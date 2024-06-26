@@ -56,7 +56,7 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
     private void filterSuggestionsBasedOn(String currentText)
     {
         List<ReferenceableObjectInstance> filteredSuggestions = suggestions.stream().filter(
-                suggestion -> suggestion.getKey().toLowerCase().contains(currentText.toLowerCase())).collect(Collectors.toList());
+                suggestion -> suggestion.getKey() != null && suggestion.getKey().toLowerCase().contains(currentText.toLowerCase())).collect(Collectors.toList());
         
         listView.setItems(FXCollections.observableArrayList(filteredSuggestions));
         
