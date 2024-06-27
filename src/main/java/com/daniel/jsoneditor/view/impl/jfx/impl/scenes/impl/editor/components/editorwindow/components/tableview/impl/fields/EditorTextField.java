@@ -26,5 +26,6 @@ public class EditorTextField extends TextField
                 parent.commitEdit(getText());
             }
         });
+        setMaxWidth(Double.MAX_VALUE);
     }
 }
