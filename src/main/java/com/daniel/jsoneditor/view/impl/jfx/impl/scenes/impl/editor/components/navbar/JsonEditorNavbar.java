@@ -45,6 +45,7 @@ public class JsonEditorNavbar extends VBox
         HBox buttonBar = new HBox();
         NavBarSwitchButton navBarSwitchButton = new NavBarSwitchButton(model, this);
         buttonBar.getChildren().add(navBarSwitchButton);
+        HBox.setHgrow(buttonBar, Priority.NEVER);
         return buttonBar;
     }
     

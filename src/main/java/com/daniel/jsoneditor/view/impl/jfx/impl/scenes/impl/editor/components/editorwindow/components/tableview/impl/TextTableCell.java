@@ -22,7 +22,6 @@ public class TextTableCell extends EditorTableCell
     {
         super(manager, controller, model, holdsObjectKey);
         this.model = model;
-        setMaxWidth(Double.MAX_VALUE);
         this.alsoAllowNumbers = alsoAllowNumbers;
     }
     
