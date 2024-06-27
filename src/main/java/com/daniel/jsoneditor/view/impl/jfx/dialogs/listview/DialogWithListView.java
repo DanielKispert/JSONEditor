@@ -19,6 +19,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 
 
 public abstract class DialogWithListView<T extends ReferencingInstance> extends ThemedDialog<String>
@@ -110,7 +111,21 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends 
             return cell;
         });
         listView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleListViewKeyPress);
-        listView.setPrefWidth(800);
+        listView.setPrefWidth(maxListItemWidth(items));
+    }
+    
+    protected int maxListItemWidth(List<T> items)
+    {
+        int maxWidth = 0;
+        for (T item : items)
+        {
+            int width = ((item.getKey() != null ? item.getKey().length() : 0) + item.getFancyName().length()) * 7;
+            if (width > maxWidth)
+            {
+                maxWidth = width;
+            }
+        }
+        return maxWidth;
     }
     
     protected abstract void onListItemDoubleClick(T item);

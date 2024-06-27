@@ -123,21 +123,42 @@ public final class JsonNodeWithPath
         StringBuilder fancyName = new StringBuilder();
         int startIndex = 0;
         int nextIndex;
+        boolean parentIsArray = false;
         // first we grab the first path bit, then the first and second, and so on
         while ((nextIndex = path.indexOf("/", startIndex)) != -1)
         {
             String partialPath = path.substring(0, nextIndex);
             JsonNodeWithPath pathNode = model.getNodeForPath(partialPath);
-            String displayName = pathNode.getDisplayName();
-            fancyName.append(displayName);
-            fancyName.append(" > ");
+            if (startIndex != 0)
+            {
+                String displayName = pathNode.getDisplayName();
+                if (parentIsArray)
+                {
+                
+                }
+                else
+                {
+                    fancyName.append(">");
+                    fancyName.append(displayName);
+                }
+            }
+            
             startIndex = nextIndex + 1;
+            parentIsArray = pathNode.isArray();
         }
         
         // the last part of the path has to be handled separately
         JsonNodeWithPath lastPathNode = model.getNodeForPath(path);
-        fancyName.append(lastPathNode.getDisplayName());
-        
+        if (parentIsArray)
+        {
+            fancyName.insert(fancyName.length() - 1, lastPathNode.getDisplayName());
+        }
+        else
+        {
+            fancyName.append(">");
+            fancyName.append(lastPathNode.getDisplayName());
+            
+        }
         return fancyName.toString();
     }
     
