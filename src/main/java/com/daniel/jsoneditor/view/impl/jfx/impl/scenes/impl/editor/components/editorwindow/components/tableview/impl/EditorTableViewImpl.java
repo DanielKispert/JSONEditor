@@ -54,10 +54,6 @@ public class EditorTableViewImpl extends EditorTableView
         this.controller = controller;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
-        //
-        getItems().addListener((ListChangeListener.Change<? extends JsonNodeWithPath> change) -> {
-            setColumnWidths();
-        });
     }
     
     private void setColumnWidths()
@@ -68,7 +64,7 @@ public class EditorTableViewImpl extends EditorTableView
         for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
         {
             // Get the column title width
-            String columnTitle = ((EditorTableColumn) column).getColumnTitle();
+            String columnTitle = column.getText();
             maxCellWidths[columnIndex] = columnTitle.length() * 6 + 10;  // Approximate width calculation
             
             for (JsonNodeWithPath item : getItems())
@@ -197,6 +193,7 @@ public class EditorTableViewImpl extends EditorTableView
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
+        setColumnWidths();
         if (isArray && controller.getSettingsController().hideEmptyColumns())
         {
             
