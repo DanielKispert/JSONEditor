@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.me
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.JsonEditorToolbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.EditorNavTree;
+import javafx.application.Platform;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
@@ -53,9 +54,9 @@ public class EditorScene extends SceneHandlerImpl
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.HORIZONTAL);
         splitPane.getItems().addAll(navbar, editorWindowManager.getEditorWindowContainer());
-        splitPane.setDividerPositions(0.4);
         splitPane.prefWidthProperty().bind(scene.widthProperty());
         splitPane.prefHeightProperty().bind(scene.heightProperty());
+        Platform.runLater(() -> splitPane.setDividerPositions(0.2));
         return splitPane;
     }
     

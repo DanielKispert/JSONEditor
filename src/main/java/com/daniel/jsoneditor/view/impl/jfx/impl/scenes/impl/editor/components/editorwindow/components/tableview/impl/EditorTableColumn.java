@@ -33,6 +33,8 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     
     private final JsonEditorEditorWindow window;
     
+    private final String columnName;
+    
     /**
      * true if this column holds the key property of a referenceable object, false otherwise
      */
@@ -56,7 +58,8 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         {
             columnName += " *";
         }
-        setText(columnName);
+        this.columnName = columnName;
+        setText(this.columnName);
         this.propertyName = propertyName;
         this.isRequired = isRequired;
         
@@ -111,6 +114,10 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         });
     }
     
+    public String getColumnTitle()
+    {
+        return columnName;
+    }
     
     private TableCell<JsonNodeWithPath, String> makeOpenButtonTableCell(String pathToOpen)
     {
@@ -194,6 +201,8 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
             }
         };
     }
+    
+    
     
     
     

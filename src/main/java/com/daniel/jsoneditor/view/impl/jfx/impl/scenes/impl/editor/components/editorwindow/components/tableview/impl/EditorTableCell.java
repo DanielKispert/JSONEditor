@@ -32,6 +32,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         this.controller = controller;
         this.model = model;
         this.holdsKeyOfReferenceableObject = holdsObjectKey;
+        setMaxWidth(Double.MAX_VALUE);
     }
     
     @Override
@@ -95,6 +96,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         manager.updateNavbarRepresentation(item.getPath());
     }
     
-    protected abstract void saveValue(JsonNodeWithPath item, String propertyName, String newValue);
     
+    
+    protected abstract void saveValue(JsonNodeWithPath item, String propertyName, String newValue);
 }
