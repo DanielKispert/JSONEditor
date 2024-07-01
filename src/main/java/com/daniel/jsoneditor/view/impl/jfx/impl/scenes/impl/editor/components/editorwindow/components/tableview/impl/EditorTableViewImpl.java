@@ -20,6 +20,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
@@ -229,6 +230,8 @@ public class EditorTableViewImpl extends EditorTableView
         
         followReferenceOrOpenColumn.setCellFactory(param -> new TableCell<>()
         {
+            private final StackPane pane = new StackPane();
+            
             @Override
             protected void updateItem(String path, boolean empty)
             {
@@ -242,14 +245,21 @@ public class EditorTableViewImpl extends EditorTableView
                 {
                     JsonNodeWithPath nodeAtPath = model.getNodeForPath(path);
                     String referencedPath = ReferenceHelper.resolveReference(nodeAtPath, model);
+                    Button button;
                     if (referencedPath != null)
                     {
-                        setGraphic(makeFollowReferenceButton(referencedPath));
+                        button = makeFollowReferenceButton(referencedPath);
                     }
                     else
                     {
-                        setGraphic(makeOpenArrayElementButton(path));
+                        button = makeOpenArrayElementButton(path);
                     }
+                    pane.getChildren().setAll(button);
+                    setGraphic(pane);
+                    button.widthProperty().addListener((observable, oldValue, newValue) ->
+                    {
+                        followReferenceOrOpenColumn.setPrefWidth(newValue.doubleValue() + 10);
+                    });
                 }
             }
         });
@@ -301,11 +311,11 @@ public class EditorTableViewImpl extends EditorTableView
     
     private Button makeFollowReferenceButton(String path)
     {
-        Button removeButton = new Button("Follow Reference");
-        removeButton.setOnAction(event -> manager.selectInNewWindow(path));
-        removeButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
-        removeButton.setMaxHeight(Double.MAX_VALUE);
-        return removeButton;
+        Button followReferenceButton = new Button("Follow Reference");
+        followReferenceButton.setOnAction(event -> manager.selectInNewWindow(path));
+        followReferenceButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
+        followReferenceButton.setMaxHeight(Double.MAX_VALUE);
+        return followReferenceButton;
     }
     
     private Button makeOpenArrayElementButton(String path)
