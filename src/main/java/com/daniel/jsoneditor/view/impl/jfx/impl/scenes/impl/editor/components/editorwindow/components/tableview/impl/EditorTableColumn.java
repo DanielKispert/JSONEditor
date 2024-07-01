@@ -16,6 +16,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 
 
 public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
@@ -47,6 +48,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         this.model = model;
         this.window = window;
         this.controller = controller;
+        this.setMinWidth(20);
         ReferenceableObject objectOfParent = window.getDisplayedObject();
         this.holdsKeyOfReferenceableObject = objectOfParent != null && ("/" + propertyName).equals(objectOfParent.getKey());
         String columnName = propertyName;
@@ -112,6 +114,14 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
             }
             return new TextTableCell(manager, controller, model, false, holdsKeyOfReferenceableObject);
         });
+    }
+    
+    public void setPrefWidthIfHigher(double newPrefWidth)
+    {
+        if (getPrefWidth() < newPrefWidth)
+        {
+            setPrefWidth(newPrefWidth);
+        }
     }
     
     public String getColumnTitle()

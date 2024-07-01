@@ -1,10 +1,13 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields;
 
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.TextTableCell;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
 
 import java.util.List;
@@ -47,6 +50,13 @@ public class AutofillField extends ComboBox<String>
             getEditor().textProperty().addListener((observable, oldValue, newValue) ->
                                                            filterSuggestions(newValue));
         }
+        
+        getEditor().textProperty().addListener((observable, oldValue, newValue) ->
+        {
+            Text text1 = new Text(newValue);
+            double width = text1.getLayoutBounds().getWidth();
+            setPrefWidth(width);
+        });
     }
     
     private void filterSuggestions(String filterText)
