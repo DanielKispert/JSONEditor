@@ -116,19 +116,6 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         });
     }
     
-    public void setPrefWidthIfHigher(double newPrefWidth)
-    {
-        if (getPrefWidth() < newPrefWidth)
-        {
-            setPrefWidth(newPrefWidth);
-        }
-    }
-    
-    public String getColumnTitle()
-    {
-        return columnName;
-    }
-    
     private TableCell<JsonNodeWithPath, String> makeOpenButtonTableCell(String pathToOpen)
     {
         return new TableCell<>()

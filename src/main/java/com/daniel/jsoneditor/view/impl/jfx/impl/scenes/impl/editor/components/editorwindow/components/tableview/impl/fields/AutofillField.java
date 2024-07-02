@@ -22,7 +22,12 @@ public class AutofillField extends ComboBox<String>
     public AutofillField(TextTableCell parent, String text, List<String> allSuggestions, boolean valueMustBeASuggestion)
     {
         this.allSuggestions = allSuggestions;
-        
+        getEditor().textProperty().addListener((observable, oldValue, newValue) ->
+        {
+            Text text1 = new Text(newValue);
+            double width = text1.getLayoutBounds().getWidth();
+            setPrefWidth(width + 50);
+        });
         setEditable(!valueMustBeASuggestion);
         setValue(text);
         setMaxWidth(Double.MAX_VALUE);
@@ -50,15 +55,10 @@ public class AutofillField extends ComboBox<String>
             getEditor().textProperty().addListener((observable, oldValue, newValue) ->
                                                            filterSuggestions(newValue));
         }
-        /*
-        getEditor().textProperty().addListener((observable, oldValue, newValue) ->
-        {
-            Text text1 = new Text(newValue);
-            double width = text1.getLayoutBounds().getWidth();
-            setPrefWidth(width + 30);
-        });
         
-         */
+
+        
+        
     }
     
     private void filterSuggestions(String filterText)

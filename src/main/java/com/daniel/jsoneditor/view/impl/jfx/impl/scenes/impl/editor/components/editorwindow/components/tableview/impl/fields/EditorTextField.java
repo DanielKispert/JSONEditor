@@ -12,7 +12,15 @@ public class EditorTextField extends TextField
 {
     public EditorTextField(TextTableCell parent, String text)
     {
-        super(text);
+        super();
+        // set preferred width to the width of the text entered plus a little extra
+        textProperty().addListener((observable, oldValue, newValue) ->
+        {
+            Text text1 = new Text(newValue);
+            double width = text1.getLayoutBounds().getWidth();
+            setPrefWidth(width + 20);
+        });
+        setText(text); //intentionally done after adding the listener
         setOnAction(event ->
         {
             parent.commitEdit(getText());
@@ -30,11 +38,6 @@ public class EditorTextField extends TextField
             }
         });
         setMaxWidth(Double.MAX_VALUE);
-        textProperty().addListener((observable, oldValue, newValue) ->
-        {
-            Text newText = new Text(newValue);
-            double width = newText.getLayoutBounds().getWidth();
-            setPrefWidth(width);
-        });
+
     }
 }
