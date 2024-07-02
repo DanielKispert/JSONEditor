@@ -62,7 +62,7 @@ public class TextTableCell extends EditorTableCell
         super.updateItem(item, empty);
         if (empty || item == null)
         {
-            setGraphic(null);
+            setGraphicWithResizing(null);
         }
         else
         {
@@ -76,13 +76,7 @@ public class TextTableCell extends EditorTableCell
             {
                 fill = new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey());
             }
-            setGraphic(fill);
-            TableColumn<JsonNodeWithPath, String> column = getTableColumn();
-            if (column instanceof EditorTableColumn)
-            {
-                EditorTableColumn editorTableColumn = (EditorTableColumn) column;
-                editorTableColumn.setPrefWidthIfHigher(fill.prefWidth(-1));
-            }
+            setGraphicWithResizing(fill);
         }
     }
     

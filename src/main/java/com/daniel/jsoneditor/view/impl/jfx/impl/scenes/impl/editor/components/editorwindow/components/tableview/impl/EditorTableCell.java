@@ -10,7 +10,9 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstan
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.scene.Node;
 import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 
 
 public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String>
@@ -33,6 +35,27 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         this.model = model;
         this.holdsKeyOfReferenceableObject = holdsObjectKey;
         setMaxWidth(Double.MAX_VALUE);
+    }
+    
+    @Override
+    protected void updateItem(String s, boolean b)
+    {
+        double graphicPrefWidth = getGraphic() != null ? getGraphic().prefWidth(-1) : 0;
+        if (graphicPrefWidth > 0)
+        {
+            //setPrefWidth(graphicPrefWidth + 100);
+        }
+        TableColumn<JsonNodeWithPath, String> column = getTableColumn();
+        if (column instanceof EditorTableColumn)
+        {
+            
+            EditorTableColumn editorTableColumn = (EditorTableColumn) column;
+            //editorTableColumn.setPrefWidthIfHigher(getGraphic().prefWidth(-1));
+        }
+    }
+    
+    protected final void setGraphicWithResizing(Node node) {
+        setGraphic(node);
     }
     
     @Override
