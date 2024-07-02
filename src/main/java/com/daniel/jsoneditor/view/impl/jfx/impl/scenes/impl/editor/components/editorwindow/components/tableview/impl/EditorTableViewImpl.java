@@ -14,7 +14,6 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.to
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
@@ -22,7 +21,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
@@ -55,37 +53,6 @@ public class EditorTableViewImpl extends EditorTableView
         this.controller = controller;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
-    }
-    
-    private void setColumnWidths()
-    {
-        double[] maxCellWidths = new double[getColumns().size()];
-        
-        int columnIndex = 0;
-        for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
-        {
-            // Get the column title width
-            String columnTitle = column.getText();
-            maxCellWidths[columnIndex] = columnTitle.length() * 6 + 10;  // Approximate width calculation
-            
-            for (JsonNodeWithPath item : getItems())
-            {
-                Object cellValue = column.getCellData(item);
-                if (cellValue != null)
-                {
-                    // Calculate the cell content width
-                    maxCellWidths[columnIndex] = Math.max(maxCellWidths[columnIndex],
-                            cellValue.toString().length() * 6 + 10);  // Approximate width calculation
-                }
-            }
-            columnIndex++;
-        }
-        
-        columnIndex = 0;
-        for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
-        {
-            column.setPrefWidth(maxCellWidths[columnIndex++]);
-        }
     }
     
     @Override
@@ -194,7 +161,6 @@ public class EditorTableViewImpl extends EditorTableView
         setItems(elements);
         getColumns().clear();
         getColumns().addAll(columns);
-        setColumnWidths();
         if (isArray && controller.getSettingsController().hideEmptyColumns())
         {
             

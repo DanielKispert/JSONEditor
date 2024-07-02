@@ -50,13 +50,15 @@ public class AutofillField extends ComboBox<String>
             getEditor().textProperty().addListener((observable, oldValue, newValue) ->
                                                            filterSuggestions(newValue));
         }
-        
+        /*
         getEditor().textProperty().addListener((observable, oldValue, newValue) ->
         {
             Text text1 = new Text(newValue);
             double width = text1.getLayoutBounds().getWidth();
-            setPrefWidth(width);
+            setPrefWidth(width + 30);
         });
+        
+         */
     }
     
     private void filterSuggestions(String filterText)
