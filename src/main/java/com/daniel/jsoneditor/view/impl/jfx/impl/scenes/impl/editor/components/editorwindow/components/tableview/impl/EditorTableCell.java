@@ -37,24 +37,8 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         setMaxWidth(Double.MAX_VALUE);
     }
     
-    @Override
-    protected void updateItem(String s, boolean b)
+    protected final void setGraphicWithResizing(Node node)
     {
-        double graphicPrefWidth = getGraphic() != null ? getGraphic().prefWidth(-1) : 0;
-        if (graphicPrefWidth > 0)
-        {
-            //setPrefWidth(graphicPrefWidth + 100);
-        }
-        TableColumn<JsonNodeWithPath, String> column = getTableColumn();
-        if (column instanceof EditorTableColumn)
-        {
-            
-            EditorTableColumn editorTableColumn = (EditorTableColumn) column;
-            //editorTableColumn.setPrefWidthIfHigher(getGraphic().prefWidth(-1));
-        }
-    }
-    
-    protected final void setGraphicWithResizing(Node node) {
         setGraphic(node);
     }
     
