@@ -142,40 +142,6 @@ public class ReferenceHelper
         return getParentObjectOfReference(model, parentPath);
     }
     
-    /**
-     * @return check all children of the given path, if its an object node, and return the ReferenceToObjectInstances that this object points to
-     */
-    public static List<ReferenceToObjectInstance> getReferencesBelowObject(ReadableModel model, String pathToObjectNode)
-    {
-        List<ReferenceToObjectInstance> references = new ArrayList<>();
-        JsonNodeWithPath node = model.getNodeForPath(pathToObjectNode);
-        
-        if (node != null && node.getNode().isObject())
-        {
-            node.getNode().fields().forEachRemaining(field -> {
-                String fieldPath = node.getPath() + "/" + field.getKey();
-                ReferenceToObject referenceToObject = model.getReferenceToObject(fieldPath);
-                if (referenceToObject != null)
-                {
-                    JsonNodeWithPath fieldNode = model.getNodeForPath(fieldPath);
-                    if (fieldNode.getNode().isArray())
-                    {
-                        for (int index = 0; index < fieldNode.getNode().size(); index++)
-                        {
-                            String itemPath = fieldPath + "/" + index;
-                            references.add(new ReferenceToObjectInstance(model, referenceToObject, model.getNodeForPath(itemPath)));
-                        }
-                    }
-                    else
-                    {
-                        references.add(new ReferenceToObjectInstance(model, referenceToObject, fieldNode));
-                    }
-                }
-            });
-        }
-        
-        return references;
-    }
     
     /**
      * returns the ReferenceToObject objects that are saved in our json schema
