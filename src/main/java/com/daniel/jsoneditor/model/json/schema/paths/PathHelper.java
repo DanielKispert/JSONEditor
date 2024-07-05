@@ -81,7 +81,8 @@ public class PathHelper
     private static String[] formatPathToCheck(String pathToCheck)
     {
         String[] pathToCheckParts = pathToCheck.split("/");
-        if (isInteger(pathToCheckParts[pathToCheckParts.length - 1]))
+        // Check if the array is not empty and the last part is an integer
+        if (pathToCheckParts.length > 0 && isInteger(pathToCheckParts[pathToCheckParts.length - 1]))
         {
             pathToCheckParts = Arrays.copyOf(pathToCheckParts, pathToCheckParts.length - 1);
         }

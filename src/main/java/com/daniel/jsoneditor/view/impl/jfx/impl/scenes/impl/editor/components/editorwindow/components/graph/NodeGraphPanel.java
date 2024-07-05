@@ -1,6 +1,9 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph;
 
+import com.brunomnsilva.smartgraph.graph.Digraph;
+import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
 import com.brunomnsilva.smartgraph.graph.Graph;
+import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.brunomnsilva.smartgraph.graphview.SmartCircularSortedPlacementStrategy;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
@@ -13,6 +16,7 @@ import javafx.scene.layout.VBox;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.function.Consumer;
 
 public class NodeGraphPanel extends SmartGraphPanel<String, String>
 {
@@ -22,11 +26,18 @@ public class NodeGraphPanel extends SmartGraphPanel<String, String>
     
     private final ReadableModel model;
     
+    private final Digraph<String, String> graph;
+    
+    
+    
     private NodeGraphPanel(ReadableModel model, SmartGraphProperties properties, SmartPlacementStrategy placementStrategy, URI cssFile)
     {
-        super(model.getJsonAsGraph(null), properties, placementStrategy, cssFile);
+        super(model.getJsonAsGraph(), properties, placementStrategy, cssFile);
+        this.graph = new DigraphEdgeList<>();
         this.model = model;
     }
+    
+    
     
     public static NodeGraphPanel create(ReadableModel model)
     {

@@ -439,37 +439,32 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public Digraph<String, String> getJsonAsGraph(String path)
+    public Digraph<String, String> getJsonAsGraph()
     {
-        // TODO
-        Digraph<String, String> g = new DigraphEdgeList<>();
-        /*
-        getReferenceableObjectInstances().forEach(referenceableObjectInstance -> g.insertVertex(referenceableObjectInstance.getPath()));
-        if (path == null)
+        Digraph<String, String> graph = new DigraphEdgeList<>();
+        
+        // Add vertices for all referenceable object instances
+        List<ReferenceableObjectInstance> referenceableObjectInstances = getReferenceableObjectInstances();
+        for (ReferenceableObjectInstance instance : referenceableObjectInstances)
         {
-            // if the path is null we start at the root element
-            path = "";
-        }
-        g.insertVertex(path);
-        //incoming references
-        for (ReferenceToObjectInstance incomingReference : getReferencesToObjectForPath(path))
-        {
-            String parentObjectPath = ReferenceHelper.getParentObjectOfReference(this, incomingReference.getPath());
-            if (parentObjectPath != null)
-            {
-                g.insertVertex(parentObjectPath);
-                g.insertEdge(parentObjectPath, path, incomingReference.getFancyName());
-            }
-        }
-        //outgoing references
-        for (ReferenceToObjectInstance outgoingReference : ReferenceHelper.getReferencesBelowObject(this, path))
-        {
-            g.insertVertex(outgoingReference.getPath());
-            g.insertEdge(path, outgoingReference.getPath(), outgoingReference.getFancyName());
+            graph.insertVertex(instance.getPath());
         }
         
-         */
-        return g;
+        // Add edges for all references to these objects
+        for (ReferenceableObjectInstance instance : referenceableObjectInstances)
+        {
+            List<ReferenceToObjectInstance> referencesToObject = getReferencesToObjectForPath(instance.getPath());
+            for (ReferenceToObjectInstance reference : referencesToObject)
+            {
+                String sourcePath = ReferenceHelper.getParentObjectOfReference(this, reference.getPath());
+                if (sourcePath != null && !sourcePath.equals(instance.getPath()))
+                {
+                    graph.insertEdge(sourcePath, instance.getPath(), reference.getFancyName());
+                }
+            }
+        }
+        
+        return graph;
     }
     
     @Override
