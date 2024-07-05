@@ -39,9 +39,9 @@ public interface ReadableModel extends ReadableState
     ReferenceableObject getReferenceableObject(String path);
     
     /**
-     * @return a graph where the ReferenceableObjects of our json are the nodes and the ReferenceToObjects are the edges
+     * @return the whole json as graph, where ReferenceableObjects are the nodes and ReferenceToObjects are the edges
      */
-    Digraph<String, String> getJsonAsGraph(String path);
+    Digraph<String, String> getJsonAsGraph();
     
     /**
      * @param path this points to the path of a json node inside our currently selected json. It can match an existing node, or it doesn't.

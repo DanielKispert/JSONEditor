@@ -134,7 +134,7 @@ public final class JsonNodeWithPath
                 String displayName = pathNode.getDisplayName();
                 if (parentIsArray)
                 {
-                
+                    fancyName.insert(fancyName.length() - 1, displayName);
                 }
                 else
                 {

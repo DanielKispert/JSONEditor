@@ -84,7 +84,7 @@ public class ReferenceHelper
     }
     
     /**
-     * returns the referenceable object that is
+     * returns the referenceable object that is at this path
      */
     public static ReferenceableObject getReferenceableObjectOfPath(ReadableModel model, String path)
     {
@@ -152,15 +152,26 @@ public class ReferenceHelper
         
         if (node != null && node.getNode().isObject())
         {
-            for (JsonNode field : node.getNode())
-            {
-                String fieldPath = node.getPath() + "/" + field.asText();
+            node.getNode().fields().forEachRemaining(field -> {
+                String fieldPath = node.getPath() + "/" + field.getKey();
                 ReferenceToObject referenceToObject = model.getReferenceToObject(fieldPath);
                 if (referenceToObject != null)
                 {
-                    references.add(new ReferenceToObjectInstance(model, referenceToObject, model.getNodeForPath(fieldPath)));
+                    JsonNodeWithPath fieldNode = model.getNodeForPath(fieldPath);
+                    if (fieldNode.getNode().isArray())
+                    {
+                        for (int index = 0; index < fieldNode.getNode().size(); index++)
+                        {
+                            String itemPath = fieldPath + "/" + index;
+                            references.add(new ReferenceToObjectInstance(model, referenceToObject, model.getNodeForPath(itemPath)));
+                        }
+                    }
+                    else
+                    {
+                        references.add(new ReferenceToObjectInstance(model, referenceToObject, fieldNode));
+                    }
                 }
-            }
+            });
         }
         
         return references;
