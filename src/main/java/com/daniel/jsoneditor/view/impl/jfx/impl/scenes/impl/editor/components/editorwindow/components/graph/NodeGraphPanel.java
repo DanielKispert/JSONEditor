@@ -26,14 +26,11 @@ public class NodeGraphPanel extends SmartGraphPanel<String, String>
     
     private final ReadableModel model;
     
-    private final Digraph<String, String> graph;
-    
     
     
     private NodeGraphPanel(ReadableModel model, SmartGraphProperties properties, SmartPlacementStrategy placementStrategy, URI cssFile)
     {
         super(model.getJsonAsGraph(), properties, placementStrategy, cssFile);
-        this.graph = new DigraphEdgeList<>();
         this.model = model;
     }
     
