@@ -2,6 +2,10 @@ package com.daniel.jsoneditor.model.impl;
 
 import com.brunomnsilva.smartgraph.graph.Digraph;
 import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
+import com.brunomnsilva.smartgraph.graph.InvalidEdgeException;
+import com.brunomnsilva.smartgraph.graph.InvalidVertexException;
+import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
+import com.daniel.jsoneditor.model.impl.graph.NodeGraphCreator;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
@@ -439,32 +443,9 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public Digraph<String, String> getJsonAsGraph()
+    public Digraph<String, EdgeIdentifier> getJsonAsGraph(String path)
     {
-        Digraph<String, String> graph = new DigraphEdgeList<>();
-        
-        // Add vertices for all referenceable object instances
-        List<ReferenceableObjectInstance> referenceableObjectInstances = getReferenceableObjectInstances();
-        for (ReferenceableObjectInstance instance : referenceableObjectInstances)
-        {
-            graph.insertVertex(instance.getPath());
-        }
-        
-        // Add edges for all references to these objects
-        for (ReferenceableObjectInstance instance : referenceableObjectInstances)
-        {
-            List<ReferenceToObjectInstance> referencesToObject = getReferencesToObjectForPath(instance.getPath());
-            for (ReferenceToObjectInstance reference : referencesToObject)
-            {
-                String sourcePath = ReferenceHelper.getParentObjectOfReference(this, reference.getPath());
-                if (sourcePath != null && !sourcePath.equals(instance.getPath()))
-                {
-                    graph.insertEdge(sourcePath, instance.getPath(), reference.getFancyName());
-                }
-            }
-        }
-        
-        return graph;
+        return NodeGraphCreator.createGraph(this, path);
     }
     
     @Override

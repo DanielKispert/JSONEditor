@@ -1,14 +1,11 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph;
 
-import com.brunomnsilva.smartgraph.graph.Digraph;
-import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
-import com.brunomnsilva.smartgraph.graph.Graph;
-import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.brunomnsilva.smartgraph.graphview.SmartCircularSortedPlacementStrategy;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -16,9 +13,8 @@ import javafx.scene.layout.VBox;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.function.Consumer;
 
-public class NodeGraphPanel extends SmartGraphPanel<String, String>
+public class NodeGraphPanel extends SmartGraphPanel<String, EdgeIdentifier>
 {
     private static final String PATH_TO_PROPERTIES = "brunomnsilva/smartgraph/smartgraph.properties";
     
