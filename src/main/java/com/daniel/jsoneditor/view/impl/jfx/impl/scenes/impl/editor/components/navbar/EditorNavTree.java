@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.n
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.daniel.jsoneditor.controller.Controller;
@@ -26,7 +27,7 @@ import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 
 
-public class EditorNavTree extends TreeView<JsonNodeWithPath>
+public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarElement
 {
     private final ReadableModel model;
     
@@ -37,12 +38,18 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath>
     // reference to the stage is required to post a dialog
     private final Stage stage;
     
-    public EditorNavTree(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager, Stage stage)
+    private final JsonEditorNavbar navbar;
+    
+    private String selectedPath;
+    
+    public EditorNavTree(JsonEditorNavbar navbar, ReadableModel model, Controller controller, EditorWindowManager editorWindowManager,
+            Stage stage)
     {
         this.model = model;
         this.controller = controller;
         this.editorWindowManager = editorWindowManager;
         this.stage = stage;
+        this.navbar = navbar;
         SplitPane.setResizableWithParent(this, false);
         setRoot(makeTree());
         setContextMenu(makeContextMenu());
@@ -274,12 +281,16 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath>
     {
         if (item != null)
         {
+            String path = item.getValue().getPath();
+            this.selectedPath = path;
             // the navbar just tells the editor view to open this node, nothing is sent to the model or controller yet
-            editorWindowManager.selectFromNavbar(item.getValue().getPath());
+            editorWindowManager.selectFromNavbar(path);
+            navbar.selectPath(path);
         }
     }
     
-    public void updateNavbarItem(String path)
+    @Override
+    public void updateSingleElement(String path)
     {
         TreeItem<JsonNodeWithPath> rootItem = getRoot();
         TreeItem<JsonNodeWithPath> itemToUpdate = findNavbarItem(rootItem, path);
@@ -322,8 +333,12 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath>
     
     public void selectPath(String path)
     {
-        TreeItem<JsonNodeWithPath> root = getRoot();
-        selectNodeByPath(root, path);
+        if (!Objects.equals(selectedPath, path))
+        {
+            selectedPath = path;
+            TreeItem<JsonNodeWithPath> root = getRoot();
+            selectNodeByPath(root, path);
+        }
     }
     
     private void selectNodeByPath(TreeItem<JsonNodeWithPath> node, String path)
@@ -344,7 +359,8 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath>
         }
     }
     
-    public void updateTree()
+    @Override
+    public void updateView()
     {
         TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
         Map<String, Boolean> expandedStates = storeExpandedStates();

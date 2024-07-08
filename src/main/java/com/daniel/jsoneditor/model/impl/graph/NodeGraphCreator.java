@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.impl.graph;
 
 import com.brunomnsilva.smartgraph.graph.Digraph;
 import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
+import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
@@ -9,6 +10,8 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstan
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.List;
+import java.util.function.Predicate;
+
 
 public class NodeGraphCreator
 {
@@ -17,40 +20,29 @@ public class NodeGraphCreator
      */
     public static Digraph<String, EdgeIdentifier> createGraph(ReadableModel model, String path)
     {
+        if (path == null)
+        {
+            return null;
+        }
         Digraph<String, EdgeIdentifier> graph = new DigraphEdgeList<>();
         graph.insertVertex(path);
-        
-        JsonNodeWithPath centralNodeWithPath = model.getNodeForPath(path);
-        JsonNode centralNode = centralNodeWithPath.getNode();
-        addOutgoingReferences(model, centralNode, path, graph);
         addIncomingReferences(model, path, graph);
+        addOutgoingReferences(model, path, graph);
         
         return graph;
     }
     
-    private static void addOutgoingReferences(ReadableModel model, JsonNode node, String currentPath, Digraph<String, EdgeIdentifier> graph)
+    private static void addOutgoingReferences(ReadableModel model, String currentPath, Digraph<String, EdgeIdentifier> graph)
     {
-        if (node.isObject())
+        List<ReferenceToObjectInstance> outgoingReferences = ReferenceHelper.findOutgoingReferences(currentPath, model);
+        for (ReferenceToObjectInstance ref : outgoingReferences)
         {
-            node.fields().forEachRemaining(entry ->
+            String toPath = ref.getPath();
+            if (!graph.vertices().contains(toPath))
             {
-                String childPath = currentPath + "/" + entry.getKey();
-                graph.insertVertex(childPath);
-                graph.insertEdge(currentPath, childPath, new EdgeIdentifier(currentPath, childPath, entry.getKey()));
-                JsonNode childNode = entry.getValue();
-                addOutgoingReferences(model, childNode, childPath, graph);
-            });
-        }
-        else if (node.isArray())
-        {
-            for (int i = 0; i < node.size(); i++)
-            {
-                String childPath = currentPath + "/" + i;
-                graph.insertVertex(childPath);
-                graph.insertEdge(currentPath, childPath, new EdgeIdentifier(currentPath, childPath, String.valueOf(i)));
-                JsonNode childNode = node.get(i);
-                addOutgoingReferences(model, childNode, childPath, graph);
+                graph.insertVertex(toPath);
             }
+            graph.insertEdge(currentPath, toPath, new EdgeIdentifier(currentPath, toPath, ref.getPath()));
         }
     }
     
@@ -59,8 +51,10 @@ public class NodeGraphCreator
         List<ReferenceToObjectInstance> incomingReferences = ReferenceHelper.getReferencesOfObject(model, path);
         for (ReferenceToObjectInstance ref : incomingReferences)
         {
-            String fromPath = ref.getPath();
-            if (!graph.vertices().contains(fromPath))
+            //the path is the parent object of that reference
+            String fromPath = ReferenceHelper.getParentObjectOfReference(model, ref.getPath());
+            
+            if (graph.vertices().stream().noneMatch(stringVertex -> stringVertex.element().equals(fromPath)))
             {
                 graph.insertVertex(fromPath);
             }
