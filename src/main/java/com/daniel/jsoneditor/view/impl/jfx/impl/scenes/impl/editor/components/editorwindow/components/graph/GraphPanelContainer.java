@@ -1,22 +1,19 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph;
 
-import com.brunomnsilva.smartgraph.graphview.SmartCircularSortedPlacementStrategy;
-import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Objects;
+
 import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
 import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.NavbarElement;
 import javafx.application.Platform;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Objects;
 
 
 public class GraphPanelContainer extends HBox implements NavbarElement
@@ -33,7 +30,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     
     private final SmartGraphProperties properties;
     
-    private final SmartPlacementStrategy initialPlacement = new SmartCircularSortedPlacementStrategy();
+    private final SmartPlacementStrategy initialPlacement;
     
     private final URI cssFile;
     
@@ -41,6 +38,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     
     private GraphPanelContainer(JsonEditorNavbar navbar, ReadableModel model, SmartGraphProperties properties, URI cssFile)
     {
+        this.initialPlacement = new JsonPlacementStrategy();
         this.cssFile = cssFile;
         this.navbar = navbar;
         this.properties = properties;
