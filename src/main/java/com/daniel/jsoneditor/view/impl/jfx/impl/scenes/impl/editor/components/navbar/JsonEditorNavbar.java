@@ -4,7 +4,7 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.NavBarSwitchButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph.NodeGraphPanel;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph.GraphPanelContainer;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
@@ -24,7 +24,7 @@ public class JsonEditorNavbar extends VBox
     
     private final EditorNavTree navTreeView;
     
-    private final NodeGraphPanel graphView;
+    private final GraphPanelContainer graphView;
     
     
     public JsonEditorNavbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager, Stage stage)
@@ -32,7 +32,7 @@ public class JsonEditorNavbar extends VBox
         this.model = model;
         buttonBar = makeButtonBar();
         navTreeView = new EditorNavTree(this, model, controller, editorWindowManager, stage);
-        graphView = NodeGraphPanel.create(this, model);
+        graphView = GraphPanelContainer.create(this, model);
         windowContainer = makeWindowContainer();
         getChildren().addAll(buttonBar, windowContainer);
         VBox.setVgrow(this, Priority.ALWAYS);

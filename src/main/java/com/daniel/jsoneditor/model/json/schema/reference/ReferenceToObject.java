@@ -10,11 +10,14 @@ public class ReferenceToObject
     
     private final String objectKey;
     
-    public ReferenceToObject(String path, String objectReferencingKey, String objectKey)
+    private final String remarks;
+    
+    public ReferenceToObject(String path, String objectReferencingKey, String objectKey, String remarks)
     {
         this.path = path;
         this.objectReferencingKey = objectReferencingKey;
         this.objectKey = objectKey;
+        this.remarks = remarks;
     }
     
     public String getObjectReferencingKey()
@@ -37,6 +40,20 @@ public class ReferenceToObject
         if (node != null)
         {
             JsonNode keyNode = node.at(objectKey);
+            if (keyNode != null && !keyNode.isMissingNode())
+            {
+                return keyNode.asText();
+            }
+        }
+        
+        return null;
+    }
+    
+    public String getRemarksOfInstance(JsonNode node)
+    {
+        if (node != null)
+        {
+            JsonNode keyNode = node.at(remarks);
             if (keyNode != null && !keyNode.isMissingNode())
             {
                 return keyNode.asText();

@@ -19,6 +19,8 @@ public class ReferenceToObjectInstance implements ReferencingInstance
     
     private final ReferenceToObject reference;
     
+    private final String remarks;
+    
     public ReferenceToObjectInstance(ReadableModel model, ReferenceToObject object, JsonNodeWithPath node)
     {
         this.path = node.getPath();
@@ -26,6 +28,7 @@ public class ReferenceToObjectInstance implements ReferencingInstance
         this.fancyName = node.makeNameIncludingPath(model);
         this.key = reference.getKeyOfInstance(node.getNode());
         this.referencingKey = node.getNode().at(reference.getObjectReferencingKey()).asText();
+        this.remarks = reference.getRemarksOfInstance(node.getNode());
     }
     
     @Override
@@ -49,6 +52,11 @@ public class ReferenceToObjectInstance implements ReferencingInstance
     public String getFancyName()
     {
         return fancyName;
+    }
+    
+    public String getRemarks()
+    {
+        return remarks;
     }
     
     public boolean refersToObject(ReferenceableObjectInstance objectInstance)
