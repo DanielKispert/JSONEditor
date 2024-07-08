@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
@@ -11,6 +12,12 @@ import javafx.util.Duration;
 
 public class TooltipHelper
 {
+    
+    public static Tooltip makeTooltipFromPath(ReadableModel model, String path)
+    {
+        JsonNode jsonNode = model.getNodeForPath(path).getNode();
+        return jsonNode == null ? null : makeTooltipFromJsonNode(jsonNode);
+    }
     
     public static Tooltip makeTooltipFromJsonNode(JsonNode jsonNode)
     {

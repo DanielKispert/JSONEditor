@@ -3,11 +3,13 @@ package com.daniel.jsoneditor.model.impl.graph;
 import com.brunomnsilva.smartgraph.graph.Digraph;
 import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
 import com.brunomnsilva.smartgraph.graph.Vertex;
+import com.brunomnsilva.smartgraph.graphview.SmartStylableNode;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.scene.control.Tooltip;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -37,12 +39,12 @@ public class NodeGraphCreator
         List<ReferenceToObjectInstance> outgoingReferences = ReferenceHelper.findOutgoingReferences(currentPath, model);
         for (ReferenceToObjectInstance ref : outgoingReferences)
         {
-            String toPath = ref.getPath();
-            if (!graph.vertices().contains(toPath))
+            String toPath = ReferenceHelper.resolveReference(model, ref);
+            if (graph.vertices().stream().noneMatch(stringVertex -> stringVertex.element().equals(toPath)))
             {
                 graph.insertVertex(toPath);
             }
-            graph.insertEdge(currentPath, toPath, new EdgeIdentifier(currentPath, toPath, ref.getPath()));
+            graph.insertEdge(currentPath, toPath, new EdgeIdentifier(currentPath, toPath, ref.getRemarks()));
         }
     }
     
@@ -58,7 +60,7 @@ public class NodeGraphCreator
             {
                 graph.insertVertex(fromPath);
             }
-            graph.insertEdge(fromPath, path, new EdgeIdentifier(fromPath, path, ref.getPath()));
+            graph.insertEdge(fromPath, path, new EdgeIdentifier(fromPath, path, ref.getRemarks()));
         }
     }
     

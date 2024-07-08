@@ -12,6 +12,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public class ReferenceHelper
 {
+    
+    public static String resolveReference(ReadableModel model, ReferenceToObjectInstance reference)
+    {
+        return resolveReference(model.getNodeForPath(reference.getPath()), model);
+    }
+    
     /**
      * @return the path of the ReferenceableObject that this node references, if it is a ReferenceToObject, otherwise null
      */
@@ -207,11 +213,14 @@ public class ReferenceHelper
                         JsonNode pathNode = refNode.get("path");
                         JsonNode objectReferencingKeyNode = refNode.get("objectReferencingKey");
                         JsonNode objectKeyNode = refNode.get("objectKey");
+                        JsonNode remarksNode = refNode.get("referenceRemarks");
                         if (pathNode != null && pathNode.isTextual() && objectKeyNode != null && objectKeyNode.isTextual()
-                                && objectReferencingKeyNode != null && objectReferencingKeyNode.isTextual())
+                                && objectReferencingKeyNode != null && objectReferencingKeyNode.isTextual() && remarksNode != null
+                                && remarksNode.isTextual())
                         {
                             referenceToObjects.add(
-                                    new ReferenceToObject(pathNode.asText(), objectReferencingKeyNode.asText(), objectKeyNode.asText()));
+                                    new ReferenceToObject(pathNode.asText(), objectReferencingKeyNode.asText(), objectKeyNode.asText(),
+                                            remarksNode.asText()));
                         }
                     }
                 }
