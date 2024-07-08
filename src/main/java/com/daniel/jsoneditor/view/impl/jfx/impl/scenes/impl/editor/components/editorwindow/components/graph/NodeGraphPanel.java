@@ -1,9 +1,12 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.List;
 
 import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
+import com.brunomnsilva.smartgraph.graphview.SmartGraphVertex;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
@@ -25,5 +28,10 @@ public class NodeGraphPanel extends SmartGraphPanel<String, EdgeIdentifier>
         this.setAutomaticLayout(true);
         setEdgeLabelProvider(EdgeIdentifier::getName);
         setVertexLabelProvider(s -> model.getNodeForPath(s).getDisplayName());
+    }
+    
+    public Collection<SmartGraphVertex<String>> getVertices()
+    {
+        return getSmartVertices();
     }
 }
