@@ -142,6 +142,51 @@ public class ReferenceHelper
         return getParentObjectOfReference(model, parentPath);
     }
     
+    /**
+     * @return all References of the node at the path or its direct children
+     */
+    public static List<ReferenceToObjectInstance> findOutgoingReferences(String path, ReadableModel model)
+    {
+        List<ReferenceToObjectInstance> outgoingReferences = new ArrayList<>();
+        
+        // Check if the node itself is a ReferenceToObject
+        ReferenceToObject referenceToObject = model.getReferenceToObject(path);
+        if (referenceToObject != null)
+        {
+            outgoingReferences.addAll(getReferenceInstancesAtPath(model, referenceToObject, path));
+        }
+        
+        JsonNodeWithPath nodeWithPath = model.getNodeForPath(path);
+        JsonNode node = nodeWithPath.getNode();
+        
+        if (node.isObject())
+        {
+            node.fields().forEachRemaining(entry -> {
+                // check if the child is a ReferenceToObjectInstance
+                String childPath = path + "/" + entry.getKey();
+                ReferenceToObject childReference = model.getReferenceToObject(childPath);
+                if (childReference != null)
+                {
+                    //check if the child is an array
+                    if (entry.getValue().isArray())
+                    {
+                        for (int index = 0; index < entry.getValue().size(); index++)
+                        {
+                            String itemPath = childPath + "/" + index;
+                            outgoingReferences.addAll(getReferenceInstancesAtPath(model, childReference, itemPath));
+                        }
+                    }
+                    else
+                    {
+                        outgoingReferences.addAll(getReferenceInstancesAtPath(model, childReference, childPath));
+                    }
+                }
+            });
+        }
+        
+        return outgoingReferences;
+    }
+    
     
     /**
      * returns the ReferenceToObject objects that are saved in our json schema
