@@ -34,7 +34,7 @@ public class NodeGraphCreator
         return graph;
     }
     
-    private static void addOutgoingReferences(ReadableModel model, String currentPath, Digraph<String, EdgeIdentifier> graph)
+    public static void addOutgoingReferences(ReadableModel model, String currentPath, Digraph<String, EdgeIdentifier> graph)
     {
         List<ReferenceToObjectInstance> outgoingReferences = ReferenceHelper.findOutgoingReferences(currentPath, model);
         for (ReferenceToObjectInstance ref : outgoingReferences)
