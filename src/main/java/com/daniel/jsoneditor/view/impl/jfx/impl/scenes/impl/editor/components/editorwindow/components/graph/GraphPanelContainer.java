@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Objects;
 
+import com.brunomnsilva.smartgraph.graphview.SmartCircularSortedPlacementStrategy;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -38,7 +39,8 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     
     private GraphPanelContainer(JsonEditorNavbar navbar, ReadableModel model, SmartGraphProperties properties, URI cssFile)
     {
-        this.initialPlacement = new JsonPlacementStrategy();
+        //this.initialPlacement = new JsonPlacementStrategy();
+        this.initialPlacement = new SmartCircularSortedPlacementStrategy();
         this.cssFile = cssFile;
         this.navbar = navbar;
         this.properties = properties;
