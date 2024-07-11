@@ -2,10 +2,15 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.brunomnsilva.smartgraph.graph.Digraph;
+import com.brunomnsilva.smartgraph.graph.Edge;
 import com.brunomnsilva.smartgraph.graph.Graph;
+import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphEdge;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
@@ -39,13 +44,39 @@ public class NodeGraphPanel extends SmartGraphPanel<String, EdgeIdentifier>
         setVertexDoubleClickAction(this::handleVertexDoubleClick);
     }
     
+    /**
+     * remove the vertex that the edge is pointing to, and all vertices that that vertex, but no other vertex that is not being deleted, is pointing to, recursively.
+     * @param
+     */
     private void handleEdgeDoubleClick(SmartGraphEdge<EdgeIdentifier, String> edge)
     {
-        Graph<String, EdgeIdentifier> graph = getModel();
-        //remove the edge and the vertex it points to
-        // the vertex to remove is the 2nd in the vertices list
-        graph.removeVertex(edge.getUnderlyingEdge().vertices()[1]);
+        Digraph<String, EdgeIdentifier> graph = (Digraph<String, EdgeIdentifier>) getModel();
+        Vertex<String> targetVertex = edge.getUnderlyingEdge().vertices()[1]; // The 2nd vertex in the edge is the "target" of the edge
+        removeVertexAndConnected(graph, targetVertex);
         update();
+    }
+    
+    private void removeVertexAndConnected(Digraph<String, EdgeIdentifier> graph, Vertex<String> vertexId)
+    {
+        Collection<Vertex<String>> verticesToRemove = new HashSet<>();
+        collectVerticesToRemove(graph, vertexId, verticesToRemove);
+        verticesToRemove.forEach(graph::removeVertex);
+    }
+    
+    private void collectVerticesToRemove(Digraph<String, EdgeIdentifier> graph, Vertex<String> startingVertex,
+            Collection<Vertex<String>> verticesToRemove)
+    {
+        for (Edge<EdgeIdentifier, String> outboundEdge : graph.outboundEdges(startingVertex))
+        {
+            // remove the vertex this edge points to if this is the only inbound edge this vertex had (= it would be orphaned by removing it)
+            Vertex<String> targetVertex = outboundEdge.vertices()[1];
+            if (graph.incidentEdges(targetVertex).size() == 1)
+            {
+                collectVerticesToRemove(graph, targetVertex, verticesToRemove);
+                verticesToRemove.add(targetVertex);
+            }
+            verticesToRemove.add(targetVertex);
+        }
     }
     
     private void handleVertexDoubleClick(SmartGraphVertex<String> vertex)
