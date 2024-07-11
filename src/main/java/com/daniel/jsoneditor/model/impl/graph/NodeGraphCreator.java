@@ -40,11 +40,17 @@ public class NodeGraphCreator
         for (ReferenceToObjectInstance ref : outgoingReferences)
         {
             String toPath = ReferenceHelper.resolveReference(model, ref);
-            if (graph.vertices().stream().noneMatch(stringVertex -> stringVertex.element().equals(toPath)))
+            // check if the edge exists already. If yes, we don't need to add it
+            EdgeIdentifier edgeToInsert = new EdgeIdentifier(currentPath, toPath, ref.getRemarks());
+            if (graph.edges().stream().noneMatch(edge -> edge.element().equals(edgeToInsert)))
             {
-                graph.insertVertex(toPath);
+                //no edge with this identifier exists
+                if (graph.vertices().stream().noneMatch(stringVertex -> stringVertex.element().equals(toPath)))
+                {
+                    graph.insertVertex(toPath);
+                }
+                graph.insertEdge(currentPath, toPath, edgeToInsert);
             }
-            graph.insertEdge(currentPath, toPath, new EdgeIdentifier(currentPath, toPath, ref.getRemarks()));
         }
     }
     
