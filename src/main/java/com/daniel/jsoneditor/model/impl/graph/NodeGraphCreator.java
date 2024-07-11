@@ -2,6 +2,8 @@ package com.daniel.jsoneditor.model.impl.graph;
 
 import com.brunomnsilva.smartgraph.graph.Digraph;
 import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
+import com.brunomnsilva.smartgraph.graph.InvalidEdgeException;
+import com.brunomnsilva.smartgraph.graph.InvalidVertexException;
 import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.brunomnsilva.smartgraph.graphview.SmartStylableNode;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -61,12 +63,16 @@ public class NodeGraphCreator
         {
             //the path is the parent object of that reference
             String fromPath = ReferenceHelper.getParentObjectOfReference(model, ref.getPath());
-            
-            if (graph.vertices().stream().noneMatch(stringVertex -> stringVertex.element().equals(fromPath)))
+            // check if the edge exists already. If yes, we don't need to add it
+            EdgeIdentifier edgeToInsert = new EdgeIdentifier(fromPath, path, ref.getRemarks());
+            if (graph.edges().stream().noneMatch(edge -> edge.element().equals(edgeToInsert)))
             {
-                graph.insertVertex(fromPath);
+                if (graph.vertices().stream().noneMatch(stringVertex -> stringVertex.element().equals(fromPath)))
+                {
+                    graph.insertVertex(fromPath);
+                }
+                graph.insertEdge(fromPath, path, edgeToInsert);
             }
-            graph.insertEdge(fromPath, path, new EdgeIdentifier(fromPath, path, ref.getRemarks()));
         }
     }
     
