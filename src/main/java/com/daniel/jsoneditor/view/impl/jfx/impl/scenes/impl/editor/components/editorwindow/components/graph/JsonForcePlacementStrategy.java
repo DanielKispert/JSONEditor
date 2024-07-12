@@ -10,6 +10,6 @@ public class JsonForcePlacementStrategy extends ForceDirectedSpringGravityLayout
 {
     public JsonForcePlacementStrategy()
     {
-        super(25, 1, 10, 0.8, 0.01);
+        super(50, 1.5, 1, 1, 0.05);
     }
 }
