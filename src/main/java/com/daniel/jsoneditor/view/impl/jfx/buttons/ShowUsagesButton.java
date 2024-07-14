@@ -57,7 +57,7 @@ public class ShowUsagesButton extends Button
             }
             else
             {
-                manager.selectFromNavbar(s);
+                manager.selectInFirstWindow(s);
             }
             
         });

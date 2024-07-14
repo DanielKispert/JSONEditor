@@ -39,8 +39,8 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     
     private GraphPanelContainer(JsonEditorNavbar navbar, ReadableModel model, SmartGraphProperties properties, URI cssFile)
     {
-        //this.initialPlacement = new JsonPlacementStrategy();
-        this.initialPlacement = new SmartCircularSortedPlacementStrategy();
+        this.initialPlacement = new JsonPlacementStrategy();
+        //this.initialPlacement = new SmartCircularSortedPlacementStrategy();
         this.cssFile = cssFile;
         this.navbar = navbar;
         this.properties = properties;

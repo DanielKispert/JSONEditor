@@ -10,7 +10,7 @@ public interface EditorWindowManager
     /**
      * a path gets selected from the navbar and has to be displayed in an editor window (we'll decide which one)
      */
-    void selectFromNavbar(String path);
+    void selectInFirstWindow(String path);
     
     void selectInNewWindow(String path);
     

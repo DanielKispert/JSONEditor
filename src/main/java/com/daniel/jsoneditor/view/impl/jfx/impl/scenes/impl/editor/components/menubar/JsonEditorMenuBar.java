@@ -61,7 +61,7 @@ public class JsonEditorMenuBar extends MenuBar
                 }
                 else
                 {
-                    manager.selectFromNavbar(s);
+                    manager.selectInFirstWindow(s);
                 }
                 
             });

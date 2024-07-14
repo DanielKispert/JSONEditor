@@ -53,7 +53,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     }
     
     @Override
-    public void selectFromNavbar(String path)
+    public void selectInFirstWindow(String path)
     {
         ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
         if (!windowsAsNodes.isEmpty())
