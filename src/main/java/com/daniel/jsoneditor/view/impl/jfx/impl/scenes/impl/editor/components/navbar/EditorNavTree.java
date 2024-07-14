@@ -284,7 +284,7 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
             String path = item.getValue().getPath();
             this.selectedPath = path;
             // the navbar just tells the editor view to open this node, nothing is sent to the model or controller yet
-            editorWindowManager.selectFromNavbar(path);
+            editorWindowManager.selectInFirstWindow(path);
             navbar.selectPath(path);
         }
     }

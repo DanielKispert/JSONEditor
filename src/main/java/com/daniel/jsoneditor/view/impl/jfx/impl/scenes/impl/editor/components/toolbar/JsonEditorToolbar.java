@@ -1,6 +1,5 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
 
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
@@ -51,7 +50,7 @@ public class JsonEditorToolbar extends ToolBar
                 }
                 else
                 {
-                    editorWindowManager.selectFromNavbar(s);
+                    editorWindowManager.selectInFirstWindow(s);
                 }
             });
         });
