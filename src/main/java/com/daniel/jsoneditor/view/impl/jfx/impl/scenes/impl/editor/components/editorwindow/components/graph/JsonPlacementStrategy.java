@@ -1,15 +1,17 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.brunomnsilva.smartgraph.graph.Digraph;
+import com.brunomnsilva.smartgraph.graph.Edge;
+import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphVertex;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
 import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
+import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
+import com.daniel.jsoneditor.model.impl.graph.NodeIdentifier;
 
 
 /**
@@ -18,41 +20,48 @@ import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
 public class JsonPlacementStrategy implements SmartPlacementStrategy
 {
     @Override
-    public <V, E> void place(double width, double height, SmartGraphPanel<V, E> smartGraphPanel) {
-        if (!(smartGraphPanel instanceof NodeGraphPanel)) {
+    public <V, E> void place(double width, double height, SmartGraphPanel<V, E> smartGraphPanel)
+    {
+        if (!(smartGraphPanel instanceof NodeGraphPanel))
+        {
             return;
         }
         
         NodeGraphPanel graphPanel = (NodeGraphPanel) smartGraphPanel;
-        Digraph<String, EdgeIdentifier> graph = (Digraph<String, EdgeIdentifier>) graphPanel.getModel();
-        List<SmartGraphVertex<String>> unplacedVertices = new ArrayList<>(graphPanel.getVertices());
+        NodeGraph graph = (NodeGraph) graphPanel.getModel();
+        List<SmartGraphVertex<NodeIdentifier>> unplacedVertices = new ArrayList<>(graphPanel.getVertices());
+        Map<Integer, Set<SmartGraphVertex<NodeIdentifier>>> layers = new HashMap<>();
         // we first figure out the nodes that have no incoming edges
-        List<SmartGraphVertex<String>> roots = new ArrayList<>();
-        for (SmartGraphVertex<String> vertex : unplacedVertices)
+        Set<SmartGraphVertex<NodeIdentifier>> roots = new HashSet<>();
+        for (SmartGraphVertex<NodeIdentifier> vertex : unplacedVertices)
         {
+            
             if (graph.incidentEdges(vertex.getUnderlyingVertex()).isEmpty())
             {
                 roots.add(vertex);
             }
         }
-        if (roots.isEmpty())
+        int currentLayerIndex = 0;
+        Set<SmartGraphVertex<NodeIdentifier>> currentLayer = roots;
+        while (!currentLayer.isEmpty())
         {
-            //TODO
+            layers.put(currentLayerIndex, currentLayer);
+            unplacedVertices.removeAll(currentLayer);
+            currentLayer = findVerticesOfNextLayer(currentLayer, graph, unplacedVertices);
+            currentLayerIndex++;
         }
-        // from every root, place the adjacent edges in the next layer
         
-        
-        Map<Integer, List<SmartGraphVertex<String>>> layers = assignLayers(unplacedVertices);
         
         double layerHeight = height / layers.size();
-        for (Map.Entry<Integer, List<SmartGraphVertex<String>>> entry : layers.entrySet())
+        for (Map.Entry<Integer, Set<SmartGraphVertex<NodeIdentifier>>> entry : layers.entrySet())
         {
             int layer = entry.getKey();
-            List<SmartGraphVertex<String>> layerVertices = entry.getValue();
+            Set<SmartGraphVertex<NodeIdentifier>> layerVertices = entry.getValue();
             double xSpacing = width / (layerVertices.size() + 1);
-            for (int i = 0; i < layerVertices.size(); i++)
+            List<SmartGraphVertex<NodeIdentifier>> layerVerticesList = new ArrayList<>(layerVertices);
+            for (int i = 0; i < layerVerticesList.size(); i++)
             {
-                SmartGraphVertex<String> vertex = layerVertices.get(i);
+                SmartGraphVertex<NodeIdentifier> vertex = layerVerticesList.get(i);
                 double x = (i + 1) * xSpacing;
                 double y = (layer + 0.5) * layerHeight;
                 vertex.setPosition(x, y);
@@ -60,11 +69,21 @@ public class JsonPlacementStrategy implements SmartPlacementStrategy
         }
     }
     
-    private Map<Integer, List<SmartGraphVertex<String>>> assignLayers(List<SmartGraphVertex<String>> vertices) {
-        // Implement layer assignment based on your graph's structure
-        // This is a placeholder and should be replaced with actual logic
-        Map<Integer, List<SmartGraphVertex<String>>> layers = new HashMap<>();
-        // Example logic to populate layers map
-        return layers;
+    private static Set<SmartGraphVertex<NodeIdentifier>> findVerticesOfNextLayer(Set<SmartGraphVertex<NodeIdentifier>> currentLayer, NodeGraph graph, List<SmartGraphVertex<NodeIdentifier>> unplacedVertices)
+    {
+        Set<SmartGraphVertex<NodeIdentifier>> nextLayer = new HashSet<>();
+        for (SmartGraphVertex<NodeIdentifier> vertex : currentLayer)
+        {
+            Collection<Edge<EdgeIdentifier, NodeIdentifier>> edges = graph.outboundEdges(vertex.getUnderlyingVertex());
+            for (Edge<EdgeIdentifier, NodeIdentifier> edge : edges)
+            {
+                NodeIdentifier targetVertexId = edge.vertices()[1].element();
+                // Find the SmartGraphVertex in unplacedVertices that matches the targetVertexId
+                unplacedVertices.stream()
+                        .filter(v -> v.getUnderlyingVertex().element().equals(targetVertexId))
+                        .findFirst().ifPresent(nextLayer::add);
+            }
+        }
+        return nextLayer;
     }
 }

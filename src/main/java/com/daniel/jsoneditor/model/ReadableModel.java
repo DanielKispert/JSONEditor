@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model;
 
 import com.brunomnsilva.smartgraph.graph.Digraph;
 import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
+import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
@@ -42,7 +43,7 @@ public interface ReadableModel extends ReadableState
     /**
      * @return a graph of the path and its direct incoming and outgoing references
      */
-    Digraph<String, EdgeIdentifier> getJsonAsGraph(String path);
+    NodeGraph getJsonAsGraph(String path);
     
     /**
      * @param path this points to the path of a json node inside our currently selected json. It can match an existing node, or it doesn't.
