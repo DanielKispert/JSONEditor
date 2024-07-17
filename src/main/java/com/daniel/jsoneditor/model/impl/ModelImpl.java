@@ -5,6 +5,7 @@ import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
 import com.brunomnsilva.smartgraph.graph.InvalidEdgeException;
 import com.brunomnsilva.smartgraph.graph.InvalidVertexException;
 import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
+import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraphCreator;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
@@ -443,7 +444,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public Digraph<String, EdgeIdentifier> getJsonAsGraph(String path)
+    public NodeGraph getJsonAsGraph(String path)
     {
         return NodeGraphCreator.createGraph(this, path);
     }
