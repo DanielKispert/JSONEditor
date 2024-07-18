@@ -30,7 +30,7 @@ public class JsonPlacementStrategy implements SmartPlacementStrategy
         NodeGraphPanel graphPanel = (NodeGraphPanel) smartGraphPanel;
         NodeGraph graph = (NodeGraph) graphPanel.getModel();
         List<SmartGraphVertex<NodeIdentifier>> unplacedVertices = new ArrayList<>(graphPanel.getVertices());
-        Map<Integer, Set<SmartGraphVertex<NodeIdentifier>>> layers = new HashMap<>();
+        List<Set<SmartGraphVertex<NodeIdentifier>>> layers = new ArrayList<>();
         // we first figure out the nodes that have no incoming edges
         Set<SmartGraphVertex<NodeIdentifier>> roots = new HashSet<>();
         for (SmartGraphVertex<NodeIdentifier> vertex : unplacedVertices)
@@ -41,29 +41,44 @@ public class JsonPlacementStrategy implements SmartPlacementStrategy
                 roots.add(vertex);
             }
         }
-        int currentLayerIndex = 0;
         Set<SmartGraphVertex<NodeIdentifier>> currentLayer = roots;
         while (!currentLayer.isEmpty())
         {
-            layers.put(currentLayerIndex, currentLayer);
+            layers.add(currentLayer);
             unplacedVertices.removeAll(currentLayer);
             currentLayer = findVerticesOfNextLayer(currentLayer, graph, unplacedVertices);
-            currentLayerIndex++;
+        }
+        //put the unplaced vertices in the last layer
+        // TODO do something better, handle them and circles properly once it comes up
+        layers.add(new HashSet<>(unplacedVertices));
+        
+        //set the layer information for every NodeIdentifier. We can only do this after setting
+        int layerIndex = 0;
+        int layersCount = layers.size();
+        for (Set<SmartGraphVertex<NodeIdentifier>> layer : layers)
+        {
+            // the layers are ordered from top to bottom, with 0 and 1 assigned. For example, with 3 layers, the layers are 0.25, 0.5 and
+            // 0.75. For four layers, it is 0.2, 0.4, 0.6 and 0.8
+            double layerPercentage = (layerIndex + 1) / (double) (layersCount + 1);
+            for (SmartGraphVertex<NodeIdentifier> vertex : layer)
+            {
+                vertex.getUnderlyingVertex().element().setLayer(layerPercentage);
+            }
+            layerIndex++;
         }
         
-        
-        double layerHeight = height / layers.size();
-        for (Map.Entry<Integer, Set<SmartGraphVertex<NodeIdentifier>>> entry : layers.entrySet())
+        // Calculate the x and y positions for each vertex based on its layer and the total width
+        for (Set<SmartGraphVertex<NodeIdentifier>> layer : layers)
         {
-            int layer = entry.getKey();
-            Set<SmartGraphVertex<NodeIdentifier>> layerVertices = entry.getValue();
-            double xSpacing = width / (layerVertices.size() + 1);
-            List<SmartGraphVertex<NodeIdentifier>> layerVerticesList = new ArrayList<>(layerVertices);
+            double xSpacing = width / (layer.size() + 1);
+            List<SmartGraphVertex<NodeIdentifier>> layerVerticesList = new ArrayList<>(layer);
             for (int i = 0; i < layerVerticesList.size(); i++)
             {
                 SmartGraphVertex<NodeIdentifier> vertex = layerVerticesList.get(i);
                 double x = (i + 1) * xSpacing;
-                double y = (layer + 0.5) * layerHeight;
+                // Use the layer value from NodeIdentifier to calculate the y position
+                double layerPercentage = vertex.getUnderlyingVertex().element().getLayer();
+                double y = height * layerPercentage;
                 vertex.setPosition(x, y);
             }
         }

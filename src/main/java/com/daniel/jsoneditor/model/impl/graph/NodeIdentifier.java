@@ -11,6 +11,7 @@ public class NodeIdentifier
     public NodeIdentifier(String path)
     {
         this.path = path;
+        this.layer = 0.5;
     }
     
     public boolean isOutgoingReferencesAdded()
