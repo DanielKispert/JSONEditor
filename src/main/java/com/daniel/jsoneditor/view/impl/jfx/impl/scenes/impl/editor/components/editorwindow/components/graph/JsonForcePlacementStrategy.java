@@ -1,50 +1,133 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph;
 
-import com.brunomnsilva.smartgraph.graphview.ForceDirectedSpringGravityLayoutStrategy;
-import com.brunomnsilva.smartgraph.graphview.ForceDirectedSpringSystemLayoutStrategy;
+import java.util.Collection;
+
+import com.brunomnsilva.smartgraph.graphview.ForceDirectedLayoutStrategy;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphVertexNode;
 import com.daniel.jsoneditor.model.impl.graph.NodeIdentifier;
 import javafx.geometry.Point2D;
-
-import java.util.Collection;
 
 
 /**
  * strategy for dragging around nodes
  */
-public class JsonForcePlacementStrategy extends ForceDirectedSpringSystemLayoutStrategy<NodeIdentifier>
+public class JsonForcePlacementStrategy extends ForceDirectedLayoutStrategy<NodeIdentifier>
 {
-    private final double gravity;
+    
+    private double repulsiveForce;
+    
+    private double attractionForce;
+    
+    private double attractionScale;
+    
+    private final double acceleration;
+    
+    /* just a scaling factor so all parameters are, at most, two-digit numbers. */
+    private static final double A_THOUSAND = 1000;
+    
+    private final double horizontalGravity;
+    
+    private final double verticalGravity;
     
     public JsonForcePlacementStrategy()
     {
-        super(50, 1.0, 1, 1);
-        this.gravity = 0.05;
+        this.repulsiveForce = 50; //default 25
+        this.attractionForce = 1; //default 3
+        this.attractionScale = 10; //default 10
+        this.acceleration = 1; //default 0.8
+        this.horizontalGravity = 0.001;
+        this.verticalGravity = 0.1;
     }
     
     @Override
     public void computeForces(Collection<SmartGraphVertexNode<NodeIdentifier>> nodes, double panelWidth, double panelHeight)
     {
-        // Attractive and repulsive forces
-        for (SmartGraphVertexNode<NodeIdentifier> v : nodes) {
-            for (SmartGraphVertexNode<NodeIdentifier> w : nodes) {
-                if(v == w) continue;
+        //calculate attraction and repulsion based on panel size and amount of nodes
+        adjustParameters(nodes.size(), panelWidth, panelHeight);
+        
+        for (SmartGraphVertexNode<NodeIdentifier> v : nodes)
+        {
+            for (SmartGraphVertexNode<NodeIdentifier> w : nodes)
+            {
+                if (v == w)
+                {
+                    continue;
+                }
                 
                 Point2D force = computeForceBetween(v, w, panelWidth, panelHeight);
                 v.addForceVector(force.getX(), force.getY());
             }
         }
         
-        // Gravitational pull towards the center for all nodes
+        // Gravitational pull towards the horizontal center for all nodes
         double centerX = panelWidth / 2;
-        double centerY = panelHeight / 2;
         
-        for (SmartGraphVertexNode<NodeIdentifier> v : nodes) {
+        for (SmartGraphVertexNode<NodeIdentifier> v : nodes)
+        {
+            // every node has a different vertical center, depending on the layer
+            double centerY = panelHeight * v.getUnderlyingVertex().element().getLayer();
             Point2D curPosition = v.getUpdatedPosition();
-            Point2D forceCenter = new Point2D(centerX - curPosition.getX(), centerY - curPosition.getY())
-                                          .multiply(gravity);
-            
+            double xDifference = centerX - curPosition.getX();
+            double yDifference = centerY - curPosition.getY();
+            Point2D forceCenter = new Point2D(xDifference * horizontalGravity, yDifference * verticalGravity);
             v.addForceVector(forceCenter.getX(), forceCenter.getY());
         }
+    }
+    
+    public void adjustParameters(int numberOfNodes, double panelWidth, double panelHeight)
+    {
+        
+        final double maxPixelsPerNode = 200 * 200;
+        final double minPixelsPerNode = 50 * 50;
+        
+        double pixelsPerNode = (panelWidth * panelHeight) / numberOfNodes;
+        //wrap pixelsPerNode between maxPixelsPerNode and minPixelsPerNode
+        pixelsPerNode = Math.min(maxPixelsPerNode, Math.max(minPixelsPerNode, pixelsPerNode));
+        
+        // Define the bounds for the repulsive force
+        final double lowerBound = 5;
+        final double upperBound = 100;
+        
+        double densityFactor = (maxPixelsPerNode - pixelsPerNode) / (maxPixelsPerNode - minPixelsPerNode);
+        
+        // Interpolate the repulsive force based on the density factor
+        this.repulsiveForce = lowerBound + (1 - densityFactor) * (upperBound - lowerBound);
+    }
+    
+    @Override
+    protected Point2D computeForceBetween(SmartGraphVertexNode<NodeIdentifier> v, SmartGraphVertexNode<NodeIdentifier> w, double panelWidth,
+            double panelHeight)
+    {
+        
+        Point2D vPosition = v.getUpdatedPosition();
+        Point2D wPosition = w.getUpdatedPosition();
+        double distance = vPosition.distance(wPosition) - (v.getRadius() + w.getRadius());
+        Point2D forceDirection = wPosition.subtract(vPosition).normalize();
+        
+        if (distance < 1)
+        {
+            distance = 1;
+        }
+        
+        // attractive force
+        Point2D attraction;
+        if (v.isAdjacentTo(w))
+        {
+            double attraction_factor = attractionForce * Math.log(distance / attractionScale);
+            attraction = forceDirection.multiply(attraction_factor);
+        }
+        else
+        {
+            attraction = new Point2D(0, 0);
+        }
+        
+        // repelling force
+        double repulsive_factor = repulsiveForce * A_THOUSAND / (distance * distance);
+        Point2D repulsion = forceDirection.multiply(-repulsive_factor);
+        
+        // combine forces
+        Point2D totalForce = new Point2D(attraction.getX() + repulsion.getX(), attraction.getY() + repulsion.getY());
+        
+        return totalForce.multiply(acceleration);
     }
 }

@@ -51,7 +51,7 @@ public class NodeGraphCreator
             if (graph.edges().stream().noneMatch(edge -> edge.element().equals(edgeToInsert)))
             {
                 //no edge with this identifier exists
-                if (graph.vertices().stream().noneMatch(stringVertex -> stringVertex.element().equals(toPath)))
+                if (graph.vertices().stream().noneMatch(stringVertex -> stringVertex.element().getPath().equals(toPath)))
                 {
                     graph.insertVertex(toPath);
                 }
