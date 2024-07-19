@@ -36,14 +36,14 @@ public class JsonForcePlacementStrategy extends ForceDirectedLayoutStrategy<Node
         this.attractionScale = 10; //default 10
         this.acceleration = 1; //default 0.8
         this.horizontalGravity = 0.001;
-        this.verticalGravity = 0.1;
+        this.verticalGravity = 0.05;
     }
     
     @Override
     public void computeForces(Collection<SmartGraphVertexNode<NodeIdentifier>> nodes, double panelWidth, double panelHeight)
     {
         //calculate attraction and repulsion based on panel size and amount of nodes
-        adjustParameters(nodes.size(), panelWidth, panelHeight);
+        adjustParameters(getSizeOfLargestLayer(nodes), panelWidth);
         
         for (SmartGraphVertexNode<NodeIdentifier> v : nodes)
         {
@@ -74,13 +74,23 @@ public class JsonForcePlacementStrategy extends ForceDirectedLayoutStrategy<Node
         }
     }
     
-    public void adjustParameters(int numberOfNodes, double panelWidth, double panelHeight)
+    private int getSizeOfLargestLayer(Collection<SmartGraphVertexNode<NodeIdentifier>> nodes)
+    {
+        int largestLayer = 0;
+        for (SmartGraphVertexNode<NodeIdentifier> node : nodes)
+        {
+            largestLayer = Math.max(largestLayer, (int) (node.getUnderlyingVertex().element().getLayer() * 100));
+        }
+        return largestLayer;
+    }
+    
+    public void adjustParameters(int sizeOfLargestLayer, double panelWidth)
     {
         
-        final double maxPixelsPerNode = 200 * 200;
-        final double minPixelsPerNode = 50 * 50;
+        final double maxPixelsPerNode = 200;
+        final double minPixelsPerNode = NodeGraphPanel.MIN_PIXELS_PER_NODE;
         
-        double pixelsPerNode = (panelWidth * panelHeight) / numberOfNodes;
+        double pixelsPerNode = panelWidth  / sizeOfLargestLayer;
         //wrap pixelsPerNode between maxPixelsPerNode and minPixelsPerNode
         pixelsPerNode = Math.min(maxPixelsPerNode, Math.max(minPixelsPerNode, pixelsPerNode));
         

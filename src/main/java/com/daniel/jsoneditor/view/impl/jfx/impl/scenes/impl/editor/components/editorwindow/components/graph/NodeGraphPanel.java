@@ -23,6 +23,11 @@ import javafx.scene.layout.VBox;
 
 public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifier>
 {
+    
+    public static final int MIN_PIXELS_PER_NODE = 50;
+    
+    public static final int MAX_NAME_LENGTH = 30;
+    
     private final ReadableModel model;
     
     public NodeGraphPanel(ReadableModel model, String path, SmartGraphProperties properties,
@@ -35,7 +40,13 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         VBox.setVgrow(this, Priority.ALWAYS);
         this.setAutomaticLayout(true);
         setEdgeLabelProvider(EdgeIdentifier::getName);
-        setVertexLabelProvider(s -> model.getNodeForPath(s.getPath()).getDisplayName());
+        setVertexLabelProvider(s ->
+        {
+            String unshortenedName = model.getNodeForPath(s.getPath()).getDisplayName();
+            int length = unshortenedName.length();
+            //the shortened name is the last X-3 characters of the name, with an ellipsis in front
+            return length > (MAX_NAME_LENGTH - 3) ? "..." + unshortenedName.substring(length - (MAX_NAME_LENGTH - 3)) : unshortenedName;
+        });
         setAutomaticLayoutStrategy(new JsonForcePlacementStrategy());
         setEdgeDoubleClickAction(this::handleEdgeDoubleClick);
         setVertexDoubleClickAction(this::handleVertexDoubleClick);

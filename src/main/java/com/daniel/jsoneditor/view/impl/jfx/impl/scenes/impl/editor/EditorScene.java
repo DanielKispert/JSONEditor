@@ -42,8 +42,8 @@ public class EditorScene extends SceneHandlerImpl
         Scene scene = new Scene(root, startingSceneWidth, startingSceneHeight);
         scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
         navbar = new JsonEditorNavbar(model, controller, editorWindowManager, stage);
-        VBox bars = new VBox(new JsonEditorMenuBar(model, controller, editorWindowManager), new JsonEditorToolbar(model, controller,
-                editorWindowManager));
+        VBox bars = new VBox(new JsonEditorMenuBar(model, controller, editorWindowManager, navbar), new JsonEditorToolbar(model, controller,
+                editorWindowManager, navbar));
         root.setTop(bars);
         root.setLeft(makeSplitPane(scene));
         return scene;
