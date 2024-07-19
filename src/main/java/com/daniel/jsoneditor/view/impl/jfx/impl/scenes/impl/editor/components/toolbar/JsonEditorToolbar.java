@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
 
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
 import com.daniel.jsoneditor.controller.Controller;
@@ -22,11 +23,14 @@ public class JsonEditorToolbar extends ToolBar
     
     private final EditorWindowManager editorWindowManager;
     
-    public JsonEditorToolbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager)
+    private final JsonEditorNavbar navbar;
+    
+    public JsonEditorToolbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager, JsonEditorNavbar navbar)
     {
         this.controller = controller;
         this.model = model;
         this.editorWindowManager = editorWindowManager;
+        this.navbar = navbar;
         
         getItems().addAll(makeSearchButtons());
     }
@@ -44,6 +48,7 @@ public class JsonEditorToolbar extends ToolBar
             FindDialog dialog = new FindDialog(model.getInstancesOfReferenceableObjectAtPath(buttonSetting.getTarget()));
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(s -> {
+                navbar.selectPath(s);
                 if (editorWindowManager.canAnotherWindowBeAdded())
                 {
                     editorWindowManager.selectInNewWindow(s);

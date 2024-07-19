@@ -84,12 +84,16 @@ public class JsonEditorNavbar extends VBox
     
     public void showNavTreeView()
     {
+        navTreeView.setVisible(true);
         navTreeView.toFront();
+        graphView.setVisible(false);
     }
     
     public void showGraphView()
     {
+        graphView.setVisible(true);
         graphView.toFront();
+        navTreeView.setVisible(false);
     }
     
 }

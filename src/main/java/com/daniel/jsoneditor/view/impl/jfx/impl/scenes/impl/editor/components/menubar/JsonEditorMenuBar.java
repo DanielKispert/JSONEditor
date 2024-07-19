@@ -8,6 +8,7 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.AboutDialog;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.SettingsDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -18,7 +19,7 @@ import javafx.scene.input.KeyCombination;
 
 public class JsonEditorMenuBar extends MenuBar
 {
-    public JsonEditorMenuBar(ReadableModel model, Controller controller, EditorWindowManager manager)
+    public JsonEditorMenuBar(ReadableModel model, Controller controller, EditorWindowManager manager, JsonEditorNavbar navbar)
     {
         super();
         setUseSystemMenuBar(true);
@@ -38,7 +39,7 @@ public class JsonEditorMenuBar extends MenuBar
         fileMenu.getItems().addAll(openItem, saveItem, refreshItem, settingsItem);
         
         Menu inspectMenu = new Menu("Inspect");
-        MenuItem findItem = makeFindAnythingItem(model, manager);
+        MenuItem findItem = makeFindAnythingItem(model, manager, navbar);
         inspectMenu.getItems().add(findItem);
         
         Menu helpMenu = new Menu("Help");
@@ -48,13 +49,14 @@ public class JsonEditorMenuBar extends MenuBar
         getMenus().addAll(fileMenu, inspectMenu, helpMenu);
     }
     
-    private static MenuItem makeFindAnythingItem(ReadableModel model, EditorWindowManager manager)
+    private static MenuItem makeFindAnythingItem(ReadableModel model, EditorWindowManager manager, JsonEditorNavbar navbar)
     {
         MenuItem findItem = new MenuItem("Find anything");
         findItem.setOnAction(event -> {
             FindDialog dialog = new FindDialog(model.getReferenceableObjectInstances());
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(s -> {
+                navbar.selectPath(s);
                 if (manager.canAnotherWindowBeAdded())
                 {
                     manager.selectInNewWindow(s);
