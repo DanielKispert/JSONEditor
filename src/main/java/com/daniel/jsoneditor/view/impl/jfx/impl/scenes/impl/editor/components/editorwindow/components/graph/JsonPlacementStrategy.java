@@ -48,9 +48,13 @@ public class JsonPlacementStrategy implements SmartPlacementStrategy
             unplacedVertices.removeAll(currentLayer);
             currentLayer = findVerticesOfNextLayer(currentLayer, graph, unplacedVertices);
         }
-        //put the unplaced vertices in the last layer
-        // TODO do something better, handle them and circles properly once it comes up
-        layers.add(new HashSet<>(unplacedVertices));
+        if (!unplacedVertices.isEmpty())
+        {
+            //put the unplaced vertices in the last layer
+            // TODO do something better, handle them and circles properly once it comes up
+            layers.add(new HashSet<>(unplacedVertices));
+            
+        }
         
         //set the layer information for every NodeIdentifier. We can only do this after setting
         int layerIndex = 0;

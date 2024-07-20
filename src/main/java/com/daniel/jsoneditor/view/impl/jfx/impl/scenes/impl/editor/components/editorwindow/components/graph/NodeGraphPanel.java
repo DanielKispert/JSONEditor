@@ -6,16 +6,15 @@ import java.util.HashSet;
 
 import com.brunomnsilva.smartgraph.graph.Edge;
 import com.brunomnsilva.smartgraph.graph.Vertex;
-import com.brunomnsilva.smartgraph.graphview.SmartGraphEdge;
-import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
-import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
-import com.brunomnsilva.smartgraph.graphview.SmartGraphVertex;
-import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
+import com.brunomnsilva.smartgraph.graphview.*;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraphCreator;
 import com.daniel.jsoneditor.model.impl.graph.NodeIdentifier;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
+import javafx.application.Platform;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -28,6 +27,8 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     public static final int MAX_NAME_LENGTH = 30;
     
+    private final SmartPlacementStrategy placementStrategy;
+    
     private final ReadableModel model;
     
     public NodeGraphPanel(ReadableModel model, String path, SmartGraphProperties properties,
@@ -35,6 +36,7 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
             URI cssFile)
     {
         super(model.getJsonAsGraph(path), properties, placementStrategy, cssFile);
+        this.placementStrategy = placementStrategy;
         this.model = model;
         HBox.setHgrow(this, Priority.ALWAYS);
         VBox.setVgrow(this, Priority.ALWAYS);
@@ -50,6 +52,17 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         setAutomaticLayoutStrategy(new JsonForcePlacementStrategy());
         setEdgeDoubleClickAction(this::handleEdgeDoubleClick);
         setVertexDoubleClickAction(this::handleVertexDoubleClick);
+    }
+    
+    public void updateTooltipsOfVertices()
+    {
+        this.getVertices().forEach(vertex ->
+        {
+            Tooltip tooltip = TooltipHelper.makeTooltipFromPath(model, vertex.getUnderlyingVertex().element().getPath());
+            SmartStylableNode node = this.getStylableVertex(vertex.getUnderlyingVertex());
+            SmartGraphVertexNode<NodeIdentifier> v = (SmartGraphVertexNode<NodeIdentifier>) node;
+            Tooltip.install(v, tooltip);
+        });
     }
     
     /**
@@ -85,6 +98,21 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
             }
             verticesToRemove.add(targetVertex);
         }
+    }
+    
+    /**
+     * overridden update method also updates the vertex positions and tooltips. Otherwise changes after the panel generation (like expanding vertexes) would not get a layer or tooltips
+     */
+    @Override
+    public void update()
+    {
+        super.update();
+        Platform.runLater(() ->
+        {
+            placementStrategy.place(widthProperty().doubleValue(), heightProperty().doubleValue(), NodeGraphPanel.this);
+            updateTooltipsOfVertices();
+        });
+        
     }
     
     private void handleVertexDoubleClick(SmartGraphVertex<NodeIdentifier> vertex)

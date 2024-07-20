@@ -29,6 +29,8 @@ out
 
 testfiles
 
+directLibs/smartgraph-2.0.0-javadoc
+
 jsoneditor.properties
 
 .gradle

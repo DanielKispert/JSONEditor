@@ -33,4 +33,10 @@ public class NodeIdentifier
     {
         this.layer = layer;
     }
+    
+    @Override
+    public String toString()
+    {
+        return "NodeIdentifier{path='" + path + '\'' +'}';
+    }
 }

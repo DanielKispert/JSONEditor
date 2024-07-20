@@ -1,20 +1,10 @@
 package com.daniel.jsoneditor.model.impl.graph;
 
-import com.brunomnsilva.smartgraph.graph.Digraph;
-import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
-import com.brunomnsilva.smartgraph.graph.InvalidEdgeException;
-import com.brunomnsilva.smartgraph.graph.InvalidVertexException;
-import com.brunomnsilva.smartgraph.graph.Vertex;
-import com.brunomnsilva.smartgraph.graphview.SmartStylableNode;
 import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
-import com.fasterxml.jackson.databind.JsonNode;
-import javafx.scene.control.Tooltip;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 
 public class NodeGraphCreator
