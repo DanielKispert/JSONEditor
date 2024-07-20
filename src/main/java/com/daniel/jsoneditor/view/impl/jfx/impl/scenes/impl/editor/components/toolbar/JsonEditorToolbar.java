@@ -31,7 +31,6 @@ public class JsonEditorToolbar extends ToolBar
         this.model = model;
         this.editorWindowManager = editorWindowManager;
         this.navbar = navbar;
-        
         getItems().addAll(makeSearchButtons());
     }
     
