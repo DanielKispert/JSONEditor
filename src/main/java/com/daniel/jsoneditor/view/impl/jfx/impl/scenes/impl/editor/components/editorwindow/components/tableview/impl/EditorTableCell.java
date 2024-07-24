@@ -10,6 +10,7 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstan
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -35,6 +36,14 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         this.model = model;
         this.holdsKeyOfReferenceableObject = holdsObjectKey;
         setMaxWidth(Double.MAX_VALUE);
+        Platform.runLater(() -> {
+            TableColumn<JsonNodeWithPath, String> column = getTableColumn();
+            if (column != null)
+            {
+                ((EditorTableColumn) column).updatePrefWidth();
+            }
+        });
+        
     }
     
     protected final void setGraphicWithResizing(Node node)
@@ -101,6 +110,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             
         }
         manager.updateNavbarRepresentation(item.getPath());
+        column.updatePrefWidth();
     }
     
     
