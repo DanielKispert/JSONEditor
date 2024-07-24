@@ -7,6 +7,8 @@ public interface EditorWindowManager
 {
     SplitPane getEditorWindowContainer();
     
+    void select(String path);
+    
     /**
      * a path gets selected from the navbar and has to be displayed in an editor window (we'll decide which one)
      */

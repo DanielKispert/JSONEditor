@@ -17,7 +17,7 @@ import javafx.scene.layout.VBox;
 import java.util.ArrayList;
 import java.util.List;
 
-// manages the positions of editor windows etc. Right now only 1 is supported so nonfunctional
+// manages the positions of editor windows etc
 public class EditorWindowManagerImpl implements EditorWindowManager
 {
     private static final int MAX_WINDOWS = 5;
@@ -36,6 +36,13 @@ public class EditorWindowManagerImpl implements EditorWindowManager
         this.model = model;
         this.controller = controller;
         editorWindowContainer = new AutoAdjustingSplitPane();
+    }
+    
+    @Override
+    public void select(String path)
+    {
+        int openWindows = editorWindowContainer.getItems().size();
+    
     }
     
     private JsonEditorEditorWindow addWindow()
