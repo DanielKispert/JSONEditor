@@ -278,7 +278,7 @@ public class EditorTableViewImpl extends EditorTableView
     private Button makeFollowReferenceButton(String path)
     {
         Button followReferenceButton = new Button("Follow Reference");
-        followReferenceButton.setOnAction(event -> manager.selectInNewWindow(path));
+        followReferenceButton.setOnAction(event -> manager.openInNewWindowIfPossible(path));
         followReferenceButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
         followReferenceButton.setMaxHeight(Double.MAX_VALUE);
         return followReferenceButton;
@@ -288,7 +288,7 @@ public class EditorTableViewImpl extends EditorTableView
     {
         Button openArrayElementButton = new Button();
         ButtonHelper.setButtonImage(openArrayElementButton, "/icons/material/darkmode/outline_open_in_new_white_24dp.png");
-        openArrayElementButton.setOnAction(event -> manager.selectInNewWindow(path));
+        openArrayElementButton.setOnAction(event -> manager.openInNewWindowIfPossible(path));
         openArrayElementButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
         openArrayElementButton.setMaxHeight(Double.MAX_VALUE);
         return openArrayElementButton;

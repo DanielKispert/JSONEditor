@@ -48,14 +48,7 @@ public class JsonEditorToolbar extends ToolBar
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(s -> {
                 navbar.selectPath(s);
-                if (editorWindowManager.canAnotherWindowBeAdded())
-                {
-                    editorWindowManager.selectInNewWindow(s);
-                }
-                else
-                {
-                    editorWindowManager.selectInFirstWindow(s);
-                }
+                editorWindowManager.openPath(s);
             });
         });
         return button;

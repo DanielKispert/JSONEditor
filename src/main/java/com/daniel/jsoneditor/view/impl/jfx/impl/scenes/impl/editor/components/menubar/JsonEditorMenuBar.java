@@ -57,15 +57,7 @@ public class JsonEditorMenuBar extends MenuBar
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(s -> {
                 navbar.selectPath(s);
-                if (manager.canAnotherWindowBeAdded())
-                {
-                    manager.selectInNewWindow(s);
-                }
-                else
-                {
-                    manager.selectInFirstWindow(s);
-                }
-                
+                manager.openPath(s);
             });
         });
         findItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN));
