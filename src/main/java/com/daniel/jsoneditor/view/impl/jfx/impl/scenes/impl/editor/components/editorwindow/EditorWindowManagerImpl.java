@@ -9,13 +9,6 @@ import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.SplitPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
-
-import java.util.ArrayList;
-import java.util.List;
 
 // manages the positions of editor windows etc
 public class EditorWindowManagerImpl implements EditorWindowManager
@@ -39,10 +32,40 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     }
     
     @Override
-    public void select(String path)
+    public void openPath(String path)
     {
-        int openWindows = editorWindowContainer.getItems().size();
-    
+        ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
+        if (!windowsAsNodes.isEmpty())
+        {
+            boolean alreadyOpenInWindow = false;
+            for (Node windowNode : windowsAsNodes)
+            {
+                if (windowNode instanceof JsonEditorEditorWindow)
+                {
+                    JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+                    if (path.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(path))
+                    {
+                        alreadyOpenInWindow = true;
+                        window.requestFocus();
+                        break;
+                    }
+                }
+            }
+            if (!alreadyOpenInWindow)
+            {
+                Node windowAsNode = windowsAsNodes.get(0);
+                if (windowAsNode instanceof JsonEditorEditorWindow)
+                {
+                    JsonEditorEditorWindow firstWindow = (JsonEditorEditorWindow) windowAsNode;
+                    firstWindow.setSelectedPath(path);
+                }
+            }
+        }
+        else
+        {
+            // if no window exists, we create a new one and open it in there
+            openInNewWindowIfPossible(path);
+        }
     }
     
     private JsonEditorEditorWindow addWindow()
@@ -60,31 +83,15 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     }
     
     @Override
-    public void selectInFirstWindow(String path)
-    {
-        ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
-        if (!windowsAsNodes.isEmpty())
-        {
-            Node firstWindowAsNode = windowsAsNodes.get(0);
-            if (firstWindowAsNode instanceof JsonEditorEditorWindow)
-            {
-                JsonEditorEditorWindow firstWindow = (JsonEditorEditorWindow) firstWindowAsNode;
-                firstWindow.setSelectedPath(path);
-            }
-        }
-        else
-        {
-            // if no window exists, we create a new one and open it in there
-            selectInNewWindow(path);
-        }
-    }
-    
-    @Override
-    public void selectInNewWindow(String path)
+    public void openInNewWindowIfPossible(String path)
     {
         if (canAnotherWindowBeAdded())
         {
             addWindow().setSelectedPath(path);
+        }
+        else
+        {
+            openPath(path);
         }
     }
     
@@ -110,7 +117,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
                 }
             }
         }
-        // if that was not successful, we open it in another window
+        // if that was not successful, we open the array in another window
         if (!atLeastOneArrayInWindow && canAnotherWindowBeAdded())
         {
             JsonEditorEditorWindow newWindow = addWindow();

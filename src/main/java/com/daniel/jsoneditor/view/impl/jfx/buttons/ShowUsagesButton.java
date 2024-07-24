@@ -50,6 +50,6 @@ public class ShowUsagesButton extends Button
         }
         ShowUsagesDialog dialog = new ShowUsagesDialog(references, selection);
         Optional<String> result = dialog.showAndWait(); //the result is the path of the node to open
-        result.ifPresent(manager::select);
+        result.ifPresent(manager::openPath);
     }
 }
