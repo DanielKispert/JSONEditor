@@ -15,8 +15,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
 
 
 public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
@@ -64,6 +65,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         setText(this.columnName);
         this.propertyName = propertyName;
         this.isRequired = isRequired;
+        updatePrefWidth();
         
         // every column holds one property of the array's items
         setCellValueFactory(data -> {
@@ -136,6 +138,30 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
                 }
             }
         };
+    }
+    
+    public void updatePrefWidth()
+    {
+        double maxWidth = columnName.length() * 7; //estimation for the title length in pixels.
+        TableView<JsonNodeWithPath> tableView = this.getTableView();
+        if (tableView == null)
+        {
+            return;
+        }
+        for (JsonNodeWithPath item : tableView.getItems())
+        {
+            String cellValue = this.getCellData(item);
+            if (cellValue != null)
+            {
+                Text text = new Text(cellValue);
+                double width = text.getLayoutBounds().getWidth() + 50; //padding for typing and checkbox buttons
+                if (width > maxWidth)
+                {
+                    maxWidth = width;
+                }
+            }
+        }
+        this.setPrefWidth(maxWidth);
     }
     
     private Button makeOpenButton(String pathToOpen)
