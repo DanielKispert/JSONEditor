@@ -1,6 +1,8 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.brunomnsilva.smartgraph.graphview.ForceDirectedLayoutStrategy;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphVertexNode;
@@ -34,8 +36,8 @@ public class JsonForcePlacementStrategy extends ForceDirectedLayoutStrategy<Node
         this.repulsiveForce = 50; //default 25
         this.attractionForce = 0.1; //default 3
         this.attractionScale = 100; //default 10
-        this.acceleration = 1; //default 0.8
-        this.horizontalGravity = 0.01;
+        this.acceleration = 3; //default 0.8
+        this.horizontalGravity = 0.05;
         this.verticalGravity = 0.1;
     }
     
@@ -76,18 +78,27 @@ public class JsonForcePlacementStrategy extends ForceDirectedLayoutStrategy<Node
     
     private int getSizeOfLargestLayer(Collection<SmartGraphVertexNode<NodeIdentifier>> nodes)
     {
-        int largestLayer = 0;
+        Map<Double, Integer> layerCountMap = new HashMap<>();
+        
         for (SmartGraphVertexNode<NodeIdentifier> node : nodes)
         {
-            largestLayer = Math.max(largestLayer, (int) (node.getUnderlyingVertex().element().getLayer() * 100));
+            double layer = node.getUnderlyingVertex().element().getLayer();
+            layerCountMap.put(layer, layerCountMap.getOrDefault(layer, 0) + 1);
         }
-        return largestLayer;
+        
+        int maxCount = 0;
+        for (int count : layerCountMap.values())
+        {
+            maxCount = Math.max(maxCount, count);
+        }
+        
+        return maxCount;
     }
     
     public void adjustParameters(int sizeOfLargestLayer, double panelWidth)
     {
         
-        final double maxPixelsPerNode = 200;
+        final double maxPixelsPerNode = 300;
         final double minPixelsPerNode = NodeGraphPanel.MIN_PIXELS_PER_NODE;
         
         double pixelsPerNode = panelWidth  / sizeOfLargestLayer;
@@ -96,7 +107,7 @@ public class JsonForcePlacementStrategy extends ForceDirectedLayoutStrategy<Node
         
         // Define the bounds for the repulsive force
         final double lowerBound = 5;
-        final double upperBound = 100;
+        final double upperBound = 500;
         
         double densityFactor = (maxPixelsPerNode - pixelsPerNode) / (maxPixelsPerNode - minPixelsPerNode);
         

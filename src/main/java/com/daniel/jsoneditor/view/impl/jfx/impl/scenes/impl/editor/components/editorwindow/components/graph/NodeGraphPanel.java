@@ -23,7 +23,7 @@ import javafx.scene.layout.VBox;
 public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifier>
 {
     
-    public static final int MIN_PIXELS_PER_NODE = 50;
+    public static final int MIN_PIXELS_PER_NODE = 100;
     
     public static final int MAX_NAME_LENGTH = 30;
     
@@ -52,16 +52,30 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         setAutomaticLayoutStrategy(new JsonForcePlacementStrategy());
         setEdgeDoubleClickAction(this::handleEdgeDoubleClick);
         setVertexDoubleClickAction(this::handleVertexDoubleClick);
+        setVertexShapeTypeProvider(nodeIdentifier -> nodeIdentifier.isCluster() ? "hexagon" : "circle");
+        setVertexRadiusProvider(nodeIdentifier -> nodeIdentifier.isCluster() ? 20 + (nodeIdentifier.getClusterPaths().size() / 2.0) : 15);
     }
     
-    public void updateTooltipsOfVertices()
+    private void updateTooltipsOfVertices()
     {
         this.getVertices().forEach(vertex ->
         {
-            Tooltip tooltip = TooltipHelper.makeTooltipFromPath(model, vertex.getUnderlyingVertex().element().getPath());
+            NodeIdentifier nodeIdentifier = vertex.getUnderlyingVertex().element();
+            Tooltip tooltip = nodeIdentifier.isCluster() ? TooltipHelper.makeTooltipFromPaths(model, nodeIdentifier.getClusterPaths())
+                    : TooltipHelper.makeTooltipFromPath(model, nodeIdentifier.getPath());
             SmartStylableNode node = this.getStylableVertex(vertex.getUnderlyingVertex());
             SmartGraphVertexNode<NodeIdentifier> v = (SmartGraphVertexNode<NodeIdentifier>) node;
             Tooltip.install(v, tooltip);
+        });
+    }
+    
+    private void updateClusterStyling()
+    {
+        this.getVertices().forEach(vertex -> {
+            if (vertex.getUnderlyingVertex().element().isCluster())
+            {
+                vertex.setStyleClass("clusterVertex");
+            }
         });
     }
     
@@ -107,12 +121,11 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     public void update()
     {
         super.update();
-        Platform.runLater(() ->
-        {
+        Platform.runLater(() -> {
             placementStrategy.place(widthProperty().doubleValue(), heightProperty().doubleValue(), NodeGraphPanel.this);
             updateTooltipsOfVertices();
+            updateClusterStyling();
         });
-        
     }
     
     private void handleVertexDoubleClick(SmartGraphVertex<NodeIdentifier> vertex)

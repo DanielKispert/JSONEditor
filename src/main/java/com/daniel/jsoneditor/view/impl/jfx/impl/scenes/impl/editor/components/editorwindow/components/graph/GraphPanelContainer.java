@@ -73,8 +73,8 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     @Override
     public void updateView()
     {
-        this.graphView = new NodeGraphPanel(model, selectedPath, properties, initialPlacement, cssFile);
         this.getChildren().clear();
+        this.graphView = new NodeGraphPanel(model, selectedPath, properties, initialPlacement, cssFile);
         this.getChildren().add(graphView);
         Platform.runLater(graphView::init);
         Platform.runLater(graphView::update); //hacky hack so the labels are properly loaded
