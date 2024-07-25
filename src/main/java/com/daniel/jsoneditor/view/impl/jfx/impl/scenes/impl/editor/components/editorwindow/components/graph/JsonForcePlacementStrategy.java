@@ -32,10 +32,10 @@ public class JsonForcePlacementStrategy extends ForceDirectedLayoutStrategy<Node
     public JsonForcePlacementStrategy()
     {
         this.repulsiveForce = 50; //default 25
-        this.attractionForce = 1; //default 3
-        this.attractionScale = 10; //default 10
+        this.attractionForce = 0.1; //default 3
+        this.attractionScale = 100; //default 10
         this.acceleration = 1; //default 0.8
-        this.horizontalGravity = 0.05;
+        this.horizontalGravity = 0.01;
         this.verticalGravity = 0.1;
     }
     
