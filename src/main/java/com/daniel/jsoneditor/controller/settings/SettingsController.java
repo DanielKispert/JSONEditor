@@ -9,6 +9,10 @@ public interface SettingsController
     
     void setRenameReferencesWhenRenamingObject(boolean renameReferences);
     
+    void setClusterShape(String symbol);
+    
+    String getClusterShape();
+    
     boolean renameReferencesWhenRenamingObject();
     
     String getLastJsonPath();

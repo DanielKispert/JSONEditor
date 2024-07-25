@@ -8,6 +8,8 @@ import java.util.Objects;
 import com.brunomnsilva.smartgraph.graphview.SmartCircularSortedPlacementStrategy;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
+import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.NavbarElement;
@@ -27,6 +29,8 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     
     private final JsonEditorNavbar navbar;
     
+    private final Controller controller;
+    
     private NodeGraphPanel graphView;
     
     private final SmartGraphProperties properties;
@@ -37,10 +41,11 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     
     private String selectedPath;
     
-    private GraphPanelContainer(JsonEditorNavbar navbar, ReadableModel model, SmartGraphProperties properties, URI cssFile)
+    private GraphPanelContainer(JsonEditorNavbar navbar, Controller controller, ReadableModel model, SmartGraphProperties properties, URI cssFile)
     {
         this.initialPlacement = new JsonPlacementStrategy();
         this.cssFile = cssFile;
+        this.controller = controller;
         this.navbar = navbar;
         this.properties = properties;
         this.model = model;
@@ -51,7 +56,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     
     
     
-    public static GraphPanelContainer create(JsonEditorNavbar navbar, ReadableModel model)
+    public static GraphPanelContainer create(JsonEditorNavbar navbar, Controller controller, ReadableModel model)
     {
         InputStream propertiesFile = GraphPanelContainer.class.getClassLoader().getResourceAsStream(PATH_TO_PROPERTIES);
         URI uri;
@@ -63,7 +68,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
         {
             throw new RuntimeException(e);
         }
-        GraphPanelContainer graphView = new GraphPanelContainer(navbar, model, new SmartGraphProperties(propertiesFile), uri);
+        GraphPanelContainer graphView = new GraphPanelContainer(navbar, controller, model, new SmartGraphProperties(propertiesFile), uri);
         HBox.setHgrow(graphView, Priority.ALWAYS);
         VBox.setVgrow(graphView, Priority.ALWAYS);
         return graphView;
@@ -74,7 +79,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     public void updateView()
     {
         this.getChildren().clear();
-        this.graphView = new NodeGraphPanel(model, selectedPath, properties, initialPlacement, cssFile);
+        this.graphView = new NodeGraphPanel(model, controller, selectedPath, properties, initialPlacement, cssFile);
         this.getChildren().add(graphView);
         Platform.runLater(graphView::init);
         Platform.runLater(graphView::update); //hacky hack so the labels are properly loaded

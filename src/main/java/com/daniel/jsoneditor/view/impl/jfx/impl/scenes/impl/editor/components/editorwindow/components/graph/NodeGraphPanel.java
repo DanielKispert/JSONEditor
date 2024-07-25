@@ -7,6 +7,7 @@ import java.util.HashSet;
 import com.brunomnsilva.smartgraph.graph.Edge;
 import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.brunomnsilva.smartgraph.graphview.*;
+import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
@@ -23,7 +24,7 @@ import javafx.scene.layout.VBox;
 public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifier>
 {
     
-    public static final int MIN_PIXELS_PER_NODE = 100;
+    public static final int MIN_PIXELS_PER_NODE = 50;
     
     public static final int MAX_NAME_LENGTH = 30;
     
@@ -31,13 +32,16 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     private final ReadableModel model;
     
-    public NodeGraphPanel(ReadableModel model, String path, SmartGraphProperties properties,
+    private final Controller controller;
+    
+    public NodeGraphPanel(ReadableModel model, Controller controller, String path, SmartGraphProperties properties,
             SmartPlacementStrategy placementStrategy,
             URI cssFile)
     {
         super(model.getJsonAsGraph(path), properties, placementStrategy, cssFile);
         this.placementStrategy = placementStrategy;
         this.model = model;
+        this.controller = controller;
         HBox.setHgrow(this, Priority.ALWAYS);
         VBox.setVgrow(this, Priority.ALWAYS);
         this.setAutomaticLayout(true);
@@ -52,7 +56,8 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         setAutomaticLayoutStrategy(new JsonForcePlacementStrategy());
         setEdgeDoubleClickAction(this::handleEdgeDoubleClick);
         setVertexDoubleClickAction(this::handleVertexDoubleClick);
-        setVertexShapeTypeProvider(nodeIdentifier -> nodeIdentifier.isCluster() ? "hexagon" : "circle");
+        String clusterSymbol = controller.getSettingsController().getClusterShape();
+        setVertexShapeTypeProvider(nodeIdentifier -> nodeIdentifier.isCluster() ? clusterSymbol : "circle");
         setVertexRadiusProvider(nodeIdentifier -> nodeIdentifier.isCluster() ? 20 + (nodeIdentifier.getClusterPaths().size() / 2.0) : 15);
     }
     
@@ -86,9 +91,14 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     private void handleEdgeDoubleClick(SmartGraphEdge<EdgeIdentifier, NodeIdentifier> edge)
     {
         NodeGraph graph = (NodeGraph) getModel();
-        Vertex<NodeIdentifier> targetVertex = edge.getUnderlyingEdge().vertices()[1]; // The 2nd vertex in the edge is the "target" of the edge
-        removeVertexAndConnected(graph, targetVertex);
-        update();
+        Vertex<NodeIdentifier> targetVertex = edge.getUnderlyingEdge()
+                .vertices()[1]; // The 2nd vertex in the edge is the "target" of the edge
+        if (!targetVertex.element().isCluster())
+        {
+            removeVertexAndConnected(graph, targetVertex);
+            update();
+        }
+
     }
     
     private void removeVertexAndConnected(NodeGraph graph, Vertex<NodeIdentifier> vertexId)
@@ -130,9 +140,12 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     private void handleVertexDoubleClick(SmartGraphVertex<NodeIdentifier> vertex)
     {
-        //add all outgoing references of the vertex to our graph
-        NodeGraphCreator.addOutgoingReferences(model, vertex.getUnderlyingVertex().element().getPath(), (NodeGraph) getModel());
-        update();
+        if (!vertex.getUnderlyingVertex().element().isCluster())
+        {
+            //add all outgoing references of the vertex to our graph
+            NodeGraphCreator.addOutgoingReferences(model, vertex.getUnderlyingVertex().element().getPath(), (NodeGraph) getModel());
+            update();
+        }
     }
     
     public Collection<SmartGraphVertex<NodeIdentifier>> getVertices()

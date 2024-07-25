@@ -4,9 +4,12 @@ import com.daniel.jsoneditor.controller.settings.SettingsController;
 import javafx.geometry.Insets;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -17,6 +20,8 @@ public class SettingsDialog extends ThemedDialog<Void>
     
     private boolean tmpRenameReferences;
     
+    private String tmpClusterShape;
+    
     private final SettingsController settingsController;
     
     public SettingsDialog(SettingsController controller)
@@ -26,6 +31,7 @@ public class SettingsDialog extends ThemedDialog<Void>
         
         this.tmpHideEmptyColumns = settingsController.hideEmptyColumns();
         this.tmpRenameReferences = settingsController.renameReferencesWhenRenamingObject();
+        this.tmpClusterShape = settingsController.getClusterShape();
         
         setTitle("Settings");
         getDialogPane().getButtonTypes().setAll(new ButtonType("Save", ButtonType.OK.getButtonData()), ButtonType.CANCEL);
@@ -43,6 +49,7 @@ public class SettingsDialog extends ThemedDialog<Void>
             {
                 settingsController.setHideEmptyColumns(tmpHideEmptyColumns);
                 settingsController.setRenameReferencesWhenRenamingObject(tmpRenameReferences);
+                settingsController.setClusterShape(tmpClusterShape);
             }
             return null;
         });
@@ -60,7 +67,7 @@ public class SettingsDialog extends ThemedDialog<Void>
         
         // Display Tab
         Tab displayTab = new Tab("Display");
-        VBox displayBox = new VBox(createDisplaySettings());
+        VBox displayBox = new VBox(createDisplaySettings(), createClusterShapeSettings());
         displayTab.setContent(displayBox);
         
         tabs.getTabs().addAll(automationTab, displayTab);
@@ -82,5 +89,17 @@ public class SettingsDialog extends ThemedDialog<Void>
         hideEmptyColumnsCheckBox.setSelected(tmpHideEmptyColumns);
         hideEmptyColumnsCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> tmpHideEmptyColumns = newValue);
         return hideEmptyColumnsCheckBox;
+    }
+    
+    private HBox createClusterShapeSettings()
+    {
+        HBox box = new HBox();
+        ComboBox<String> clusterShapeComboBox = new ComboBox<>();
+        clusterShapeComboBox.getItems().addAll("star", "triangle", "square", "hexagon");
+        clusterShapeComboBox.setValue(tmpClusterShape);
+        clusterShapeComboBox.valueProperty().addListener((observable, oldValue, newValue) -> tmpClusterShape = newValue);
+        Label title = new Label("Cluster Shape: ");
+        box.getChildren().addAll(title, clusterShapeComboBox);
+        return box;
     }
 }

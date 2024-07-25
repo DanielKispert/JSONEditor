@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.controller.settings.impl;
 
+import java.util.Objects;
 import java.util.Properties;
 
 import com.daniel.jsoneditor.controller.settings.SettingsController;
@@ -29,6 +30,20 @@ public class SettingsControllerImpl implements SettingsController
     {
         properties.setProperty(PropertyFileKeys.PROPERTY_HIDE_EMPTY_COLUMNS, automaticallyHideEmptyColumns ? "true" : "false");
         PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public void setClusterShape(String symbol)
+    {
+        properties.setProperty(PropertyFileKeys.PROPERTY_CLUSTER_SHAPE, symbol);
+        PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public String getClusterShape()
+    {
+        String shape = properties.getProperty(PropertyFileKeys.PROPERTY_CLUSTER_SHAPE);
+        return Objects.requireNonNullElse(shape, "hexagon");
     }
     
     @Override
