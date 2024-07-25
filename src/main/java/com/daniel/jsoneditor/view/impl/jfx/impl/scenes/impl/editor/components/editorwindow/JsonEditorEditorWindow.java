@@ -132,6 +132,8 @@ public class JsonEditorEditorWindow extends VBox
     
     /**
      * select the array parent if the node to select is either no object or an object with only non-openable children
+     * also, if the parent of the array is an object, then selecting the object would show the array in a "compact child view" anyway.
+     * Therefore when we would select an array with an object parent, we select the object parent.
      */
     private String divertPathToSelect(String path)
     {
@@ -166,8 +168,19 @@ public class JsonEditorEditorWindow extends VBox
                     }
                 }
             }
+            else if (nodeAtPath.isArray() && parentNode.isObject()) //parent object & array child => open the parent too
+            {
+                pathToSelect = parentPath;
+            }
         }
-        return pathToSelect;
+        if (!path.equals(pathToSelect))
+        {
+            return divertPathToSelect(pathToSelect); //recursion until the path doesn't change
+        }
+        else
+        {
+            return pathToSelect;
+        }
     }
     
     public void focusArrayItem(String itemPath)
