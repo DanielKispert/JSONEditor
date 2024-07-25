@@ -58,7 +58,7 @@ public class JsonEditorEditorWindow extends VBox
         displayedObject = null;
         this.manager = manager;
         this.controller = controller;
-        nameBar = new JsonEditorNamebar(manager, this, model);
+        nameBar = new JsonEditorNamebar(manager, this, model, controller);
         childTableViews = new ArrayList<>();
         editorTables = new AutoAdjustingSplitPane();
         editorTables.setOrientation(javafx.geometry.Orientation.VERTICAL);
