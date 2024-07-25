@@ -1,10 +1,15 @@
 package com.daniel.jsoneditor.model.impl.graph;
 
+import java.util.List;
+
+
 public class NodeIdentifier
 {
     private boolean outgoingReferencesAdded = false;
     
-    private final boolean isCluster;
+    private boolean isCluster;
+    
+    private List<String> clusterPaths;
     
     private double layer; //number between 0 and 1 that sets what level of the window the node gravitates towards. 0 is the top, 1 is the bottom
     
@@ -15,6 +20,22 @@ public class NodeIdentifier
         this.path = path;
         this.layer = 0.5;
         isCluster = false;
+    }
+    
+    public boolean isCluster()
+    {
+        return isCluster;
+    }
+    
+    public void setCluster(List<String> paths)
+    {
+        this.isCluster = true;
+        this.clusterPaths = paths;
+    }
+    
+    public List<String> getClusterPaths()
+    {
+        return clusterPaths;
     }
     
     public boolean isOutgoingReferencesAdded()

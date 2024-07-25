@@ -1,10 +1,13 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
@@ -12,6 +15,15 @@ import javafx.util.Duration;
 
 public class TooltipHelper
 {
+    
+    public static Tooltip makeTooltipFromPaths(ReadableModel model, List<String> paths)
+    {
+        String tooltipText = paths.stream().map(model::getNodeForPath).filter(Objects::nonNull) // Ignore null nodes
+                .map(JsonNodeWithPath::getDisplayName).collect(Collectors.joining("\n"));
+        Tooltip tooltip = new Tooltip(tooltipText);
+        tooltip.setShowDuration(Duration.INDEFINITE);
+        return tooltip;
+    }
     
     public static Tooltip makeTooltipFromPath(ReadableModel model, String path)
     {

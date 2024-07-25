@@ -65,9 +65,20 @@ public class NodeGraphCreator
                 JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
                 if (parentNode.isArray() && refs.size() > 1)
                 {
+                    List<String> toPaths = new ArrayList<>();
+                    for (ReferenceToObjectInstance ref : refs)
+                    {
+                        String toPath = ReferenceHelper.resolveReference(model, ref);
+                        if (toPath == null)
+                        {
+                            continue;
+                        }
+                        toPaths.add(toPath);
+                    }
                     //there are more than one references with the same parent and remarks, so we cluster them in a common node
                     EdgeIdentifier edgeToCluster = new EdgeIdentifier(currentPath, parentPath, remarks);
-                    addEdgeToGraph(edgeToCluster, graph);
+                    addClusterNodeToGraph(graph, parentPath, toPaths);
+                    addEdgeToGraph(graph, edgeToCluster);
                 }
                 else
                 {
@@ -80,14 +91,22 @@ public class NodeGraphCreator
                             continue;
                         }
                         EdgeIdentifier edge = new EdgeIdentifier(currentPath, toPath, ref.getRemarks());
-                        addEdgeToGraph(edge, graph);
+                        addEdgeToGraph(graph, edge);
                     }
                 }
             }
         }
     }
     
-    private static void addEdgeToGraph(EdgeIdentifier edge, NodeGraph graph)
+    private static void addClusterNodeToGraph(NodeGraph graph, String path, List<String> clusteredPaths)
+    {
+        if (graph.vertices().stream().noneMatch(vertex -> vertex.element().getPath().equals(path)))
+        {
+            graph.insertClusterVertex(path, clusteredPaths);
+        }
+    }
+    
+    private static void addEdgeToGraph(NodeGraph graph, EdgeIdentifier edge)
     {
         if (graph.edges().stream().noneMatch(existingEdge -> existingEdge.element().equals(edge)))
         {
@@ -112,14 +131,7 @@ public class NodeGraphCreator
             String fromPath = ReferenceHelper.getParentObjectOfReference(model, ref.getPath());
             // check if the edge exists already. If yes, we don't need to add it
             EdgeIdentifier edgeToInsert = new EdgeIdentifier(fromPath, path, ref.getRemarks());
-            if (graph.edges().stream().noneMatch(edge -> edge.element().equals(edgeToInsert)))
-            {
-                if (graph.vertices().stream().noneMatch(stringVertex -> stringVertex.element().getPath().equals(fromPath)))
-                {
-                    graph.insertVertex(fromPath);
-                }
-                graph.insertEdge(fromPath, path, edgeToInsert);
-            }
+            addEdgeToGraph(graph, edgeToInsert);
         }
     }
     

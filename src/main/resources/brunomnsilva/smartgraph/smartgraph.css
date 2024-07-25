@@ -40,16 +40,9 @@
     -fx-stroke-dash-array: none;
 }
 
-.myVertex {
-    -fx-stroke-width: 4;
+.clusterVertex {
+    -fx-stroke-width: 3;
     -fx-stroke: rgb(100, 100, 105);
     -fx-stroke-type: inside;
     -fx-fill: rgb(72, 72, 80);
-}
-
-.myEdge {
-    -fx-stroke-width: 2;
-    -fx-stroke: rgb(80, 80, 85);
-    -fx-opacity: 1;
-    -fx-fill: transparent;
 }
