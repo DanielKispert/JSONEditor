@@ -38,7 +38,7 @@ public class JsonForcePlacementStrategy extends ForceDirectedLayoutStrategy<Node
         this.attractionScale = 100; //default 10
         this.acceleration = 3; //default 0.8
         this.horizontalGravity = 0.05;
-        this.verticalGravity = 0.1;
+        this.verticalGravity = 0.5;
     }
     
     @Override
@@ -97,17 +97,16 @@ public class JsonForcePlacementStrategy extends ForceDirectedLayoutStrategy<Node
     
     public void adjustParameters(int sizeOfLargestLayer, double panelWidth)
     {
-        
-        final double maxPixelsPerNode = 300;
+        final double maxPixelsPerNode = 250;
         final double minPixelsPerNode = NodeGraphPanel.MIN_PIXELS_PER_NODE;
         
-        double pixelsPerNode = panelWidth  / sizeOfLargestLayer;
+        double pixelsPerNode = panelWidth / sizeOfLargestLayer;
         //wrap pixelsPerNode between maxPixelsPerNode and minPixelsPerNode
         pixelsPerNode = Math.min(maxPixelsPerNode, Math.max(minPixelsPerNode, pixelsPerNode));
         
         // Define the bounds for the repulsive force
         final double lowerBound = 5;
-        final double upperBound = 500;
+        final double upperBound = 100;
         
         double densityFactor = (maxPixelsPerNode - pixelsPerNode) / (maxPixelsPerNode - minPixelsPerNode);
         

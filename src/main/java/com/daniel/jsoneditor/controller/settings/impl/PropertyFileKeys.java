@@ -8,6 +8,8 @@ public class PropertyFileKeys
     
     public final static String PROPERTY_REMEMBER_PATHS = "remember_paths";
     
+    public final static String PROPERTY_CLUSTER_SHAPE = "cluster_shape";
+    
     public final static String PROPERTY_HIDE_EMPTY_COLUMNS = "automatically_hide_empty_columns";
     
     public final static String PROPERTY_RENAME_REFERENCES_WHEN_RENAMING_OBJECT = "rename_references_when_renaming_object";
