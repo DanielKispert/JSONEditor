@@ -1,12 +1,15 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components;
 
+import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ShowUsagesButton;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.AreYouSureDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import javafx.scene.layout.HBox;
@@ -19,6 +22,8 @@ public class JsonEditorNamebar extends HBox
     
     private final JsonEditorEditorWindow editorWindow;
     
+    private final Controller controller;
+    
     private final Label nameLabel;
     
     private String parentPath;
@@ -29,17 +34,19 @@ public class JsonEditorNamebar extends HBox
     
     private final ShowUsagesButton showUsagesButton;
     
-    public JsonEditorNamebar(EditorWindowManager manager, JsonEditorEditorWindow editorWindow, ReadableModel model)
+    public JsonEditorNamebar(EditorWindowManager manager, JsonEditorEditorWindow editorWindow, ReadableModel model, Controller controller)
     {
         super();
         this.manager = manager;
         this.editorWindow = editorWindow;
+        this.controller = controller;
         this.model = model;
         HBox.setHgrow(this, Priority.ALWAYS);
         nameLabel = new Label();
+        nameLabel.setAlignment(Pos.CENTER);
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
         showUsagesButton = new ShowUsagesButton(model, manager);
-        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showUsagesButton,
+        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showUsagesButton, makeDeleteItemButton(),
                 makeCloseWindowButton());
     }
     
@@ -82,5 +89,22 @@ public class JsonEditorNamebar extends HBox
         closeWindowButton.setOnAction(actionEvent -> manager.closeWindow(editorWindow));
         closeWindowButton.setAlignment(Pos.CENTER_RIGHT);
         return closeWindowButton;
+    }
+    
+    private Button makeDeleteItemButton()
+    {
+        Button deleteItemButton = new Button();
+        ButtonHelper.setButtonImage(deleteItemButton, "/icons/material/darkmode/outline_delete_white_24dp.png");
+        deleteItemButton.setOnAction(actionEvent -> {
+            AreYouSureDialog dialog = new AreYouSureDialog("Delete Node", "Are you sure you want to delete this node?",
+                    "This will delete the node and all its children.");
+            dialog.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES)
+                {
+                    controller.removeNode(selectedPath);
+                }
+            });
+        });
+        return deleteItemButton;
     }
 }
