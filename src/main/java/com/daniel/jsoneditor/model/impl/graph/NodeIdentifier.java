@@ -4,6 +4,8 @@ public class NodeIdentifier
 {
     private boolean outgoingReferencesAdded = false;
     
+    private final boolean isCluster;
+    
     private double layer; //number between 0 and 1 that sets what level of the window the node gravitates towards. 0 is the top, 1 is the bottom
     
     private final String path;
@@ -12,6 +14,7 @@ public class NodeIdentifier
     {
         this.path = path;
         this.layer = 0.5;
+        isCluster = false;
     }
     
     public boolean isOutgoingReferencesAdded()
