@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -90,6 +91,35 @@ public class ReferenceHelper
         {
             // the referenceable object is the object itself, so we get its key
             return Collections.singletonList(new ReferenceableObjectInstance(model, referenceableObject, objectInstance));
+        }
+    }
+    
+    public static void createAndInsertReferenceableObject(ReadableModel readableModel, WritableModel model, String referenceableObjectPath, String newKey)
+    {
+        // Get the ReferenceableObject using the referenceableObjectPath
+        ReferenceableObject referenceableObject = getReferenceableObjectOfPath(readableModel, referenceableObjectPath);
+        if (referenceableObject == null)
+        {
+            throw new IllegalArgumentException("ReferenceableObject not found for the given path: " + referenceableObjectPath);
+        }
+        
+        // Check if the ReferenceableObject is an array
+        JsonNodeWithPath referenceableObjectNode = readableModel.getNodeForPath(referenceableObject.getPath());
+        if (referenceableObjectNode.isArray())
+        {
+            // Add a new node to the array
+            model.addNodeToArray(referenceableObject.getPath());
+            
+            // Get the path of the newly added node
+            int newIndex = referenceableObjectNode.getNode().size() - 1;
+            String newNodePath = referenceableObject.getPath() + "/" + newIndex;
+            
+            // Set the key of the new node
+            setKeyOfInstance(readableModel, referenceableObject, newNodePath, newKey);
+        }
+        else
+        {
+            throw new IllegalArgumentException("ReferenceableObject is not an array: " + referenceableObjectPath);
         }
     }
     
