@@ -7,6 +7,8 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.selection.FileSelectionBox;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -17,6 +19,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -59,21 +62,14 @@ public class JSONSelectionScene extends SceneHandlerImpl
             selectedSettingsPath = rememberedSettingsPath;
         }
         boolean rememberedRememberSettings = settingsController.rememberPaths();
-        // JSON
-        Label jsonLabel = new Label("JSON to edit:");
-        TextField jsonFileField = new TextField(selectedJsonPath);
-        jsonFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedJsonPath = newValue);
-        HBox jsonBox = getJsonBox(stage, jsonFileField, jsonLabel);
-        // SCHEMA
-        Label schemaLabel = new Label("Schema:");
-        TextField schemaFileField = new TextField(selectedSchemaPath);
-        schemaFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedSchemaPath = newValue);
-        HBox schemaBox = getSchemaBox(stage, schemaFileField, schemaLabel);
-        // SETTINGS
-        Label settingsLabel = new Label("Settings:");
-        TextField settingsFileField = new TextField(selectedSettingsPath);
-        settingsFileField.textProperty().addListener((observable, oldValue, newValue) -> selectedSettingsPath = newValue);
-        HBox settingsBox = getSettingsBox(stage, settingsFileField, settingsLabel);
+        
+        FileSelectionBox jsonBox = new FileSelectionBox("JSON to edit:", selectedJsonPath, stage,
+                new FileChooser.ExtensionFilter("JSON Files", "*.json"));
+        FileSelectionBox schemaBox = new FileSelectionBox("Schema:", selectedSchemaPath, stage,
+                new FileChooser.ExtensionFilter("JSON Files", "*.json"));
+        FileSelectionBox settingsBox = new FileSelectionBox("Settings:", selectedSettingsPath, stage,
+                new FileChooser.ExtensionFilter("JSON Files", "*.json"));
+        
         
         CheckBox rememberCheckBox = new CheckBox("Remember");
         rememberCheckBox.setSelected(rememberedRememberSettings);
@@ -82,6 +78,9 @@ public class JSONSelectionScene extends SceneHandlerImpl
         okButton.setOnAction(e ->
         {
             remember = rememberCheckBox.isSelected();
+            selectedJsonPath = jsonBox.getFilePath();
+            selectedSchemaPath = schemaBox.getFilePath();
+            selectedSettingsPath = settingsBox.getFilePath();
             if (selectedJsonPath == null || selectedJsonPath.isEmpty())
             {
                 askToGenerateJson(stage);
@@ -93,91 +92,12 @@ public class JSONSelectionScene extends SceneHandlerImpl
     
         });
         
-        GridPane root = new GridPane();
-        root.addRow(0, jsonBox);
-        root.addRow(1, schemaBox);
-        root.addRow(2, settingsBox);
-        root.addRow(3, rememberCheckBox);
-        root.addRow(4, okButton);
+        VBox root = new VBox(10, jsonBox, schemaBox, settingsBox, rememberCheckBox, okButton);
+        root.setPadding(new Insets(10));
         
-        Scene scene = new Scene(root, 400, 200);
+        Scene scene = new Scene(root, 700, 300);
         scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
         return scene;
-    }
-    
-    private HBox getSettingsBox(Stage stage, TextField settingsFileField, Label settingsLabel)
-    {
-        Button settingsButton = new Button("Select Settings");
-        settingsButton.setOnAction(e ->
-        {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Select Settings file");
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
-            );
-            if (lastDirectory != null)
-            {
-                fileChooser.setInitialDirectory(lastDirectory);
-            }
-            File selectedSettings = fileChooser.showOpenDialog(stage);
-            if (selectedSettings != null)
-            {
-                selectedSettingsPath = selectedSettings.getAbsolutePath();
-                settingsFileField.setText(selectedSettingsPath);
-                lastDirectory = selectedSettings.getParentFile();
-            }
-        });
-        return new HBox(settingsLabel, settingsFileField, settingsButton);
-    }
-    
-    private HBox getSchemaBox(Stage stage, TextField schemaFileField, Label schemaLabel)
-    {
-        Button schemaButton = new Button("Select Schema");
-        schemaButton.setOnAction(e ->
-        {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Select Schema file");
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
-            );
-            if (lastDirectory != null)
-            {
-                fileChooser.setInitialDirectory(lastDirectory);
-            }
-            File selectedSchema = fileChooser.showOpenDialog(stage);
-            if (selectedSchema != null)
-            {
-                selectedSchemaPath = selectedSchema.getAbsolutePath();
-                schemaFileField.setText(selectedSchemaPath);
-                lastDirectory = selectedSchema.getParentFile();
-            }
-        });
-        return new HBox(schemaLabel, schemaFileField, schemaButton);
-    }
-    
-    private HBox getJsonBox(Stage stage, TextField jsonFileField, Label jsonLabel)
-    {
-        Button jsonButton = new Button("Select JSON");
-        jsonButton.setOnAction(e ->
-        {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Select JSON file");
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("JSON Files", "*.json")
-            );
-            if (lastDirectory != null)
-            {
-                fileChooser.setInitialDirectory(lastDirectory);
-            }
-            File selectedJson = fileChooser.showOpenDialog(stage);
-            if (selectedJson != null)
-            {
-                selectedJsonPath = selectedJson.getAbsolutePath();
-                jsonFileField.setText(selectedJsonPath);
-                lastDirectory = selectedJson.getParentFile();
-            }
-        });
-        return new HBox(jsonLabel, jsonFileField, jsonButton);
     }
     
     private void continueToEditor()
