@@ -81,6 +81,7 @@ public class EditorScene extends SceneHandlerImpl
     public void handleMovedSelection()
     {
         navbar.handleUpdate();
+        editorWindowManager.updateEditors();
     }
     
     public JsonEditorNavbar getNavbar()

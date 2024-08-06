@@ -115,7 +115,7 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index)
     {
-        model.moveItemToIndex(newParent, item, index);
+        model.moveItemToIndex(item, index);
     }
     
     @Override
