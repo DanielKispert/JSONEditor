@@ -17,6 +17,7 @@ import com.daniel.jsoneditor.model.statemachine.StateMachine;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.RenameKeyDialog;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import javax.naming.Referenceable;
 
 
 public class ModelImpl implements ReadableModel, WritableModel
@@ -481,20 +483,32 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void duplicateArrayItem(String pathToItemToDuplicate)
     {
+        JsonNodeWithPath itemToDuplicate = getNodeForPath(pathToItemToDuplicate);
+        
         JsonNodeWithPath parentArray = getNodeForPath(PathHelper.getParentPath(pathToItemToDuplicate));
         
         if (parentArray != null && parentArray.getNode().isArray())
         {
             ArrayNode arrayNode = (ArrayNode) parentArray.getNode();
             
-            // Get the index of the item to be cloned
+            // Get the index of the item to be cloned so that we can insert the next item at that index + 1
             int indexToClone = Integer.parseInt(SchemaHelper.getLastPathSegment(pathToItemToDuplicate));
             
-            // Clone the item at indexToClone + 1
-            JsonNode clonedNode = arrayNode.get(indexToClone).deepCopy();
-            
+            JsonNode clonedNode = itemToDuplicate.getNode().deepCopy();
             // Insert the cloned item at indexToClone + 1
             arrayNode.insert(indexToClone + 1, clonedNode);
+            
+            String clonedPath = PathHelper.getParentPath(itemToDuplicate.getPath()) + "/" + (indexToClone + 1);
+            
+            //check if the cloned node is a referenceable object, if yes then we want to offer to change its name
+            ReferenceableObject object = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath);
+            if (object != null)
+            {
+                String currentKey = object.getKeyOfInstance(itemToDuplicate.getNode());
+                new RenameKeyDialog(currentKey).showAndWait().ifPresent(
+                        newKey -> ReferenceHelper.setKeyOfInstance(this, object, clonedPath, newKey));
+            }
+            
             sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
         }
     }
