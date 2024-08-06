@@ -1,10 +1,5 @@
 package com.daniel.jsoneditor.model.impl;
 
-import com.brunomnsilva.smartgraph.graph.Digraph;
-import com.brunomnsilva.smartgraph.graph.DigraphEdgeList;
-import com.brunomnsilva.smartgraph.graph.InvalidEdgeException;
-import com.brunomnsilva.smartgraph.graph.InvalidVertexException;
-import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraphCreator;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -37,10 +32,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.naming.Referenceable;
 
 
 public class ModelImpl implements ReadableModel, WritableModel
@@ -151,26 +144,22 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index)
+    public void moveItemToIndex(JsonNodeWithPath item, int index)
     {
-        JsonNode selectedNode = newParent.getNode();
+        JsonNodeWithPath parent = getNodeForPath(PathHelper.getParentPath(item.getPath()));
+        ArrayNode arrayNode = (ArrayNode) parent.getNode();
         JsonNode itemNode = item.getNode();
-        if (selectedNode.isArray())
+        
+        for (int i = 0; i < arrayNode.size(); i++)
         {
-            ArrayNode arrayNode = (ArrayNode) selectedNode;
-            for (int i = 0; i < arrayNode.size(); i++)
+            if (arrayNode.get(i).equals(itemNode))
             {
-                JsonNode arrayItem = arrayNode.get(i);
-                if (arrayItem.equals(itemNode))
-                {
-                    arrayNode.remove(i);
-                    arrayNode.insert(index, itemNode);
-                    sendEvent(new Event(EventEnum.MOVED_CHILD_OF_SELECTED_JSON_NODE));
-                    break;
-                }
+                arrayNode.remove(i);
+                arrayNode.insert(index, itemNode);
+                sendEvent(new Event(EventEnum.MOVED_CHILD_OF_SELECTED_JSON_NODE));
+                break;
             }
         }
-        
     }
     
     @Override

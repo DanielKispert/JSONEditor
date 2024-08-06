@@ -1,7 +1,6 @@
 package com.daniel.jsoneditor.model;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
-import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
@@ -20,7 +19,7 @@ public interface WritableModel
     
     void sendEvent(Event state);
     
-    void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index);
+    void moveItemToIndex(JsonNodeWithPath item, int index);
     
     /**
      * @param selectedPath points to the path of the array to which a node should be added

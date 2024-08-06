@@ -18,9 +18,12 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
@@ -53,6 +56,7 @@ public class EditorTableViewImpl extends EditorTableView
         this.controller = controller;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
+        setRowFactory(jsonNodeWithPathTableView -> new EditorTableRow(controller));
     }
     
     @Override
