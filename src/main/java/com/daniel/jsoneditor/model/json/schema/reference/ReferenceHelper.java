@@ -6,8 +6,12 @@ import java.util.List;
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 
 public class ReferenceHelper
@@ -266,6 +270,54 @@ public class ReferenceHelper
             }
         }
         return refs;
+    }
+    
+    public static void setKeyOfInstance(ReadableModel model, ReferenceableObject object, String pathToInstance, String newKey)
+    {
+        if (pathToInstance == null || newKey == null || newKey.isEmpty())
+        {
+            return;
+        }
+        
+        String[] keyParts = object.getKey().split("/");
+        JsonNode currentNode = model.getNodeForPath(pathToInstance).getNode();
+        JsonNode parentNode = null;
+        
+        for (String keyPart : keyParts)
+        {
+            if (keyPart.isEmpty())
+            {
+                continue;
+            }
+            parentNode = currentNode;
+            currentNode = currentNode.path(keyPart);
+            if (currentNode.isMissingNode())
+            {
+                return;
+            }
+        }
+        
+        if (parentNode instanceof ObjectNode)
+        {
+            // check if we need a text or number node
+            List<String> types = SchemaHelper.getTypes(model.getSubschemaForPath(pathToInstance + "/" + object.getKey()).getSchemaNode());
+            if (types.contains("string"))
+            {
+                ((ObjectNode) parentNode).set(keyParts[keyParts.length - 1], new TextNode(newKey));
+            }
+            else if (types.contains("integer") || types.contains("number"))
+            {
+                try
+                {
+                    ((ObjectNode) parentNode).set(keyParts[keyParts.length - 1], new IntNode(Integer.parseInt(newKey)));
+                }
+                catch (NumberFormatException e)
+                {
+                    System.out.println("Could not parse key to number: " + newKey);
+                }
+            }
+            
+        }
     }
     
     private static List<ReferenceToObjectInstance> getInstancesOfReferenceToObject(ReadableModel model, ReferenceToObject object)
