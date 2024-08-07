@@ -6,6 +6,7 @@ import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
@@ -18,12 +19,9 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
@@ -70,7 +68,15 @@ public class EditorTableViewImpl extends EditorTableView
         JsonNode node = nodeWithPath.getNode();
         JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath()).getSchemaNode();
         
-        boolean holdsReferences = false;
+        ReferenceToObject reference = model.getReferenceToObject(nodeWithPath.getPath());
+        if (reference != null)
+        {
+        
+            
+            
+        
+        
+        }
         
         
         ObservableList<JsonNodeWithPath> nodesToDisplay = FXCollections.observableArrayList(); //either a list of array items or object fields

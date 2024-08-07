@@ -3,11 +3,15 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.AutofillField;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
+import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.TableColumn;
+import javafx.scene.layout.HBox;
 import javafx.util.Pair;
 
 import java.util.Collections;
@@ -67,6 +71,7 @@ public class TextTableCell extends EditorTableCell
         else
         {
             Pair<Boolean, List<String>> suggestions = getSuggestions();
+            HBox fieldGraphic = new HBox();
             Control fill;
             if (suggestions.getValue().isEmpty())
             {
@@ -76,8 +81,21 @@ public class TextTableCell extends EditorTableCell
             {
                 fill = new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey());
             }
-            setGraphicWithResizing(fill);
+            fieldGraphic.getChildren().add(fill);
+            if (true)
+            {
+                Button createNewReferenceableObjectButton = new Button();
+                ButtonHelper.setButtonImage(createNewReferenceableObjectButton, "/icons/material/darkmode/outline_create_white_24dp.png");
+                fieldGraphic.getChildren().add(createNewReferenceableObjectButton);
+            }
+            setGraphicWithResizing(fieldGraphic);
         }
+    }
+    
+    private List<ReferenceableObjectInstance> getFittingReferenceableObjects()
+    {
+        return null;
+    
     }
     
     private Pair<Boolean, List<String>> getSuggestions()
