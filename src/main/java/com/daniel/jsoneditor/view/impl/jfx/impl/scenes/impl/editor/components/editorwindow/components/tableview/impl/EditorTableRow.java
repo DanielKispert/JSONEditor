@@ -60,4 +60,6 @@ public class EditorTableRow extends TableRow<JsonNodeWithPath>
             event.consume();
         });
     }
+    
+    
 }
