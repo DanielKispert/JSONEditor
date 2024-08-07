@@ -84,6 +84,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         setCellFactory(column1 -> {
             if (propertyNode.isObject())
             {
+                
                 List<String> types = SchemaHelper.getTypes(propertyNode);
                 if (types != null)
                 {

@@ -34,6 +34,12 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     @Override
     public void openPath(String path)
     {
+        openPath(path, true);
+    }
+    
+    @Override
+    public void openPath(String path, boolean openObjectParentOfArray)
+    {
         ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
         if (!windowsAsNodes.isEmpty())
         {
@@ -64,8 +70,23 @@ public class EditorWindowManagerImpl implements EditorWindowManager
         else
         {
             // if no window exists, we create a new one and open it in there
-            openInNewWindowIfPossible(path);
+            openInNewWindowIfPossible(path, openObjectParentOfArray);
         }
+        
+    }
+    
+    @Override
+    public void openInNewWindowIfPossible(String path, boolean openObjectParentOfArray)
+    {
+        if (canAnotherWindowBeAdded())
+        {
+            addWindow().setSelectedPath(path, openObjectParentOfArray);
+        }
+        else
+        {
+            openPath(path, openObjectParentOfArray);
+        }
+        
     }
     
     private JsonEditorEditorWindow addWindow()
@@ -85,14 +106,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     @Override
     public void openInNewWindowIfPossible(String path)
     {
-        if (canAnotherWindowBeAdded())
-        {
-            addWindow().setSelectedPath(path);
-        }
-        else
-        {
-            openPath(path);
-        }
+        openInNewWindowIfPossible(path, true);
     }
     
     @Override

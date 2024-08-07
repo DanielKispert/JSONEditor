@@ -209,7 +209,6 @@ public class ControllerImpl implements Controller, Observer
     public void addNewNodeToArray(String path)
     {
         // we check whether the array holds ReferencesToObjects or referenceable objects. In these cases, we do some additional steps
-        
         if (false && readableModel.getReferenceToObject(path) != null)
         {
             ReferenceTypeDialog dialog = new ReferenceTypeDialog();
