@@ -12,6 +12,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.util.Pair;
 
 import java.util.Collections;
@@ -29,6 +30,7 @@ public class TextTableCell extends EditorTableCell
         super(manager, controller, model, holdsObjectKey);
         this.model = model;
         this.alsoAllowNumbers = alsoAllowNumbers;
+        HBox.setHgrow(this, Priority.ALWAYS);
     }
     
     @Override
@@ -81,13 +83,19 @@ public class TextTableCell extends EditorTableCell
             {
                 fill = new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey());
             }
-            fieldGraphic.getChildren().add(fill);
-            if (true)
-            {
-                Button createNewReferenceableObjectButton = new Button();
-                ButtonHelper.setButtonImage(createNewReferenceableObjectButton, "/icons/material/darkmode/outline_create_white_24dp.png");
-                fieldGraphic.getChildren().add(createNewReferenceableObjectButton);
+            HBox.setHgrow(fill, Priority.ALWAYS);
+            Button createNewReferenceableObjectButton = new Button();
+            ButtonHelper.setButtonImage(createNewReferenceableObjectButton, "/icons/material/darkmode/outline_create_white_24dp.png");
+            fieldGraphic.getChildren().addAll(fill, createNewReferenceableObjectButton);
+            if (false) {
+                createNewReferenceableObjectButton.setVisible(true);
+                createNewReferenceableObjectButton.setManaged(true);
+            } else {
+                createNewReferenceableObjectButton.setVisible(false);
+                createNewReferenceableObjectButton.setManaged(false);
             }
+            
+            
             setGraphicWithResizing(fieldGraphic);
         }
     }
