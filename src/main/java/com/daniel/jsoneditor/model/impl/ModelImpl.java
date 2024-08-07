@@ -452,11 +452,9 @@ public class ModelImpl implements ReadableModel, WritableModel
         JsonNode itemsSchema = getSubschemaForPath(selectedPath + "/0").getSchemaNode();
         JsonNode newItem = NodeGenerator.generateNodeFromSchema(itemsSchema);
         addNodeToArray(selectedPath, newItem);
-        
     }
     
-    @Override
-    public void addNodeToArray(String arrayPath, JsonNode nodeToAdd)
+    private void addNodeToArray(String arrayPath, JsonNode nodeToAdd)
     {
         JsonNodeWithPath parent = getNodeForPath(arrayPath);
         if (parent.isArray())

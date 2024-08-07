@@ -302,6 +302,9 @@ public class ReferenceHelper
         return refs;
     }
     
+    /**
+     * sets the key node of a node, assuming the node is an instance of a Refererenceable Object
+     */
     public static void setKeyOfInstance(ReadableModel model, ReferenceableObject object, String pathToInstance, String newKey)
     {
         if (pathToInstance == null || newKey == null || newKey.isEmpty())

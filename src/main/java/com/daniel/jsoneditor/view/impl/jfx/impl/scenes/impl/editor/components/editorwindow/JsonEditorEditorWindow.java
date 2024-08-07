@@ -74,11 +74,21 @@ public class JsonEditorEditorWindow extends VBox
     }
     
     /**
-     * selects a json node in this window
+     * helper method that just always allows diverting to child views
      */
     public void setSelectedPath(String path)
     {
-        this.selectedPath = divertPathToSelect(path);
+        setSelectedPath(path, true);
+    }
+    
+    /**
+     * selects a json node in this window
+     * @param allowDivertingToChildViews if true, then opening an array will lead to opening its object parent so the array is shown in a
+     * child view
+     */
+    public void setSelectedPath(String path, boolean allowDivertingToChildViews)
+    {
+        this.selectedPath = divertPathToSelect(path, allowDivertingToChildViews);
         JsonNodeWithPath newNode = model.getNodeForPath(selectedPath);
         if (newNode.isArray())
         {
@@ -133,9 +143,9 @@ public class JsonEditorEditorWindow extends VBox
     /**
      * select the array parent if the node to select is either no object or an object with only non-openable children
      * also, if the parent of the array is an object, then selecting the object would show the array in a "compact child view" anyway.
-     * Therefore when we would select an array with an object parent, we select the object parent.
+     * Therefore when we would select an array with an object parent, we select the object parent if the parameter allows it.
      */
-    private String divertPathToSelect(String path)
+    private String divertPathToSelect(String path, boolean allowDivertingToChildViews)
     {
         String pathToSelect = path;
         JsonNodeWithPath nodeAtPath = model.getNodeForPath(path);
@@ -168,14 +178,15 @@ public class JsonEditorEditorWindow extends VBox
                     }
                 }
             }
-            else if (nodeAtPath.isArray() && parentNode.isObject()) //parent object & array child => open the parent too
+            else if (allowDivertingToChildViews && nodeAtPath.isArray() && parentNode.isObject()) //parent object & array child => open the
+                // parent too
             {
                 pathToSelect = parentPath;
             }
         }
         if (!path.equals(pathToSelect))
         {
-            return divertPathToSelect(pathToSelect); //recursion until the path doesn't change
+            return divertPathToSelect(pathToSelect, allowDivertingToChildViews); //recursion until the path doesn't change
         }
         else
         {
