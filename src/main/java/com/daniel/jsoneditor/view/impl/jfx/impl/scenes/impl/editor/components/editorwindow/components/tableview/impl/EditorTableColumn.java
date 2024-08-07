@@ -155,7 +155,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
             if (cellValue != null)
             {
                 Text text = new Text(cellValue);
-                double width = text.getLayoutBounds().getWidth() + 50; //padding for typing and checkbox buttons
+                double width = text.getLayoutBounds().getWidth() + 100; //padding for typing and checkbox buttons
                 if (width > maxWidth)
                 {
                     maxWidth = width;
