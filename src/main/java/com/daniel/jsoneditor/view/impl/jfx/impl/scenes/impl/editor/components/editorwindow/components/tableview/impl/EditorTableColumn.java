@@ -6,6 +6,7 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
@@ -42,7 +43,9 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
      */
     private final boolean holdsKeyOfReferenceableObject;
     
-    public EditorTableColumn(EditorWindowManager manager, Controller controller, ReadableModel model, JsonEditorEditorWindow window, JsonNode propertyNode, String propertyName, boolean isRequired)
+    private final boolean holdsObjectKeysOfReferences;
+    
+    public EditorTableColumn(EditorWindowManager manager, Controller controller, ReadableModel model, JsonEditorEditorWindow window, EditorTableViewImpl tableView, JsonNode propertyNode, String propertyName, boolean isRequired)
     {
         super();
         this.manager = manager;
@@ -50,8 +53,19 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         this.window = window;
         this.controller = controller;
         this.setMinWidth(20);
-        ReferenceableObject objectOfParent = window.getDisplayedObject();
+        JsonNodeWithPath selectedNodeByTable = model.getNodeForPath(tableView.getSelectedPath());
+        ReferenceableObject objectOfParent = null;
+        if (selectedNodeByTable.isArray())
+        {
+            objectOfParent = model.getReferenceableObject(selectedNodeByTable.getPath() + "/0");
+        }
+        else if (selectedNodeByTable.isObject())
+        {
+            objectOfParent = model.getReferenceableObject(selectedNodeByTable.getPath());
+        }
         this.holdsKeyOfReferenceableObject = objectOfParent != null && ("/" + propertyName).equals(objectOfParent.getKey());
+        ReferenceToObject parentReference = model.getReferenceToObject(tableView.getSelectedPath());
+        holdsObjectKeysOfReferences = parentReference != null && propertyName.equals(parentReference.getObjectKey().substring(1));
         String columnName = propertyName;
         if (holdsKeyOfReferenceableObject)
         {
@@ -141,6 +155,11 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         };
     }
     
+    public boolean holdsObjectKeysOfReferences()
+    {
+        return holdsObjectKeysOfReferences;
+    }
+    
     public void updatePrefWidth()
     {
         double maxWidth = columnName.length() * 7; //estimation for the title length in pixels.
@@ -155,7 +174,10 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
             if (cellValue != null)
             {
                 Text text = new Text(cellValue);
-                double width = text.getLayoutBounds().getWidth() + 50; //padding for typing and checkbox buttons
+                int extraWidth = holdsObjectKeysOfReferences ?
+                        80 :
+                        50; //if we hold object keys of references we add extra padding for the "create" button
+                double width = text.getLayoutBounds().getWidth() + extraWidth; //padding for typing and checkbox buttons
                 if (width > maxWidth)
                 {
                     maxWidth = width;

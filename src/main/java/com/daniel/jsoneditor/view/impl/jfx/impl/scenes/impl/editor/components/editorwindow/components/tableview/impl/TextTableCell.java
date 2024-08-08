@@ -87,10 +87,13 @@ public class TextTableCell extends EditorTableCell
             Button createNewReferenceableObjectButton = new Button();
             ButtonHelper.setButtonImage(createNewReferenceableObjectButton, "/icons/material/darkmode/outline_create_white_24dp.png");
             fieldGraphic.getChildren().addAll(fill, createNewReferenceableObjectButton);
-            if (false) {
+            if (((EditorTableColumn) getTableColumn()).holdsObjectKeysOfReferences() && false)
+            {
                 createNewReferenceableObjectButton.setVisible(true);
                 createNewReferenceableObjectButton.setManaged(true);
-            } else {
+            }
+            else
+            {
                 createNewReferenceableObjectButton.setVisible(false);
                 createNewReferenceableObjectButton.setManaged(false);
             }
