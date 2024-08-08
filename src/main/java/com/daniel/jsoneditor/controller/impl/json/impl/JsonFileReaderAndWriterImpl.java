@@ -24,21 +24,7 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         this.mapper = new ObjectMapper();
     }
     
-    @Override
-    public boolean validateJsonWithSchema(JsonNode json, JsonSchema schema)
-    {
-        Set<ValidationMessage> messages = schema.validate(json);
-        for (ValidationMessage message : messages)
-        {
-            System.out.println("Validation Error: " + message.getMessage() + " with element content " + json.at(convertToJSONPointer(message.getPath())));
-        }
-        return messages.isEmpty();
-    }
-    
-    private String convertToJSONPointer(String path)
-    {
-        return path.replace("$", "").replace("[", "/").replace("]", "").replaceAll("\\.", "/");
-    }
+
     
     @Override
     public JsonNode getJsonFromFile(File file)

@@ -7,8 +7,6 @@ import java.io.File;
 
 public interface JsonFileReaderAndWriter
 {
-    boolean validateJsonWithSchema(JsonNode json, JsonSchema schema);
-    
     JsonNode getJsonFromFile(File file);
     
     JsonNode getNodeFromString(String content);

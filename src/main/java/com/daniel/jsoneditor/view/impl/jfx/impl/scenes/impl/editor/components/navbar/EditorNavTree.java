@@ -23,6 +23,9 @@ import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 
@@ -53,8 +56,7 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         SplitPane.setResizableWithParent(this, false);
         setRoot(makeTree());
         setContextMenu(makeContextMenu());
-        setOnMouseClicked(mouseEvent ->
-        {
+        setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getButton().equals(MouseButton.PRIMARY) && mouseEvent.getClickCount() == 2)
             {
                 TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
@@ -77,6 +79,7 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         setCellFactory(tv -> new TreeCell<>()
         {
             private Tooltip tooltip = null;
+            
             @Override
             public void updateItem(JsonNodeWithPath item, boolean empty)
             {
@@ -99,6 +102,39 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
                 }
             }
         });
+        
+        // Add key event handler for copy and paste
+        addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+    }
+    
+    private void handleKeyPressed(KeyEvent event)
+    {
+        if (new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).match(event))
+        {
+            copy();
+        }
+        else if (new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN).match(event))
+        {
+            paste();
+        }
+    }
+    
+    private void copy()
+    {
+        TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
+        if (selectedItem != null)
+        {
+            controller.copyToClipboard(selectedItem.getValue().getPath());
+        }
+    }
+    
+    private void paste()
+    {
+        TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
+        if (selectedItem != null)
+        {
+            controller.pasteFromClipboardReplacingChild(selectedItem.getValue().getPath());
+        }
     }
     
     private ContextMenu makeContextMenu()
@@ -108,23 +144,26 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         MenuItem addItemItem = new MenuItem("Add Item");
         MenuItem duplicateItem = new MenuItem("Duplicate Item");
         MenuItem newWindowItem = new MenuItem("Open in new Window");
+        MenuItem copyItem = new MenuItem("Copy");
+        MenuItem pasteItem = new MenuItem("Paste");
         MenuItem deleteItem = new MenuItem("Delete");
         MenuItem sortArray = new MenuItem("Sort");
         MenuItem importItem = new MenuItem("Import");
         MenuItem exportItem = new MenuItem("Export");
         MenuItem exportWithDependenciesItem = new MenuItem("Export with Dependencies");
-        addItemItem.setOnAction(event ->
-        {
+        
+        copyItem.setOnAction(event -> copy());
+        pasteItem.setOnAction(event -> paste());
+        addItemItem.setOnAction(event -> {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
             {
                 JsonNodeWithPath selectedNode = selectedItem.getValue();
                 controller.addNewNodeToArray(selectedNode.getPath());
-            
+                
             }
         });
-        duplicateItem.setOnAction(event ->
-        {
+        duplicateItem.setOnAction(event -> {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
             if (selectedItem != null && selectedItem.getParent() != null)
             {
@@ -137,8 +176,7 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
                 }
             }
         });
-        newWindowItem.setOnAction(actionEvent ->
-        {
+        newWindowItem.setOnAction(actionEvent -> {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
             {
@@ -180,15 +218,15 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
             JsonNodeWithPath selectedNode = selectedItem.getValue();
             controller.exportNode(selectedNode.getPath());
         });
-        exportWithDependenciesItem.setOnAction(event ->
-        {
+        exportWithDependenciesItem.setOnAction(event -> {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
             JsonNodeWithPath selectedNode = selectedItem.getValue();
             controller.exportNodeWithDependencies(selectedNode.getPath());
         });
-    
-        contextMenu.getItems().addAll(newWindowItem, addItemItem, duplicateItem, sortArray, importItem, exportItem, exportWithDependenciesItem, deleteItem);
-    
+        
+        contextMenu.getItems().addAll(newWindowItem, addItemItem, copyItem, pasteItem, duplicateItem, sortArray, importItem, exportItem,
+                exportWithDependenciesItem, deleteItem);
+        
         this.setOnContextMenuRequested(event -> {
             TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
@@ -215,7 +253,7 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
             }
             // only show the prompt to display in a new window if the maximum window amount is not reached
             newWindowItem.setVisible(editorWindowManager.canAnotherWindowBeAdded());
-        
+            
         });
         
         return contextMenu;
@@ -260,7 +298,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
             }
         }
     }
-    
     
     private void populateForArray(NavbarItem parent)
     {

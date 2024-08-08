@@ -2,8 +2,6 @@ package com.daniel.jsoneditor.controller;
 
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
-import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.File;
 
@@ -46,6 +44,15 @@ public interface Controller
     void openNewJson();
     
     void generateJson();
+    
+    /**
+     * copy the node at the path to the clipboard
+     */
+    void copyToClipboard(String path);
+    
+    void pasteFromClipboardReplacingChild(String pathToInsert);
+    
+    void pasteFromClipboardIntoParent(String parentPath);
     
 
 }
