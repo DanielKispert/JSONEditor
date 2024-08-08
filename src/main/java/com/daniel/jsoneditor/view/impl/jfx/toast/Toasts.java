@@ -8,9 +8,12 @@ public enum Toasts
     SAVE_SUCCESSFUL_TOAST("saved", Color.GREEN, 2),
     IMPORT_SUCCESSFUL_TOAST("Import successful", Color.GREEN, 2),
     EXPORT_SUCCESSFUL_TOAST("Export succeessful", Color.GREEN, 2),
-    EXPORT_FAILED_DEPENDENCY_LOOP_TOAST("Export failed, resolve circular dependencies first", Color.RED, 4),
-    SAVE_FAILED_TOAST("Save failed", Color.RED, 3),
     REFRESH_SUCCESSFUL_TOAST("Reloaded", Color.GREEN, 2),
+    COPIED_TO_CLIPBOARD_TOAST("Copied to clipboard", Color.GREEN, 2),
+    ERROR_TOAST("Error", Color.RED, 2),
+    EXPORT_FAILED_DEPENDENCY_LOOP_TOAST("Export failed, resolve circular dependencies first", Color.RED, 2),
+    PASTED_FROM_CLIPBOARD_TOAST("Pasted", Color.GREEN, 2),
+    SAVE_FAILED_TOAST("Save failed", Color.RED, 3),
     NO_REFERENCES_TOAST("No references found", Color.RED, 2);
     
     private final String message;

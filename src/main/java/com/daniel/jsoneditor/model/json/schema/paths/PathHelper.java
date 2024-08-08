@@ -113,4 +113,18 @@ public class PathHelper
         
         return null;
     }
+    
+    public static String getLastPathSegment(String path)
+    {
+        if (path == null || path.isEmpty()) {
+            return null;
+        }
+        
+        String[] segments = path.split("/");
+        if (segments.length == 0) {
+            return null;
+        }
+        
+        return segments[segments.length - 1];
+    }
 }

@@ -17,6 +17,7 @@ import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
@@ -28,8 +29,11 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceType;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceTypeDialog;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.SelectReferenceDialog;
+import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.stage.Stage;
 
 
@@ -144,7 +148,7 @@ public class ControllerImpl implements Controller, Observer
         JsonNode contentNode = jsonReader.getNodeFromString(content);
         JsonNode mergedNode = JsonNodeMerger.createMergedNode(existingNodeAtPath, contentNode);
         JsonSchema schemaAtPath = readableModel.getSubschemaForPath(path);
-        if (mergedNode != null && jsonReader.validateJsonWithSchema(mergedNode, schemaAtPath))
+        if (mergedNode != null && SchemaHelper.validateJsonWithSchema(mergedNode, schemaAtPath))
         {
             // the node exists and is valid for its current location
             model.setNode(path, mergedNode);
@@ -293,8 +297,7 @@ public class ControllerImpl implements Controller, Observer
     
     private void handleJsonValidation(JsonNode json, JsonSchema schema, Runnable onSuccess)
     {
-        JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
-        if (reader.validateJsonWithSchema(json, schema))
+        if (SchemaHelper.validateJsonWithSchema(json, schema))
         {
             onSuccess.run();
         }
@@ -314,5 +317,99 @@ public class ControllerImpl implements Controller, Observer
     public void generateJson()
     {
     
+    }
+    
+    @Override
+    public void copyToClipboard(String path)
+    {
+        JsonNodeWithPath item = readableModel.getNodeForPath(path);
+        if (item != null)
+        {
+            ClipboardContent content = new ClipboardContent();
+            content.putString(item.getNode().toString());
+            Clipboard.getSystemClipboard().setContent(content);
+            view.showToast(Toasts.COPIED_TO_CLIPBOARD_TOAST);
+        }
+        else
+        {
+            view.showToast(Toasts.ERROR_TOAST);
+            System.out.println("Failed to copy to clipboard, " + path + " is not a valid path");
+        }
+    }
+    
+    @Override
+    public void pasteFromClipboardReplacingChild(String pathToInsert)
+    {
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        if (clipboard.hasString())
+        {
+            String jsonString = clipboard.getString();
+            try
+            {
+                JsonNode jsonNode = new JsonFileReaderAndWriterImpl().getNodeFromString(jsonString);
+                JsonNodeWithPath itemToInsertAt = readableModel.getNodeForPath(pathToInsert);
+                if (itemToInsertAt == null)
+                {
+                    view.showToast(Toasts.ERROR_TOAST);
+                    return;
+                }
+                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(pathToInsert)))
+                {
+                    model.setNode(pathToInsert, jsonNode);
+                    view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
+                    
+                }
+                else if (itemToInsertAt.isArray() && SchemaHelper.validateJsonWithSchema(jsonNode,
+                        readableModel.getSubschemaForPath(pathToInsert + "/0")))
+                {
+                    model.setNode(itemToInsertAt.getPath() + "/" + itemToInsertAt.getNode().size(), jsonNode);
+                    view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
+                }
+                else
+                {
+                    view.showToast(Toasts.ERROR_TOAST);
+                }
+            }
+            catch (Exception e)
+            {
+                view.showToast(Toasts.ERROR_TOAST);
+            }
+        }
+        
+    }
+    
+    @Override
+    public void pasteFromClipboardIntoParent(String parentPath)
+    {
+        JsonNodeWithPath parentNode = readableModel.getNodeForPath(parentPath);
+        if (parentNode == null || !parentNode.isArray())
+        {
+            view.showToast(Toasts.ERROR_TOAST);
+            return;
+        }
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        if (clipboard.hasString())
+        {
+            String jsonString = clipboard.getString();
+            try
+            {
+                JsonNode jsonNode = new JsonFileReaderAndWriterImpl().getNodeFromString(jsonString);
+                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(parentPath)))
+                {
+                    int arraySize = parentNode.getNode().size();
+                    model.setNode(parentNode.getPath() + "/" + arraySize, jsonNode); //add the new node at the end
+                    view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
+                }
+                else
+                {
+                    view.showToast(Toasts.ERROR_TOAST);
+                }
+            }
+            catch (Exception e)
+            {
+                view.showToast(Toasts.ERROR_TOAST);
+            }
+        }
+        
     }
 }

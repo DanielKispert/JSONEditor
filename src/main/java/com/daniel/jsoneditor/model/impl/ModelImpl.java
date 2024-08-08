@@ -177,6 +177,11 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public JsonNodeWithPath getNodeForPath(String path)
     {
+        // the root node is reachable under "" and not null.
+        if (path == null)
+        {
+            return null;
+        }
         return new JsonNodeWithPath(getRootJson().at(path), path);
     }
     
@@ -515,46 +520,48 @@ public class ModelImpl implements ReadableModel, WritableModel
             sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
             return;
         }
-        int lastSlashIndex = path.lastIndexOf('/');
-        if (lastSlashIndex != -1)
+        String parentPath = PathHelper.getParentPath(path);
+        String targetNodeName = PathHelper.getLastPathSegment(path);
+        JsonNode parentNode = getNodeForPath(parentPath).getNode();
+        if (parentNode.isObject())
         {
-            String parentPath = path.substring(0, lastSlashIndex);
-            String targetNodeName = path.substring(lastSlashIndex + 1);
-            JsonNode parentNode = rootJson.at(parentPath);
-            if (parentNode.isObject())
+            if (content == null)
             {
-                if (content == null)
-                {
-                    ((ObjectNode) parentNode).remove(targetNodeName);
-                }
-                else
-                {
-                    ((ObjectNode) parentNode).set(targetNodeName, content);
-                }
-            }
-            else if (parentNode.isArray())
-            {
-                // we try to parse targetNodeName into an integer (for an index)
-                int index = Integer.parseInt(targetNodeName);
-                if (content == null)
-                {
-                    ((ArrayNode) parentNode).remove(index);
-                }
-                else
-                {
-                    ((ArrayNode) parentNode).set(index, content);
-                }
+                ((ObjectNode) parentNode).remove(targetNodeName);
             }
             else
             {
-                return;
+                ((ObjectNode) parentNode).set(targetNodeName, content);
+            }
+        }
+        else if (parentNode.isArray())
+        {
+            // we try to parse targetNodeName into an integer (for an index)
+            int index = Integer.parseInt(targetNodeName);
+            int parentSize = parentNode.size();
+            if (content == null)
+            {
+                ((ArrayNode) parentNode).remove(index);
+            }
+            else
+            {
+                if (index >= parentSize)
+                {
+                    //we target a non-existing index, meaning we need to add this node to the end of the array
+                    ((ArrayNode) parentNode).add(content);
+                }
+                else
+                {
+                    // override an existing index
+                    ((ArrayNode) parentNode).set(index, content);
+                }
             }
         }
         else
         {
-            // TODO make this prettier
             return;
         }
+        
         // both of these events do the same, it's just for cleanliness right now
         if (content != null)
         {

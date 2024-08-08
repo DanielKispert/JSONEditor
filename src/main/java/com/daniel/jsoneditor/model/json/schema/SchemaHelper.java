@@ -3,10 +3,12 @@ package com.daniel.jsoneditor.model.json.schema;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
+import com.networknt.schema.ValidationMessage;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 
 public class SchemaHelper
@@ -19,6 +21,22 @@ public class SchemaHelper
         resolveJsonRefs(root, schemaNode);
         
         return root;
+    }
+    
+    public static boolean validateJsonWithSchema(JsonNode json, JsonSchema schema)
+    {
+        Set<ValidationMessage> messages = schema.validate(json);
+        for (ValidationMessage message : messages)
+        {
+            System.out.println("Validation Error: " + message.getMessage() + " with element content " + json.at(
+                    convertToJSONPointer(message.getPath())));
+        }
+        return messages.isEmpty();
+    }
+    
+    private static String convertToJSONPointer(String path)
+    {
+        return path.replace("$", "").replace("[", "/").replace("]", "").replaceAll("\\.", "/");
     }
     
     private static void resolveJsonRefs(JsonSchema rootWithRefs, JsonNode node)

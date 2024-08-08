@@ -1,5 +1,8 @@
 package com.daniel.jsoneditor.model.statemachine.impl;
 
+/**
+ * events are sent from model (or controller) and update the UI
+ */
 public enum EventEnum
 {
     
@@ -26,5 +29,5 @@ public enum EventEnum
     
     IMPORT_SUCCESSFUL,
     
-    SAVING_FAILED
+    SAVING_FAILED,
 }

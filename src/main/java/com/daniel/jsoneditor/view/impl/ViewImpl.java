@@ -99,4 +99,10 @@ public class ViewImpl implements View
         Alert alert = new ThemedAlert(Alert.AlertType.ERROR, "Select a JSON and a Schema!", ButtonType.OK);
         alert.showAndWait();
     }
+    
+    @Override
+    public void showToast(Toasts toast)
+    {
+        uiHandler.showToast(toast);
+    }
 }

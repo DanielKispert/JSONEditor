@@ -17,8 +17,14 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -46,6 +52,12 @@ public class EditorTableViewImpl extends EditorTableView
     
     private final JsonEditorEditorWindow window;
     
+    /**
+     * our table view shows one child item per row. We save the path of the parent item in case we want to paste something and there are no
+     * child views to grab the parent path from
+     */
+    private String parentPath;
+    
     public EditorTableViewImpl(EditorWindowManager manager, JsonEditorEditorWindow window, ReadableModel model, Controller controller)
     {
         this.window = window;
@@ -54,7 +66,55 @@ public class EditorTableViewImpl extends EditorTableView
         this.controller = controller;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
-        setRowFactory(jsonNodeWithPathTableView -> new EditorTableRow(controller));
+        setRowFactory(jsonNodeWithPathTableView -> new EditorTableRow(model, controller));
+        addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+        setContextMenu(makeContextMenu());
+    }
+    
+    private ContextMenu makeContextMenu()
+    {
+        // Add context menu for right-click functionality
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem copyItem = new MenuItem("Copy");
+        MenuItem pasteItem = new MenuItem("Paste");
+        
+        copyItem.setOnAction(event -> copy());
+        pasteItem.setOnAction(event -> paste());
+        
+        contextMenu.getItems().addAll(copyItem, pasteItem);
+        return contextMenu;
+    }
+    
+    private void handleKeyPressed(KeyEvent event)
+    {
+        if (new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).match(event))
+        {
+            copy();
+        }
+        else if (new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN).match(event))
+        {
+            paste();
+        }
+    }
+    
+    private void copy()
+    {
+        JsonNodeWithPath selectedItem = getSelectionModel().getSelectedItem();
+        controller.copyToClipboard(selectedItem != null ? selectedItem.getPath() : null);
+        
+    }
+    
+    private void paste()
+    {
+        JsonNodeWithPath selectedItem = getSelectionModel().getSelectedItem();
+        if (selectedItem != null)
+        {
+            controller.pasteFromClipboardReplacingChild(selectedItem.getPath());
+        }
+        else
+        {
+            controller.pasteFromClipboardIntoParent(parentPath);
+        }
     }
     
     @Override
@@ -65,6 +125,7 @@ public class EditorTableViewImpl extends EditorTableView
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
     {
+        parentPath = nodeWithPath.getPath();
         JsonNode node = nodeWithPath.getNode();
         JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath()).getSchemaNode();
         
