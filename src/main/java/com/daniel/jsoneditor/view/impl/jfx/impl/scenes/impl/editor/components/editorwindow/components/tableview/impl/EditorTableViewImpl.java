@@ -117,6 +117,11 @@ public class EditorTableViewImpl extends EditorTableView
         }
     }
     
+    public String getSelectedPath()
+    {
+        return parentPath;
+    }
+    
     @Override
     protected double computePrefHeight(double v)
     {
@@ -345,7 +350,7 @@ public class EditorTableViewImpl extends EditorTableView
             String propertyName = property.getKey().getKey();
             boolean isRequired = property.getKey().getValue();
             JsonNode propertyNode = property.getValue();
-            columns.add(new EditorTableColumn(manager, controller, model, window, propertyNode, propertyName, isRequired));
+            columns.add(new EditorTableColumn(manager, controller, model, window, this, propertyNode, propertyName, isRequired));
         }
         return columns;
     }

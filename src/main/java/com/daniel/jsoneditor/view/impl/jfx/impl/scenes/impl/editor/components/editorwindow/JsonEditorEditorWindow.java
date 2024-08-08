@@ -49,13 +49,9 @@ public class JsonEditorEditorWindow extends VBox
     
     private List<TableViewWithCompactNamebar> childTableViews;
     
-    // reference so we don't always have to get it from the path
-    private ReferenceableObject displayedObject;
-    
     public JsonEditorEditorWindow(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
         this.model = model;
-        displayedObject = null;
         this.manager = manager;
         this.controller = controller;
         nameBar = new JsonEditorNamebar(manager, this, model, controller);
@@ -90,14 +86,6 @@ public class JsonEditorEditorWindow extends VBox
     {
         this.selectedPath = divertPathToSelect(path, allowDivertingToChildViews);
         JsonNodeWithPath newNode = model.getNodeForPath(selectedPath);
-        if (newNode.isArray())
-        {
-            displayedObject = model.getReferenceableObject(newNode.getPath() + "/0");
-        }
-        else if (newNode.isObject())
-        {
-            displayedObject = model.getReferenceableObject(newNode.getPath());
-        }
         nameBar.setSelection(newNode);
         mainTableView.setSelection(newNode);
         // for every child node of type array we add a compact child view
@@ -230,11 +218,6 @@ public class JsonEditorEditorWindow extends VBox
             selectedChildPaths.add(childView.getSelectedPath());
         }
         return selectedChildPaths;
-    }
-    
-    public ReferenceableObject getDisplayedObject()
-    {
-        return displayedObject;
     }
     
     public AutoAdjustingSplitPane getTablesSplitPane()
