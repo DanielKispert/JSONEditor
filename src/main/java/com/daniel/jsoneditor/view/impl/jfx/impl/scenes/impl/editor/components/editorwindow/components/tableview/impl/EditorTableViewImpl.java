@@ -21,6 +21,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -67,33 +68,21 @@ public class EditorTableViewImpl extends EditorTableView
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
         setRowFactory(jsonNodeWithPathTableView -> new EditorTableRow(model, controller));
-        addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
-        setContextMenu(makeContextMenu());
-    }
-    
-    private ContextMenu makeContextMenu()
-    {
-        // Add context menu for right-click functionality
-        ContextMenu contextMenu = new ContextMenu();
-        MenuItem copyItem = new MenuItem("Copy");
-        MenuItem pasteItem = new MenuItem("Paste");
-        
-        copyItem.setOnAction(event -> copy());
-        pasteItem.setOnAction(event -> paste());
-        
-        contextMenu.getItems().addAll(copyItem, pasteItem);
-        return contextMenu;
+        //addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
     }
     
     private void handleKeyPressed(KeyEvent event)
     {
-        if (new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).match(event))
+        if (isFocused())
         {
-            copy();
-        }
-        else if (new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN).match(event))
-        {
-            paste();
+            if (new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).match(event))
+            {
+                copy();
+            }
+            else if (new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN).match(event))
+            {
+                paste();
+            }
         }
     }
     
@@ -101,7 +90,6 @@ public class EditorTableViewImpl extends EditorTableView
     {
         JsonNodeWithPath selectedItem = getSelectionModel().getSelectedItem();
         controller.copyToClipboard(selectedItem != null ? selectedItem.getPath() : null);
-        
     }
     
     private void paste()

@@ -3,13 +3,16 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 
 
@@ -27,6 +30,53 @@ public class EditorTableRow extends TableRow<JsonNodeWithPath>
         setOnDragDetected(this::handleDragDetected);
         setOnDragOver(this::handleDragOver);
         setOnDragDropped(this::handleDragDropped);
+        addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+        setContextMenu(makeContextMenu());
+    }
+    
+    private void handleKeyPressed(KeyEvent event)
+    {
+        if (isFocused())
+        {
+            if (new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).match(event))
+            {
+                copy();
+            }
+            else if (new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN).match(event))
+            {
+                paste();
+            }
+        }
+    }
+    
+    private ContextMenu makeContextMenu()
+    {
+        // Add context menu for right-click functionality
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem copyItem = new MenuItem("Copy");
+        MenuItem pasteItem = new MenuItem("Paste");
+        
+        copyItem.setOnAction(event -> copy());
+        pasteItem.setOnAction(event -> paste());
+        
+        this.setOnContextMenuRequested(event -> copyItem.setVisible(getItem() != null));
+        contextMenu.getItems().addAll(copyItem, pasteItem);
+        return contextMenu;
+    }
+    
+    private void copy()
+    {
+        JsonNodeWithPath item = getItem();
+        controller.copyToClipboard(item != null ? item.getPath() : null);
+    }
+    
+    private void paste()
+    {
+        JsonNodeWithPath selectedItem = getItem();
+        if (selectedItem != null)
+        {
+            controller.pasteFromClipboardReplacingChild(selectedItem.getPath());
+        }
     }
     
 
