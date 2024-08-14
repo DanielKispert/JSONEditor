@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableRow;
@@ -22,11 +23,14 @@ public class EditorTableRow extends TableRow<JsonNodeWithPath>
     
     private final Controller controller;
     
-    public EditorTableRow(ReadableModel model, Controller controller)
+    private final EditorTableView myTableView;
+    
+    public EditorTableRow(ReadableModel model, Controller controller, EditorTableView myTableView)
     {
         super();
         this.model = model;
         this.controller = controller;
+        this.myTableView = myTableView;
         setOnDragDetected(this::handleDragDetected);
         setOnDragOver(this::handleDragOver);
         setOnDragDropped(this::handleDragDropped);
@@ -76,6 +80,10 @@ public class EditorTableRow extends TableRow<JsonNodeWithPath>
         if (selectedItem != null)
         {
             controller.pasteFromClipboardReplacingChild(selectedItem.getPath());
+        }
+        else
+        {
+            controller.pasteFromClipboardIntoParent(myTableView.getSelectedPath());
         }
     }
     

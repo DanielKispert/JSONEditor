@@ -67,7 +67,7 @@ public class EditorTableViewImpl extends EditorTableView
         this.controller = controller;
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
-        setRowFactory(jsonNodeWithPathTableView -> new EditorTableRow(model, controller));
+        setRowFactory(jsonNodeWithPathTableView -> new EditorTableRow(model, controller, this));
         //addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
     }
     
@@ -105,6 +105,7 @@ public class EditorTableViewImpl extends EditorTableView
         }
     }
     
+    @Override
     public String getSelectedPath()
     {
         return parentPath;
@@ -125,7 +126,6 @@ public class EditorTableViewImpl extends EditorTableView
         ReferenceToObject reference = model.getReferenceToObject(nodeWithPath.getPath());
         if (reference != null)
         {
-        
             
             
         
