@@ -68,7 +68,7 @@ public class EditorTableViewImpl extends EditorTableView
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
         setRowFactory(jsonNodeWithPathTableView -> new EditorTableRow(model, controller, this));
-        //addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+        addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
     }
     
     private void handleKeyPressed(KeyEvent event)
