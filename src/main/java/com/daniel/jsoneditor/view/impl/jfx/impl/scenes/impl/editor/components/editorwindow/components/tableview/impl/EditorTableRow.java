@@ -34,23 +34,7 @@ public class EditorTableRow extends TableRow<JsonNodeWithPath>
         setOnDragDetected(this::handleDragDetected);
         setOnDragOver(this::handleDragOver);
         setOnDragDropped(this::handleDragDropped);
-        addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
         setContextMenu(makeContextMenu());
-    }
-    
-    private void handleKeyPressed(KeyEvent event)
-    {
-        if (isFocused())
-        {
-            if (new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).match(event))
-            {
-                copy();
-            }
-            else if (new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN).match(event))
-            {
-                paste();
-            }
-        }
     }
     
     private ContextMenu makeContextMenu()
