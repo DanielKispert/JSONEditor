@@ -31,6 +31,8 @@ public interface Controller
     
     void addNewNodeToArray(String path);
     
+    void createNewReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key);
+    
     void sortArray(String path);
     
     void duplicateArrayNode(String path);

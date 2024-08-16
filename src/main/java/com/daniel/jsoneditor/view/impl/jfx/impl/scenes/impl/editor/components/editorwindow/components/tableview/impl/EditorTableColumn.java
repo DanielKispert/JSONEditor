@@ -43,6 +43,9 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
      */
     private final boolean holdsKeyOfReferenceableObject;
     
+    /**
+     * true if the table holds a list of references to object and this column holds their "objectKey" attribute
+     */
     private final boolean holdsObjectKeysOfReferences;
     
     public EditorTableColumn(EditorWindowManager manager, Controller controller, ReadableModel model, JsonEditorEditorWindow window, EditorTableViewImpl tableView, JsonNode propertyNode, String propertyName, boolean isRequired)

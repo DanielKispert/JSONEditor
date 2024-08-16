@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model;
 
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
@@ -43,4 +44,9 @@ public interface WritableModel
      * sets a path to a node, replacing everything that was there before
      */
     void setNode(String path, JsonNode content);
+    
+    /**
+     * adds a new node to the JSON for the
+     */
+    void addReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key);
 }

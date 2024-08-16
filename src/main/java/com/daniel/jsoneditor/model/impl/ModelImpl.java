@@ -574,6 +574,13 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public void addReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key)
+    {
+        ReferenceHelper.createAndInsertReferenceableObject(this, this, pathOfReferenceableObject, key);
+        // TODO switch state
+    }
+    
+    @Override
     public void setNode(String path, JsonNode content)
     {
         removeOrSetNode(path, content);
