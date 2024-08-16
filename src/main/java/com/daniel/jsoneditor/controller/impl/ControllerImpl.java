@@ -261,6 +261,13 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void createNewReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key)
+    {
+        model.addReferenceableObjectNodeWithKey(pathOfReferenceableObject, key);
+        
+    }
+    
+    @Override
     public void sortArray(String path)
     {
         model.sortArray(path);

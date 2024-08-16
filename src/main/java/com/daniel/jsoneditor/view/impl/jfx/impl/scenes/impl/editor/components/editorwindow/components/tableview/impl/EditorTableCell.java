@@ -47,6 +47,14 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         
     }
     
+    protected void handleCreateNewReferenceableObject()
+    {
+        // create a new referenceable object from the model
+        controller.createNewReferenceableObjectNodeWithKey();
+        
+        
+    }
+    
     protected final void setGraphicWithResizing(Node node)
     {
         setGraphic(node);

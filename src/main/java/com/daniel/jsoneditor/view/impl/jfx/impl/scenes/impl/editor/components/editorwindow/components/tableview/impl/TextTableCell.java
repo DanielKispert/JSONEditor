@@ -86,8 +86,9 @@ public class TextTableCell extends EditorTableCell
             HBox.setHgrow(fill, Priority.ALWAYS);
             Button createNewReferenceableObjectButton = new Button();
             ButtonHelper.setButtonImage(createNewReferenceableObjectButton, "/icons/material/darkmode/outline_create_white_24dp.png");
+            createNewReferenceableObjectButton.setOnAction(event -> handleCreateNewReferenceableObject());
             fieldGraphic.getChildren().addAll(fill, createNewReferenceableObjectButton);
-            if (((EditorTableColumn) getTableColumn()).holdsObjectKeysOfReferences() && false)
+            if (((EditorTableColumn) getTableColumn()).holdsObjectKeysOfReferences())
             {
                 createNewReferenceableObjectButton.setVisible(true);
                 createNewReferenceableObjectButton.setManaged(true);

@@ -119,6 +119,7 @@ public class ReferenceHelper
         }
         else
         {
+            // TODO solve
             throw new IllegalArgumentException("ReferenceableObject is not an array: " + referenceableObjectPath);
         }
     }
