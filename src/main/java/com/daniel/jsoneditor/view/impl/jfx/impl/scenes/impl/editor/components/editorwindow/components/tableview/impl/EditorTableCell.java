@@ -1,20 +1,17 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl;
 
-import java.awt.*;
-import java.util.Objects;
-import java.util.function.Consumer;
-
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+
+import java.util.Objects;
 
 
 public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String>
@@ -50,7 +47,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     protected void handleCreateNewReferenceableObject()
     {
         // create a new referenceable object from the model
-        controller.createNewReferenceableObjectNodeWithKey();
+        controller.createNewReferenceableObjectNodeWithKey(null, null); //TODO fill in
         
         
     }

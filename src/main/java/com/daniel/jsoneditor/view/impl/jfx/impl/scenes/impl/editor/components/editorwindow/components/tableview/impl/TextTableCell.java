@@ -3,6 +3,8 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
@@ -88,7 +90,7 @@ public class TextTableCell extends EditorTableCell
             ButtonHelper.setButtonImage(createNewReferenceableObjectButton, "/icons/material/darkmode/outline_create_white_24dp.png");
             createNewReferenceableObjectButton.setOnAction(event -> handleCreateNewReferenceableObject());
             fieldGraphic.getChildren().addAll(fill, createNewReferenceableObjectButton);
-            if (((EditorTableColumn) getTableColumn()).holdsObjectKeysOfReferences())
+            if (holdsKeyOfReferenceableObjectThatDoesNotExist())
             {
                 createNewReferenceableObjectButton.setVisible(true);
                 createNewReferenceableObjectButton.setManaged(true);
@@ -104,10 +106,40 @@ public class TextTableCell extends EditorTableCell
         }
     }
     
+    boolean holdsKeyOfReferenceableObjectThatDoesNotExist()
+    {
+        if (!((EditorTableColumn) getTableColumn()).holdsObjectKeysOfReferences())
+        {
+            return false;
+        }
+        
+        String cellValue = getItem();
+        if (cellValue == null || cellValue.isEmpty())
+        {
+            return false;
+        }
+        
+        // Assuming `model` is an instance of ReadableModel available in the class
+        List<ReferenceableObject> referenceableObjects = model.getReferenceableObjects();
+        for (ReferenceableObject referenceableObject : referenceableObjects)
+        {
+            List<ReferenceableObjectInstance> instances = ReferenceHelper.getReferenceableObjectInstances(model, referenceableObject);
+            for (ReferenceableObjectInstance instance : instances)
+            {
+                if (cellValue.equals(instance.getKey()))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+        
+    }
+    
     private List<ReferenceableObjectInstance> getFittingReferenceableObjects()
     {
         return null;
-    
+        
     }
     
     private Pair<Boolean, List<String>> getSuggestions()
