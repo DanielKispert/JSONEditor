@@ -118,20 +118,16 @@ public class TextTableCell extends EditorTableCell
         {
             return false;
         }
-        
-        // Assuming `model` is an instance of ReadableModel available in the class
-        List<ReferenceableObject> referenceableObjects = model.getReferenceableObjects();
-        for (ReferenceableObject referenceableObject : referenceableObjects)
+        ReferenceableObject objectOfParent = model.getReferenceableObject(((EditorTableViewImpl) getTableView()).getSelectedPath());
+        List<ReferenceableObjectInstance> instances = ReferenceHelper.getReferenceableObjectInstances(model, objectOfParent);
+        for (ReferenceableObjectInstance instance : instances)
         {
-            List<ReferenceableObjectInstance> instances = ReferenceHelper.getReferenceableObjectInstances(model, referenceableObject);
-            for (ReferenceableObjectInstance instance : instances)
+            if (cellValue.equals(instance.getKey()))
             {
-                if (cellValue.equals(instance.getKey()))
-                {
-                    return false;
-                }
+                return false;
             }
         }
+        
         return true;
         
     }
