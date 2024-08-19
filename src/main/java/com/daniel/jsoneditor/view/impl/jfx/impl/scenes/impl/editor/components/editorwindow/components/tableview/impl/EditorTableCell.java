@@ -47,9 +47,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     protected void handleCreateNewReferenceableObject()
     {
         // create a new referenceable object from the model
-        controller.createNewReferenceableObjectNodeWithKey(null, null); //TODO fill in
-        
-        
+        controller.createNewReferenceableObjectNodeWithKey(((EditorTableViewImpl) getTableView()).getSelectedPath(), getItem());
     }
     
     protected final void setGraphicWithResizing(Node node)
