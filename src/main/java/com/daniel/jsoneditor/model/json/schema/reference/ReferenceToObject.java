@@ -49,6 +49,20 @@ public class ReferenceToObject
         return null;
     }
     
+    public String getObjectReferencingKeyOfInstance(JsonNode instance)
+    {
+        if (instance != null)
+        {
+            JsonNode keyNode = instance.at(objectReferencingKey);
+            if (keyNode != null && !keyNode.isMissingNode())
+            {
+                return keyNode.asText();
+            }
+        }
+        
+        return null;
+    }
+    
     public String getRemarksOfInstance(JsonNode node)
     {
         if (node != null)
