@@ -39,31 +39,41 @@ public class ReferenceHelper
         }
         String objectReferencingKey = node.getNode().at(reference.getObjectReferencingKey()).asText();
         String objectKey = node.getNode().at(reference.getObjectKey()).asText();
+        ReferenceableObject object = getReferenceableObject(model, objectReferencingKey);
+        if (object == null)
+        {
+            System.out.println("Could not find a referenceable object for reference " + node.getDisplayName());
+            return null;
+        }
+        JsonNodeWithPath objectNode = model.getNodeForPath(object.getPath());
+        if (objectNode.isArray())
+        {
+            int index = 0;
+            for (JsonNode item : objectNode.getNode())
+            {
+                if (objectKey.equals(object.getKeyOfInstance(item)))
+                {
+                    return objectNode.getPath() + "/" + index;
+                }
+                index++;
+            }
+            return objectNode.getPath() + "/" + 0;
+        }
+        else
+        {
+            return objectNode.getPath();
+        }
+    }
+    
+    public static ReferenceableObject getReferenceableObject(ReadableModel model, String referencingKey)
+    {
         for (ReferenceableObject object : model.getReferenceableObjects())
         {
-            if (object.getReferencingKey().equals(objectReferencingKey))
+            if (object.getReferencingKey().equals(referencingKey))
             {
-                JsonNodeWithPath objectNode = model.getNodeForPath(object.getPath());
-                if (objectNode.isArray())
-                {
-                    int index = 0;
-                    for (JsonNode item : objectNode.getNode())
-                    {
-                        if (objectKey.equals(object.getKeyOfInstance(item)))
-                        {
-                            return objectNode.getPath() + "/" + index;
-                        }
-                        index++;
-                    }
-                }
-                else
-                {
-                    return objectNode.getPath();
-                }
-                break;
+                return object;
             }
         }
-        System.out.println("Could not find a referenceable object for reference " + node.getDisplayName());
         return null;
     }
     

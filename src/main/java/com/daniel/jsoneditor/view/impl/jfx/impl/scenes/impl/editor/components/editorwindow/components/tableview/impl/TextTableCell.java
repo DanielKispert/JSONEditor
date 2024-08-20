@@ -18,6 +18,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.util.Pair;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -123,16 +124,9 @@ public class TextTableCell extends EditorTableCell
         // we can assume that the parent item is a referenceToObject because the previous condition was true
         JsonNodeWithPath parentItem = getTableRow().getItem();
         ReferenceToObject referenceToObject = model.getReferenceToObject(parentItem.getPath());
+        String objectReferencingKey = referenceToObject.getObjectReferencingKeyOfInstance(parentItem.getNode());
         
-        for (ReferenceableObjectInstance instance : instances)
-        {
-            if (cellValue.equals(instance.getKey()))
-            {
-                return false;
-            }
-        }
-        
-        return true;
+        return model.getReferenceableObjectInstance(objectReferencingKey, getItem()) == null;
         
     }
     

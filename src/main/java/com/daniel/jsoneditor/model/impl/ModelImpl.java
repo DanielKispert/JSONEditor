@@ -574,6 +574,24 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public ReferenceableObjectInstance getReferenceableObjectInstance(String referencingKey, String key)
+    {
+        ReferenceableObject object = ReferenceHelper.getReferenceableObject(this, referencingKey);
+        if (object == null)
+        {
+            return null;
+        }
+        for (ReferenceableObjectInstance instance : ReferenceHelper.getReferenceableObjectInstances(this, object))
+        {
+            if (instance.getKey().equals(key))
+            {
+                return instance;
+            }
+        }
+        return null;
+    }
+    
+    @Override
     public void addReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key)
     {
         ReferenceHelper.createAndInsertReferenceableObject(this, this, pathOfReferenceableObject, key);

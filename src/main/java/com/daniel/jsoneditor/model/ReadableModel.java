@@ -41,6 +41,11 @@ public interface ReadableModel extends ReadableState
     ReferenceableObject getReferenceableObject(String path);
     
     /**
+     * @return the ReferenceableObjectInstance of a ReferenceableObject with the given referencingKey where the instance has the key or null if none exists
+     */
+    ReferenceableObjectInstance getReferenceableObjectInstance(String referencingKey, String key);
+    
+    /**
      * @return a graph of the path and its direct incoming and outgoing references
      */
     NodeGraph getJsonAsGraph(String path);
