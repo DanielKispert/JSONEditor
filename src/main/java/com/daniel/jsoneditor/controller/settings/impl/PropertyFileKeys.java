@@ -8,6 +8,8 @@ public class PropertyFileKeys
     
     public final static String PROPERTY_REMEMBER_PATHS = "remember_paths";
     
+    public final static String PROPERTY_START_MAXIMIZED = "start_maximized";
+    
     public final static String PROPERTY_CLUSTER_SHAPE = "cluster_shape";
     
     public final static String PROPERTY_HIDE_EMPTY_COLUMNS = "automatically_hide_empty_columns";

@@ -1,5 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl;
 
+import java.util.Optional;
+
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
@@ -10,8 +12,6 @@ import com.daniel.jsoneditor.view.impl.jfx.toast.impl.ToastImpl;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
-
-import java.util.Optional;
 
 
 public class UIHandlerImpl implements UIHandler
@@ -29,6 +29,7 @@ public class UIHandlerImpl implements UIHandler
         this.controller = controller;
         this.stage = stage;
         this.model = model;
+        stage.maximizedProperty().addListener((observable, oldValue, newValue) -> controller.getSettingsController().setStartMaximized(newValue));
     }
     
     @Override
@@ -43,6 +44,7 @@ public class UIHandlerImpl implements UIHandler
     {
         this.editorScene = new EditorScene(this, controller, model);
         stage.setScene(editorScene.getScene(stage));
+        stage.setMaximized(controller.getSettingsController().getStartMaximized()); //start maximized if the editor was maximized last time
         stage.show();
     }
     
