@@ -4,6 +4,7 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
@@ -118,8 +119,11 @@ public class TextTableCell extends EditorTableCell
         {
             return false;
         }
-        ReferenceableObject objectOfParent = model.getReferenceableObject(((EditorTableViewImpl) getTableView()).getSelectedPath());
-        List<ReferenceableObjectInstance> instances = ReferenceHelper.getReferenceableObjectInstances(model, objectOfParent);
+        
+        // we can assume that the parent item is a referenceToObject because the previous condition was true
+        JsonNodeWithPath parentItem = getTableRow().getItem();
+        ReferenceToObject referenceToObject = model.getReferenceToObject(parentItem.getPath());
+        
         for (ReferenceableObjectInstance instance : instances)
         {
             if (cellValue.equals(instance.getKey()))

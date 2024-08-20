@@ -73,6 +73,10 @@ public class ReferenceHelper
     public static List<ReferenceableObjectInstance> getReferenceableObjectInstances(ReadableModel model,
             ReferenceableObject referenceableObject)
     {
+        if (referenceableObject == null)
+        {
+            return new ArrayList<>();
+        }
         JsonNodeWithPath objectInstance = model.getNodeForPath(referenceableObject.getPath());
         if (objectInstance.isArray())
         {
