@@ -40,6 +40,28 @@ public class SettingsControllerImpl implements SettingsController
     }
     
     @Override
+    public void setStartMaximized(boolean startMaximized)
+    {
+        properties.setProperty(PropertyFileKeys.PROPERTY_START_MAXIMIZED, startMaximized ? "true" : "false");
+        PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public boolean getStartMaximized()
+    {
+        // default is false
+        String property = properties.getProperty(PropertyFileKeys.PROPERTY_START_MAXIMIZED);
+        if (property == null)
+        {
+            return false;
+        }
+        else
+        {
+            return "true".equalsIgnoreCase(property);
+        }
+    }
+    
+    @Override
     public String getClusterShape()
     {
         String shape = properties.getProperty(PropertyFileKeys.PROPERTY_CLUSTER_SHAPE);

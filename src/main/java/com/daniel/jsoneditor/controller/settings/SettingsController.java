@@ -11,6 +11,10 @@ public interface SettingsController
     
     void setClusterShape(String symbol);
     
+    void setStartMaximized(boolean startMaximized);
+    
+    boolean getStartMaximized();
+    
     String getClusterShape();
     
     boolean renameReferencesWhenRenamingObject();
