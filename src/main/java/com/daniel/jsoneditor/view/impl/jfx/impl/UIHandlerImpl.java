@@ -3,14 +3,17 @@ package com.daniel.jsoneditor.view.impl.jfx.impl;
 import java.util.Optional;
 
 import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.controller.settings.impl.EditorDimensions;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelectionScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import com.daniel.jsoneditor.view.impl.jfx.toast.impl.ToastImpl;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 
@@ -29,7 +32,11 @@ public class UIHandlerImpl implements UIHandler
         this.controller = controller;
         this.stage = stage;
         this.model = model;
-        stage.maximizedProperty().addListener((observable, oldValue, newValue) -> controller.getSettingsController().setStartMaximized(newValue));
+        stage.maximizedProperty().addListener((observable, oldValue, newValue) -> {
+            EditorDimensions oldDimensions = controller.getSettingsController().getEditorDimensions();
+            controller.getSettingsController().setEditorDimensions(oldDimensions.getWidth(), oldDimensions.getHeight(), newValue);
+        });
+        
     }
     
     @Override
@@ -42,9 +49,15 @@ public class UIHandlerImpl implements UIHandler
     @Override
     public void showMainEditor()
     {
+        EditorDimensions dimensions = controller.getSettingsController().getEditorDimensions();
+        stage.setMaximized(dimensions.isMaximized()); //start maximized if the editor was maximized last
+        stage.setWidth(dimensions.getWidth());
+        stage.setHeight(dimensions.getHeight());
+        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+        stage.setX((screenBounds.getWidth() - dimensions.getWidth()) / 2);
+        stage.setY((screenBounds.getHeight() - dimensions.getHeight()) / 2);
         this.editorScene = new EditorScene(this, controller, model);
         stage.setScene(editorScene.getScene(stage));
-        stage.setMaximized(controller.getSettingsController().getStartMaximized()); //start maximized if the editor was maximized last time
         stage.show();
     }
     

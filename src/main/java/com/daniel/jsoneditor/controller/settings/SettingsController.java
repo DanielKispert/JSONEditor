@@ -1,5 +1,8 @@
 package com.daniel.jsoneditor.controller.settings;
 
+import com.daniel.jsoneditor.controller.settings.impl.EditorDimensions;
+
+
 public interface SettingsController
 {
     void setFileProperties(boolean rememberPaths, String jsonPath, String schemaPath, String settingsPath);
@@ -11,9 +14,9 @@ public interface SettingsController
     
     void setClusterShape(String symbol);
     
-    void setStartMaximized(boolean startMaximized);
+    void setEditorDimensions(int width, int height, boolean startMaximized);
     
-    boolean getStartMaximized();
+    EditorDimensions getEditorDimensions();
     
     String getClusterShape();
     
