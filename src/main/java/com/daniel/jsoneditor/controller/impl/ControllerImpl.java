@@ -212,52 +212,7 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void addNewNodeToArray(String path)
     {
-        // we check whether the array holds ReferencesToObjects or referenceable objects. In these cases, we do some additional steps
-        if (false && readableModel.getReferenceToObject(path) != null)
-        {
-            ReferenceTypeDialog dialog = new ReferenceTypeDialog();
-            Optional<ReferenceType> result = dialog.showAndWait();
-            if (result.isPresent())
-            {
-                ReferenceType referenceType = result.get();
-                if (ReferenceType.REFERENCE_TO_OBJECT.equals(referenceType))
-                {
-                    Optional<String> dialogResult = new SelectReferenceDialog(
-                            readableModel.getReferenceableObjectInstances()).showAndWait();
-                    if (dialogResult.isPresent())
-                    {
-                        String resultString = dialogResult.get();
-                        if (ReferenceType.CREATE_NEW_REFERENCE.name().equals(resultString))
-                        {
-                            // show the dialog to create a new reference
-                        } else {
-                            // the user selected an existing object, so we now need to make a reference to that object and add that one to
-                            // the array
-                            
-                            
-                        }
-                        
-                    }
-                }
-                else if (ReferenceType.MANUAL_REFERENCE.equals(referenceType))
-                {
-                    // the user wants to manually add a reference so we simply create a new object
-                    model.addNodeToArray(path);
-                }
-            }
-        }
-        else
-        {
-            if (false)
-            {
-                // TODO handle referenceable objects
-            }
-            else
-            {
-                // the array contains neither references nor objects
-                model.addNodeToArray(path);
-            }
-        }
+        model.addNodeToArray(path);
     }
     
     @Override

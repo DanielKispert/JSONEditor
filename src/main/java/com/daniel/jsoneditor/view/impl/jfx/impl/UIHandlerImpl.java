@@ -43,6 +43,8 @@ public class UIHandlerImpl implements UIHandler
     public void showSelectJsonAndSchema()
     {
         stage.setScene(new JSONSelectionScene(this, controller, model).getScene(stage));
+        stage.setX(700);
+        stage.setY(300);
         stage.show();
     }
     
@@ -68,6 +70,16 @@ public class UIHandlerImpl implements UIHandler
         {
             editorScene.handleAddedArrayItem(pathOfArrayItem);
         }
+    }
+    
+    @Override
+    public void handleAddedReferenceableObject(String pathOfObject)
+    {
+        if (editorScene != null)
+        {
+            editorScene.handleAddedReferenceableObject(pathOfObject);
+        }
+        
     }
     
     @Override

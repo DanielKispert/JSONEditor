@@ -9,6 +9,8 @@ import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
+import com.daniel.jsoneditor.model.statemachine.impl.Event;
+import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -121,19 +123,18 @@ public class ReferenceHelper
         JsonNodeWithPath referenceableObjectNode = readableModel.getNodeForPath(referenceableObject.getPath());
         if (referenceableObjectNode.isArray())
         {
-            // Add a new node to the array
-            model.addNodeToArray(referenceableObject.getPath());
-            
-            // Get the path of the newly added node
-            int newIndex = referenceableObjectNode.getNode().size() - 1;
-            String newNodePath = referenceableObject.getPath() + "/" + newIndex;
+            String path = referenceableObject.getPath();
+            JsonNode newItem = readableModel.makeArrayNode(path);
+            int addedIndex = model.addNodeToArray(path, newItem);
+            String newNodePath = referenceableObject.getPath() + "/" + addedIndex;
             
             // Set the key of the new node
             setKeyOfInstance(readableModel, referenceableObject, newNodePath, newKey);
+            model.sendEvent(new Event(EventEnum.ADDED_REFERENCEABLE_OBJECT, newNodePath));
         }
         else
         {
-            // TODO solve
+            // good point for future development
             throw new IllegalArgumentException("ReferenceableObject is not an array: " + referenceableObjectPath);
         }
     }
@@ -146,7 +147,7 @@ public class ReferenceHelper
         // we first check whether the object itself is the referenceableObject. But only if we're not an array. If we're an array we can't be a referenceable object (for reasons)
         JsonNodeWithPath node = model.getNodeForPath(path);
         List<ReferenceableObject> referenceableObjects = model.getReferenceableObjects();
-        if (node != null && !node.isArray())
+        if (node != null)
         {
             for (ReferenceableObject object : referenceableObjects)
             {

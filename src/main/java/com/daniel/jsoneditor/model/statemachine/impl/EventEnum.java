@@ -11,7 +11,9 @@ public enum EventEnum
     
     MAIN_EDITOR,
     
-    ADDED_ITEM_TO_ARRAY,
+    ADDED_REFERENCEABLE_OBJECT,
+    
+    ADDED_ITEM_TO_ARRAY_FROM_ARRAY,
     
     UPDATED_JSON_STRUCTURE,
     

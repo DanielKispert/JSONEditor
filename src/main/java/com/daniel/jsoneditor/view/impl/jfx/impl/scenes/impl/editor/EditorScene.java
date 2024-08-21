@@ -78,6 +78,15 @@ public class EditorScene extends SceneHandlerImpl
         editorWindowManager.focusOnArrayItem(pathOfAddedArrayItem);
     }
     
+    public void handleAddedReferenceableObject(String pathOfAddedObject)
+    {
+        editorWindowManager.updateEditors();
+        navbar.handleUpdate();
+        // desired navbar behavior: select the item that we just added if it's not already selected
+        navbar.selectPath(pathOfAddedObject);
+        editorWindowManager.openInNewWindowIfPossible(pathOfAddedObject);
+    }
+    
     
     public void updateEverything()
     {

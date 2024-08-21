@@ -12,6 +12,8 @@ public interface UIHandler
     
     void showMainEditor();
     
+    void handleAddedReferenceableObject(String pathOfObject);
+    
     void handleAddedArrayItem(String pathOfArrayItem);
     
     void updateEditorSceneWithSelectedJson();
