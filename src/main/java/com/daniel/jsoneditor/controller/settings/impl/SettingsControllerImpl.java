@@ -10,6 +10,8 @@ public class SettingsControllerImpl implements SettingsController
 {
     private final Properties properties;
     
+    private EditorDimensions dimensionsCache; //so we don't have to access the properties file every time
+    
     public SettingsControllerImpl()
     {
         this.properties = PropertiesFileHelper.readPropertiesFromFile();
@@ -40,25 +42,35 @@ public class SettingsControllerImpl implements SettingsController
     }
     
     @Override
-    public void setStartMaximized(boolean startMaximized)
+    public void setEditorDimensions(int width, int height, boolean startMaximized)
     {
+        properties.setProperty(PropertyFileKeys.PROPERTY_EDITOR_WIDTH, String.valueOf(width));
+        properties.setProperty(PropertyFileKeys.PROPERTY_EDITOR_HEIGHT, String.valueOf(height));
         properties.setProperty(PropertyFileKeys.PROPERTY_START_MAXIMIZED, startMaximized ? "true" : "false");
+        System.out.println("Setting editor dimensions to " + width + "x" + height + " maximized: " + startMaximized);
         PropertiesFileHelper.writePropertiesToFile(properties);
+        dimensionsCache = new EditorDimensions(width, height, startMaximized);
     }
     
     @Override
-    public boolean getStartMaximized()
+    public EditorDimensions getEditorDimensions()
     {
-        // default is false
-        String property = properties.getProperty(PropertyFileKeys.PROPERTY_START_MAXIMIZED);
-        if (property == null)
+        if (dimensionsCache == null)
         {
-            return false;
+            dimensionsCache = readEditorDimensionsFromProperties();
         }
-        else
-        {
-            return "true".equalsIgnoreCase(property);
-        }
+        return dimensionsCache;
+    }
+    
+    private EditorDimensions readEditorDimensionsFromProperties()
+    {
+        String widthProperty = properties.getProperty(PropertyFileKeys.PROPERTY_EDITOR_WIDTH);
+        String heightProperty = properties.getProperty(PropertyFileKeys.PROPERTY_EDITOR_HEIGHT);
+        String maximizedProperty = properties.getProperty(PropertyFileKeys.PROPERTY_START_MAXIMIZED);
+        int width = widthProperty == null ? 1400 : Integer.parseInt(widthProperty);
+        int height = heightProperty == null ? 800 : Integer.parseInt(heightProperty);
+        boolean maximized = "true".equalsIgnoreCase(maximizedProperty);
+        return new EditorDimensions(width, height, maximized);
     }
     
     @Override

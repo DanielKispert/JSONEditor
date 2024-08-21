@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
 public class TextTableCell extends EditorTableCell
 {
     
@@ -29,7 +30,8 @@ public class TextTableCell extends EditorTableCell
     
     private final boolean alsoAllowNumbers;
     
-    public TextTableCell(EditorWindowManager manager, Controller controller, ReadableModel model, boolean alsoAllowNumbers, boolean holdsObjectKey)
+    public TextTableCell(EditorWindowManager manager, Controller controller, ReadableModel model, boolean alsoAllowNumbers,
+            boolean holdsObjectKey)
     {
         super(manager, controller, model, holdsObjectKey);
         this.model = model;
@@ -73,6 +75,7 @@ public class TextTableCell extends EditorTableCell
         if (empty || item == null)
         {
             setGraphicWithResizing(null);
+            createNewReferenceableObjectButton = null;
         }
         else
         {
@@ -88,46 +91,14 @@ public class TextTableCell extends EditorTableCell
                 fill = new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey());
             }
             HBox.setHgrow(fill, Priority.ALWAYS);
-            Button createNewReferenceableObjectButton = new Button();
+            createNewReferenceableObjectButton = new Button();
             ButtonHelper.setButtonImage(createNewReferenceableObjectButton, "/icons/material/darkmode/outline_create_white_24dp.png");
             createNewReferenceableObjectButton.setOnAction(event -> handleCreateNewReferenceableObject());
             fieldGraphic.getChildren().addAll(fill, createNewReferenceableObjectButton);
-            if (holdsKeyOfReferenceableObjectThatDoesNotExist())
-            {
-                createNewReferenceableObjectButton.setVisible(true);
-                createNewReferenceableObjectButton.setManaged(true);
-            }
-            else
-            {
-                createNewReferenceableObjectButton.setVisible(false);
-                createNewReferenceableObjectButton.setManaged(false);
-            }
-            
+            toggleCreateNewReferenceableObjectButtonVisibility();
             
             setGraphicWithResizing(fieldGraphic);
         }
-    }
-    
-    boolean holdsKeyOfReferenceableObjectThatDoesNotExist()
-    {
-        if (!((EditorTableColumn) getTableColumn()).holdsObjectKeysOfReferences())
-        {
-            return false;
-        }
-        
-        String cellValue = getItem();
-        if (cellValue == null || cellValue.isEmpty())
-        {
-            return false;
-        }
-        
-        // we can assume that the parent item is a referenceToObject because the previous condition was true
-        JsonNodeWithPath parentItem = getTableRow().getItem();
-        ReferenceToObject referenceToObject = model.getReferenceToObject(parentItem.getPath());
-        String objectReferencingKey = referenceToObject.getObjectReferencingKeyOfInstance(parentItem.getNode());
-        
-        return model.getReferenceableObjectInstance(objectReferencingKey, getItem()) == null;
-        
     }
     
     private List<ReferenceableObjectInstance> getFittingReferenceableObjects()

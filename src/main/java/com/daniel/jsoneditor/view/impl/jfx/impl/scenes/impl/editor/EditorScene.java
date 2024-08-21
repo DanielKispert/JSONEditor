@@ -1,10 +1,10 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor;
 
+import com.daniel.jsoneditor.controller.settings.impl.EditorDimensions;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.menubar.JsonEditorMenuBar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.JsonEditorToolbar;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.EditorNavTree;
 import javafx.application.Platform;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
@@ -35,17 +35,25 @@ public class EditorScene extends SceneHandlerImpl
     @Override
     public Scene getScene(Stage stage)
     {
-        double startingSceneWidth = 1400;
-        double startingSceneHeight = 800;
         
         BorderPane root = new BorderPane();
-        Scene scene = new Scene(root, startingSceneWidth, startingSceneHeight);
+        Scene scene = new Scene(root, stage.getWidth(), stage.getHeight());
         scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
         navbar = new JsonEditorNavbar(model, controller, editorWindowManager, stage);
-        VBox bars = new VBox(new JsonEditorMenuBar(model, controller, editorWindowManager, navbar), new JsonEditorToolbar(model, controller,
-                editorWindowManager, navbar));
+        VBox bars = new VBox(new JsonEditorMenuBar(model, controller, editorWindowManager, navbar),
+                new JsonEditorToolbar(model, controller, editorWindowManager, navbar));
         root.setTop(bars);
         root.setLeft(makeSplitPane(scene));
+        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+            EditorDimensions oldDimensions = controller.getSettingsController().getEditorDimensions();
+            //resizing the window means its no longer maximized
+            controller.getSettingsController().setEditorDimensions(newValue.intValue(), oldDimensions.getHeight(), false);
+        });
+        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+            EditorDimensions oldDimensions = controller.getSettingsController().getEditorDimensions();
+            //resizing the window means its no longer maximized
+            controller.getSettingsController().setEditorDimensions(oldDimensions.getWidth(), newValue.intValue(), false);
+        });
         return scene;
     }
     

@@ -3,11 +3,13 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.application.Platform;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
@@ -27,6 +29,8 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     
     private String previouslyCommittedValue;
     
+    protected Button createNewReferenceableObjectButton;
+    
     public EditorTableCell(EditorWindowManager manager, Controller controller, ReadableModel model, boolean holdsObjectKey)
     {
         this.manager = manager;
@@ -42,6 +46,40 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             }
         });
         
+    }
+    
+    protected String getValue()
+    {
+        return previouslyCommittedValue;
+    }
+    
+    protected boolean holdsKeyOfReferenceableObjectThatDoesNotExist()
+    {
+        if (!((EditorTableColumn) getTableColumn()).holdsObjectKeysOfReferences())
+        {
+            return false;
+        }
+        
+        String cellValue = getValue();
+        if (cellValue == null || cellValue.isEmpty())
+        {
+            return false;
+        }
+        
+        // we can assume that the parent item is a referenceToObject because the previous condition was true
+        JsonNodeWithPath parentItem = getTableRow().getItem();
+        if (parentItem == null)
+        {
+            return false;
+        }
+        ReferenceToObject referenceToObject = model.getReferenceToObject(parentItem.getPath());
+        if (referenceToObject == null)
+        {
+            return false;
+        }
+        String objectReferencingKey = referenceToObject.getObjectReferencingKeyOfInstance(parentItem.getNode());
+        
+        return model.getReferenceableObjectInstance(objectReferencingKey, getValue()) == null;
     }
     
     protected void handleCreateNewReferenceableObject()
@@ -92,6 +130,10 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
                 }
             }
         }
+        // display the button to create a new object if applicable
+        toggleCreateNewReferenceableObjectButtonVisibility();
+        
+        //save in the JSON we're editing
         if (jsonNode != null && jsonNode.isValueNode())
         {
             if (newValue.isEmpty() && !column.isRequired())
@@ -115,6 +157,24 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         }
         manager.updateNavbarRepresentation(item.getPath());
         column.updatePrefWidth();
+    }
+    
+    protected void toggleCreateNewReferenceableObjectButtonVisibility()
+    {
+        if (createNewReferenceableObjectButton == null)
+        {
+            return;
+        }
+        if (holdsKeyOfReferenceableObjectThatDoesNotExist())
+        {
+            createNewReferenceableObjectButton.setVisible(true);
+            createNewReferenceableObjectButton.setManaged(true);
+        }
+        else
+        {
+            createNewReferenceableObjectButton.setVisible(false);
+            createNewReferenceableObjectButton.setManaged(false);
+        }
     }
     
     
