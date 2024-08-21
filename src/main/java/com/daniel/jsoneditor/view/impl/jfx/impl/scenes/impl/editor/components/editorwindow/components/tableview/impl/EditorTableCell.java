@@ -5,6 +5,8 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.CreateNewReferenceableObjectButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.application.Platform;
@@ -29,7 +31,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     
     private String previouslyCommittedValue;
     
-    protected Button createNewReferenceableObjectButton;
+    protected CreateNewReferenceableObjectButton createNewReferenceableObjectButton;
     
     public EditorTableCell(EditorWindowManager manager, Controller controller, ReadableModel model, boolean holdsObjectKey)
     {
@@ -66,26 +68,37 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             return false;
         }
         
-        // we can assume that the parent item is a referenceToObject because the previous condition was true
-        JsonNodeWithPath parentItem = getTableRow().getItem();
-        if (parentItem == null)
-        {
-            return false;
-        }
-        ReferenceToObject referenceToObject = model.getReferenceToObject(parentItem.getPath());
-        if (referenceToObject == null)
-        {
-            return false;
-        }
-        String objectReferencingKey = referenceToObject.getObjectReferencingKeyOfInstance(parentItem.getNode());
+        String objectReferencingKey = getObjectReferencingKey();
+        if (objectReferencingKey == null) return false;
         
         return model.getReferenceableObjectInstance(objectReferencingKey, getValue()) == null;
     }
     
+    private String getObjectReferencingKey()
+    {
+        // we can assume that the parent item is a referenceToObject because the previous condition was true
+        JsonNodeWithPath parentItem = getTableRow().getItem();
+        if (parentItem == null)
+        {
+            return null;
+        }
+        ReferenceToObject referenceToObject = model.getReferenceToObject(parentItem.getPath());
+        if (referenceToObject == null)
+        {
+            return null;
+        }
+        return referenceToObject.getObjectReferencingKeyOfInstance(parentItem.getNode());
+    }
+    
     protected void handleCreateNewReferenceableObject()
     {
-        // create a new referenceable object from the model
-        controller.createNewReferenceableObjectNodeWithKey(((EditorTableViewImpl) getTableView()).getSelectedPath(), getItem());
+        String objectReferencingKey = getObjectReferencingKey();
+        ReferenceableObject referenceableObject = model.getReferenceableObjectByReferencingKey(objectReferencingKey);
+        if (referenceableObject != null)
+        {
+            // create a new referenceable object instance from the model
+            controller.createNewReferenceableObjectNodeWithKey(referenceableObject.getPath(), getValue());
+        }
     }
     
     protected final void setGraphicWithResizing(Node node)

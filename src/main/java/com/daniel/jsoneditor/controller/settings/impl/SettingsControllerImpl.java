@@ -47,7 +47,6 @@ public class SettingsControllerImpl implements SettingsController
         properties.setProperty(PropertyFileKeys.PROPERTY_EDITOR_WIDTH, String.valueOf(width));
         properties.setProperty(PropertyFileKeys.PROPERTY_EDITOR_HEIGHT, String.valueOf(height));
         properties.setProperty(PropertyFileKeys.PROPERTY_START_MAXIMIZED, startMaximized ? "true" : "false");
-        System.out.println("Setting editor dimensions to " + width + "x" + height + " maximized: " + startMaximized);
         PropertiesFileHelper.writePropertiesToFile(properties);
         dimensionsCache = new EditorDimensions(width, height, startMaximized);
     }

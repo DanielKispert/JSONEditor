@@ -40,6 +40,8 @@ public interface ReadableModel extends ReadableState
     
     ReferenceableObject getReferenceableObject(String path);
     
+    ReferenceableObject getReferenceableObjectByReferencingKey(String referencingKey);
+    
     /**
      * @return the ReferenceableObjectInstance of a ReferenceableObject with the given referencingKey where the instance has the key or null if none exists
      */
@@ -63,6 +65,8 @@ public interface ReadableModel extends ReadableState
     List<ReferenceableObjectInstance> getReferenceableObjectInstances();
     
     List<ReferenceableObjectInstance> getInstancesOfReferenceableObjectAtPath(String referenceableObjectPath);
+    
+    JsonNode makeArrayNode(String arrayPath);
     
     String searchForNode(String path, String value);
     

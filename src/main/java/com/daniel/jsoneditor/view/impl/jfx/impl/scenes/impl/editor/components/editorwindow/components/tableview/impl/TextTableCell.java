@@ -8,6 +8,7 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.CreateNewReferenceableObjectButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.AutofillField;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
@@ -91,8 +92,7 @@ public class TextTableCell extends EditorTableCell
                 fill = new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey());
             }
             HBox.setHgrow(fill, Priority.ALWAYS);
-            createNewReferenceableObjectButton = new Button();
-            ButtonHelper.setButtonImage(createNewReferenceableObjectButton, "/icons/material/darkmode/outline_create_white_24dp.png");
+            createNewReferenceableObjectButton = new CreateNewReferenceableObjectButton();
             createNewReferenceableObjectButton.setOnAction(event -> handleCreateNewReferenceableObject());
             fieldGraphic.getChildren().addAll(fill, createNewReferenceableObjectButton);
             toggleCreateNewReferenceableObjectButtonVisibility();

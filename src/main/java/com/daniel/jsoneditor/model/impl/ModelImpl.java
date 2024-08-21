@@ -454,12 +454,23 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void addNodeToArray(String selectedPath)
     {
-        JsonNode itemsSchema = getSubschemaForPath(selectedPath + "/0").getSchemaNode();
-        JsonNode newItem = NodeGenerator.generateNodeFromSchema(itemsSchema);
-        addNodeToArray(selectedPath, newItem);
+        JsonNode newItem = makeArrayNode(selectedPath);
+        int addedIndex = addNodeToArray(selectedPath, newItem);
+        if (addedIndex != -1)
+        {
+            sendEvent(new Event(EventEnum.ADDED_ITEM_TO_ARRAY_FROM_ARRAY, selectedPath + "/" + addedIndex));
+        }
     }
     
-    private void addNodeToArray(String arrayPath, JsonNode nodeToAdd)
+    @Override
+    public JsonNode makeArrayNode(String selectedPath)
+    {
+        JsonNode itemsSchema = getSubschemaForPath(selectedPath + "/0").getSchemaNode();
+        return NodeGenerator.generateNodeFromSchema(itemsSchema);
+    }
+    
+    @Override
+    public int addNodeToArray(String arrayPath, JsonNode nodeToAdd)
     {
         JsonNodeWithPath parent = getNodeForPath(arrayPath);
         if (parent.isArray())
@@ -467,9 +478,10 @@ public class ModelImpl implements ReadableModel, WritableModel
             // we need the parents size to get the index of the newly added item
             int indexOfNewItem = parent.getNode().size();
             ((ArrayNode) parent.getNode()).add(nodeToAdd);
-            sendEvent(new Event(EventEnum.ADDED_ITEM_TO_ARRAY, arrayPath + "/" + indexOfNewItem));
+            return indexOfNewItem;
+            
         }
-        
+        return -1;
     }
     
     @Override
@@ -589,6 +601,12 @@ public class ModelImpl implements ReadableModel, WritableModel
             }
         }
         return null;
+    }
+    
+    @Override
+    public ReferenceableObject getReferenceableObjectByReferencingKey(String referencingKey)
+    {
+        return ReferenceHelper.getReferenceableObject(this, referencingKey);
     }
     
     @Override
