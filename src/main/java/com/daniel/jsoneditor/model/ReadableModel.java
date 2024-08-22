@@ -59,6 +59,8 @@ public interface ReadableModel extends ReadableState
      */
     List<ReferenceToObjectInstance> getReferencesToObjectForPath(String path);
     
+    List<ReferenceableObjectInstance> getReferenceableObjectInstances(ReferenceableObject object);
+    
     /**
      * @return prepared referenceable object instances
      */
