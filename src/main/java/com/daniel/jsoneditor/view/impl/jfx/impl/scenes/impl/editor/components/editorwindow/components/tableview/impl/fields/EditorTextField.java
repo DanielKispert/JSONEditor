@@ -17,7 +17,7 @@ public class EditorTextField extends TextField
             Text text1 = new Text(newValue);
             double width = text1.getLayoutBounds().getWidth();
             setPrefWidth(width + 20);
-            parent.onTextEntered(newValue);
+            parent.onTextChanged(newValue);
         });
         setText(text); //intentionally done after adding the listener
         setOnAction(event ->
