@@ -14,6 +14,10 @@ import java.util.function.Consumer;
 
 public class FittingObjectsPopup
 {
+    private double posX;
+    
+    private double posY;
+    
     private final Popup popup;
     
     private final ListView<ReferenceableObjectInstance> listView;
@@ -40,6 +44,12 @@ public class FittingObjectsPopup
         });
     }
     
+    public void setPopupPosition(double x, double y)
+    {
+        this.posX = x;
+        this.posY = y;
+    }
+    
     private void handleItemSelection(Consumer<ReferenceableObjectInstance> onItemSelected)
     {
         ReferenceableObjectInstance selectedItem = listView.getSelectionModel().getSelectedItem();
@@ -59,7 +69,7 @@ public class FittingObjectsPopup
         }
         else if (!items.isEmpty() && !popup.isShowing())
         {
-            show(popup.getOwnerWindow(), popup.getX(), popup.getY());
+            show(popup.getOwnerWindow(), posX, posY);
         }
     }
     

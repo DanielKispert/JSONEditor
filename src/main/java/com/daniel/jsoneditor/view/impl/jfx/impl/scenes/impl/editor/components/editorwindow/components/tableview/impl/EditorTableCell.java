@@ -19,12 +19,10 @@ import javafx.scene.Node;
 import javafx.scene.control.Control;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TextField;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 
 public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String>
@@ -97,9 +95,9 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         {
             return;
         }
-        fittingObjectsPopup.setItems(fittingObjects);
         Bounds cellBounds = localToScreen(getBoundsInLocal());
-        fittingObjectsPopup.show(getScene().getWindow(), cellBounds.getMinX(), cellBounds.getMaxY());
+        fittingObjectsPopup.setPopupPosition(cellBounds.getMinX(), cellBounds.getMaxY());
+        fittingObjectsPopup.setItems(fittingObjects);
     }
     
     private void hidePopup()
@@ -248,7 +246,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         column.updatePrefWidth();
     }
     
-    public void onTextEntered(String enteredText)
+    public void onTextChanged(String enteredText)
     {
         displayedValue = enteredText;
         toggleCreateNewReferenceableObjectButtonVisibility();

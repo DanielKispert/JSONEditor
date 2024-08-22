@@ -3,12 +3,10 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.CreateNewReferenceableObjectButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.AutofillField;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
-import javafx.scene.control.Control;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.util.Pair;
@@ -87,7 +85,7 @@ public class TextTableCell extends EditorTableCell
             createNewReferenceableObjectButton = new CreateNewReferenceableObjectButton();
             createNewReferenceableObjectButton.setOnAction(event -> handleCreateNewReferenceableObject());
             fieldGraphic.getChildren().addAll(currentTextEnterGraphic, createNewReferenceableObjectButton);
-            onTextEntered(item);
+            onTextChanged(item);
             
             setGraphicWithResizing(fieldGraphic);
         }
