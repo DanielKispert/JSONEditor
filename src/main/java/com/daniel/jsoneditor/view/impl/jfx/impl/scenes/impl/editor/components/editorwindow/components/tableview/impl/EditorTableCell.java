@@ -52,7 +52,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         this.controller = controller;
         this.model = model;
         this.holdsKeyOfReferenceableObject = holdsObjectKey;
-        this.fittingObjectsPopup = new FittingObjectsPopup(this::onFittingObjectSelected);
+        this.fittingObjectsPopup = new FittingObjectsPopup(this::onFittingObjectSelected, this::onPopupButtonClicked);
         setMaxWidth(Double.MAX_VALUE);
         Platform.runLater(() -> {
             TableColumn<JsonNodeWithPath, String> column = getTableColumn();
@@ -61,6 +61,11 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
                 ((EditorTableColumn) column).updatePrefWidth();
             }
         });
+    }
+    
+    private void onPopupButtonClicked(ReferenceableObjectInstance selectedItem)
+    {
+        System.out.println("Button clicked for item: " + selectedItem.getKey());
     }
     
     private void onFittingObjectSelected(ReferenceableObjectInstance selectedItem)
@@ -96,7 +101,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             return;
         }
         Bounds cellBounds = localToScreen(getBoundsInLocal());
-        fittingObjectsPopup.setPopupPosition(cellBounds.getMinX(), cellBounds.getMaxY());
+        fittingObjectsPopup.setPopupPosition(getScene().getWindow(), cellBounds.getMinX(), cellBounds.getMaxY());
         fittingObjectsPopup.setItems(fittingObjects);
     }
     
