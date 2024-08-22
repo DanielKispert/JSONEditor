@@ -45,6 +45,12 @@
     -fx-background-color: -accent-color;
 }
 
+.popup-list-view {
+    -fx-border-color: black;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+}
+
 .label {
     -fx-text-fill: white;
 }

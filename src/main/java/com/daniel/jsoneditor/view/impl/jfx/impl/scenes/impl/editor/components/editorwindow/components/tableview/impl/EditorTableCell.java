@@ -99,9 +99,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         }
         fittingObjectsPopup.setItems(fittingObjects);
         Bounds cellBounds = localToScreen(getBoundsInLocal());
-        double popupX = cellBounds.getMinX();
-        double popupY = cellBounds.getMaxY();
-        fittingObjectsPopup.show(getScene().getWindow(), popupX, popupY);
+        fittingObjectsPopup.show(getScene().getWindow(), cellBounds.getMinX(), cellBounds.getMaxY());
     }
     
     private void hidePopup()

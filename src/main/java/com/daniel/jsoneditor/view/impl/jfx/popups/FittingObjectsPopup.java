@@ -11,20 +11,21 @@ import javafx.stage.Window;
 import java.util.List;
 import java.util.function.Consumer;
 
+
 public class FittingObjectsPopup
 {
     private final Popup popup;
+    
     private final ListView<ReferenceableObjectInstance> listView;
     
     public FittingObjectsPopup(Consumer<ReferenceableObjectInstance> onItemSelected)
     {
         listView = new ListView<>();
+        listView.getStyleClass().add("popup-list-view");
         HBox.setHgrow(listView, Priority.ALWAYS);
         popup = new Popup();
         popup.getContent().add(listView);
-        listView.setOnMouseClicked(event -> {
-            handleItemSelection(onItemSelected);
-        });
+        listView.setOnMouseClicked(event -> handleItemSelection(onItemSelected));
         listView.setOnKeyPressed(event -> {
             // accept on enter
             if (event.getCode() == KeyCode.ENTER)
@@ -51,6 +52,7 @@ public class FittingObjectsPopup
     
     public void setItems(List<ReferenceableObjectInstance> items)
     {
+        listView.getItems().setAll(items);
         if (items.isEmpty() && popup.isShowing())
         {
             hide();
@@ -59,8 +61,6 @@ public class FittingObjectsPopup
         {
             show(popup.getOwnerWindow(), popup.getX(), popup.getY());
         }
-        listView.getItems().setAll(items);
-        adjustPopupSize();
     }
     
     public void show(Window owner, double x, double y)
@@ -68,7 +68,7 @@ public class FittingObjectsPopup
         if (!popup.isShowing() && owner != null)
         {
             popup.show(owner, x, y);
-            adjustPopupSize();
+            //adjustPopupSize();
         }
     }
     
@@ -82,7 +82,16 @@ public class FittingObjectsPopup
     
     private void adjustPopupSize()
     {
+        double itemHeight = 24; // Approximate height of each item
+        double maxHeight = 200; // Maximum height of the popup
+        double newHeight = Math.min(listView.getItems().size() * itemHeight, maxHeight);
+        System.out.println("Setting Popup Dimensions to " + listView.getWidth() + "x" + newHeight);
         popup.setWidth(listView.getWidth());
-        popup.setHeight(listView.getHeight());
+        popup.setHeight(newHeight);
+    }
+    
+    private void adjustPopupPosition()
+    {
+    
     }
 }
