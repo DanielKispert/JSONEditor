@@ -231,6 +231,12 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
+    public List<ReferenceableObjectInstance> getReferenceableObjectInstances(ReferenceableObject object)
+    {
+        return ReferenceHelper.getReferenceableObjectInstances(this, object);
+    }
+    
+    @Override
     public List<ReferenceableObjectInstance> getInstancesOfReferenceableObjectAtPath(String referenceableObjectPath)
     {
         for (ReferenceableObject object : getReferenceableObjects())

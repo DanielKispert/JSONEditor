@@ -3,23 +3,16 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
-import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.CreateNewReferenceableObjectButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.AutofillField;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
-import javafx.scene.control.Button;
 import javafx.scene.control.Control;
-import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.util.Pair;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -82,30 +75,25 @@ public class TextTableCell extends EditorTableCell
         {
             Pair<Boolean, List<String>> suggestions = getSuggestions();
             HBox fieldGraphic = new HBox();
-            Control fill;
             if (suggestions.getValue().isEmpty())
             {
-                fill = new EditorTextField(this, item);
+                currentTextEnterGraphic = new EditorTextField(this, item);
             }
             else
             {
-                fill = new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey());
+                currentTextEnterGraphic = new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey());
             }
-            HBox.setHgrow(fill, Priority.ALWAYS);
+            HBox.setHgrow(currentTextEnterGraphic, Priority.ALWAYS);
             createNewReferenceableObjectButton = new CreateNewReferenceableObjectButton();
             createNewReferenceableObjectButton.setOnAction(event -> handleCreateNewReferenceableObject());
-            fieldGraphic.getChildren().addAll(fill, createNewReferenceableObjectButton);
-            toggleCreateNewReferenceableObjectButtonVisibility();
+            fieldGraphic.getChildren().addAll(currentTextEnterGraphic, createNewReferenceableObjectButton);
+            onTextEntered(item);
             
             setGraphicWithResizing(fieldGraphic);
         }
     }
     
-    private List<ReferenceableObjectInstance> getFittingReferenceableObjects()
-    {
-        return null;
-        
-    }
+
     
     private Pair<Boolean, List<String>> getSuggestions()
     {

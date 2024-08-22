@@ -1,8 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields;
 
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.TextTableCell;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
@@ -19,6 +17,7 @@ public class EditorTextField extends TextField
             Text text1 = new Text(newValue);
             double width = text1.getLayoutBounds().getWidth();
             setPrefWidth(width + 20);
+            parent.onTextEntered(newValue);
         });
         setText(text); //intentionally done after adding the listener
         setOnAction(event ->
@@ -31,6 +30,7 @@ public class EditorTextField extends TextField
             {
                 parent.commitEdit(getText());
             }
+            parent.contentFocusChanged(isNowFocused);
         });
         setOnKeyReleased(t -> {
             if (t.getCode() == KeyCode.ENTER) {

@@ -47,4 +47,10 @@ public class ReferenceableObjectInstance implements ReferencingInstance
     {
         return referencingKey;
     }
+    
+    @Override
+    public String toString()
+    {
+        return key;
+    }
 }

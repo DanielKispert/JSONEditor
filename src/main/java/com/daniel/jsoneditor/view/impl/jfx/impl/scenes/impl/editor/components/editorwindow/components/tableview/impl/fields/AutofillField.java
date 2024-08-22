@@ -1,15 +1,9 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields;
 
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.TextTableCell;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
-import javafx.util.Callback;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +22,7 @@ public class AutofillField extends ComboBox<String>
             Text text1 = new Text(newValue);
             double width = text1.getLayoutBounds().getWidth();
             setPrefWidth(width + 50);
+            parent.onTextEntered(newValue);
         });
         setEditable(!valueMustBeASuggestion);
         setValue(text);
@@ -41,6 +36,7 @@ public class AutofillField extends ComboBox<String>
             {
                 parent.commitEdit(getEditor().getText());
             }
+            parent.contentFocusChanged(isNowFocused);
         });
         getEditor().setOnKeyReleased(t -> {
             if (t.getCode() == KeyCode.ENTER)
