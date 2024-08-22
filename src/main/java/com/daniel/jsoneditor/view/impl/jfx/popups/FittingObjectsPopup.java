@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.popups;
 
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import javafx.scene.control.ListView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.Popup;
@@ -21,22 +22,42 @@ public class FittingObjectsPopup
         HBox.setHgrow(listView, Priority.ALWAYS);
         popup = new Popup();
         popup.getContent().add(listView);
-        listView.setOnMouseClicked(event ->
-        {
-            ReferenceableObjectInstance selectedItem = listView.getSelectionModel().getSelectedItem();
-            if (selectedItem != null && onItemSelected != null)
+        listView.setOnMouseClicked(event -> {
+            handleItemSelection(onItemSelected);
+        });
+        listView.setOnKeyPressed(event -> {
+            // accept on enter
+            if (event.getCode() == KeyCode.ENTER)
             {
-                onItemSelected.accept(selectedItem);
+                handleItemSelection(onItemSelected);
+            }
+            // hide on escape
+            else if (event.getCode() == KeyCode.ESCAPE)
+            {
                 hide();
             }
         });
     }
     
+    private void handleItemSelection(Consumer<ReferenceableObjectInstance> onItemSelected)
+    {
+        ReferenceableObjectInstance selectedItem = listView.getSelectionModel().getSelectedItem();
+        if (selectedItem != null && onItemSelected != null)
+        {
+            onItemSelected.accept(selectedItem);
+            hide();
+        }
+    }
+    
     public void setItems(List<ReferenceableObjectInstance> items)
     {
-        if (items.isEmpty())
+        if (items.isEmpty() && popup.isShowing())
         {
             hide();
+        }
+        else if (!items.isEmpty() && !popup.isShowing())
+        {
+            show(popup.getOwnerWindow(), popup.getX(), popup.getY());
         }
         listView.getItems().setAll(items);
         adjustPopupSize();
@@ -44,7 +65,7 @@ public class FittingObjectsPopup
     
     public void show(Window owner, double x, double y)
     {
-        if (!popup.isShowing())
+        if (!popup.isShowing() && owner != null)
         {
             popup.show(owner, x, y);
             adjustPopupSize();
