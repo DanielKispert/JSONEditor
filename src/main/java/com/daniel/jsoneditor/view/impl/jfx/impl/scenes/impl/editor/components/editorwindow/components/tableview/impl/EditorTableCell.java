@@ -52,7 +52,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         this.controller = controller;
         this.model = model;
         this.holdsKeyOfReferenceableObject = holdsObjectKey;
-        this.fittingObjectsPopup = new FittingObjectsPopup(this::onFittingObjectSelected, this::onPopupButtonClicked);
+        this.fittingObjectsPopup = new FittingObjectsPopup(model, this::onFittingObjectSelected, this::onPopupButtonClicked);
         setMaxWidth(Double.MAX_VALUE);
         Platform.runLater(() -> {
             TableColumn<JsonNodeWithPath, String> column = getTableColumn();
@@ -65,7 +65,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     
     private void onPopupButtonClicked(ReferenceableObjectInstance selectedItem)
     {
-        System.out.println("Button clicked for item: " + selectedItem.getKey());
+        controller.duplicateReferenceableObjectForLinking(getTableRow().getItem().getPath(), selectedItem.getPath());
     }
     
     private void onFittingObjectSelected(ReferenceableObjectInstance selectedItem)
@@ -101,8 +101,9 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             return;
         }
         Bounds cellBounds = localToScreen(getBoundsInLocal());
-        fittingObjectsPopup.setPopupPosition(getScene().getWindow(), cellBounds.getMinX(), cellBounds.getMaxY());
         fittingObjectsPopup.setItems(fittingObjects);
+        // we give the position of the BOTTOM left corner because the popup needs to calculate the one for the top left
+        fittingObjectsPopup.setPopupPosition(getScene().getWindow(), cellBounds.getMinX(), cellBounds.getMinY());
     }
     
     private void hidePopup()

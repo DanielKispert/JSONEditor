@@ -318,6 +318,16 @@ public class ReferenceHelper
         return refs;
     }
     
+    public static void setObjectKeyOfInstance(ReadableModel model, ReferenceToObject reference, String pathToInstance, String newKey)
+    {
+        if (reference == null || newKey == null || newKey.isEmpty() || pathToInstance == null || pathToInstance.isEmpty())
+        {
+            return;
+        }
+        setKeyNode(model, pathToInstance, newKey, reference.getObjectKey());
+        
+    }
+    
     /**
      * sets the key node of a node, assuming the node is an instance of a Refererenceable Object
      */
@@ -328,8 +338,15 @@ public class ReferenceHelper
             return;
         }
         
-        String[] keyParts = object.getKey().split("/");
-        JsonNode currentNode = model.getNodeForPath(pathToInstance).getNode();
+        String pathToKey = object.getKey();
+        
+        setKeyNode(model, pathToInstance, newKey, pathToKey);
+    }
+    
+    private static void setKeyNode(ReadableModel model, String pathToNode, String newKey, String pathToKey)
+    {
+        String[] keyParts = pathToKey.split("/");
+        JsonNode currentNode = model.getNodeForPath(pathToNode).getNode();
         JsonNode parentNode = null;
         
         for (String keyPart : keyParts)
@@ -349,7 +366,7 @@ public class ReferenceHelper
         if (parentNode instanceof ObjectNode)
         {
             // check if we need a text or number node
-            List<String> types = SchemaHelper.getTypes(model.getSubschemaForPath(pathToInstance + "/" + object.getKey()).getSchemaNode());
+            List<String> types = SchemaHelper.getTypes(model.getSubschemaForPath(pathToNode + "/" + pathToKey).getSchemaNode());
             if (types.contains("string"))
             {
                 ((ObjectNode) parentNode).set(keyParts[keyParts.length - 1], new TextNode(newKey));

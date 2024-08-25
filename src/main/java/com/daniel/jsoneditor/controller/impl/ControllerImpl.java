@@ -235,6 +235,12 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void duplicateReferenceableObjectForLinking(String referencePath, String pathToDuplicate)
+    {
+        model.duplicateNodeAndLink(referencePath, pathToDuplicate);
+    }
+    
+    @Override
     public void saveToFile()
     {
         JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();

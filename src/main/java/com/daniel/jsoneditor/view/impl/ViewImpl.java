@@ -68,6 +68,7 @@ public class ViewImpl implements View
             case MOVED_CHILD_OF_SELECTED_JSON_NODE:
                 uiHandler.updateEditorSceneWithMovedJson();
                 break;
+            case CREATED_NODE_FOR_LINKING:
             case SAVING_SUCCESSFUL:
                 uiHandler.showToast(Toasts.SAVE_SUCCESSFUL_TOAST);
                 break;

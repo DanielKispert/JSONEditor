@@ -17,6 +17,8 @@ public enum EventEnum
     
     UPDATED_JSON_STRUCTURE,
     
+    CREATED_NODE_FOR_LINKING,
+    
     REFRESH_SUCCESSFUL,
     
     MOVED_CHILD_OF_SELECTED_JSON_NODE,

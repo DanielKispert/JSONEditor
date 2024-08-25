@@ -1,6 +1,5 @@
 package com.daniel.jsoneditor.model;
 
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
@@ -42,6 +41,11 @@ public interface WritableModel
      * duplicates the array item the path points to
      */
     void duplicateArrayItem(String pathToItemToDuplicate);
+    
+    /**
+     * duplicates a referenceable object that should be linked in a reference and adjusts the reference with its name
+     */
+    void duplicateNodeAndLink(String referencePath, String pathToItemToDuplicate);
     
     void removeNode(String path);
     

@@ -493,35 +493,71 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void duplicateArrayItem(String pathToItemToDuplicate)
     {
+        duplicateItem(pathToItemToDuplicate);
+        sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
+    }
+    
+    @Override
+    public void duplicateNodeAndLink(String referencePath, String pathToItemToDuplicate)
+    {
+        JsonNodeWithPath itemToDuplicate = getNodeForPath(pathToItemToDuplicate);
+        if (itemToDuplicate == null) {
+            return;
+        }
+        
+        // Retrieve the parent node of the reference
+        JsonNodeWithPath referencingNode = getNodeForPath(referencePath);
+        if (referencingNode == null || !referencingNode.isObject()) {
+            return;
+        }
+        ReferenceToObject reference = getReferenceToObject(referencePath);
+        
+        // duplicate the node
+        String clonedPath = duplicateItem(pathToItemToDuplicate);
+        
+        JsonNodeWithPath clonedNode = getNodeForPath(clonedPath);
+        
+        String newKeyName = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath).getKeyOfInstance(clonedNode.getNode());
+        
+        //set the objectKey of the reference to the key of the object
+        ReferenceHelper.setObjectKeyOfInstance(this, reference, referencePath, newKeyName);
+        
+        sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
+    }
+    
+    private String duplicateItem(String pathToItemToDuplicate)
+    {
         JsonNodeWithPath itemToDuplicate = getNodeForPath(pathToItemToDuplicate);
         
         JsonNodeWithPath parentArray = getNodeForPath(PathHelper.getParentPath(pathToItemToDuplicate));
         
-        if (parentArray != null && parentArray.getNode().isArray())
+        if (parentArray == null || !parentArray.getNode().isArray())
         {
-            ArrayNode arrayNode = (ArrayNode) parentArray.getNode();
-            
-            // Get the index of the item to be cloned so that we can insert the next item at that index + 1
-            int indexToClone = Integer.parseInt(SchemaHelper.getLastPathSegment(pathToItemToDuplicate));
-            
-            JsonNode clonedNode = itemToDuplicate.getNode().deepCopy();
-            // Insert the cloned item at indexToClone + 1
-            arrayNode.insert(indexToClone + 1, clonedNode);
-            
-            String clonedPath = PathHelper.getParentPath(itemToDuplicate.getPath()) + "/" + (indexToClone + 1);
-            
-            //check if the cloned node is a referenceable object, if yes then we want to offer to change its name
-            ReferenceableObject object = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath);
-            if (object != null)
-            {
-                String currentKey = object.getKeyOfInstance(itemToDuplicate.getNode());
-                new RenameKeyDialog(currentKey).showAndWait().ifPresent(
-                        newKey -> ReferenceHelper.setKeyOfInstance(this, object, clonedPath, newKey));
-            }
-            
-            sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
+            return null;
         }
+        ArrayNode arrayNode = (ArrayNode) parentArray.getNode();
+        
+        // Get the index of the item to be cloned so that we can insert the next item at that index + 1
+        int indexToClone = Integer.parseInt(SchemaHelper.getLastPathSegment(pathToItemToDuplicate));
+        
+        JsonNode clonedNode = itemToDuplicate.getNode().deepCopy();
+        // Insert the cloned item at indexToClone + 1
+        arrayNode.insert(indexToClone + 1, clonedNode);
+        
+        String clonedPath = PathHelper.getParentPath(itemToDuplicate.getPath()) + "/" + (indexToClone + 1);
+        
+        //check if the cloned node is a referenceable object, if yes then we want to offer to change its name
+        ReferenceableObject object = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath);
+        if (object != null)
+        {
+            String currentKey = object.getKeyOfInstance(itemToDuplicate.getNode());
+            new RenameKeyDialog(currentKey).showAndWait().ifPresent(
+                    newKey -> ReferenceHelper.setKeyOfInstance(this, object, clonedPath, newKey));
+        }
+        return clonedPath;
     }
+    
+
     
     @Override
     public void removeNode(String path)
