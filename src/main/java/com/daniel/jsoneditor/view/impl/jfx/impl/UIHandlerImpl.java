@@ -43,8 +43,8 @@ public class UIHandlerImpl implements UIHandler
     public void showSelectJsonAndSchema()
     {
         stage.setScene(new JSONSelectionScene(this, controller, model).getScene(stage));
-        stage.setX(700);
-        stage.setY(300);
+        stage.setWidth(700);
+        stage.setHeight(300);
         stage.show();
     }
     

@@ -37,6 +37,8 @@ public interface Controller
     
     void duplicateArrayNode(String path);
     
+    void duplicateReferenceableObjectForLinking(String referencePath, String pathToDuplicate);
+    
     void saveToFile();
     
     void refreshFromFile();

@@ -1,11 +1,16 @@
 package com.daniel.jsoneditor.view.impl.jfx.popups;
 
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
+import javafx.application.Platform;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 import javafx.stage.Window;
 import javafx.util.Callback;
@@ -16,6 +21,11 @@ import java.util.function.Consumer;
 
 public class FittingObjectsPopup
 {
+    private final Consumer<ReferenceableObjectInstance> onItemSelected;
+    
+    private final Consumer<ReferenceableObjectInstance> onButtonClicked;
+    
+    
     private Window owner;
     
     private double posX;
@@ -26,19 +36,24 @@ public class FittingObjectsPopup
     
     private final ListView<ReferenceableObjectInstance> listView;
     
-    public FittingObjectsPopup(Consumer<ReferenceableObjectInstance> onItemSelected, Consumer<ReferenceableObjectInstance> onButtonClicked)
+    public FittingObjectsPopup(ReadableModel model, Consumer<ReferenceableObjectInstance> onItemSelected, Consumer<ReferenceableObjectInstance> onButtonClicked)
     {
+        this.onItemSelected = onItemSelected;
+        this.onButtonClicked = onButtonClicked;
         listView = new ListView<>();
         listView.getStyleClass().add("popup-list-view");
-        HBox.setHgrow(listView, Priority.ALWAYS);
         popup = new Popup();
         popup.getContent().add(listView);
-        listView.setOnMouseClicked(event -> handleItemSelection(onItemSelected));
-        listView.setOnKeyPressed(event -> {
+        listView.setOnMouseClicked(event -> handleItemSelection(listView.getSelectionModel().getSelectedItem()));
+        HBox.setHgrow(listView, Priority.ALWAYS);
+        VBox.setVgrow(listView, Priority.NEVER);
+        listView.setOnKeyPressed(event ->
+        {
             // accept on enter
             if (event.getCode() == KeyCode.ENTER)
             {
-                handleItemSelection(onItemSelected);
+                handleItemSelection(
+                        listView.getSelectionModel().getSelectedItem());
             }
             // hide on escape
             else if (event.getCode() == KeyCode.ESCAPE)
@@ -53,22 +68,36 @@ public class FittingObjectsPopup
             {
                 return new ListCell<>()
                 {
+                    
                     @Override
                     protected void updateItem(ReferenceableObjectInstance item, boolean empty)
                     {
                         super.updateItem(item, empty);
                         if (item != null)
                         {
+                            
                             HBox hBox = new HBox();
                             hBox.setSpacing(10);
-                            HBox.setHgrow(listView, Priority.ALWAYS);
+                            Label label = new Label(item.getKey());
+                            label.setTooltip(TooltipHelper.makeTooltipFromPath(model, item.getPath()));
                             
-                            Button button = new Button();
-                            ButtonHelper.setButtonImage(button, "/icons/material/darkmode/outline_copy_white_24dp.png");
-                            button.setOnAction(event -> onButtonClicked.accept(item));
-                            button.setTooltip(new Tooltip("Create duplicate and link"));
                             
-                            hBox.getChildren().addAll(new Label(item.getKey()), button);
+                            Region spacer = new Region();
+                            HBox.setHgrow(spacer, Priority.ALWAYS);
+                            
+                            Button linkButton = new Button();
+                            ButtonHelper.setButtonImage(linkButton, "/icons/material/darkmode/outline_link_white_24dp.png");
+                            linkButton.setOnAction(event ->
+                            {
+                                handleItemSelection(item);
+                            });
+                            linkButton.setTooltip(new Tooltip("Link to this object"));
+                            
+                            Button duplicateButton = new Button();
+                            ButtonHelper.setButtonImage(duplicateButton, "/icons/material/darkmode/outline_copy_white_24dp.png");
+                            duplicateButton.setOnAction(event -> handleDuplicateCreation(item));
+                            duplicateButton.setTooltip(new Tooltip("Create duplicate and link"));
+                            hBox.getChildren().addAll(label, spacer, linkButton, duplicateButton);
                             setGraphic(hBox);
                         }
                         else
@@ -79,6 +108,7 @@ public class FittingObjectsPopup
                 };
             }
         });
+        listView.heightProperty().addListener((observable, oldValue, newValue) -> moveVertically(newValue.doubleValue()));
     }
     
     public void setPopupPosition(Window owner, double x, double y)
@@ -86,12 +116,10 @@ public class FittingObjectsPopup
         this.owner = owner;
         this.posX = x;
         this.posY = y;
-        System.out.println("Setting Popup Position to " + x + ", " + y);
     }
     
-    private void handleItemSelection(Consumer<ReferenceableObjectInstance> onItemSelected)
+    private void handleItemSelection(ReferenceableObjectInstance selectedItem)
     {
-        ReferenceableObjectInstance selectedItem = listView.getSelectionModel().getSelectedItem();
         if (selectedItem != null && onItemSelected != null)
         {
             onItemSelected.accept(selectedItem);
@@ -99,26 +127,55 @@ public class FittingObjectsPopup
         }
     }
     
+    private void handleDuplicateCreation(ReferenceableObjectInstance selectedItem)
+    {
+        if (selectedItem != null && onButtonClicked != null)
+        {
+            onButtonClicked.accept(selectedItem);
+            hide();
+        }
+    }
+    
     public void setItems(List<ReferenceableObjectInstance> items)
     {
         listView.getItems().setAll(items);
+        listView.setPrefWidth(maxListItemWidth(items));
+        
         if (items.isEmpty() && popup.isShowing())
         {
             hide();
         }
-        else if (!items.isEmpty() && !popup.isShowing())
+        else if (!items.isEmpty())
         {
             show(owner, posX, posY);
         }
+    }
+    
+    protected int maxListItemWidth(List<ReferenceableObjectInstance> items)
+    {
+        int maxWidth = 0;
+        for (ReferenceableObjectInstance item : items)
+        {
+            int width = item.getKey().length() * 7 + 48; //48 = 2 buttons (hopefully)
+            if (width > maxWidth)
+            {
+                maxWidth = width;
+            }
+        }
+        return maxWidth;
+    }
+    
+    public void moveVertically(double newHeight)
+    {
+        popup.setY(posY - newHeight);
     }
     
     public void show(Window owner, double x, double y)
     {
         if (!popup.isShowing() && owner != null)
         {
-            System.out.println("Showing Popup at " + x + ", " + y);
             popup.show(owner, x, y);
-            //adjustPopupSize();
+            moveVertically(popup.getHeight());
         }
     }
     
@@ -128,20 +185,5 @@ public class FittingObjectsPopup
         {
             popup.hide();
         }
-    }
-    
-    private void adjustPopupSize()
-    {
-        double itemHeight = 24; // Approximate height of each item
-        double maxHeight = 200; // Maximum height of the popup
-        double newHeight = Math.min(listView.getItems().size() * itemHeight, maxHeight);
-        System.out.println("Setting Popup Dimensions to " + listView.getWidth() + "x" + newHeight);
-        popup.setWidth(listView.getWidth());
-        popup.setHeight(newHeight);
-    }
-    
-    private void adjustPopupPosition()
-    {
-    
     }
 }
