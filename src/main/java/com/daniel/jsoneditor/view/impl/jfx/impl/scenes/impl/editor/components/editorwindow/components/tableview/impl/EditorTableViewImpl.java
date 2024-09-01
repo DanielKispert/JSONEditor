@@ -365,7 +365,7 @@ public class EditorTableViewImpl extends EditorTableView
     private Button makeRemoveButton(String path)
     {
         Button removeButton = new Button();
-        ButtonHelper.setButtonImage(removeButton, "/icons/material/darkmode/outline_close_white_24dp.png");
+        ButtonHelper.setButtonImage(removeButton, "/icons/material/darkmode/outline_delete_white_24dp.png");
         removeButton.setOnAction(event -> controller.removeNode(path));
         removeButton.setMaxHeight(Double.MAX_VALUE);
         return removeButton;
