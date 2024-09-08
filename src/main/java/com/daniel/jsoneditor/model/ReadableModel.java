@@ -1,7 +1,5 @@
 package com.daniel.jsoneditor.model;
 
-import com.brunomnsilva.smartgraph.graph.Digraph;
-import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
@@ -43,9 +41,10 @@ public interface ReadableModel extends ReadableState
     ReferenceableObject getReferenceableObjectByReferencingKey(String referencingKey);
     
     /**
-     * @return the ReferenceableObjectInstance of a ReferenceableObject with the given referencingKey where the instance has the key or null if none exists
+     * @return the ReferenceableObjectInstance of this ReferenceableObject with the given referencingKey where the instance has the key or null if none exists
      */
-    ReferenceableObjectInstance getReferenceableObjectInstance(String referencingKey, String key);
+    ReferenceableObjectInstance getReferenceableObjectInstanceWithKey(ReferenceableObject object, String key);
+    
     
     /**
      * @return a graph of the path and its direct incoming and outgoing references

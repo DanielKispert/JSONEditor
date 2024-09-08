@@ -69,6 +69,10 @@ public class ReferenceHelper
     
     public static ReferenceableObject getReferenceableObject(ReadableModel model, String referencingKey)
     {
+        if (referencingKey == null)
+        {
+            return null;
+        }
         for (ReferenceableObject object : model.getReferenceableObjects())
         {
             if (object.getReferencingKey().equals(referencingKey))
@@ -82,7 +86,8 @@ public class ReferenceHelper
     /**
      * goes through the currently loaded json and returns all nodes that are instances of this referenceable object
      */
-    public static List<ReferenceableObjectInstance> getReferenceableObjectInstances(ReadableModel model,
+    public static List<ReferenceableObjectInstance> getReferenceableObjectInstances(
+            ReadableModel model,
             ReferenceableObject referenceableObject)
     {
         if (referenceableObject == null)
@@ -217,7 +222,8 @@ public class ReferenceHelper
         
         if (node.isObject())
         {
-            node.fields().forEachRemaining(entry -> {
+            node.fields().forEachRemaining(entry ->
+            {
                 // check if the child is a ReferenceToObjectInstance
                 String childPath = path + "/" + entry.getKey();
                 ReferenceToObject childReference = model.getReferenceToObject(childPath);
@@ -265,8 +271,8 @@ public class ReferenceHelper
                         JsonNode objectKeyNode = refNode.get("objectKey");
                         JsonNode remarksNode = refNode.get("referenceRemarks");
                         if (pathNode != null && pathNode.isTextual() && objectKeyNode != null && objectKeyNode.isTextual()
-                                && objectReferencingKeyNode != null && objectReferencingKeyNode.isTextual() && remarksNode != null
-                                && remarksNode.isTextual())
+                                    && objectReferencingKeyNode != null && objectReferencingKeyNode.isTextual() && remarksNode != null
+                                    && remarksNode.isTextual())
                         {
                             referenceToObjects.add(
                                     new ReferenceToObject(pathNode.asText(), objectReferencingKeyNode.asText(), objectKeyNode.asText(),

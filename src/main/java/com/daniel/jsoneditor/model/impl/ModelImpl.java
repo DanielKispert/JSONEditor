@@ -628,9 +628,8 @@ public class ModelImpl implements ReadableModel, WritableModel
     }
     
     @Override
-    public ReferenceableObjectInstance getReferenceableObjectInstance(String referencingKey, String key)
+    public ReferenceableObjectInstance getReferenceableObjectInstanceWithKey(ReferenceableObject object, String key)
     {
-        ReferenceableObject object = ReferenceHelper.getReferenceableObject(this, referencingKey);
         if (object == null)
         {
             return null;
