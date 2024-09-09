@@ -150,7 +150,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             return false;
         }
         
-        ReferenceableObject objectWithKey = model.getReferenceableObjectByReferencingKey(getObjectReferencingKey())
+        ReferenceableObject objectWithKey = model.getReferenceableObjectByReferencingKey(getObjectReferencingKey());
         if (objectWithKey == null)
         {
             return false; //if no referenceable object exists, we can't create a new instance of it. Don't show the button
