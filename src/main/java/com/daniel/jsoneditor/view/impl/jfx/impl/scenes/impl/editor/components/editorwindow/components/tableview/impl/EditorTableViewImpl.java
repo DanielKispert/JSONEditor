@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -52,6 +53,8 @@ public class EditorTableViewImpl extends EditorTableView
     private final Controller controller;
     
     private final JsonEditorEditorWindow window;
+    
+    private FilteredList<JsonNodeWithPath> filteredItems;
     
     /**
      * our table view shows one child item per row. We save the path of the parent item in case we want to paste something and there are no
@@ -103,6 +106,25 @@ public class EditorTableViewImpl extends EditorTableView
         {
             controller.pasteFromClipboardIntoParent(parentPath);
         }
+    }
+    
+    @Override
+    public void filter()
+    {
+        filteredItems.setPredicate(item -> {
+            for (TableColumn<JsonNodeWithPath, ?> column : getColumns()) {
+                if (column instanceof EditorTableColumn) {
+                    EditorTableColumn editorColumn = (EditorTableColumn) column;
+                    List<String> selectedValues = editorColumn.getSelectedValues();
+                    String cellValue = item.getNode().get(editorColumn.getPropertyName()).asText();
+                    if (!selectedValues.contains(cellValue)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        });
+        
     }
     
     @Override

@@ -29,6 +29,8 @@ public abstract class EditorTableView extends TableView<JsonNodeWithPath> implem
     
     public abstract String getSelectedPath();
     
+    public abstract void filter();
+    
     @Override
     public boolean isCollapsed()
     {

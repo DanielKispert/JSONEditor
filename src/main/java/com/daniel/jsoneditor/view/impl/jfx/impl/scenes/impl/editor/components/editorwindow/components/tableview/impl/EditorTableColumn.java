@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -8,16 +9,22 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.FilterColumnButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.transformation.FilteredList;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 
 
@@ -37,6 +44,10 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     private final JsonEditorEditorWindow window;
     
     private final String columnName;
+    
+    private final FilterColumnButton filterButton;
+    
+    private FilteredList<JsonNodeWithPath> filteredItems;
     
     /**
      * true if this column holds the key property of a referenceable object, false otherwise
@@ -69,17 +80,16 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         this.holdsKeyOfReferenceableObject = objectOfParent != null && ("/" + propertyName).equals(objectOfParent.getKey());
         ReferenceToObject parentReference = model.getReferenceToObject(tableView.getSelectedPath());
         holdsObjectKeysOfReferences = parentReference != null && propertyName.equals(parentReference.getObjectKey().substring(1));
-        String columnName = propertyName;
-        if (holdsKeyOfReferenceableObject)
-        {
-            columnName = "🔑 " + columnName;
-        }
-        if (isRequired)
-        {
-            columnName += " *";
-        }
-        this.columnName = columnName;
-        setText(this.columnName);
+        
+        // make header
+        this.columnName = makeColumnTitle(propertyName, isRequired);
+        this.filterButton = new FilterColumnButton(this::getRowValues, this::applyFilter);
+        setGraphic(makeHeader());
+        
+        this.filteredItems = new FilteredList<>(tableView.getItems(), p -> true);
+        tableView.setItems(filteredItems);
+        
+        
         this.propertyName = propertyName;
         this.isRequired = isRequired;
         updatePrefWidth();
@@ -136,6 +146,43 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         });
     }
     
+    private HBox makeHeader()
+    {
+        HBox header = new HBox();
+        Text columnText = new Text(columnName);
+        columnText.getStyleClass().add("column-header-text");
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        header.getChildren().addAll(columnText, spacer, filterButton);
+        header.setAlignment(Pos.CENTER_LEFT);
+        return header;
+    }
+    
+    private void applyFilter()
+    {
+        // call the table to filter these rows
+        ((EditorTableViewImpl) getTableView()).filter();
+    }
+    
+    public List<String> getSelectedValues()
+    {
+        return filterButton.getSelectedValues();
+    }
+    
+    private String makeColumnTitle(String propertyName, boolean isRequired)
+    {
+        String columnName = propertyName;
+        if (holdsKeyOfReferenceableObject)
+        {
+            columnName = "🔑 " + columnName;
+        }
+        if (isRequired)
+        {
+            columnName += " *";
+        }
+        return columnName;
+    }
+    
     private TableCell<JsonNodeWithPath, String> makeOpenButtonTableCell(String pathToOpen)
     {
         return new TableCell<>()
@@ -165,10 +212,11 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     
     public void updatePrefWidth()
     {
-        double maxWidth = columnName.length() * 7; //estimation for the title length in pixels.
+        double startingWidth = columnName.length() * 7 + 40; //estimation for the title length in pixels.
         TableView<JsonNodeWithPath> tableView = this.getTableView();
         if (tableView == null)
         {
+            this.setPrefWidth(startingWidth);
             return;
         }
         for (JsonNodeWithPath item : tableView.getItems())
@@ -180,14 +228,22 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
                 int extraWidth = holdsObjectKeysOfReferences ?
                         80 :
                         50; //if we hold object keys of references we add extra padding for the "create" button
-                double width = text.getLayoutBounds().getWidth() + extraWidth; //padding for typing and checkbox buttons
-                if (width > maxWidth)
+                double largestCellWidth = text.getLayoutBounds().getWidth() + extraWidth; //padding for typing and checkbox buttons
+                if (largestCellWidth > startingWidth)
                 {
-                    maxWidth = width;
+                    startingWidth = largestCellWidth;
                 }
             }
         }
-        this.setPrefWidth(maxWidth);
+        this.setPrefWidth(startingWidth);
+    }
+    
+    private List<String> getRowValues()
+    {
+        return getTableView().getItems().stream()
+                       .map(item -> item.getNode().get(propertyName).asText())
+                       .distinct()
+                       .collect(Collectors.toList());
     }
     
     private Button makeOpenButton(String pathToOpen)

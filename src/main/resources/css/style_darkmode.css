@@ -35,6 +35,11 @@
     -fx-pref-width: 7;
 }
 
+.column-header-text {
+    -fx-fill: white;
+    -fx-font-size: 12px;
+}
+
 .dialog-pane .button-bar .button {
     -fx-background-color: -background-color;
     -fx-border-width: 0;
