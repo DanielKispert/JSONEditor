@@ -7,6 +7,7 @@ public enum EventEnum
 {
     
     LAUNCHING,
+    
     READ_JSON_AND_SCHEMA,
     
     MAIN_EDITOR,

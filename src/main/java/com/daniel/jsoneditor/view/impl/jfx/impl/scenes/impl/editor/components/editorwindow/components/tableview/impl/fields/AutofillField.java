@@ -22,7 +22,7 @@ public class AutofillField extends ComboBox<String>
             Text text1 = new Text(newValue);
             double width = text1.getLayoutBounds().getWidth();
             setPrefWidth(width + 50);
-            parent.onTextChanged(newValue);
+            parent.onUserChangedText(newValue);
         });
         setEditable(!valueMustBeASuggestion);
         setValue(text);

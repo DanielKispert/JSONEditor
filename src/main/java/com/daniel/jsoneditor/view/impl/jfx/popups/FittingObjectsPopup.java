@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInst
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
@@ -43,6 +44,8 @@ public class FittingObjectsPopup
         listView = new ListView<>();
         listView.getStyleClass().add("popup-list-view");
         popup = new Popup();
+        popup.setAutoHide(true);
+        popup.setAutoFix(true);
         popup.getContent().add(listView);
         listView.setOnMouseClicked(event -> handleItemSelection(listView.getSelectionModel().getSelectedItem()));
         HBox.setHgrow(listView, Priority.ALWAYS);
@@ -156,7 +159,7 @@ public class FittingObjectsPopup
         int maxWidth = 0;
         for (ReferenceableObjectInstance item : items)
         {
-            int width = item.getKey().length() * 7 + 48; //48 = 2 buttons (hopefully)
+            int width = item.getKey().length() * 7 + 96; //96 = 2 buttons (hopefully)
             if (width > maxWidth)
             {
                 maxWidth = width;

@@ -522,7 +522,7 @@ public class ModelImpl implements ReadableModel, WritableModel
         //set the objectKey of the reference to the key of the object
         ReferenceHelper.setObjectKeyOfInstance(this, reference, referencePath, newKeyName);
         
-        sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
+        sendEvent(new Event(EventEnum.ADDED_REFERENCEABLE_OBJECT, clonedPath));
     }
     
     private String duplicateItem(String pathToItemToDuplicate)

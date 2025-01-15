@@ -67,6 +67,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         this.window = window;
         this.controller = controller;
         this.setMinWidth(20);
+        this.setSortable(false);
         JsonNodeWithPath selectedNodeByTable = model.getNodeForPath(tableView.getSelectedPath());
         ReferenceableObject objectOfParent = null;
         if (selectedNodeByTable.isArray())
