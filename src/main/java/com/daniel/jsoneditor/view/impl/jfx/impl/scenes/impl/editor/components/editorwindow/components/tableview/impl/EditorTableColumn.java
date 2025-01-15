@@ -241,10 +241,10 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     
     private List<String> getRowValues()
     {
-        return getTableView().getItems().stream()
-                       .map(item -> item.getNode().get(propertyName).asText())
-                       .distinct()
-                       .collect(Collectors.toList());
+        return getTableView().getItems().stream().map(item -> {
+            JsonNode node = item.getNode().get(propertyName);
+            return node != null ? node.asText() : "";
+        }).distinct().collect(Collectors.toList());
     }
     
     private Button makeOpenButton(String pathToOpen)
