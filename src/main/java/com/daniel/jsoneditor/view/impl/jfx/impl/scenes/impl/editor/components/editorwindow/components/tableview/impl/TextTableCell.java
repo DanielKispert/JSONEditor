@@ -73,6 +73,7 @@ public class TextTableCell extends EditorTableCell
         {
             Pair<Boolean, List<String>> suggestions = getSuggestions();
             HBox fieldGraphic = new HBox();
+            displayedValue = item;
             if (suggestions.getValue().isEmpty())
             {
                 currentTextEnterGraphic = new EditorTextField(this, item);
@@ -85,7 +86,7 @@ public class TextTableCell extends EditorTableCell
             createNewReferenceableObjectButton = new CreateNewReferenceableObjectButton();
             createNewReferenceableObjectButton.setOnAction(event -> handleCreateNewReferenceableObject());
             fieldGraphic.getChildren().addAll(currentTextEnterGraphic, createNewReferenceableObjectButton);
-            onTextChanged(item);
+            toggleCreateNewReferenceableObjectButtonVisibility();
             
             setGraphicWithResizing(fieldGraphic);
         }

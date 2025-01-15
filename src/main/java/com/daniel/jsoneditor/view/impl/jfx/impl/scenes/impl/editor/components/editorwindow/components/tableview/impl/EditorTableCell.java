@@ -24,7 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-
+/**
+ * Abstract class representing a custom table cell in the editor table.
+ * This class provides functionality for handling the display and editing of JSON node values within a table cell.
+ * It also manages the display of a popup for selecting referenceable objects and handles the creation of new referenceable objects.
+ */
 public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String>
 {
     
@@ -38,7 +42,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     
     private String previouslyCommittedValue;
     
-    private String displayedValue;
+    protected String displayedValue;
     
     protected CreateNewReferenceableObjectButton createNewReferenceableObjectButton;
     
@@ -52,7 +56,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         this.controller = controller;
         this.model = model;
         this.holdsKeyOfReferenceableObject = holdsObjectKey;
-        this.fittingObjectsPopup = new FittingObjectsPopup(model, this::onFittingObjectSelected, this::onPopupButtonClicked);
+        this.fittingObjectsPopup = new FittingObjectsPopup(model, this::onFittingObjectSelected, this::onDuplicateItemButtonClicked);
         setMaxWidth(Double.MAX_VALUE);
         Platform.runLater(() -> {
             TableColumn<JsonNodeWithPath, String> column = getTableColumn();
@@ -63,7 +67,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         });
     }
     
-    private void onPopupButtonClicked(ReferenceableObjectInstance selectedItem)
+    private void onDuplicateItemButtonClicked(ReferenceableObjectInstance selectedItem)
     {
         controller.duplicateReferenceableObjectForLinking(getTableRow().getItem().getPath(), selectedItem.getPath());
     }
@@ -101,9 +105,9 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             return;
         }
         Bounds cellBounds = localToScreen(getBoundsInLocal());
-        fittingObjectsPopup.setItems(fittingObjects);
         // we give the position of the BOTTOM left corner because the popup needs to calculate the one for the top left
         fittingObjectsPopup.setPopupPosition(getScene().getWindow(), cellBounds.getMinX(), cellBounds.getMinY());
+        fittingObjectsPopup.setItems(fittingObjects);
     }
     
     private void hidePopup()
@@ -255,14 +259,17 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         column.updatePrefWidth();
     }
     
-    public void onTextChanged(String enteredText)
+    public void onUserChangedText(String enteredText)
     {
-        displayedValue = enteredText;
-        toggleCreateNewReferenceableObjectButtonVisibility();
-        fittingObjectsPopup.setItems(getFittingReferenceableObjects());
+        if (!Objects.equals(enteredText, displayedValue))
+        {
+            displayedValue = enteredText;
+            toggleCreateNewReferenceableObjectButtonVisibility();
+            fittingObjectsPopup.setItems(getFittingReferenceableObjects());
+        }
     }
     
-    private void toggleCreateNewReferenceableObjectButtonVisibility()
+    protected void toggleCreateNewReferenceableObjectButtonVisibility()
     {
         if (createNewReferenceableObjectButton == null)
         {

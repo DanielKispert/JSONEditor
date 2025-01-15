@@ -14,12 +14,13 @@ public class EditorTextField extends TextField
         // set preferred width to the width of the text entered plus a little extra
         textProperty().addListener((observable, oldValue, newValue) ->
         {
-            Text text1 = new Text(newValue);
-            double width = text1.getLayoutBounds().getWidth();
+            Text newText = new Text(newValue);
+            double width = newText.getLayoutBounds().getWidth();
             setPrefWidth(width + 20);
-            parent.onTextChanged(newValue);
+            parent.onUserChangedText(newValue);
         });
         setText(text); //intentionally done after adding the listener
+        
         setOnAction(event ->
         {
             parent.commitEdit(getText());
