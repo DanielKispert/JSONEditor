@@ -33,7 +33,7 @@ public class FilterColumnButton extends Button
         List<String> uniqueValues = uniqueValuesSupplier.get();
         for (String value : uniqueValues)
         {
-            CheckMenuItem menuItem = new CheckMenuItem(value);
+            CheckMenuItem menuItem = new CheckMenuItem(escapeUnderscores(value));
             menuItem.setSelected(true);
             menuItem.setOnAction(e -> onFilterChanged.run());
             filterMenu.getItems().add(menuItem);
@@ -41,11 +41,21 @@ public class FilterColumnButton extends Button
         filterMenu.show(this, Side.BOTTOM, 0, 0);
     }
     
+    private String escapeUnderscores(String value)
+    {
+        return value.replaceAll("_", "__");
+    }
+    
+    private String revertUnderscores(String value)
+    {
+        return value.replaceAll("__", "_");
+    }
+    
     public List<String> getSelectedValues()
     {
         return filterMenu.getItems().stream()
                        .filter(item -> item instanceof CheckMenuItem && ((CheckMenuItem) item).isSelected())
-                       .map(MenuItem::getText)
+                       .map(item -> revertUnderscores(item.getText()))
                        .collect(Collectors.toList());
     }
 }
