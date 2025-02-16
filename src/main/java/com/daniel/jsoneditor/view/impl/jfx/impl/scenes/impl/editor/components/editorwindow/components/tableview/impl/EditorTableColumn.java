@@ -12,6 +12,7 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.FilterColumnButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.beans.property.SimpleStringProperty;
@@ -165,8 +166,12 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         ((EditorTableViewImpl) getTableView()).filter();
     }
     
+    /**
+     * Convention: null: no value was selected, so show nothing, empty list: all values were selected, show everything
+     */
     public List<String> getSelectedValues()
     {
+        System.out.println("selected values for column " + propertyName + ": " + filterButton.getSelectedValues());
         return filterButton.getSelectedValues();
     }
     
@@ -241,7 +246,8 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     
     private List<String> getRowValues()
     {
-        return getTableView().getItems().stream().map(item -> {
+        return ((EditorTableView) getTableView()).getUnfilteredItems().stream().map(item ->
+        {
             JsonNode node = item.getNode().get(propertyName);
             return node != null ? node.asText() : "";
         }).distinct().collect(Collectors.toList());

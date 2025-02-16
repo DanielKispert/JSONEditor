@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.elements.Collapsible;
+import javafx.collections.ObservableList;
 import javafx.scene.control.TableView;
 
 
@@ -36,4 +37,6 @@ public abstract class EditorTableView extends TableView<JsonNodeWithPath> implem
     {
         return false;
     }
+    
+    public abstract ObservableList<JsonNodeWithPath> getUnfilteredItems();
 }
