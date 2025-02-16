@@ -18,11 +18,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -37,6 +34,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 
 /**
@@ -46,6 +45,9 @@ import java.util.Map.Entry;
  */
 public class EditorTableViewImpl extends EditorTableView
 {
+    
+    private static final Logger logger = Logger.getLogger(EditorTableViewImpl.class.getName());
+    
     private final ReadableModel model;
     
     private final EditorWindowManager manager;
@@ -53,6 +55,9 @@ public class EditorTableViewImpl extends EditorTableView
     private final Controller controller;
     
     private final JsonEditorEditorWindow window;
+    
+    //this list contains all items before the ui-filtering occurs
+    private ObservableList<JsonNodeWithPath> allItems;
     
     private FilteredList<JsonNodeWithPath> filteredItems;
     
@@ -111,13 +116,30 @@ public class EditorTableViewImpl extends EditorTableView
     @Override
     public void filter()
     {
-        filteredItems.setPredicate(item -> {
-            for (TableColumn<JsonNodeWithPath, ?> column : getColumns()) {
-                if (column instanceof EditorTableColumn) {
+        filteredItems.setPredicate(item ->
+        {
+            for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
+            {
+                if (column instanceof EditorTableColumn)
+                {
                     EditorTableColumn editorColumn = (EditorTableColumn) column;
                     List<String> selectedValues = editorColumn.getSelectedValues();
+                    
+                    // If the list is null, show nothing
+                    if (selectedValues == null)
+                    {
+                        return false;
+                    }
+                    
+                    // if the list is an empty list, show everything
+                    if (selectedValues.isEmpty())
+                    {
+                        continue;
+                    }
+                    
                     String cellValue = item.getNode().get(editorColumn.getPropertyName()).asText();
-                    if (!selectedValues.contains(cellValue)) {
+                    if (!selectedValues.contains(cellValue))
+                    {
                         return false;
                     }
                 }
@@ -125,7 +147,15 @@ public class EditorTableViewImpl extends EditorTableView
             return true;
         });
         
+        long shownItems = filteredItems.stream().count();
+        long totalItems = getItems().size();
+        logger.info("Selected values for columns: " + getColumns().stream()
+                                                              .filter(column -> column instanceof EditorTableColumn)
+                                                              .map(column -> ((EditorTableColumn) column).getSelectedValues())
+                                                              .collect(Collectors.toList()) +
+                            ". Showing " + shownItems + " of " + totalItems + " items.");
     }
+    
     
     @Override
     public String getSelectedPath()
@@ -150,8 +180,6 @@ public class EditorTableViewImpl extends EditorTableView
         {
             
             
-        
-        
         }
         
         
@@ -199,8 +227,15 @@ public class EditorTableViewImpl extends EditorTableView
         }
     }
     
+    @Override
+    public ObservableList<JsonNodeWithPath> getUnfilteredItems()
+    {
+        return allItems;
+    }
+    
     private void setView(ObservableList<JsonNodeWithPath> elements, JsonNode parentSchema)
     {
+        this.allItems = elements;
         JsonNode type = parentSchema.get("type");
         if (type == null)
         {
@@ -247,8 +282,8 @@ public class EditorTableViewImpl extends EditorTableView
             // we add a column of delete buttons.css
             columns.add(createDeleteButtonColumn());
         }
-        
-        setItems(elements);
+        filteredItems = new FilteredList<>(allItems);
+        setItems(filteredItems);
         getColumns().clear();
         getColumns().addAll(columns);
         if (isArray && controller.getSettingsController().hideEmptyColumns())
