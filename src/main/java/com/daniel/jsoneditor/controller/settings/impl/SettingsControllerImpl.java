@@ -22,8 +22,14 @@ public class SettingsControllerImpl implements SettingsController
     {
         properties.setProperty(PropertyFileKeys.PROPERTY_REMEMBER_PATHS, rememberPaths ? "true" : "false");
         properties.setProperty(PropertyFileKeys.PROPERTY_LAST_JSON_PATH, jsonPath);
-        properties.setProperty(PropertyFileKeys.PROPERTY_LAST_SCHEMA_PATH, schemaPath);
-        properties.setProperty(PropertyFileKeys.PROPERTY_LAST_SETTINGS_PATH, settingsPath);
+        if (schemaPath != null)
+        {
+            properties.setProperty(PropertyFileKeys.PROPERTY_LAST_SCHEMA_PATH, schemaPath);
+        }
+        if (settingsPath != null)
+        {
+            properties.setProperty(PropertyFileKeys.PROPERTY_LAST_SETTINGS_PATH, settingsPath);
+        }
         PropertiesFileHelper.writePropertiesToFile(properties);
     }
     
