@@ -83,8 +83,12 @@ public class FilterColumnButton extends Button
      */
     public List<String> getSelectedValues()
     {
-        long selectedCount = valueStateMap.values().stream().filter(Boolean::booleanValue).count();
-        if (selectedCount == valueStateMap.size())
+        List<String> uniqueValues = uniqueValuesSupplier.get();
+        long selectedCount = uniqueValues.stream()
+                                     .filter(value -> valueStateMap.getOrDefault(value, true))
+                                     .count();
+        
+        if (selectedCount == uniqueValues.size())
         {
             return List.of();
         }
@@ -94,9 +98,8 @@ public class FilterColumnButton extends Button
         }
         else
         {
-            return valueStateMap.entrySet().stream()
-                           .filter(Map.Entry::getValue)
-                           .map(Map.Entry::getKey)
+            return uniqueValues.stream()
+                           .filter(value -> valueStateMap.getOrDefault(value, true))
                            .map(this::revertUnderscores)
                            .collect(Collectors.toList());
         }
