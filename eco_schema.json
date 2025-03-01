@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ecolaw_1.0.0",
+  "description": "schema for an eco law",
+  "type": "object",
+  "required": [
+    "version",
+    "type",
+    "name",
+    "reference",
+    "description",
+    "properties"
+  ],
+  "referenceableObjects": [],
+  "referencesToObjects": [],
+  "properties": {
+    "version": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "type": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "reference": {
+      "type": "boolean"
+    },
+    "description": {
+      "type": "string"
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "Sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Eco.Gameplay.Civics.Laws.LawSection"
+          }
+        },
+        "State": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Eco.Gameplay.Civics.Laws.LawSection": {
+      "type": "object",
+      "required": [
+        "type",
+        "reference",
+        "properties"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "boolean"
+        },
+        "properties": {
+          "type": "object",
+          "required": [
+            "Title",
+            "UserDescription",
+            "Triggers",
+            "IfThenBlocks"
+          ],
+          "properties": {
+            "Title": {
+              "type": "string"
+            },
+            "UserDescription": {
+              "type": "string"
+            },
+            "Triggers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Eco.Gameplay.Civics.Laws.TriggerSettings"
+              }
+            },
+            "IfThenBlocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Eco.Gameplay.Civics.IfThenBlock"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Eco.Gameplay.Civics.Laws.TriggerSettings": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "boolean"
+        },
+        "properties": {
+          "type": "object",
+          "properties": {
+            "Trigger": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "Configs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Eco.Gameplay.GameActions.SelectTriggerConfig"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Eco.Gameplay.GameActions.SelectTriggerConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "typeToConfig": {
+          "type": "string"
+        },
+        "propNameBacker": {
+          "type": "string"
+        },
+        "propDisplayName": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "properties": {
+            "List": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "mustDeriveType": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "requiredTag": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "internalDescription": {
+                  "type": "string"
+                },
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Eco.Gameplay.Civics.IfThenBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "boolean"
+        },
+        "properties": {
+          "type": "object",
+          "properties": {
+            "If": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "List": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "Comparison": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "Then": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
