@@ -4,7 +4,6 @@ import javafx.geometry.Side;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
 
 import java.util.HashMap;
 import java.util.List;
@@ -85,13 +84,13 @@ public class FilterColumnButton extends Button
     public List<String> getSelectedValues()
     {
         long selectedCount = valueStateMap.values().stream().filter(Boolean::booleanValue).count();
-        if (selectedCount == 0)
-        {
-            return null;
-        }
-        else if (selectedCount == valueStateMap.size())
+        if (selectedCount == valueStateMap.size())
         {
             return List.of();
+        }
+        else if (selectedCount == 0)
+        {
+            return null;
         }
         else
         {

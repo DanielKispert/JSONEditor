@@ -116,36 +116,7 @@ public class EditorTableViewImpl extends EditorTableView
     @Override
     public void filter()
     {
-        filteredItems.setPredicate(item ->
-        {
-            for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
-            {
-                if (column instanceof EditorTableColumn)
-                {
-                    EditorTableColumn editorColumn = (EditorTableColumn) column;
-                    List<String> selectedValues = editorColumn.getSelectedValues();
-                    
-                    // If the list is null, show nothing
-                    if (selectedValues == null)
-                    {
-                        return false;
-                    }
-                    
-                    // if the list is an empty list, show everything
-                    if (selectedValues.isEmpty())
-                    {
-                        continue;
-                    }
-                    
-                    String cellValue = item.getNode().get(editorColumn.getPropertyName()).asText();
-                    if (!selectedValues.contains(cellValue))
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        });
+        filteredItems.setPredicate(this::filterItem);
         
         long shownItems = filteredItems.stream().count();
         long totalItems = getItems().size();
@@ -154,6 +125,42 @@ public class EditorTableViewImpl extends EditorTableView
                                                               .map(column -> ((EditorTableColumn) column).getSelectedValues())
                                                               .collect(Collectors.toList()) +
                             ". Showing " + shownItems + " of " + totalItems + " items.");
+    }
+    
+    /**
+     * true if the item should be shown in the list, false if not
+     */
+    private boolean filterItem(JsonNodeWithPath item)
+    {
+        for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
+        {
+            if (column instanceof EditorTableColumn)
+            {
+                EditorTableColumn editorColumn = (EditorTableColumn) column;
+                List<String> selectedValues = editorColumn.getSelectedValues();
+
+                
+                // If the list is null, show nothing
+                if (selectedValues == null)
+                {
+                    return false;
+                }
+                
+                // if the list is an empty list, then this column allows everything. Check the next column
+                if (selectedValues.isEmpty())
+                {
+                    continue;
+                }
+
+                
+                String cellValue = item.getNode().get(editorColumn.getPropertyName()).asText();
+                if (!selectedValues.contains(cellValue))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
     
     
@@ -427,5 +434,6 @@ public class EditorTableViewImpl extends EditorTableView
         removeButton.setMaxHeight(Double.MAX_VALUE);
         return removeButton;
     }
+    
     
 }
