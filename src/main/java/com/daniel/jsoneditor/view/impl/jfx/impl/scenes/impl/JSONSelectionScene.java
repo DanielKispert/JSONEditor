@@ -10,13 +10,7 @@ import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.selection.FileSelectionBox;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -102,12 +96,11 @@ public class JSONSelectionScene extends SceneHandlerImpl
     
     private void continueToEditor()
     {
-        controller.getSettingsController().setFileProperties(remember, selectedJsonPath, selectedSchemaPath, selectedSettingsPath);
         controller.jsonAndSchemaSelected(new File(selectedJsonPath), new File(selectedSchemaPath), new File(selectedSettingsPath));
+        controller.getSettingsController().setFileProperties(remember, selectedJsonPath, selectedSchemaPath, selectedSettingsPath);
     }
     
-    private void askToGenerateJson(Stage stage)
-    {
+    private void askToGenerateJson(Stage stage) {
         // Create an alert dialog to ask for the JSON path
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("JSON Path");
@@ -117,10 +110,13 @@ public class JSONSelectionScene extends SceneHandlerImpl
         ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.NO);
         alert.getButtonTypes().setAll(yesButton, noButton);
         
+        // Apply the common CSS to the alert dialog
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
+        
         Optional<ButtonType> result = alert.showAndWait();
         
-        if (result.isPresent() && result.get() == yesButton)
-        {
+        if (result.isPresent() && result.get() == yesButton) {
             // Create the file chooser with a default JSON path
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Save As");
@@ -131,16 +127,12 @@ public class JSONSelectionScene extends SceneHandlerImpl
             // Show the file chooser dialog
             File selectedDirectory = fileChooser.showSaveDialog(stage);
             
-            if (selectedDirectory != null)
-            {
+            if (selectedDirectory != null) {
                 // Get the selected file name and directory
                 String fileName = fileChooser.getInitialFileName();
                 File selectedFile = new File(selectedDirectory, fileName);
                 // generate a JSON and save it in the selected file
                 // TODO
-                
-                
-                
             }
         }
     }
