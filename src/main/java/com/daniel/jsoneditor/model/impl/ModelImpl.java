@@ -666,6 +666,10 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public JsonSchema getSubschemaForPath(String path)
     {
+        if (path == null || path.isEmpty())
+        {
+            return rootSchema;
+        }
         // this will be an array like ["", "addresses" "1" "street"]
         String[] pathParts = path.split("/");
         // this is the root schema, we want the schema that validates only the node that is given by the path

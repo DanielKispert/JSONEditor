@@ -9,8 +9,8 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.EditorTableViewImpl;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.TableViewButtonBar;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -28,7 +28,7 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
     
     private final CollapseButton collapseButton;
     
-    private final Button addItemButton;
+    private final TableViewButtonBar buttonBar;
     
     private boolean collapsed;
     
@@ -42,27 +42,20 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
         this.nameBar = new HBox();
         this.controller = controller;
         this.model = model;
+        this.buttonBar = new TableViewButtonBar(controller, tableView::getCurrentlyDisplayedPaths, () -> selectedPath);
         this.collapseButton = createCollapseButton(window);
-        addItemButton = new Button("Add Item");
-        this.getChildren().addAll(nameBar, tableView);
+        this.getChildren().addAll(nameBar, tableView, buttonBar);
     }
     
     public void setSelection(JsonNodeWithPath selection)
     {
         this.selectedPath = selection.getPath();
         tableView.setSelection(selection);
-        if (model.canAddMoreItems(selection.getPath()))
-        {
-            this.getChildren().add(addItemButton);
-            addItemButton.setOnAction(event -> controller.addNewNodeToArray(selection.getPath()));
-        }
-        else
-        {
-            this.getChildren().remove(addItemButton);
-        }
+        
         // the namebar gets the fancy name of the selected node
         nameBar.getChildren().clear();
         nameBar.getChildren().add(createNameLabel(selection.getDisplayName()));
+        buttonBar.updateBottomBar(model.canAddMoreItems(selectedPath), !tableView.getCurrentlyDisplayedPaths().isEmpty());
         //nameBar.getChildren().addAll(collapseButton, createNameLabel(selection.getDisplayName()));
     }
     

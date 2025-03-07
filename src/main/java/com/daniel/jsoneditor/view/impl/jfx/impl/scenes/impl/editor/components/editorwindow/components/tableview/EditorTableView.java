@@ -5,6 +5,8 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.elements.Collapsible;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TableView;
 
+import java.util.List;
+
 
 public abstract class EditorTableView extends TableView<JsonNodeWithPath> implements Collapsible
 {
@@ -39,4 +41,9 @@ public abstract class EditorTableView extends TableView<JsonNodeWithPath> implem
     }
     
     public abstract ObservableList<JsonNodeWithPath> getUnfilteredItems();
+    
+    /**
+     * @return a list of the paths of each row item that is currently displayed (after filters)
+     */
+    public abstract List<String> getCurrentlyDisplayedPaths();
 }

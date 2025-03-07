@@ -2,13 +2,12 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.AutoAdjustingSplitPane;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.JsonEditorNamebar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.TableViewWithCompactNamebar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.TableViewButtonBar;
 import com.fasterxml.jackson.databind.JsonNode;
-import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -40,12 +39,11 @@ public class JsonEditorEditorWindow extends VBox
     
     private final Controller controller;
     
-    private final Button addItemButton;
-    
     private final ReadableModel model;
     
     private String selectedPath;
     
+    private final TableViewButtonBar buttonBar;
     
     private List<TableViewWithCompactNamebar> childTableViews;
     
@@ -59,14 +57,12 @@ public class JsonEditorEditorWindow extends VBox
         editorTables = new AutoAdjustingSplitPane();
         editorTables.setOrientation(javafx.geometry.Orientation.VERTICAL);
         mainTableView = new EditorTableViewImpl(manager, this, model, controller);
-        addItemButton = new Button("Add Item");
-        addItemButton.setOnAction(event -> controller.addNewNodeToArray(selectedPath));
-        HBox.setHgrow(addItemButton, Priority.ALWAYS);
-        VBox.setVgrow(addItemButton, Priority.NEVER);
-        addItemButton.setMaxWidth(Double.MAX_VALUE);
+        buttonBar = new TableViewButtonBar(controller, mainTableView::getCurrentlyDisplayedPaths, () -> selectedPath);
+        
+        VBox.setVgrow(buttonBar, Priority.NEVER);
         VBox.setVgrow(this, Priority.ALWAYS);
         HBox.setHgrow(this, Priority.ALWAYS);
-        getChildren().addAll(nameBar, editorTables);
+        getChildren().addAll(nameBar, editorTables, buttonBar);
     }
     
     /**
@@ -79,8 +75,9 @@ public class JsonEditorEditorWindow extends VBox
     
     /**
      * selects a json node in this window
+     *
      * @param allowDivertingToChildViews if true, then opening an array will lead to opening its object parent so the array is shown in a
-     * child view
+     *                                   child view
      */
     public void setSelectedPath(String path, boolean allowDivertingToChildViews)
     {
@@ -93,17 +90,7 @@ public class JsonEditorEditorWindow extends VBox
         editorTables.getItems().add(mainTableView);
         childTableViews = getCompactChildViews(newNode);
         childTableViews.forEach(childTable -> editorTables.getItems().add(childTable)); //intentionally so we send a new event for every add
-        if (model.canAddMoreItems(selectedPath))
-        {
-            if (getChildren().size() == 2)
-            {
-                getChildren().add(addItemButton);
-            }
-        }
-        else
-        {
-            getChildren().remove(addItemButton);
-        }
+        buttonBar.updateBottomBar(model.canAddMoreItems(path), false);
         if (!selectedPath.equals(path))
         {
             //if we show a different path than the one that was requested, we show an array. In that case, we focus the item that was requested
@@ -121,7 +108,7 @@ public class JsonEditorEditorWindow extends VBox
             if (entry.getValue().isArray())
             {
                 TableViewWithCompactNamebar childView = new TableViewWithCompactNamebar(manager, this, model, controller);
-                childView.setSelection(new JsonNodeWithPath(entry.getValue(), node.getPath() + "/" + entry.getKey() ));
+                childView.setSelection(new JsonNodeWithPath(entry.getValue(), node.getPath() + "/" + entry.getKey()));
                 childViews.add(childView);
             }
         }
@@ -167,7 +154,7 @@ public class JsonEditorEditorWindow extends VBox
                 }
             }
             else if (allowDivertingToChildViews && nodeAtPath.isArray() && parentNode.isObject()) //parent object & array child => open the
-                // parent too
+            // parent too
             {
                 pathToSelect = parentPath;
             }

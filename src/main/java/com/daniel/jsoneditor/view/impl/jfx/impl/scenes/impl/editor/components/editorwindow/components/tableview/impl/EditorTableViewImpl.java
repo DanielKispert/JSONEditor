@@ -240,6 +240,12 @@ public class EditorTableViewImpl extends EditorTableView
         return allItems;
     }
     
+    @Override
+    public List<String> getCurrentlyDisplayedPaths()
+    {
+        return getItems().stream().map(JsonNodeWithPath::getPath).collect(Collectors.toList());
+    }
+    
     private void setView(ObservableList<JsonNodeWithPath> elements, JsonNode parentSchema)
     {
         this.allItems = elements;
