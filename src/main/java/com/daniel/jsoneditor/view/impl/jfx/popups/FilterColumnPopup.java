@@ -22,7 +22,7 @@ public class FilterColumnPopup extends BasePopup<List<String>>
         vbox = new VBox();
         vbox.setPadding(new Insets(10));
         vbox.setSpacing(5);
-        vbox.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
+        vbox.getStyleClass().add("popup-list-view");
         popup.getContent().add(vbox);
     }
     
