@@ -20,21 +20,34 @@ public class TooltipHelper
     {
         String tooltipText = paths.stream().map(model::getNodeForPath).filter(Objects::nonNull) // Ignore null nodes
                 .map(JsonNodeWithPath::getDisplayName).collect(Collectors.joining("\n"));
-        Tooltip tooltip = new Tooltip(tooltipText);
-        tooltip.setShowDuration(Duration.INDEFINITE);
-        return tooltip;
+        return makeTooltipFromText(tooltipText);
     }
     
     public static Tooltip makeTooltipFromPath(ReadableModel model, String path)
     {
-        JsonNode jsonNode = model.getNodeForPath(path).getNode();
-        return jsonNode == null ? null : makeTooltipFromJsonNode(jsonNode);
+        return makeTooltipFromText(getDescriptiveTextFromPath(model, path));
     }
+    
+    public static String getDescriptiveTextFromPath(ReadableModel model, String path)
+    {
+        JsonNode node = model.getNodeForPath(path).getNode();
+        return getTooltipTextFromJsonNode(node);
+    }
+
     
     public static Tooltip makeTooltipFromJsonNode(JsonNode jsonNode)
     {
         String tooltipText = getTooltipTextFromJsonNode(jsonNode);
-        Tooltip tooltip = new Tooltip(tooltipText);
+        return makeTooltipFromText(tooltipText);
+    }
+    
+    private static Tooltip makeTooltipFromText(String text)
+    {
+        if (text == null)
+        {
+            return null;
+        }
+        Tooltip tooltip = new Tooltip(text);
         tooltip.setShowDuration(Duration.INDEFINITE);
         return tooltip;
     }
@@ -47,6 +60,10 @@ public class TooltipHelper
     
     private static String getTooltipTextFromJsonNode(JsonNode jsonNode)
     {
+        if (jsonNode == null)
+        {
+            return null;
+        }
         if (jsonNode.isValueNode())
         {
             return jsonNode.asText();

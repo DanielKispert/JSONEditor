@@ -42,7 +42,7 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
         this.nameBar = new HBox();
         this.controller = controller;
         this.model = model;
-        this.buttonBar = new TableViewButtonBar(controller, tableView::getCurrentlyDisplayedPaths, () -> selectedPath);
+        this.buttonBar = new TableViewButtonBar(model, controller, tableView::getCurrentlyDisplayedPaths, () -> selectedPath);
         this.collapseButton = createCollapseButton(window);
         this.getChildren().addAll(nameBar, tableView, buttonBar);
     }
