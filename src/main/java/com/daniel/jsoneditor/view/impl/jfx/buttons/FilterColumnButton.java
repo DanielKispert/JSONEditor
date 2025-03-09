@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.buttons;
 
 import com.daniel.jsoneditor.view.impl.jfx.popups.FilterColumnPopup;
+import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.stage.Window;
 
@@ -32,8 +33,8 @@ public class FilterColumnButton extends Button
     {
         List<String> uniqueValues = uniqueValuesSupplier.get();
         filterPopup.setItems(uniqueValues);
-        Window window = getScene().getWindow();
-        filterPopup.setPopupPosition(window, window.getX() + getLayoutX(), window.getY() + getLayoutY() + getHeight());
+        Bounds bounds = localToScreen(getBoundsInLocal());
+        filterPopup.setPopupPosition(getScene().getWindow(), bounds.getMinX(), bounds.getMinY());
         filterPopup.show();
     }
     

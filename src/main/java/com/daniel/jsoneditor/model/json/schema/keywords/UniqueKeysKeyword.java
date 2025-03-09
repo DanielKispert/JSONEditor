@@ -10,7 +10,6 @@ import java.util.Set;
 
 public class UniqueKeysKeyword extends AbstractKeyword
 {
-    private static final Logger logger = LoggerFactory.getLogger(UniqueKeysKeyword.class);
     public UniqueKeysKeyword()
     {
         super("uniqueKeys");
@@ -27,7 +26,6 @@ public class UniqueKeysKeyword extends AbstractKeyword
             public Set<ValidationMessage> validate(JsonNode node, JsonNode rootNode, String at)
             {
                 // you can do validate here
-                logger.info("config:{} path:{} node:{}", config, at, node);
             
                 return Collections.emptySet();
             }

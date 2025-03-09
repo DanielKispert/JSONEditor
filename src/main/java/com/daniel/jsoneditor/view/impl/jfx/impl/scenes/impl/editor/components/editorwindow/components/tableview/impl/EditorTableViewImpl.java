@@ -28,13 +28,14 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
@@ -46,7 +47,7 @@ import java.util.stream.Collectors;
 public class EditorTableViewImpl extends EditorTableView
 {
     
-    private static final Logger logger = Logger.getLogger(EditorTableViewImpl.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(EditorTableViewImpl.class);
     
     private final ReadableModel model;
     
@@ -120,7 +121,7 @@ public class EditorTableViewImpl extends EditorTableView
         
         long shownItems = filteredItems.stream().count();
         long totalItems = getItems().size();
-        logger.info("Selected values for columns: " + getColumns().stream()
+        logger.debug("Selected values for columns: " + getColumns().stream()
                                                               .filter(column -> column instanceof EditorTableColumn)
                                                               .map(column -> ((EditorTableColumn) column).getSelectedValues())
                                                               .collect(Collectors.toList()) +

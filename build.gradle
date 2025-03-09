@@ -21,6 +21,7 @@ javafx {
     modules = [ 'javafx.controls' ]
 }
 
+
 dependencies {
     implementation 'com.networknt:json-schema-validator:1.0.87'
     implementation name: 'smartgraph-2.0.0' //local jar that has been recompiled to run on java 11
