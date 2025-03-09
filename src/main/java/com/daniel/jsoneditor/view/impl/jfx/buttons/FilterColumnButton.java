@@ -1,9 +1,8 @@
 package com.daniel.jsoneditor.view.impl.jfx.buttons;
 
-import javafx.geometry.Side;
+import com.daniel.jsoneditor.view.impl.jfx.popups.FilterColumnPopup;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.ContextMenu;
+import javafx.stage.Window;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,11 +12,10 @@ import java.util.stream.Collectors;
 
 public class FilterColumnButton extends Button
 {
-    
-    private final ContextMenu filterMenu;
+    private final FilterColumnPopup filterPopup;
     private final Supplier<List<String>> uniqueValuesSupplier;
     private final Runnable onFilterChanged;
-    private final Map<String, Boolean> valueStateMap; //will be with escaped underscores
+    private final Map<String, Boolean> valueStateMap;
     
     public FilterColumnButton(Supplier<List<String>> uniqueValuesSupplier, Runnable onFilterChanged)
     {
@@ -25,62 +23,20 @@ public class FilterColumnButton extends Button
         this.uniqueValuesSupplier = uniqueValuesSupplier;
         this.onFilterChanged = onFilterChanged;
         ButtonHelper.setButtonImage(this, "/icons/material/darkmode/outline_filter_white_24dp.png");
-        setOnAction(actionEvent -> showFilterMenu());
-        filterMenu = new ContextMenu();
+        setOnAction(actionEvent -> showFilterPopup());
         this.valueStateMap = new HashMap<>();
+        this.filterPopup = new FilterColumnPopup(valueStateMap, v -> onFilterChanged.run());
     }
     
-    private void showFilterMenu()
+    private void showFilterPopup()
     {
-        filterMenu.getItems().clear();
         List<String> uniqueValues = uniqueValuesSupplier.get();
-        
-        // Add "Select All" checkbox
-        CheckMenuItem selectAllItem = new CheckMenuItem("Select/Unselect All");
-        selectAllItem.setSelected(valueStateMap.values().stream().allMatch(Boolean::booleanValue));
-        selectAllItem.setOnAction(e ->
-        {
-            boolean selected = selectAllItem.isSelected();
-            filterMenu.getItems().forEach(item ->
-            {
-                if (item instanceof CheckMenuItem)
-                {
-                    ((CheckMenuItem) item).setSelected(selected);
-                    valueStateMap.put(revertUnderscores(item.getText()), selected);
-                }
-            });
-            onFilterChanged.run();
-        });
-        filterMenu.getItems().add(selectAllItem);
-        
-        for (String value : uniqueValues)
-        {
-            CheckMenuItem menuItem = new CheckMenuItem(escapeUnderscores(value));
-            menuItem.setSelected(valueStateMap.getOrDefault(value, true));
-            menuItem.setOnAction(e ->
-            {
-                valueStateMap.put(revertUnderscores(menuItem.getText()), menuItem.isSelected());
-                selectAllItem.setSelected(valueStateMap.values().stream().allMatch(Boolean::booleanValue));
-                onFilterChanged.run();
-            });
-            filterMenu.getItems().add(menuItem);
-        }
-        filterMenu.show(this, Side.BOTTOM, 0, 0);
+        filterPopup.setItems(uniqueValues);
+        Window window = getScene().getWindow();
+        filterPopup.setPopupPosition(window, window.getX() + getLayoutX(), window.getY() + getLayoutY() + getHeight());
+        filterPopup.show();
     }
     
-    private String escapeUnderscores(String value)
-    {
-        return value.replaceAll("_", "__");
-    }
-    
-    private String revertUnderscores(String value)
-    {
-        return value.replaceAll("__", "_");
-    }
-    
-    /**
-     * Convention: null: no value was selected, so show nothing, empty list: all values were selected, show everything
-     */
     public List<String> getSelectedValues()
     {
         List<String> uniqueValues = uniqueValuesSupplier.get();
@@ -103,5 +59,10 @@ public class FilterColumnButton extends Button
                            .map(this::revertUnderscores)
                            .collect(Collectors.toList());
         }
+    }
+    
+    private String revertUnderscores(String value)
+    {
+        return value.replaceAll("__", "_");
     }
 }

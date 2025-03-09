@@ -57,7 +57,7 @@ public class JsonEditorEditorWindow extends VBox
         editorTables = new AutoAdjustingSplitPane();
         editorTables.setOrientation(javafx.geometry.Orientation.VERTICAL);
         mainTableView = new EditorTableViewImpl(manager, this, model, controller);
-        buttonBar = new TableViewButtonBar(controller, mainTableView::getCurrentlyDisplayedPaths, () -> selectedPath);
+        buttonBar = new TableViewButtonBar(model, controller, mainTableView::getCurrentlyDisplayedPaths, () -> selectedPath);
         
         VBox.setVgrow(buttonBar, Priority.NEVER);
         VBox.setVgrow(this, Priority.ALWAYS);
