@@ -204,6 +204,12 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void removeNodes(List<String> paths)
+    {
+        model.removeNodes(paths);
+    }
+    
+    @Override
     public void removeNode(String path)
     {
         model.removeNode(path);

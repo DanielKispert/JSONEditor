@@ -4,6 +4,8 @@ import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 
 import java.io.File;
+import java.util.List;
+
 
 public interface Controller
 {
@@ -26,6 +28,8 @@ public interface Controller
     void exportNode(String path);
     
     void exportNodeWithDependencies(String path);
+    
+    void removeNodes(List<String> paths);
     
     void removeNode(String path);
     
