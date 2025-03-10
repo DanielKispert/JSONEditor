@@ -560,10 +560,11 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void removeNodes(List<String> paths)
     {
-        // only the last removal shall notify the UI
-        for (int i = 0; i < paths.size(); i++)
+        // dirty hack: remove the last item first to avoid removing unintended items
+        // this will break once we add sorting
+        for (int i = paths.size() - 1; i >= 0; i--)
         {
-            removeOrSetNode(paths.get(i), null, i == paths.size() - 1);
+            removeOrSetNode(paths.get(i), null, i == 0);
         }
     }
     
