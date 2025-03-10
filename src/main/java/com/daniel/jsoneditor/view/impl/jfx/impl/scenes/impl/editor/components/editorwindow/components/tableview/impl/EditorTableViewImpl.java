@@ -122,10 +122,20 @@ public class EditorTableViewImpl extends EditorTableView
         long shownItems = filteredItems.stream().count();
         long totalItems = getItems().size();
         logger.debug("Selected values for columns: " + getColumns().stream()
-                                                              .filter(column -> column instanceof EditorTableColumn)
-                                                              .map(column -> ((EditorTableColumn) column).getSelectedValues())
-                                                              .collect(Collectors.toList()) +
-                            ". Showing " + shownItems + " of " + totalItems + " items.");
+                                                               .filter(column -> column instanceof EditorTableColumn)
+                                                               .map(column -> ((EditorTableColumn) column).getSelectedValues())
+                                                               .collect(Collectors.toList()) +
+                             ". Showing " + shownItems + " of " + totalItems + " items.");
+        
+        // trigger a resizing for all columns since their info could have changed now
+        getColumns().forEach(column ->
+        {
+            if (column instanceof EditorTableColumn)
+            {
+                ((EditorTableColumn) column).updatePrefWidth();
+            }
+        });
+        
     }
     
     /**
