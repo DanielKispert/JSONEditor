@@ -7,6 +7,8 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.settings.Settings;
 
 import java.io.File;
+import java.util.List;
+
 
 public interface WritableModel
 {
@@ -46,6 +48,8 @@ public interface WritableModel
      * duplicates a referenceable object that should be linked in a reference and adjusts the reference with its name
      */
     void duplicateNodeAndLink(String referencePath, String pathToItemToDuplicate);
+    
+    void removeNodes(List<String> paths);
     
     void removeNode(String path);
     

@@ -65,9 +65,6 @@ public class DeleteAllButton extends Button
     
     private void deleteAllVisibleItems(List<String> paths)
     {
-        for (String path : paths)
-        {
-            controller.removeNode(path);
-        }
+        controller.removeNodes(paths);
     }
 }

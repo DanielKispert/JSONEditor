@@ -557,15 +557,26 @@ public class ModelImpl implements ReadableModel, WritableModel
         return clonedPath;
     }
     
-
+    @Override
+    public void removeNodes(List<String> paths)
+    {
+        // only the last removal shall notify the UI
+        for (int i = 0; i < paths.size(); i++)
+        {
+            removeOrSetNode(paths.get(i), null, i == paths.size() - 1);
+        }
+    }
     
     @Override
     public void removeNode(String path)
     {
-        removeOrSetNode(path, null);
+        removeOrSetNode(path, null, true);
     }
     
-    private void removeOrSetNode(String path, JsonNode content)
+    /**
+     * changes the JSON structure by setting the defined content at the defined path. If you want to notify the UI of these changes, set notifyUI to true.
+     */
+    private void removeOrSetNode(String path, JsonNode content, boolean notifyUI)
     {
         if (path == null || path.isEmpty())
         {
@@ -615,6 +626,10 @@ public class ModelImpl implements ReadableModel, WritableModel
         {
             return;
         }
+        if (!notifyUI)
+        {
+            return;
+        }
         
         // both of these events do the same, it's just for cleanliness right now
         if (content != null)
@@ -660,7 +675,7 @@ public class ModelImpl implements ReadableModel, WritableModel
     @Override
     public void setNode(String path, JsonNode content)
     {
-        removeOrSetNode(path, content);
+        removeOrSetNode(path, content, true);
     }
     
     @Override
