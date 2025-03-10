@@ -8,10 +8,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 
 public class AutoAdjustingSplitPane extends SplitPane
 {
@@ -22,7 +18,8 @@ public class AutoAdjustingSplitPane extends SplitPane
         getStyleClass().add("auto-adjusting-split-pane");
         getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
         
-        getItems().addListener((ListChangeListener.Change<? extends javafx.scene.Node> c) -> {
+        getItems().addListener((ListChangeListener.Change<? extends javafx.scene.Node> c) ->
+        {
             while (c.next())
             {
                 int numberOfItems = getItems().size();
@@ -43,8 +40,9 @@ public class AutoAdjustingSplitPane extends SplitPane
                         preferredSpaceForNewItem = preferredSpaceForNewItem == 0 ? preferredSpaceForLastItem : preferredSpaceForNewItem;
                         //fallback, we use half the space if the new item doesn't have a preferred dimension yet
                         double positionOfNewDivider = positionOfDividerBeforeLastItem
-                                + (preferredSpaceForLastItem / (preferredSpaceForLastItem + preferredSpaceForNewItem)) * (1
-                                - positionOfDividerBeforeLastItem);
+                                                              + (preferredSpaceForLastItem / (preferredSpaceForLastItem + preferredSpaceForNewItem)) * (
+                                1
+                                        - positionOfDividerBeforeLastItem);
                         newPositions[i] = positionOfNewDivider;
                     }
                     else
@@ -61,5 +59,51 @@ public class AutoAdjustingSplitPane extends SplitPane
     private double getPreferredDimension(Node item)
     {
         return getOrientation() == Orientation.VERTICAL ? item.prefHeight(-1) : item.prefWidth(-1);
+    }
+    
+    @Override
+    protected double computePrefWidth(double height)
+    {
+        if (getOrientation() == Orientation.HORIZONTAL)
+        {
+            double totalPrefWidth = 0;
+            for (Node item : getItems())
+            {
+                totalPrefWidth += item.prefWidth(height);
+            }
+            return totalPrefWidth;
+        }
+        else
+        {
+            double maxPrefWidth = 0;
+            for (Node item : getItems())
+            {
+                maxPrefWidth = Math.max(maxPrefWidth, item.prefWidth(height));
+            }
+            return maxPrefWidth;
+        }
+    }
+    
+    @Override
+    protected double computePrefHeight(double width)
+    {
+        if (getOrientation() == Orientation.VERTICAL)
+        {
+            double totalPrefHeight = 0;
+            for (Node item : getItems())
+            {
+                totalPrefHeight += item.prefHeight(width);
+            }
+            return totalPrefHeight;
+        }
+        else
+        {
+            double maxPrefHeight = 0;
+            for (Node item : getItems())
+            {
+                maxPrefHeight = Math.max(maxPrefHeight, item.prefHeight(width));
+            }
+            return maxPrefHeight;
+        }
     }
 }

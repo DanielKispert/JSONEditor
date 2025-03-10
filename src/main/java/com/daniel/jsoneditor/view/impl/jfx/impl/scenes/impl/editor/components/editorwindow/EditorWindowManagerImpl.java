@@ -13,7 +13,7 @@ import javafx.scene.control.SplitPane;
 // manages the positions of editor windows etc
 public class EditorWindowManagerImpl implements EditorWindowManager
 {
-    private static final int MAX_WINDOWS = 5;
+    private static final int MAX_WINDOWS = 7;
     
     private final EditorScene editorScene;
     

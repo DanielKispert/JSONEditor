@@ -211,4 +211,12 @@ public class JsonEditorEditorWindow extends VBox
     {
         return editorTables;
     }
+    
+    @Override
+    protected double computePrefWidth(double v)
+    {
+        // the preferred width of the editor window is the highest width of all its children, so nameBar, editorTables and buttonBar
+        double prefWidth = Math.max(nameBar.prefWidth(v), editorTables.prefWidth(v));
+        return Math.max(prefWidth, buttonBar.prefWidth(v));
+    }
 }
