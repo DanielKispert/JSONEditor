@@ -4,6 +4,7 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.cells.FollowOrCreateButtonCell;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableRow;
@@ -21,6 +22,8 @@ public class EditorTableRow extends TableRow<JsonNodeWithPath>
     
     private final EditorTableView myTableView;
     
+    private FollowOrCreateButtonCell currentFollowCell;
+    
     public EditorTableRow(ReadableModel model, Controller controller, EditorTableView myTableView)
     {
         super();
@@ -31,6 +34,19 @@ public class EditorTableRow extends TableRow<JsonNodeWithPath>
         setOnDragOver(this::handleDragOver);
         setOnDragDropped(this::handleDragDropped);
         setContextMenu(makeContextMenu());
+    }
+    
+    public void setCurrentFollowCell(FollowOrCreateButtonCell currentFollowCell)
+    {
+        this.currentFollowCell = currentFollowCell;
+    }
+    
+    public void updateFollowRefOrOpenItemButton()
+    {
+        if (currentFollowCell != null)
+        {
+            currentFollowCell.userEntryInSameRow();
+        }
     }
     
     private ContextMenu makeContextMenu()

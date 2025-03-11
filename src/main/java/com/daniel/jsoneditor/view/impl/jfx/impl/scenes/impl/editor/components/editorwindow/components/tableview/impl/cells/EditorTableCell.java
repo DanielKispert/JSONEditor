@@ -1,4 +1,4 @@
-package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl;
+package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.cells;
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -9,6 +9,8 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.CreateNewReferenceableObjectButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.EditorTableRow;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.EditorTableColumn;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.AutofillField;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
 import com.daniel.jsoneditor.view.impl.jfx.popups.FittingObjectsPopup;
@@ -19,6 +21,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Control;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -204,13 +207,14 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         }
         super.commitEdit(newValue);
         EditorTableColumn column = ((EditorTableColumn) getTableColumn());
-        if (getTableRow() == null || getTableRow().getItem() == null)
+        TableRow<JsonNodeWithPath> tableRow = getTableRow();
+        if (tableRow == null || tableRow.getItem() == null)
         {
             return;
         }
         // from this point on we likely will save the value, so we remember it for next time
         previouslyCommittedValue = newValue;
-        JsonNodeWithPath item = getTableRow().getItem();
+        JsonNodeWithPath item = tableRow.getItem();
         String propertyName = column.getPropertyName();
         JsonNode jsonNode = item.getNode().get(propertyName);
         
@@ -257,6 +261,11 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         }
         manager.updateNavbarRepresentation(item.getPath());
         column.updatePrefWidth();
+        // update the follow reference or open column button of this row, if existing
+        if (tableRow instanceof EditorTableRow)
+        {
+            ((EditorTableRow) tableRow).updateFollowRefOrOpenItemButton();
+        }
     }
     
     public void onUserChangedText(String enteredText)
