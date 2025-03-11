@@ -5,13 +5,14 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.cells.FollowOrCreateButtonCell;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.EditorTableColumn;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.FollowRefOrOpenColumn;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -25,7 +26,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 import org.slf4j.Logger;
@@ -302,7 +302,7 @@ public class EditorTableViewImpl extends EditorTableView
         if (isArray)
         {
             // we add a column that either holds the "follow reference" or "open array element" button
-            columns.add(createFollowReferenceOrOpenElementButtonColumn());
+            columns.add(new FollowRefOrOpenColumn(model, manager));
             // we add a column of delete buttons.css
             columns.add(createDeleteButtonColumn());
         }
@@ -335,51 +335,6 @@ public class EditorTableViewImpl extends EditorTableView
                 }
             }
         }
-    }
-    
-    private TableColumn<JsonNodeWithPath, String> createFollowReferenceOrOpenElementButtonColumn()
-    {
-        TableColumn<JsonNodeWithPath, String> followReferenceOrOpenColumn = new TableColumn<>();
-        
-        followReferenceOrOpenColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getPath()));
-        
-        followReferenceOrOpenColumn.setCellFactory(param -> new TableCell<>()
-        {
-            private final StackPane pane = new StackPane();
-            
-            @Override
-            protected void updateItem(String path, boolean empty)
-            {
-                super.updateItem(path, empty);
-                
-                if (empty || path == null)
-                {
-                    setGraphic(null);
-                }
-                else
-                {
-                    JsonNodeWithPath nodeAtPath = model.getNodeForPath(path);
-                    String referencedPath = ReferenceHelper.resolveReference(nodeAtPath, model);
-                    Button button;
-                    if (referencedPath != null)
-                    {
-                        button = makeFollowReferenceButton(referencedPath);
-                    }
-                    else
-                    {
-                        button = makeOpenArrayElementButton(path);
-                    }
-                    pane.getChildren().setAll(button);
-                    setGraphic(pane);
-                    button.widthProperty().addListener((observable, oldValue, newValue) ->
-                    {
-                        followReferenceOrOpenColumn.setPrefWidth(newValue.doubleValue() + 10);
-                    });
-                }
-            }
-        });
-        
-        return followReferenceOrOpenColumn;
     }
     
     private TableColumn<JsonNodeWithPath, String> createDeleteButtonColumn()
@@ -422,25 +377,6 @@ public class EditorTableViewImpl extends EditorTableView
             columns.add(new EditorTableColumn(manager, controller, model, window, this, propertyNode, propertyName, isRequired));
         }
         return columns;
-    }
-    
-    private Button makeFollowReferenceButton(String path)
-    {
-        Button followReferenceButton = new Button("Follow Reference");
-        followReferenceButton.setOnAction(event -> manager.openInNewWindowIfPossible(path));
-        followReferenceButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
-        followReferenceButton.setMaxHeight(Double.MAX_VALUE);
-        return followReferenceButton;
-    }
-    
-    private Button makeOpenArrayElementButton(String path)
-    {
-        Button openArrayElementButton = new Button();
-        ButtonHelper.setButtonImage(openArrayElementButton, "/icons/material/darkmode/outline_open_in_new_white_24dp.png");
-        openArrayElementButton.setOnAction(event -> manager.openInNewWindowIfPossible(path));
-        openArrayElementButton.setTooltip(TooltipHelper.makeTooltipFromJsonNode(model.getNodeForPath(path).getNode()));
-        openArrayElementButton.setMaxHeight(Double.MAX_VALUE);
-        return openArrayElementButton;
     }
     
     private Button makeRemoveButton(String path)
