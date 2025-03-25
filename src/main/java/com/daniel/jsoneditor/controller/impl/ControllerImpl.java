@@ -144,9 +144,9 @@ public class ControllerImpl implements Controller, Observer
     public void importAtNode(String path, String content)
     {
         JsonFileReaderAndWriter jsonReader = new JsonFileReaderAndWriterImpl();
-        JsonNode existingNodeAtPath = readableModel.getRootJson().at(path); // we intentionally ignore JsonNodeWithPath in case its null
+        JsonNodeWithPath existingNodeAtPath = readableModel.getNodeForPath(path == null ? "" : path);
         JsonNode contentNode = jsonReader.getNodeFromString(content);
-        JsonNode mergedNode = JsonNodeMerger.createMergedNode(existingNodeAtPath, contentNode);
+        JsonNode mergedNode = JsonNodeMerger.createMergedNode(readableModel, existingNodeAtPath, contentNode);
         JsonSchema schemaAtPath = readableModel.getSubschemaForPath(path);
         if (mergedNode != null && SchemaHelper.validateJsonWithSchema(mergedNode, schemaAtPath))
         {
