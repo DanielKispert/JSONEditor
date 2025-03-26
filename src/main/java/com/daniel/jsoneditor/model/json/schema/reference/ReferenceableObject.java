@@ -3,7 +3,7 @@ package com.daniel.jsoneditor.model.json.schema.reference;
 import com.fasterxml.jackson.databind.JsonNode;
 
 
-public class ReferenceableObject
+public class ReferenceableObject implements Instanceable
 {
     private final String referencingKey;
     
@@ -32,6 +32,8 @@ public class ReferenceableObject
     {
         return key;
     }
+    
+    
     
     public String getKeyOfInstance(JsonNode node)
     {
