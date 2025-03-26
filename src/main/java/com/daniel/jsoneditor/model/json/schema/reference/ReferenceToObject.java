@@ -3,9 +3,10 @@ package com.daniel.jsoneditor.model.json.schema.reference;
 import com.fasterxml.jackson.databind.JsonNode;
 
 
-public class ReferenceToObject
+public class ReferenceToObject implements Instanceable
 {
     private final String path;
+    
     private final String objectReferencingKey;
     
     private final String objectKey;
