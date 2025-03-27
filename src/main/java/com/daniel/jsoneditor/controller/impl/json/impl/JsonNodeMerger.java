@@ -4,8 +4,6 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.Instanceable;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -110,7 +108,7 @@ public class JsonNodeMerger
         {
             return null;
         }
-        return instanceable.getKeyOfInstance(possibleInstance);
+        return instanceable.getInstanceIdentifier(possibleInstance);
     }
     
     private static ObjectNode mergeObjects(ReadableModel model, JsonNodeWithPath baseNode, ObjectNode updateNode)
