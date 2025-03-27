@@ -77,4 +77,10 @@ public class ReferenceToObject implements Instanceable
         
         return null;
     }
+    
+    @Override
+    public String getInstanceIdentifier(JsonNode node)
+    {
+        return getRemarksOfInstance(node) + "||" + getKeyOfInstance(node) + "||" + getObjectReferencingKeyOfInstance(node);
+    }
 }

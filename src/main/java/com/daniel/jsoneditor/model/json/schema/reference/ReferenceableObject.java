@@ -48,4 +48,10 @@ public class ReferenceableObject implements Instanceable
         
         return null;
     }
+    
+    @Override
+    public String getInstanceIdentifier(JsonNode node)
+    {
+        return getKeyOfInstance(node);
+    }
 }
