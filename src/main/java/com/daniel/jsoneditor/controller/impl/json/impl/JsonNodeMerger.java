@@ -56,19 +56,17 @@ public class JsonNodeMerger
             String keyOfUpdateElement = getComparisonKey(arrayOfObjectsOrReferences, updateElement);
             if (keyOfUpdateElement == null)
             {
-                // the objects (or arrays) we want to merge dont have keys, we can't merge them
-                baseArray.add(updateElement);
+                // the updateElement is null, skip this one
                 continue;
             }
             // if the update element is an object or array we'll try to merge it into the base array if it's already in there
-            // we do merging via the ReferenceableObject framework
+            // we do merging via the ReferenceableObject framework or via object equality (hashing)
             boolean containedInBaseArray = false;
             JsonNode baseElementToMerge = null;
             int foundIndex;
             for (foundIndex = 0; foundIndex < baseArray.size(); foundIndex++)
             {
                 String keyOfObject = getComparisonKey(arrayOfObjectsOrReferences, baseArray.get(foundIndex));
-                // if the object (or array) at the path is not a referenceable object instance
                 baseElementToMerge = baseArray.get(foundIndex);
                 
                 if (keyOfUpdateElement.equals(keyOfObject))
@@ -104,9 +102,13 @@ public class JsonNodeMerger
     
     private static String getComparisonKey(Instanceable instanceable, JsonNode possibleInstance)
     {
-        if (instanceable == null || possibleInstance == null)
+        if (possibleInstance == null)
         {
             return null;
+        }
+        if (instanceable == null)
+        {
+            return possibleInstance.hashCode() + "";
         }
         return instanceable.getInstanceIdentifier(possibleInstance);
     }
