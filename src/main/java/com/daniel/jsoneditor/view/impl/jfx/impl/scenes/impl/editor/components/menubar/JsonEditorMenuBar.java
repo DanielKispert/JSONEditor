@@ -38,6 +38,15 @@ public class JsonEditorMenuBar extends MenuBar
         settingsItem.setOnAction(event -> new SettingsDialog(controller.getSettingsController()).showAndWait());
         fileMenu.getItems().addAll(openItem, saveItem, refreshItem, settingsItem);
         
+        Menu editMenu = new Menu("Edit");
+        MenuItem undoItem = new MenuItem("Undo");
+        undoItem.setOnAction(event -> controller.undoLastAction());
+        undoItem.setAccelerator(new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN));
+        MenuItem redoItem = new MenuItem("Redo");
+        redoItem.setOnAction(event -> controller.redoLastAction());
+        redoItem.setAccelerator(new KeyCodeCombination(KeyCode.Y, KeyCombination.SHORTCUT_DOWN));
+        editMenu.getItems().addAll(undoItem, redoItem);
+        
         Menu inspectMenu = new Menu("Inspect");
         MenuItem findItem = makeFindAnythingItem(model, manager, navbar);
         inspectMenu.getItems().add(findItem);
@@ -46,7 +55,7 @@ public class JsonEditorMenuBar extends MenuBar
         MenuItem aboutItem = new MenuItem("About");
         aboutItem.setOnAction(event -> new AboutDialog().showAndWait());
         helpMenu.getItems().add(aboutItem);
-        getMenus().addAll(fileMenu, inspectMenu, helpMenu);
+        getMenus().addAll(fileMenu, editMenu, inspectMenu, helpMenu);
     }
     
     private static MenuItem makeFindAnythingItem(ReadableModel model, EditorWindowManager manager, JsonEditorNavbar navbar)

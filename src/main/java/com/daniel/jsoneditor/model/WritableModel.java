@@ -29,11 +29,6 @@ public interface WritableModel
     void addNodeToArray(String selectedPath);
     
     /**
-     * @return the index where the node was added or -1 if it wasn't added
-     */
-    int addNodeToArray(String selectedPath, JsonNode content);
-    
-    /**
      * sorts the array node at the given path
      * @param path
      */

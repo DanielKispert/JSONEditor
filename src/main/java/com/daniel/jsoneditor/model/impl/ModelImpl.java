@@ -1,5 +1,7 @@
 package com.daniel.jsoneditor.model.impl;
 
+import com.daniel.jsoneditor.model.WritableModelInternal;
+import com.daniel.jsoneditor.model.commands.CommandFactory;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraphCreator;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -36,7 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 
-public class ModelImpl implements ReadableModel, WritableModel
+public class ModelImpl implements ReadableModel, WritableModelInternal
 {
     private static final String NUMBER_REGEX = "-?\\d+(\\.\\d+)?";
     
@@ -56,6 +58,12 @@ public class ModelImpl implements ReadableModel, WritableModel
     {
         this.stateMachine = stateMachine;
         this.settings = new Settings(null, null);
+    }
+    
+    @Override
+    public CommandFactory getCommandFactory()
+    {
+        return new CommandFactory(this, this);
     }
     
     @Override

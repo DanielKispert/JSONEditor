@@ -62,5 +62,17 @@ public interface Controller
     
     void pasteFromClipboardIntoParent(String parentPath);
     
+    /**
+     * Undo the last action performed by the user.
+     * If no action can be undone, this method does nothing.
+     */
+    void undoLastAction();
+    
+    /**
+     * Redo the last undone action performed by the user.
+     * If no action can be redone, this method does nothing.
+     */
+    void redoLastAction();
+    
 
 }

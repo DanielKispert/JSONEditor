@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model;
 
+import com.daniel.jsoneditor.model.commands.CommandFactory;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
@@ -15,6 +16,8 @@ import java.util.List;
 
 public interface ReadableModel extends ReadableState
 {
+    CommandFactory getCommandFactory();
+    
     File getCurrentJSONFile();
     
     File getCurrentSchemaFile();
