@@ -4,10 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 import com.daniel.jsoneditor.controller.impl.json.VariableHelper;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
@@ -16,6 +16,8 @@ import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.commands.CommandFactory;
+import com.daniel.jsoneditor.model.commands.impl.AddNodeToArrayCommand;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
@@ -26,9 +28,6 @@ import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.view.View;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
-import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceType;
-import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.ReferenceTypeDialog;
-import com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing.SelectReferenceDialog;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
@@ -50,9 +49,15 @@ public class ControllerImpl implements Controller, Observer
     
     private final SettingsController settingsController;
     
+    private final CommandManager commandManager;
+    
+    private final CommandFactory commandFactory;
+    
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
     {
         this.settingsController = new SettingsControllerImpl();
+        this.commandManager = new CommandManager();
+        this.commandFactory = readableModel.getCommandFactory();
         this.model = model;
         this.readableModel = readableModel;
         this.subjects = new ArrayList<>();
@@ -218,7 +223,7 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void addNewNodeToArray(String path)
     {
-        model.addNodeToArray(path);
+        commandManager.executeCommand(commandFactory.addNodeToArrayCommand(path));
     }
     
     @Override
@@ -385,5 +390,17 @@ public class ControllerImpl implements Controller, Observer
             }
         }
         
+    }
+    
+    @Override
+    public void undoLastAction()
+    {
+        commandManager.undo();
+    }
+    
+    @Override
+    public void redoLastAction()
+    {
+        commandManager.redo();
     }
 }

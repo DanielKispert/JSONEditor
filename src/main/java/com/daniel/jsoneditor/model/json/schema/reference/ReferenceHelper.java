@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -115,7 +116,7 @@ public class ReferenceHelper
         }
     }
     
-    public static void createAndInsertReferenceableObject(ReadableModel readableModel, WritableModel model, String referenceableObjectPath, String newKey)
+    public static void createAndInsertReferenceableObject(ReadableModel readableModel, WritableModelInternal model, String referenceableObjectPath, String newKey)
     {
         // Get the ReferenceableObject using the referenceableObjectPath
         ReferenceableObject referenceableObject = getReferenceableObjectOfPath(readableModel, referenceableObjectPath);
