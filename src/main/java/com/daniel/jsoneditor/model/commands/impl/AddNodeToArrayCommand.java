@@ -7,24 +7,26 @@ import com.daniel.jsoneditor.model.WritableModelInternal;
 public class AddNodeToArrayCommand extends BaseCommand
 {
     
-    private final String path;
+    private final String pathToArray;
     
-    public AddNodeToArrayCommand(ReadableModel readModel, WritableModelInternal model, String path)
+    private String pathOfAddedNode;
+    
+    public AddNodeToArrayCommand(ReadableModel readModel, WritableModelInternal model, String pathToArray)
     {
         super(readModel, model);
-        this.path = path;
+        this.pathToArray = pathToArray;
     }
     
     @Override
     public void execute()
     {
-        model.addNodeToArray(path);
+        int addedIndex = model.addNodeToArray(pathToArray);
+        pathOfAddedNode = pathToArray + "/" + addedIndex;
     }
     
     @Override
     public void undo()
     {
-        // doublecheck this
-        model.removeNode(path);
+        model.removeNode(pathOfAddedNode);
     }
 }

@@ -466,7 +466,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     }
     
     @Override
-    public void addNodeToArray(String selectedPath)
+    public int addNodeToArray(String selectedPath)
     {
         JsonNode newItem = makeArrayNode(selectedPath);
         int addedIndex = addNodeToArray(selectedPath, newItem);
@@ -474,6 +474,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         {
             sendEvent(new Event(EventEnum.ADDED_ITEM_TO_ARRAY_FROM_ARRAY, selectedPath + "/" + addedIndex));
         }
+        return addedIndex;
     }
     
     @Override

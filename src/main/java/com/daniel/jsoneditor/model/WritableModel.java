@@ -26,7 +26,9 @@ public interface WritableModel
     /**
      * @param selectedPath points to the path of the array to which a node should be added
      */
-    void addNodeToArray(String selectedPath);
+    int addNodeToArray(String selectedPath);
+    
+    
     
     /**
      * sorts the array node at the given path
