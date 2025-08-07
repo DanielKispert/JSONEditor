@@ -63,7 +63,8 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
      */
     private final boolean holdsObjectKeysOfReferences;
     
-    public EditorTableColumn(EditorWindowManager manager, Controller controller, ReadableModel model, JsonEditorEditorWindow window, EditorTableViewImpl tableView, JsonNode propertyNode, String propertyName, boolean isRequired)
+    public EditorTableColumn(EditorWindowManager manager, Controller controller, ReadableModel model, JsonEditorEditorWindow window,
+            EditorTableViewImpl tableView, JsonNode propertyNode, String propertyName, boolean isRequired)
     {
         super();
         this.manager = manager;
@@ -94,7 +95,6 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         this.filteredItems = new FilteredList<>(tableView.getItems(), p -> true);
         tableView.setItems(filteredItems);
         
-        
         this.propertyName = propertyName;
         this.isRequired = isRequired;
         updatePrefWidth();
@@ -120,6 +120,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
                 List<String> types = SchemaHelper.getTypes(propertyNode);
                 if (types != null)
                 {
+                    boolean hasNumberType = types.contains("integer") || types.contains("number");
                     // TODO refactor to allow the user to choose what to display
                     if (types.contains("array") || types.contains("object"))
                     {
@@ -127,21 +128,10 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
                     }
                     else if (types.contains("string"))
                     {
-                        
-                        if (types.contains("integer") || types.contains("number"))
-                        {
-                            // display a TextTableCell that can also save itself as a number and not as a string if the user enters a
-                            // number
-                            return new TextTableCell(manager, controller, model, true, holdsKeyOfReferenceableObject);
-                        }
-                        else
-                        {
-                            // a normal TextTableCell is enough. One that should save itself as string and not a number
-                            return new TextTableCell(manager, controller, model, false, holdsKeyOfReferenceableObject);
-                        }
-                        
+                        return new TextTableCell(manager, controller, model, hasNumberType,
+                                holdsKeyOfReferenceableObject);
                     }
-                    else if (types.contains("integer") || types.contains("number"))
+                    else if (hasNumberType)
                     {
                         return makeNumberTableCell();
                     }
@@ -249,8 +239,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     
     private List<String> getRowValues()
     {
-        return ((EditorTableView) getTableView()).getUnfilteredItems().stream().map(item ->
-        {
+        return ((EditorTableView) getTableView()).getUnfilteredItems().stream().map(item -> {
             JsonNode node = item.getNode().get(propertyName);
             return node != null ? node.asText() : "";
         }).distinct().collect(Collectors.toList());
@@ -316,10 +305,6 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
             }
         };
     }
-    
-    
-    
-    
     
     public String getPropertyName()
     {

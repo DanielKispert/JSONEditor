@@ -162,15 +162,6 @@ public final class JsonNodeWithPath
         return fancyName.toString();
     }
     
-    public void removeProperty(String propertyName)
-    {
-        if (node != null && node.isObject())
-        {
-            ObjectNode node = (ObjectNode) this.node;
-            node.remove(propertyName);
-        }
-    }
-    
     public void setProperty(String propertyName, Object value)
     {
         if (node != null && node.isObject())
@@ -181,6 +172,10 @@ public final class JsonNodeWithPath
             if (propertyName.startsWith("/"))
             {
                 propertyName = propertyName.substring(1);
+            }
+            if (value == null)
+            {
+                node.remove(propertyName);
             }
             if (value instanceof String)
             {

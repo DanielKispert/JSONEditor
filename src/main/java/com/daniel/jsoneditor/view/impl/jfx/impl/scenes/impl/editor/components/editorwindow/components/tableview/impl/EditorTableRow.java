@@ -1,7 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl;
 
 import com.daniel.jsoneditor.controller.Controller;
-import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.cells.FollowOrCreateButtonCell;
@@ -16,7 +15,6 @@ import javafx.scene.input.TransferMode;
 
 public class EditorTableRow extends TableRow<JsonNodeWithPath>
 {
-    private final ReadableModel model;
     
     private final Controller controller;
     
@@ -24,10 +22,9 @@ public class EditorTableRow extends TableRow<JsonNodeWithPath>
     
     private FollowOrCreateButtonCell currentFollowCell;
     
-    public EditorTableRow(ReadableModel model, Controller controller, EditorTableView myTableView)
+    public EditorTableRow(Controller controller, EditorTableView myTableView)
     {
         super();
-        this.model = model;
         this.controller = controller;
         this.myTableView = myTableView;
         setOnDragDetected(this::handleDragDetected);

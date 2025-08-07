@@ -20,6 +20,7 @@ import com.daniel.jsoneditor.model.commands.CommandFactory;
 import com.daniel.jsoneditor.model.commands.impl.AddNodeToArrayCommand;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
@@ -296,6 +297,14 @@ public class ControllerImpl implements Controller, Observer
     public void generateJson()
     {
     
+    }
+    
+    @Override
+    public void setValueAtPath(String path, Object value)
+    {
+        String parentPath = PathHelper.getParentPath(path);
+        String propertyName = PathHelper.getLastPathSegment(path);
+        commandManager.executeCommand(commandFactory.setValueAtNodeCommand(parentPath, propertyName, value));
     }
     
     @Override

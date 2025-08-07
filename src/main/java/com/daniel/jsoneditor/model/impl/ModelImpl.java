@@ -15,6 +15,7 @@ import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.RenameKeyDialog;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.EditorTableViewImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -28,6 +29,8 @@ import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
 import javafx.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,6 +43,8 @@ import java.util.stream.StreamSupport;
 
 public class ModelImpl implements ReadableModel, WritableModelInternal
 {
+    private static final Logger logger = LoggerFactory.getLogger(ModelImpl.class);
+    
     private static final String NUMBER_REGEX = "-?\\d+(\\.\\d+)?";
     
     private final StateMachine stateMachine;
@@ -63,7 +68,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     @Override
     public CommandFactory getCommandFactory()
     {
-        return new CommandFactory(this, this);
+        return new CommandFactory(this);
     }
     
     @Override
@@ -168,6 +173,15 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
                 break;
             }
         }
+    }
+    
+    @Override
+    public Object setValueAtPath(String parentPath, String propertyName, Object value)
+    {
+        JsonNodeWithPath nodeWithPath = getNodeForPath(parentPath);
+        logger.debug("Setting value at path {} with property {} to {}", parentPath, propertyName, value);
+        nodeWithPath.setProperty(propertyName, value);
+        return null; //TODO
     }
     
     @Override
