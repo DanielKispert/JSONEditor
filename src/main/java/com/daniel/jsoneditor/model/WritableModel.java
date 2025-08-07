@@ -10,7 +10,7 @@ import java.io.File;
 import java.util.List;
 
 
-public interface WritableModel
+public interface WritableModel extends ReadableModel
 {
     
     void jsonAndSchemaSuccessfullyValidated(File jsonFile, File schemaFile, JsonNode json, JsonSchema schema);
@@ -27,6 +27,15 @@ public interface WritableModel
      * @param selectedPath points to the path of the array to which a node should be added
      */
     int addNodeToArray(String selectedPath);
+    
+    /**
+     *
+     * @param parentPath
+     * @param propertyName property name of the value that should be set. does not need a "/"
+     * @param value
+     * @return the old value that was at the path, or null if there was no value before
+     */
+    Object setValueAtPath(String parentPath, String propertyName, Object value);
     
     
     

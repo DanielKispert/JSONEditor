@@ -53,6 +53,8 @@ public interface Controller
     
     void generateJson();
     
+    void setValueAtPath(String path, Object value);
+    
     /**
      * copy the node at the path to the clipboard
      */

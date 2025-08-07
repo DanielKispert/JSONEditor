@@ -34,10 +34,9 @@ import java.util.Objects;
  */
 public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String>
 {
+    protected final Controller controller;
     
     private final EditorWindowManager manager;
-    
-    private final Controller controller;
     
     private final ReadableModel model;
     
@@ -226,14 +225,8 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             for (ReferenceToObjectInstance referenceToObjectInstance : model.getReferencesToObjectForPath(item.getPath()))
             {
                 JsonNodeWithPath referencingNode = model.getNodeForPath(referenceToObjectInstance.getPath());
-                if (newValue.isEmpty() && !column.isRequired())
-                {
-                    referencingNode.removeProperty(referenceToObjectInstance.getReference().getObjectKey());
-                }
-                else
-                {
-                    referencingNode.setProperty(referenceToObjectInstance.getReference().getObjectKey(), newValue);
-                }
+                String pathToChange = referencingNode.getPath() + "/" + referenceToObjectInstance.getReference().getObjectKey();
+                controller.setValueAtPath(pathToChange, (!newValue.isEmpty() || column.isRequired()) ? newValue : null);
             }
         }
         
@@ -242,7 +235,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         {
             if (newValue.isEmpty() && !column.isRequired())
             {
-                item.removeProperty(propertyName);
+                controller.setValueAtPath(item.getPath() + "/" + propertyName, null);
             }
             else
             {

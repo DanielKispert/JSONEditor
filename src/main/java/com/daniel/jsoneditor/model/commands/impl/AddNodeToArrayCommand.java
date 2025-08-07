@@ -11,9 +11,9 @@ public class AddNodeToArrayCommand extends BaseCommand
     
     private String pathOfAddedNode;
     
-    public AddNodeToArrayCommand(ReadableModel readModel, WritableModelInternal model, String pathToArray)
+    public AddNodeToArrayCommand(WritableModelInternal model, String pathToArray)
     {
-        super(readModel, model);
+        super(model);
         this.pathToArray = pathToArray;
     }
     

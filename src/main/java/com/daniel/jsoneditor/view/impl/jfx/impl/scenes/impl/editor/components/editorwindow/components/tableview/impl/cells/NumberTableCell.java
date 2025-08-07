@@ -19,14 +19,14 @@ public class NumberTableCell extends EditorTableCell
         try
         {
             int valueAsInt = Integer.parseInt(newValue);
-            item.setProperty(propertyName, valueAsInt);
+            controller.setValueAtPath(item.getPath() + "/" + propertyName, valueAsInt);
         }
         catch (NumberFormatException e)
         {
             try
             {
                 double valueAsDouble = Double.parseDouble(newValue);
-                item.setProperty(propertyName, valueAsDouble);
+                controller.setValueAtPath(item.getPath() + "/" + propertyName, valueAsDouble);
             }
             catch (NumberFormatException f)
             {
