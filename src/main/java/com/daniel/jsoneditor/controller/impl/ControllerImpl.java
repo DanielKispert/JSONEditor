@@ -57,7 +57,7 @@ public class ControllerImpl implements Controller, Observer
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
     {
         this.settingsController = new SettingsControllerImpl();
-        this.commandManager = new CommandManager();
+        this.commandManager = new CommandManager(model); // braucht model für Undo/Redo
         this.commandFactory = readableModel.getCommandFactory();
         this.model = model;
         this.readableModel = readableModel;

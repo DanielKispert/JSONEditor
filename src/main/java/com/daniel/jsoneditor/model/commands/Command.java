@@ -1,11 +1,15 @@
 package com.daniel.jsoneditor.model.commands;
 
+import com.daniel.jsoneditor.model.changes.ModelChange;
+import java.util.List;
+
 /**
- * A command adjusts the model in some way. It comes from a user action in the UI
+ * A command mutates the model and returns a list of semantic model changes for UI + Undo/Redo.
  */
-public interface Command
-{
-    void execute();
-    
-    void undo();
+public interface Command {
+    /**
+     * Executes the command and returns the list of changes (empty if no mutation happened).
+     * @return list of ModelChange (never null)
+     */
+    List<ModelChange> execute();
 }
