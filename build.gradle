@@ -25,4 +25,11 @@ javafx {
 dependencies {
     implementation 'com.networknt:json-schema-validator:1.0.87'
     implementation name: 'smartgraph-2.0.0' //local jar that has been recompiled to run on java 11
+    // Tests: JUnit 5 baseline for model behavior before introducing ModelChange refactor
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+}
+
+test {
+    useJUnitPlatform()
 }
