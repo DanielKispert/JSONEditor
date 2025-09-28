@@ -18,6 +18,7 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.commands.CommandFactory;
 import com.daniel.jsoneditor.model.commands.impl.AddNodeToArrayCommand;
+import com.daniel.jsoneditor.model.commands.impl.MoveItemCommand;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -125,7 +126,12 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index)
     {
-        model.moveItemToIndex(item, index);
+        if (item == null || item.getPath() == null)
+        {
+            return;
+        }
+        // cross-parent moves not implemented (only reorder inside same array)
+        commandManager.executeCommand(commandFactory.moveItemCommand(item.getPath(), index));
     }
     
     @Override
@@ -212,13 +218,21 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void removeNodes(List<String> paths)
     {
-        model.removeNodes(paths);
+        if (paths == null || paths.isEmpty())
+        {
+            return;
+        }
+        commandManager.executeCommand(commandFactory.removeNodesCommand(paths));
     }
     
     @Override
     public void removeNode(String path)
     {
-        model.removeNode(path);
+        if (path == null)
+        {
+            return;
+        }
+        commandManager.executeCommand(commandFactory.removeNodeCommand(path));
     }
     
     @Override
@@ -230,26 +244,42 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void createNewReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key)
     {
-        model.addReferenceableObjectNodeWithKey(pathOfReferenceableObject, key);
+        if (pathOfReferenceableObject == null || key == null)
+        {
+            return;
+        }
+        commandManager.executeCommand(commandFactory.createReferenceableObjectCommand(pathOfReferenceableObject, key));
         
     }
     
     @Override
     public void sortArray(String path)
     {
-        model.sortArray(path);
+        if (path == null)
+        {
+            return;
+        }
+        commandManager.executeCommand(commandFactory.sortArrayCommand(path));
     }
     
     @Override
     public void duplicateArrayNode(String path)
     {
-        model.duplicateArrayItem(path);
+        if (path == null)
+        {
+            return;
+        }
+        commandManager.executeCommand(commandFactory.duplicateArrayItemCommand(path));
     }
     
     @Override
     public void duplicateReferenceableObjectForLinking(String referencePath, String pathToDuplicate)
     {
-        model.duplicateNodeAndLink(referencePath, pathToDuplicate);
+        if (referencePath == null || pathToDuplicate == null)
+        {
+            return;
+        }
+        commandManager.executeCommand(commandFactory.duplicateReferenceAndLinkCommand(referencePath, pathToDuplicate));
     }
     
     @Override

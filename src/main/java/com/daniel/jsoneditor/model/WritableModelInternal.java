@@ -12,5 +12,9 @@ public interface WritableModelInternal extends WritableModel
      * @return the index where the node was added or -1 if it wasn't added
      */
     int addNodeToArray(String selectedPath, JsonNode content);
-
+    
+    /**
+     * Generates a new element conforming to array item schema for the array at selectedPath.
+     */
+    JsonNode makeArrayNode(String selectedPath);
 }

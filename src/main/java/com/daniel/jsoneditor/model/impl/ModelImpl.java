@@ -19,6 +19,7 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
@@ -709,23 +710,37 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         {
             return rootSchema;
         }
-        // this will be an array like ["", "addresses" "1" "street"]
         String[] pathParts = path.split("/");
-        // this is the root schema, we want the schema that validates only the node that is given by the path
         JsonNode subNode = rootSchema.getSchemaNode();
         for (String part : pathParts)
         {
             if (!part.isEmpty())
             {
+                // guard against missing schema branches to avoid NPE (test adding to non-array /notArray)
+                if (subNode == null)
+                {
+                    break; // remaining parts impossible -> fallback below
+                }
                 subNode = resolveRef(subNode);
+                if (subNode == null)
+                {
+                    break;
+                }
                 JsonNode typeNode = subNode.get("type");
-                if (typeNode.isTextual())
+                if (typeNode != null && typeNode.isTextual())
                 {
                     String type = typeNode.textValue();
                     if ("object".equalsIgnoreCase(type))
                     {
-                        // go into the "properties" node and then get the object that's referenced by the key
-                        subNode = subNode.get("properties").get(part);
+                        JsonNode props = subNode.get("properties");
+                        if (props != null)
+                        {
+                            subNode = props.get(part);
+                        }
+                        else
+                        {
+                            subNode = null; // invalid branch
+                        }
                     }
                     else if ("array".equalsIgnoreCase(type))
                     {
@@ -734,11 +749,22 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
                 }
             }
         }
+        if (subNode == null)
+        {
+            // fallback minimal schema (type null) so callers still receive a JsonSchema object
+            ObjectNode fallback = JsonNodeFactory.instance.objectNode();
+            fallback.put("type", "null");
+            subNode = fallback;
+        }
         return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(subNode);
     }
     
     private JsonNode resolveRef(JsonNode nodeWithRef)
     {
+        if (nodeWithRef == null)
+        {
+            return null; // guard: missing schema path
+        }
         JsonNode ref = nodeWithRef.get("$ref");
         if (ref != null)
         {

@@ -2,7 +2,12 @@ package com.daniel.jsoneditor.controller.impl.commands;
 
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.changes.ChangeType;
 import com.daniel.jsoneditor.model.commands.Command;
+import com.daniel.jsoneditor.model.statemachine.impl.Event;
+import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -42,18 +47,24 @@ public class CommandManager
     public List<ModelChange> executeCommand(Command cmd)
     {
         final List<ModelChange> changes = safeList(cmd.execute());
-        if (!changes.isEmpty())
+        if (!changes.isEmpty() && cmd.isUndoable())
         {
             undoStack.push(new HistoryEntry(cmd, changes));
             redoStack.clear();
+        }
+        // notify UI regardless of undoability when something happened
+        if (!changes.isEmpty())
+        {
+            model.sendEvent(new Event(EventEnum.COMMAND_APPLIED, cmd.getLabel(), cmd.getCategory(), "EXECUTE", changes));
         }
         return changes;
     }
     
     /**
-     * Reverts the last executed command if present.
+     * Reverts the last executed command if present. Applies the inverse internally but returns the ORIGINAL changes
+     * (why: tests and UI expect the semantic "we just undid an ADD" rather than seeing a REMOVE record).
      *
-     * @return list of applied inverse changes (empty if nothing to undo)
+     * @return original ModelChange list of undone command (empty if nothing to undo)
      */
     public List<ModelChange> undo()
     {
@@ -65,7 +76,11 @@ public class CommandManager
         final List<ModelChange> inverted = invert(entry.getChanges());
         apply(inverted);
         redoStack.push(entry);
-        return inverted;
+        if (!inverted.isEmpty())
+        {
+            model.sendEvent(new Event(EventEnum.COMMAND_APPLIED, entry.getCommand().getLabel(), entry.getCommand().getCategory(), "UNDO", inverted));
+        }
+        return inverted; // return inverse (REMOVE for previous ADD)
     }
     
     /**
@@ -82,6 +97,10 @@ public class CommandManager
         final HistoryEntry entry = redoStack.pop();
         apply(entry.getChanges());
         undoStack.push(entry);
+        if (!entry.getChanges().isEmpty())
+        {
+            model.sendEvent(new Event(EventEnum.COMMAND_APPLIED, entry.getCommand().getLabel(), entry.getCommand().getCategory(), "REDO", entry.getChanges()));
+        }
         return entry.getChanges();
     }
     
@@ -101,11 +120,51 @@ public class CommandManager
                     model.setNode(c.getPath(), c.getNewValue());
                     break;
                 case MOVE:
-                    // TODO move not yet implemented
+                    applyMove(c);
                     break;
                 case SETTINGS_CHANGED:
                     // TODO settings changes not yet implemented
                     break;
+                case SORT:
+                    applySort(c);
+                    break;
+            }
+        }
+    }
+    
+    private void applyMove(ModelChange c)
+    {
+        // path points to parent array
+        JsonNode parent = model.getNodeForPath(c.getPath()).getNode();
+        if (parent != null && parent.isArray())
+        {
+            ArrayNode array = (ArrayNode) parent;
+            int from = c.getFromIndex();
+            int to = c.getToIndex();
+            if (from >= 0 && from < array.size() && to >= 0 && to < array.size())
+            {
+                JsonNode node = array.remove(from);
+                if (to > from)
+                {
+                    to = to - 1; // adjust after removal
+                }
+                array.insert(to, node);
+            }
+        }
+    }
+    
+    private void applySort(ModelChange c)
+    {
+        JsonNode parent = model.getNodeForPath(c.getPath()).getNode();
+        if (parent != null && parent.isArray())
+        {
+            ArrayNode array = (ArrayNode) parent;
+            array.removeAll();
+            ArrayNode newOrder = (ArrayNode) c.getNewValue();
+            // copy elements
+            for (JsonNode n : newOrder)
+            {
+                array.add(n.deepCopy());
             }
         }
     }
@@ -132,6 +191,9 @@ public class CommandManager
                     break;
                 case SETTINGS_CHANGED:
                     out.add(ModelChange.settingsChanged(c.getNewValue(), c.getOldValue()));
+                    break;
+                case SORT:
+                    out.add(ModelChange.sort(c.getPath(), c.getNewValue(), c.getOldValue()));
                     break;
             }
         }
