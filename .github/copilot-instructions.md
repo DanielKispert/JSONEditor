@@ -1,0 +1,1 @@
+this is an AGPL-3.0 licensed project. Use english for documentation and comments. Use 140 characters per line. Use curly brackets on the next line.
