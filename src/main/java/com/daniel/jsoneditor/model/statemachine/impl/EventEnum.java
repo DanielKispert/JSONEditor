@@ -35,4 +35,6 @@ public enum EventEnum
     IMPORT_SUCCESSFUL,
     
     SAVING_FAILED,
+    
+    COMMAND_APPLIED // new command (execute/undo/redo) with metadata
 }

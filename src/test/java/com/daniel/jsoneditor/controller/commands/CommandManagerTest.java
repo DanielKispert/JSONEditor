@@ -19,13 +19,16 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests für Undo/Redo über neuen ModelChange-basierten CommandManager.
- */
-public class CommandManagerTest {
-    private static final ObjectMapper M = new ObjectMapper();
 
-    private ModelImpl createModel() throws Exception {
+/**
+ * Tests CommandManager with simple add/undo/redo scenarios.
+ */
+public class CommandManagerTest
+{
+    private static final ObjectMapper M = new ObjectMapper();
+    
+    private ModelImpl createModel() throws Exception
+    {
         ObjectNode root = M.createObjectNode();
         root.set("arr", M.createArrayNode());
         ObjectNode schemaRoot = M.createObjectNode();
@@ -44,46 +47,49 @@ public class CommandManagerTest {
         model.jsonAndSchemaSuccessfullyValidated(new File("dummy.json"), new File("dummy_schema.json"), root, schema);
         return model;
     }
-
+    
     @Test
-    void testExecuteUndoRedoSingleAdd() throws Exception {
+    void testExecuteUndoRedoSingleAdd() throws Exception
+    {
         ModelImpl model = createModel();
         CommandManager mgr = new CommandManager(model);
         CommandFactory factory = model.getCommandFactory();
-
+        
         List<ModelChange> changes = mgr.executeCommand(factory.addNodeToArrayCommand("/arr"));
         assertEquals(1, changes.size());
         ModelChange c = changes.get(0);
-        assertEquals(ChangeType.ADD, c.type());
-        assertEquals("/arr/0", c.path());
-        assertNotNull(c.newValue());
+        assertEquals(ChangeType.ADD, c.getType());
+        assertEquals("/arr/0", c.getPath());
+        assertNotNull(c.getNewValue());
         ArrayNode arr = (ArrayNode) model.getNodeForPath("/arr").getNode();
         assertEquals(1, arr.size());
-
+        
         List<ModelChange> undo = mgr.undo();
         assertEquals(1, undo.size());
         ModelChange u = undo.get(0);
-        assertEquals(ChangeType.REMOVE, u.type());
-        assertEquals("/arr/0", u.path());
+        assertEquals(ChangeType.REMOVE, u.getType());
+        assertEquals("/arr/0", u.getPath());
         assertEquals(0, arr.size());
-
+        
         List<ModelChange> redo = mgr.redo();
         assertEquals(1, redo.size());
         ModelChange r = redo.get(0);
-        assertEquals(ChangeType.ADD, r.type());
+        assertEquals(ChangeType.ADD, r.getType());
         assertEquals(1, arr.size());
     }
-
+    
     @Test
-    void testUndoEmptyStack() throws Exception {
+    void testUndoEmptyStack() throws Exception
+    {
         ModelImpl model = createModel();
         CommandManager mgr = new CommandManager(model);
         assertTrue(mgr.undo().isEmpty());
         assertTrue(mgr.redo().isEmpty());
     }
-
+    
     @Test
-    void testMultipleAddsUndoRedoOrder() throws Exception {
+    void testMultipleAddsUndoRedoOrder() throws Exception
+    {
         ModelImpl model = createModel();
         CommandManager mgr = new CommandManager(model);
         CommandFactory factory = model.getCommandFactory();
@@ -102,4 +108,3 @@ public class CommandManagerTest {
         assertEquals(3, arr.size());
     }
 }
-

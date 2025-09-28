@@ -1,10 +1,15 @@
 package com.daniel.jsoneditor.model.commands;
 
-import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.commands.impl.AddNodeToArrayCommand;
 import com.daniel.jsoneditor.model.commands.impl.SetValueAtNodeCommand;
+import com.daniel.jsoneditor.model.commands.impl.RemoveNodeCommand;
+import com.daniel.jsoneditor.model.commands.impl.SortArrayCommand;
+import com.daniel.jsoneditor.model.commands.impl.RemoveNodesCommand;
+import com.daniel.jsoneditor.model.commands.impl.MoveItemCommand;
+import com.daniel.jsoneditor.model.commands.impl.CreateReferenceableObjectCommand;
+import com.daniel.jsoneditor.model.commands.impl.DuplicateArrayItemCommand;
+import com.daniel.jsoneditor.model.commands.impl.DuplicateReferenceAndLinkCommand;
 
 
 public class CommandFactory
@@ -25,5 +30,40 @@ public class CommandFactory
     public SetValueAtNodeCommand setValueAtNodeCommand(String parentPath, String propertyName, Object value)
     {
         return new SetValueAtNodeCommand(model, parentPath, propertyName, value);
+    }
+    
+    public RemoveNodeCommand removeNodeCommand(String path)
+    {
+        return new RemoveNodeCommand(model, path);
+    }
+    
+    public RemoveNodesCommand removeNodesCommand(java.util.List<String> paths)
+    {
+        return new RemoveNodesCommand(model, paths);
+    }
+    
+    public SortArrayCommand sortArrayCommand(String path)
+    {
+        return new SortArrayCommand(model, path);
+    }
+    
+    public MoveItemCommand moveItemCommand(String itemPath, int targetIndex)
+    {
+        return new MoveItemCommand(model, itemPath, targetIndex);
+    }
+    
+    public CreateReferenceableObjectCommand createReferenceableObjectCommand(String refObjPath, String key)
+    {
+        return new CreateReferenceableObjectCommand(model, refObjPath, key);
+    }
+    
+    public DuplicateArrayItemCommand duplicateArrayItemCommand(String itemPath)
+    {
+        return new DuplicateArrayItemCommand(model, itemPath);
+    }
+    
+    public DuplicateReferenceAndLinkCommand duplicateReferenceAndLinkCommand(String referencePath, String pathToDuplicate)
+    {
+        return new DuplicateReferenceAndLinkCommand(model, referencePath, pathToDuplicate);
     }
 }

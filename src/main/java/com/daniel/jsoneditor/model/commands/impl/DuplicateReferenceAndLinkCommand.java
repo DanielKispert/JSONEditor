@@ -1,0 +1,68 @@
+package com.daniel.jsoneditor.model.commands.impl;
+
+import com.daniel.jsoneditor.model.WritableModelInternal;
+import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.schema.ReferenceableObject;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
+import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Duplicates an object at pathToItemToDuplicate and updates the referencing node at referencePath to point to the new key.
+ * Undo removes the duplicated object and restores the referencing node snapshot (via REPLACE inversion).
+ */
+public class DuplicateReferenceAndLinkCommand extends BaseCommand
+{
+    private final String referencePath;
+    private final String pathToItemToDuplicate;
+    
+    public DuplicateReferenceAndLinkCommand(final WritableModelInternal model, final String referencePath, final String pathToItemToDuplicate)
+    {
+        super(model);
+        this.referencePath = referencePath;
+        this.pathToItemToDuplicate = pathToItemToDuplicate;
+    }
+    
+    @Override
+    public String getCategory() { return "STRUCTURE"; }
+    
+    @Override
+    public String getLabel() { return "Duplicate Ref & Link"; }
+    
+    @Override
+    public List<ModelChange> execute()
+    {
+        final JsonNode oldRefSnapshot = model.getNodeForPath(referencePath).getNode().deepCopy();
+        JsonNodeWithPath itemNode = model.getNodeForPath(pathToItemToDuplicate);
+        if (itemNode == null || itemNode.getNode().isMissingNode())
+        {
+            return noChanges();
+        }
+        // compute new item path (duplicate inserted after original index)
+        final String parentPath = PathHelper.getParentPath(pathToItemToDuplicate);
+        final int originalIndex = Integer.parseInt(PathHelper.getLastPathSegment(pathToItemToDuplicate));
+        final String newItemPath = parentPath + "/" + (originalIndex + 1);
+        // perform duplication and linking using existing model method
+        model.duplicateNodeAndLink(referencePath, pathToItemToDuplicate);
+        JsonNode newItem = model.getNodeForPath(newItemPath).getNode();
+        if (newItem == null || newItem.isMissingNode())
+        {
+            return noChanges();
+        }
+        final JsonNode newRefSnapshot = model.getNodeForPath(referencePath).getNode().deepCopy();
+        List<ModelChange> out = new ArrayList<>();
+        out.add(ModelChange.add(newItemPath, newItem));
+        if (!oldRefSnapshot.equals(newRefSnapshot))
+        {
+            out.add(ModelChange.replace(referencePath, (JsonNode) oldRefSnapshot, (JsonNode) newRefSnapshot));
+        }
+        return out;
+    }
+}
+
