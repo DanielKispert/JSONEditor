@@ -59,6 +59,7 @@ public class ViewImpl implements View
                 break;
             case REFRESH_SUCCESSFUL:
                 uiHandler.showToast(Toasts.REFRESH_SUCCESSFUL_TOAST);
+                break;
             case UPDATED_JSON_STRUCTURE:
                 uiHandler.updateEditorSceneWithUpdatedStructure();
                 break;

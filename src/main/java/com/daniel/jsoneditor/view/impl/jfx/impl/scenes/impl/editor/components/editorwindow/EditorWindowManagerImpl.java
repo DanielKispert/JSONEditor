@@ -180,4 +180,93 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     {
         editorScene.getHandlerForToasting().showToast(toast);
     }
+    
+    @Override
+    public void handlePathAdded(String path)
+    {
+        // Update any windows that might be displaying the parent of the added path
+        final String parentPath = PathHelper.getParentPath(path);
+        for (Node node : editorWindowContainer.getItems())
+        {
+            final JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
+            if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
+            {
+                window.handleChildAdded(path);
+            }
+        }
+    }
+    
+    @Override
+    public void handlePathRemoved(String path)
+    {
+        // Close any windows showing the removed path
+        editorWindowContainer.getItems().removeIf(node -> {
+            final JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
+            return path.equals(window.getSelectedPath());
+        });
+        
+        // Update any windows that might be displaying the parent of the removed path
+        final String parentPath = PathHelper.getParentPath(path);
+        for (Node node : editorWindowContainer.getItems())
+        {
+            final JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
+            if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
+            {
+                window.handleChildRemoved(path);
+            }
+        }
+    }
+    
+    @Override
+    public void handlePathChanged(String path)
+    {
+        // Update any windows showing this specific path or its children
+        for (Node node : editorWindowContainer.getItems())
+        {
+            final JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
+            if (path.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(path) || path.startsWith(window.getSelectedPath()))
+            {
+                window.handlePathChanged(path);
+            }
+        }
+    }
+    
+    @Override
+    public void handlePathMoved(String path)
+    {
+        // Update any windows showing the parent array that contains the moved item
+        for (Node node : editorWindowContainer.getItems())
+        {
+            final JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
+            if (path.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(path))
+            {
+                window.handleChildMoved(path);
+            }
+        }
+    }
+    
+    @Override
+    public void handlePathSorted(String path)
+    {
+        // Update any windows showing the sorted array
+        for (Node node : editorWindowContainer.getItems())
+        {
+            final JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
+            if (path.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(path))
+            {
+                window.handleSorted(path);
+            }
+        }
+    }
+    
+    @Override
+    public void handleSettingsChanged()
+    {
+        // Refresh all windows to apply new settings
+        for (Node node : editorWindowContainer.getItems())
+        {
+            final JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
+            window.handleSettingsChanged();
+        }
+    }
 }

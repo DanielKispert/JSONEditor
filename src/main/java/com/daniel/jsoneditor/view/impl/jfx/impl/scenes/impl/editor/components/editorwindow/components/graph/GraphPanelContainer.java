@@ -100,6 +100,54 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     @Override
     public void updateSingleElement(String path)
     {
+        // For graph, do complete update for now
+        updateView();
+    }
     
+    // Granular update methods for specific model changes
+    public void handlePathAdded(String path)
+    {
+        // For graph, do complete update for now
+        updateView();
+    }
+    
+    public void handlePathRemoved(String path)
+    {
+        // For graph, do complete update for now
+        updateView();
+    }
+    
+    public void handlePathChanged(String path)
+    {
+        // For graph, do complete update for now
+        updateView();
+    }
+    
+    public void handlePathMoved(String path)
+    {
+        // For graph, do complete update for now
+        updateView();
+    }
+    
+    public void handlePathSorted(String path)
+    {
+        // For graph, do complete update for now
+        updateView();
+    }
+    
+    public void handleRemovedSelection(String path)
+    {
+        if (path.equals(selectedPath))
+        {
+            selectedPath = null;
+        }
+        // Do complete update for now
+        updateView();
+    }
+    
+    public void handleSettingsChanged()
+    {
+        // Refresh graph to apply new settings
+        updateView();
     }
 }

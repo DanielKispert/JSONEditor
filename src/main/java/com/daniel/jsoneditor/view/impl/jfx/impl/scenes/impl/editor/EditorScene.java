@@ -106,7 +106,8 @@ public class EditorScene extends SceneHandlerImpl
         return navbar;
     }
     
-    
-
-    
+    public EditorWindowManager getEditorWindowManager()
+    {
+        return editorWindowManager;
+    }
 }

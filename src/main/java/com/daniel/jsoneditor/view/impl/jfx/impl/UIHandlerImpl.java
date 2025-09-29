@@ -3,6 +3,8 @@ package com.daniel.jsoneditor.view.impl.jfx.impl;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.controller.settings.impl.EditorDimensions;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.changes.ChangeType;
+import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelectionScene;
@@ -124,16 +126,97 @@ public class UIHandlerImpl implements UIHandler
     @Override
     public void handleCommandApplied(Event event)
     {
-        // Handle command execution events (execute/undo/redo)
-        if (editorScene != null)
+        if (editorScene != null && event.getChanges() != null)
         {
-            // Update the UI after any command execution
-            editorScene.updateEverything();
-            
-            // Optional: Show command feedback
-            final String commandPhase = event.getCommandPhase();
-            final String commandLabel = event.getCommandLabel();
+            // Process each model change granularly
+            for (final ModelChange change : event.getChanges())
+            {
+                handleModelChange(change);
+            }
         }
     }
     
+    /**
+     * Handles individual model changes with granular UI updates.
+     *
+     * @param change the specific model change to handle
+     */
+    private void handleModelChange(ModelChange change)
+    {
+        final String path = change.getPath();
+        final ChangeType type = change.getType();
+        
+        switch (type)
+        {
+            case ADD:
+                handleAdd(path);
+                break;
+            case REMOVE:
+                handleRemove(path);
+                break;
+            case REPLACE:
+                handleReplace(path);
+                break;
+            case MOVE:
+                handleMove(path);
+                break;
+            case SORT:
+                handleSort(path);
+                break;
+            case SETTINGS_CHANGED:
+                handleSettingsChange();
+                break;
+        }
+    }
+    
+    private void handleAdd(String path)
+    {
+        // Update navbar to show new node
+        editorScene.getNavbar().handlePathAdded(path);
+        // Update any open editors that might display the parent
+        editorScene.getEditorWindowManager().handlePathAdded(path);
+        // Select the newly added item
+        editorScene.getNavbar().selectPath(path);
+    }
+    
+    private void handleRemove(String path)
+    {
+        // Update navbar to remove the node
+        editorScene.getNavbar().handlePathRemoved(path);
+        // Update any open editors that might have displayed this path
+        editorScene.getEditorWindowManager().handlePathRemoved(path);
+        // Clear selection if removed path was selected
+        editorScene.getNavbar().handleRemovedSelection(path);
+    }
+    
+    private void handleReplace(String path)
+    {
+        // Update navbar display for the changed node
+        editorScene.getNavbar().handlePathChanged(path);
+        // Update any open editors showing this path
+        editorScene.getEditorWindowManager().handlePathChanged(path);
+    }
+    
+    private void handleMove(String path)
+    {
+        // Update navbar to reflect new order
+        editorScene.getNavbar().handlePathMoved(path);
+        // Update any open editors showing the parent array
+        editorScene.getEditorWindowManager().handlePathMoved(path);
+    }
+    
+    private void handleSort(String path)
+    {
+        // Update navbar to reflect new sort order
+        editorScene.getNavbar().handlePathSorted(path);
+        // Update any open editors showing the sorted array
+        editorScene.getEditorWindowManager().handlePathSorted(path);
+    }
+    
+    private void handleSettingsChange()
+    {
+        // Refresh UI elements affected by settings
+        editorScene.getNavbar().handleSettingsChanged();
+        editorScene.getEditorWindowManager().handleSettingsChanged();
+    }
 }
