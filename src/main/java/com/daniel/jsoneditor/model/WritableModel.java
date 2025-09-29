@@ -22,12 +22,12 @@ public interface WritableModel extends ReadableModel
     void sendEvent(Event state);
     
     void moveItemToIndex(JsonNodeWithPath item, int index);
-    
+
     /**
      * @param selectedPath points to the path of the array to which a node should be added
      */
     int addNodeToArray(String selectedPath);
-    
+
     /**
      *
      * @param parentPath
@@ -37,33 +37,33 @@ public interface WritableModel extends ReadableModel
      */
     Object setValueAtPath(String parentPath, String propertyName, Object value);
     
-    
-    
+
+
     /**
      * sorts the array node at the given path
      * @param path
      */
     void sortArray(String path);
-    
+
     /**
      * duplicates the array item the path points to
      */
     void duplicateArrayItem(String pathToItemToDuplicate);
-    
+
     /**
      * duplicates a referenceable object that should be linked in a reference and adjusts the reference with its name
      */
     void duplicateNodeAndLink(String referencePath, String pathToItemToDuplicate);
-    
+
     void removeNodes(List<String> paths);
-    
+
     void removeNode(String path);
-    
+
     /**
      * sets a path to a node, replacing everything that was there before
      */
     void setNode(String path, JsonNode content);
-    
+
     /**
      * adds a new node to the JSON for the
      */

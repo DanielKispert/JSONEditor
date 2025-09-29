@@ -15,7 +15,6 @@ import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.RenameKeyDialog;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.EditorTableViewImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -24,7 +23,6 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.observe.Subject;
@@ -170,7 +168,6 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             {
                 arrayNode.remove(i);
                 arrayNode.insert(index, itemNode);
-                sendEvent(new Event(EventEnum.MOVED_CHILD_OF_SELECTED_JSON_NODE));
                 break;
             }
         }
@@ -401,8 +398,6 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         arrayNode.removeAll();
         arrayNode.addAll(items);
-        sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
-        
     }
     
     @Override
@@ -484,12 +479,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     public int addNodeToArray(String selectedPath)
     {
         JsonNode newItem = makeArrayNode(selectedPath);
-        int addedIndex = addNodeToArray(selectedPath, newItem);
-        if (addedIndex != -1)
-        {
-            sendEvent(new Event(EventEnum.ADDED_ITEM_TO_ARRAY_FROM_ARRAY, selectedPath + "/" + addedIndex));
-        }
-        return addedIndex;
+        return addNodeToArray(selectedPath, newItem);
     }
     
     @Override
@@ -518,7 +508,6 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     public void duplicateArrayItem(String pathToItemToDuplicate)
     {
         duplicateItem(pathToItemToDuplicate);
-        sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
     }
     
     @Override
@@ -545,8 +534,6 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         
         //set the objectKey of the reference to the key of the object
         ReferenceHelper.setObjectKeyOfInstance(this, reference, referencePath, newKeyName);
-        
-        sendEvent(new Event(EventEnum.ADDED_REFERENCEABLE_OBJECT, clonedPath));
     }
     
     private String duplicateItem(String pathToItemToDuplicate)
@@ -588,26 +575,25 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         // this will break once we add sorting
         for (int i = paths.size() - 1; i >= 0; i--)
         {
-            removeOrSetNode(paths.get(i), null, i == 0);
+            removeOrSetNode(paths.get(i), null);
         }
     }
     
     @Override
     public void removeNode(String path)
     {
-        removeOrSetNode(path, null, true);
+        removeOrSetNode(path, null);
     }
     
     /**
      * changes the JSON structure by setting the defined content at the defined path. If you want to notify the UI of these changes, set notifyUI to true.
      */
-    private void removeOrSetNode(String path, JsonNode content, boolean notifyUI)
+    private void removeOrSetNode(String path, JsonNode content)
     {
         if (path == null || path.isEmpty())
         {
             // we are attempting to insert at the root node
             setRootJson(content);
-            sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
             return;
         }
         String parentPath = PathHelper.getParentPath(path);
@@ -647,24 +633,6 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
                 }
             }
         }
-        else
-        {
-            return;
-        }
-        if (!notifyUI)
-        {
-            return;
-        }
-        
-        // both of these events do the same, it's just for cleanliness right now
-        if (content != null)
-        {
-            sendEvent(new Event(EventEnum.UPDATED_JSON_STRUCTURE));
-        }
-        else
-        {
-            sendEvent(new Event(EventEnum.REMOVED_SELECTED_JSON_NODE));
-        }
     }
     
     @Override
@@ -700,7 +668,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     @Override
     public void setNode(String path, JsonNode content)
     {
-        removeOrSetNode(path, content, true);
+        removeOrSetNode(path, content);
     }
     
     @Override

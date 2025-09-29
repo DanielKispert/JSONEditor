@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.model.commands;
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.commands.impl.AddNodeToArrayCommand;
 import com.daniel.jsoneditor.model.commands.impl.SetValueAtNodeCommand;
+import com.daniel.jsoneditor.model.commands.impl.SetNodeCommand;
 import com.daniel.jsoneditor.model.commands.impl.RemoveNodeCommand;
 import com.daniel.jsoneditor.model.commands.impl.SortArrayCommand;
 import com.daniel.jsoneditor.model.commands.impl.RemoveNodesCommand;
@@ -65,5 +66,10 @@ public class CommandFactory
     public DuplicateReferenceAndLinkCommand duplicateReferenceAndLinkCommand(String referencePath, String pathToDuplicate)
     {
         return new DuplicateReferenceAndLinkCommand(model, referencePath, pathToDuplicate);
+    }
+    
+    public SetNodeCommand setNodeCommand(String path, com.fasterxml.jackson.databind.JsonNode newNode)
+    {
+        return new SetNodeCommand(model, path, newNode);
     }
 }

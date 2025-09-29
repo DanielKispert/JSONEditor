@@ -163,8 +163,7 @@ public class ControllerImpl implements Controller, Observer
         if (mergedNode != null && SchemaHelper.validateJsonWithSchema(mergedNode, schemaAtPath))
         {
             // the node exists and is valid for its current location
-            model.setNode(path, mergedNode);
-            model.sendEvent(new Event(EventEnum.IMPORT_SUCCESSFUL));
+            commandManager.executeCommand(commandFactory.setNodeCommand(path, mergedNode));
         }
     }
     
@@ -373,14 +372,14 @@ public class ControllerImpl implements Controller, Observer
                 }
                 if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(pathToInsert)))
                 {
-                    model.setNode(pathToInsert, jsonNode);
+                    commandManager.executeCommand(commandFactory.setNodeCommand(pathToInsert, jsonNode));
                     view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
                     
                 }
                 else if (itemToInsertAt.isArray() && SchemaHelper.validateJsonWithSchema(jsonNode,
                         readableModel.getSubschemaForPath(pathToInsert + "/0")))
                 {
-                    model.setNode(itemToInsertAt.getPath() + "/" + itemToInsertAt.getNode().size(), jsonNode);
+                    commandManager.executeCommand(commandFactory.setNodeCommand(itemToInsertAt.getPath() + "/" + itemToInsertAt.getNode().size(), jsonNode));
                     view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
                 }
                 else
@@ -415,7 +414,7 @@ public class ControllerImpl implements Controller, Observer
                 if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(parentPath)))
                 {
                     int arraySize = parentNode.getNode().size();
-                    model.setNode(parentNode.getPath() + "/" + arraySize, jsonNode); //add the new node at the end
+                    commandManager.executeCommand(commandFactory.setNodeCommand(parentNode.getPath() + "/" + arraySize, jsonNode));
                     view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
                 }
                 else

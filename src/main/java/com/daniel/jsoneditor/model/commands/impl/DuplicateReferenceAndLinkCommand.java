@@ -1,17 +1,13 @@
 package com.daniel.jsoneditor.model.commands.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.json.schema.ReferenceableObject;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Duplicates an object at pathToItemToDuplicate and updates the referencing node at referencePath to point to the new key.
