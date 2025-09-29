@@ -67,12 +67,18 @@ public class EditorTableViewImpl extends EditorTableView
      */
     private String parentPath;
     
+    // Extracted helper classes to reduce complexity
+    private final TableSchemaProcessor schemaProcessor;
+    private final TableColumnFactory columnFactory;
+    
     public EditorTableViewImpl(EditorWindowManager manager, JsonEditorEditorWindow window, ReadableModel model, Controller controller)
     {
         this.window = window;
         this.manager = manager;
         this.model = model;
         this.controller = controller;
+        this.schemaProcessor = new TableSchemaProcessor(model);
+        this.columnFactory = new TableColumnFactory(manager, controller, model, window);
         VBox.setVgrow(this, Priority.ALWAYS);
         setEditable(true);
         setRowFactory(jsonNodeWithPathTableView -> new EditorTableRow(controller, this));
@@ -162,8 +168,13 @@ public class EditorTableViewImpl extends EditorTableView
                     continue;
                 }
 
-                
-                String cellValue = item.getNode().get(editorColumn.getPropertyName()).asText();
+                JsonNode propertyNode = item.getNode().get(editorColumn.getPropertyName());
+                if (propertyNode == null)
+                {
+                    // If property doesn't exist, treat as empty string
+                    return selectedValues.contains("");
+                }
+                String cellValue = propertyNode.asText();
                 if (!selectedValues.contains(cellValue))
                 {
                     return false;
@@ -189,31 +200,16 @@ public class EditorTableViewImpl extends EditorTableView
     public void setSelection(JsonNodeWithPath nodeWithPath)
     {
         parentPath = nodeWithPath.getPath();
-        JsonNode node = nodeWithPath.getNode();
-        JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath()).getSchemaNode();
         
         ReferenceToObject reference = model.getReferenceToObject(nodeWithPath.getPath());
         if (reference != null)
         {
-            
-            
+            // TODO: Handle references
         }
         
-        
-        ObservableList<JsonNodeWithPath> nodesToDisplay = FXCollections.observableArrayList(); //either a list of array items or object fields
-        if (nodeWithPath.isArray())
-        {
-            int arrayItemIndex = 0;
-            for (JsonNode arrayItem : node)
-            {
-                nodesToDisplay.add(new JsonNodeWithPath(arrayItem, nodeWithPath.getPath() + "/" + arrayItemIndex++));
-            }
-        }
-        else if (nodeWithPath.isObject())
-        {
-            nodesToDisplay.add(nodeWithPath);
-        }
-        setView(nodesToDisplay, schema);
+        // Use the extracted schema processor to handle complex logic
+        final TableSchemaProcessor.TableData tableData = schemaProcessor.processNode(nodeWithPath);
+        setView(tableData);
     }
     
     @Override
@@ -256,126 +252,51 @@ public class EditorTableViewImpl extends EditorTableView
         return getItems().stream().map(JsonNodeWithPath::getPath).collect(Collectors.toList());
     }
     
-    private void setView(ObservableList<JsonNodeWithPath> elements, JsonNode parentSchema)
+    private void setView(TableSchemaProcessor.TableData tableData)
     {
-        this.allItems = elements;
-        JsonNode type = parentSchema.get("type");
-        if (type == null)
-        {
-            return;
-        }
-        String typeText = type.asText();
-        boolean isArray = "array".equals(typeText);
-        JsonNode childSchema = parentSchema;
-        List<Pair<Pair<String, Boolean>, JsonNode>> properties = new ArrayList<>();
-        if (isArray)
-        {
-            // Get the array node items and their properties from the schema
-            childSchema = childSchema.get("items");
-        }
-        List<String> requiredProperties = SchemaHelper.getRequiredProperties(childSchema);
+        this.allItems = tableData.getNodes();
         
-        Iterator<Entry<String, JsonNode>> iterator = childSchema.get("properties").fields();
+        // Use the column factory to create columns
+        final List<TableColumn<JsonNodeWithPath, String>> columns = columnFactory.createColumns(
+            tableData.getProperties(),
+            tableData.isArray(),
+            this
+        );
         
-        while (iterator.hasNext())
-        {
-            Map.Entry<String, JsonNode> entry = iterator.next();
-            String propertyName = entry.getKey();
-            boolean isRequired = requiredProperties.contains(propertyName);
-            if (isArray)
-            {
-                // we only permit non-object and non-array properties in the list.
-                String propertyType = NodeSearcher.getTypeFromNode(entry.getValue());
-                if (propertyType != null && !"object".equals(propertyType) && !"array".equals(propertyType))
-                {
-                    properties.add(new Pair<>(new Pair<>(propertyName, isRequired), entry.getValue()));
-                }
-            }
-            else
-            {
-                properties.add(new Pair<>(new Pair<>(propertyName, isRequired), entry.getValue()));
-            }
-        }
-        
-        List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>(createTableColumns(properties));
-        if (isArray)
-        {
-            // we add a column that either holds the "follow reference" or "open array element" button
-            columns.add(new FollowRefOrOpenColumn(model, manager));
-            // we add a column of delete buttons.css
-            columns.add(createDeleteButtonColumn());
-        }
         filteredItems = new FilteredList<>(allItems);
         setItems(filteredItems);
         getColumns().clear();
         getColumns().addAll(columns);
-        if (isArray && controller.getSettingsController().hideEmptyColumns())
+        
+        if (tableData.isArray() && controller.getSettingsController().hideEmptyColumns())
         {
-            
-            for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
+            hideEmptyColumns();
+        }
+    }
+    
+    private void hideEmptyColumns()
+    {
+        for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
+        {
+            if (column instanceof EditorTableColumn)
             {
-                if (column instanceof EditorTableColumn)
+                final boolean required = ((EditorTableColumn) column).isRequired();
+                if (!required)
                 {
-                    boolean required = ((EditorTableColumn) column).isRequired();
-                    if (!required)
+                    boolean empty = true;
+                    
+                    for (int i = 0; i < getItems().size(); i++)
                     {
-                        boolean empty = true;
-                        
-                        for (int i = 0; i < getItems().size(); i++)
+                        if (column.getCellData(i) != null && !column.getCellData(i).toString().isEmpty())
                         {
-                            if (column.getCellData(i) != null && !column.getCellData(i).toString().isEmpty())
-                            {
-                                empty = false;
-                                break;
-                            }
+                            empty = false;
+                            break;
                         }
-                        column.setVisible(!empty);
                     }
+                    column.setVisible(!empty);
                 }
             }
         }
-    }
-    
-    private TableColumn<JsonNodeWithPath, String> createDeleteButtonColumn()
-    {
-        TableColumn<JsonNodeWithPath, String> deleteColumn = new TableColumn<>("Delete");
-        
-        deleteColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getPath()));
-        
-        deleteColumn.setCellFactory(param -> new TableCell<>()
-        {
-            @Override
-            protected void updateItem(String path, boolean empty)
-            {
-                super.updateItem(path, empty);
-                if (empty || path == null)
-                {
-                    setGraphic(null);
-                }
-                else
-                {
-                    setGraphic(makeRemoveButton(path));
-                }
-            }
-        });
-        
-        return deleteColumn;
-    }
-    
-    /**
-     * creates columns for the table view
-     */
-    private List<EditorTableColumn> createTableColumns(List<Pair<Pair<String, Boolean>, JsonNode>> properties)
-    {
-        List<EditorTableColumn> columns = new ArrayList<>();
-        for (Pair<Pair<String, Boolean>, JsonNode> property : properties)
-        {
-            String propertyName = property.getKey().getKey();
-            boolean isRequired = property.getKey().getValue();
-            JsonNode propertyNode = property.getValue();
-            columns.add(new EditorTableColumn(manager, controller, model, window, this, propertyNode, propertyName, isRequired));
-        }
-        return columns;
     }
     
     private Button makeRemoveButton(String path)
@@ -387,5 +308,62 @@ public class EditorTableViewImpl extends EditorTableView
         return removeButton;
     }
     
+    // Granular update methods for specific model changes
+    public void handleItemAdded(String path)
+    {
+        // Refresh the table to show the new item
+        JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
+        if (parentNode != null)
+        {
+            setSelection(parentNode);
+        }
+    }
     
+    public void handleItemRemoved(String path)
+    {
+        // Refresh the table to remove the deleted item
+        JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
+        if (parentNode != null)
+        {
+            setSelection(parentNode);
+        }
+    }
+    
+    public void handleItemChanged(String path)
+    {
+        // Find and update the specific item in the table
+        for (int i = 0; i < allItems.size(); i++)
+        {
+            if (allItems.get(i).getPath().equals(path))
+            {
+                JsonNodeWithPath updatedNode = model.getNodeForPath(path);
+                if (updatedNode != null)
+                {
+                    allItems.set(i, updatedNode);
+                }
+                break;
+            }
+        }
+        refresh();
+    }
+    
+    public void handleItemMoved(String path)
+    {
+        // Refresh the entire table to show new order
+        JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
+        if (parentNode != null)
+        {
+            setSelection(parentNode);
+        }
+    }
+    
+    public void handleSorted(String path)
+    {
+        // Refresh the entire table to show sorted order
+        JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
+        if (parentNode != null)
+        {
+            setSelection(parentNode);
+        }
+    }
 }

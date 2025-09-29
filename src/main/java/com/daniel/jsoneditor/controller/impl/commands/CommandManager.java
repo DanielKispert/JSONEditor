@@ -1,18 +1,17 @@
 package com.daniel.jsoneditor.controller.impl.commands;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.changes.ModelChange;
-import com.daniel.jsoneditor.model.changes.ChangeType;
 import com.daniel.jsoneditor.model.commands.Command;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
 
 
 /**

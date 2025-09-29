@@ -400,42 +400,92 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     @Override
     public void updateView()
     {
-        TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
-        Map<String, Boolean> expandedStates = storeExpandedStates();
         setRoot(makeTree());
-        restoreExpandedStates(getRoot(), expandedStates);
-        if (selectedItem != null)
+    }
+    
+    // Granular update methods for specific model changes
+    public void handlePathAdded(String path)
+    {
+        final TreeItem<JsonNodeWithPath> rootItem = getRoot();
+        final String parentPath = PathHelper.getParentPath(path);
+        final TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(rootItem, parentPath);
+        
+        if (parentItem != null)
         {
-            selectNodeByPath(getRoot(), selectedItem.getValue().getPath());
+            final JsonNodeWithPath newNode = model.getNodeForPath(path);
+            if (newNode != null && (newNode.isObject() || newNode.isArray()))
+            {
+                final NavbarItem newItem = new NavbarItem(model, path);
+                populateItem(newItem);
+                parentItem.getChildren().add(newItem);
+                parentItem.setExpanded(true); // expand parent to show new item
+            }
         }
     }
     
-    private Map<String, Boolean> storeExpandedStates()
+    public void handlePathRemoved(String path)
     {
-        Map<String, Boolean> expandedStates = new HashMap<>();
-        storeExpandedStatesRecursive(getRoot(), expandedStates);
-        return expandedStates;
-    }
-    
-    private void storeExpandedStatesRecursive(TreeItem<JsonNodeWithPath> item, Map<String, Boolean> expandedStates)
-    {
-        expandedStates.put(item.getValue().getPath(), item.isExpanded());
-        for (TreeItem<JsonNodeWithPath> child : item.getChildren())
+        final TreeItem<JsonNodeWithPath> rootItem = getRoot();
+        final TreeItem<JsonNodeWithPath> itemToRemove = findNavbarItem(rootItem, path);
+        
+        if (itemToRemove != null && itemToRemove.getParent() != null)
         {
-            storeExpandedStatesRecursive(child, expandedStates);
+            itemToRemove.getParent().getChildren().remove(itemToRemove);
+            
+            // Clear selection if removed item was selected
+            if (path.equals(selectedPath))
+            {
+                getSelectionModel().clearSelection();
+                selectedPath = null;
+            }
         }
     }
     
-    private void restoreExpandedStates(TreeItem<JsonNodeWithPath> currentItem, Map<String, Boolean> expandedStates)
+    public void handlePathChanged(String path)
     {
-        Boolean expanded = expandedStates.get(currentItem.getValue().getPath());
-        if (expanded != null)
+        updateSingleElement(path);
+    }
+    
+    public void handlePathMoved(String path)
+    {
+        // For moves within arrays, refresh the parent array structure
+        final String parentPath = PathHelper.getParentPath(path);
+        final TreeItem<JsonNodeWithPath> rootItem = getRoot();
+        final TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(rootItem, parentPath);
+        
+        if (parentItem != null)
         {
-            currentItem.setExpanded(expanded);
+            // Clear and rebuild children to reflect new order
+            parentItem.getChildren().clear();
+            populateItem((NavbarItem) parentItem);
         }
-        for (TreeItem<JsonNodeWithPath> child : currentItem.getChildren())
+    }
+    
+    public void handlePathSorted(String path)
+    {
+        // Refresh the sorted array to show new order
+        final TreeItem<JsonNodeWithPath> rootItem = getRoot();
+        final TreeItem<JsonNodeWithPath> sortedItem = findNavbarItem(rootItem, path);
+        
+        if (sortedItem != null)
         {
-            restoreExpandedStates(child, expandedStates);
+            sortedItem.getChildren().clear();
+            populateItem((NavbarItem) sortedItem);
         }
+    }
+    
+    public void handleRemovedSelection(String path)
+    {
+        if (path.equals(selectedPath))
+        {
+            getSelectionModel().clearSelection();
+            selectedPath = null;
+        }
+    }
+    
+    public void handleSettingsChanged()
+    {
+        // Refresh tree view to apply new settings (e.g., display preferences)
+        updateView();
     }
 }

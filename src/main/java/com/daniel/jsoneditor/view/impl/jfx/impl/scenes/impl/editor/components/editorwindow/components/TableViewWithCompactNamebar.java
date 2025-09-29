@@ -78,14 +78,41 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
     @Override
     protected double computePrefHeight(double v)
     {
-        return nameBar.prefHeight(v) + tableView.prefHeight(v);
+        if (collapsed)
+        {
+            return nameBar.getHeight();
+        }
+        else
+        {
+            return nameBar.getHeight() + tableView.prefHeight(v) + buttonBar.prefHeight(v);
+        }
     }
     
     private CollapseButton createCollapseButton(JsonEditorEditorWindow window)
     {
-        CollapseButton collapseButton = new CollapseButton(tableView, window);
-        //the button should only be as large as the label
-        return collapseButton;
+        return new CollapseButton(tableView, window);
+    }
+    
+    @Override
+    public void collapse()
+    {
+        tableView.setVisible(false);
+        buttonBar.setVisible(false);
+        collapsed = true;
+    }
+    
+    @Override
+    public void expand()
+    {
+        tableView.setVisible(true);
+        buttonBar.setVisible(true);
+        collapsed = false;
+    }
+    
+    @Override
+    public boolean isCollapsed()
+    {
+        return collapsed;
     }
     
     public void focusItem(String itemPath)
@@ -98,21 +125,31 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
         return selectedPath;
     }
     
-    @Override
-    public void collapse()
+    // Granular update methods for specific model changes
+    public void handleItemAdded(String path)
     {
-        collapsed = true;
+        tableView.handleItemAdded(path);
+        buttonBar.updateBottomBar(model.canAddMoreItems(selectedPath), !tableView.getCurrentlyDisplayedPaths().isEmpty());
     }
     
-    @Override
-    public void expand()
+    public void handleItemRemoved(String path)
     {
-        collapsed = false;
+        tableView.handleItemRemoved(path);
+        buttonBar.updateBottomBar(model.canAddMoreItems(selectedPath), !tableView.getCurrentlyDisplayedPaths().isEmpty());
     }
     
-    @Override
-    public boolean isCollapsed()
+    public void handleItemChanged(String path)
     {
-        return collapsed;
+        tableView.handleItemChanged(path);
+    }
+    
+    public void handleItemMoved(String path)
+    {
+        tableView.handleItemMoved(path);
+    }
+    
+    public void handleSorted(String path)
+    {
+        tableView.handleSorted(path);
     }
 }

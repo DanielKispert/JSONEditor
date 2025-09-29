@@ -47,4 +47,17 @@ public interface EditorWindowManager
     void updateEditors();
     
     void showToast(Toasts toast);
+    
+    // Granular update methods for specific model changes
+    void handlePathAdded(String path);
+    
+    void handlePathRemoved(String path);
+    
+    void handlePathChanged(String path);
+    
+    void handlePathMoved(String path);
+    
+    void handlePathSorted(String path);
+    
+    void handleSettingsChanged();
 }

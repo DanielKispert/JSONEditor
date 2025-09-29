@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Editor consists of a vbox holding:
@@ -199,17 +200,109 @@ public class JsonEditorEditorWindow extends VBox
      */
     public List<String> getOpenChildPaths()
     {
-        List<String> selectedChildPaths = new ArrayList<>();
-        for (TableViewWithCompactNamebar childView : childTableViews)
-        {
-            selectedChildPaths.add(childView.getSelectedPath());
-        }
-        return selectedChildPaths;
+        return childTableViews.stream().map(TableViewWithCompactNamebar::getSelectedPath).collect(Collectors.toList());
     }
     
     public AutoAdjustingSplitPane getTablesSplitPane()
     {
         return editorTables;
+    }
+    
+    // Granular update methods for specific model changes
+    public void handleChildAdded(String path)
+    {
+        // Update main table if it displays the parent
+        if (selectedPath.equals(PathHelper.getParentPath(path)))
+        {
+            mainTableView.handleItemAdded(path);
+        }
+        
+        // Update any child table views that might display the parent
+        for (TableViewWithCompactNamebar childTable : childTableViews)
+        {
+            if (childTable.getSelectedPath().equals(PathHelper.getParentPath(path)))
+            {
+                childTable.handleItemAdded(path);
+            }
+        }
+    }
+    
+    public void handleChildRemoved(String path)
+    {
+        // Update main table if it displays the parent
+        if (selectedPath.equals(PathHelper.getParentPath(path)))
+        {
+            mainTableView.handleItemRemoved(path);
+        }
+        
+        // Update any child table views that might display the parent
+        for (TableViewWithCompactNamebar childTable : childTableViews)
+        {
+            if (childTable.getSelectedPath().equals(PathHelper.getParentPath(path)))
+            {
+                childTable.handleItemRemoved(path);
+            }
+        }
+    }
+    
+    public void handlePathChanged(String path)
+    {
+        // Update if this window shows the changed path
+        if (selectedPath.equals(path) || path.startsWith(selectedPath))
+        {
+            mainTableView.handleItemChanged(path);
+        }
+        
+        // Update any child table views
+        for (TableViewWithCompactNamebar childTable : childTableViews)
+        {
+            if (childTable.getSelectedPath().equals(path) || path.startsWith(childTable.getSelectedPath()))
+            {
+                childTable.handleItemChanged(path);
+            }
+        }
+    }
+    
+    public void handleChildMoved(String path)
+    {
+        // Update main table if it displays the parent array
+        if (selectedPath.equals(PathHelper.getParentPath(path)))
+        {
+            mainTableView.handleItemMoved(path);
+        }
+        
+        // Update any child table views
+        for (TableViewWithCompactNamebar childTable : childTableViews)
+        {
+            if (childTable.getSelectedPath().equals(PathHelper.getParentPath(path)))
+            {
+                childTable.handleItemMoved(path);
+            }
+        }
+    }
+    
+    public void handleSorted(String path)
+    {
+        // Update if this window shows the sorted array
+        if (selectedPath.equals(path))
+        {
+            mainTableView.handleSorted(path);
+        }
+        
+        // Update any child table views
+        for (TableViewWithCompactNamebar childTable : childTableViews)
+        {
+            if (childTable.getSelectedPath().equals(path))
+            {
+                childTable.handleSorted(path);
+            }
+        }
+    }
+    
+    public void handleSettingsChanged()
+    {
+        // Refresh the entire window to apply new settings
+        setSelectedPath(selectedPath);
     }
     
     @Override

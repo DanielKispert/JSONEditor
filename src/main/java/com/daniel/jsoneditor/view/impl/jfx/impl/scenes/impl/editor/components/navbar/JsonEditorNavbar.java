@@ -96,4 +96,46 @@ public class JsonEditorNavbar extends VBox
         navTreeView.setVisible(false);
     }
     
+    // Granular update methods for specific model changes
+    public void handlePathAdded(String path)
+    {
+        navTreeView.handlePathAdded(path);
+        graphView.handlePathAdded(path);
+    }
+    
+    public void handlePathRemoved(String path)
+    {
+        navTreeView.handlePathRemoved(path);
+        graphView.handlePathRemoved(path);
+    }
+    
+    public void handlePathChanged(String path)
+    {
+        navTreeView.handlePathChanged(path);
+        graphView.handlePathChanged(path);
+    }
+    
+    public void handlePathMoved(String path)
+    {
+        navTreeView.handlePathMoved(path);
+        graphView.handlePathMoved(path);
+    }
+    
+    public void handlePathSorted(String path)
+    {
+        navTreeView.handlePathSorted(path);
+        graphView.handlePathSorted(path);
+    }
+    
+    public void handleRemovedSelection(String path)
+    {
+        navTreeView.handleRemovedSelection(path);
+        graphView.handleRemovedSelection(path);
+    }
+    
+    public void handleSettingsChanged()
+    {
+        navTreeView.handleSettingsChanged();
+        graphView.handleSettingsChanged();
+    }
 }
