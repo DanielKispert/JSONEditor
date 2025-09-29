@@ -78,6 +78,9 @@ public class ViewImpl implements View
             case IMPORT_SUCCESSFUL:
                 uiHandler.showToast(Toasts.IMPORT_SUCCESSFUL_TOAST);
                 break;
+            case COMMAND_APPLIED:
+                uiHandler.handleCommandApplied(newEvent);
+                break;
         }
     
     }

@@ -1,18 +1,15 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl;
 
-import java.util.Optional;
-
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.controller.settings.impl.EditorDimensions;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelectionScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import com.daniel.jsoneditor.view.impl.jfx.toast.impl.ToastImpl;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
@@ -124,16 +121,19 @@ public class UIHandlerImpl implements UIHandler
         new ToastImpl().show(stage, toast.getMessage(), toast.getColor(), toast.getDuration());
     }
     
-    public static void showConfirmDialog(Runnable onContinue, String text)
+    @Override
+    public void handleCommandApplied(Event event)
     {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Are you sure?");
-        alert.setHeaderText(text);
-        
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK)
+        // Handle command execution events (execute/undo/redo)
+        if (editorScene != null)
         {
-            onContinue.run();
+            // Update the UI after any command execution
+            editorScene.updateEverything();
+            
+            // Optional: Show command feedback
+            final String commandPhase = event.getCommandPhase();
+            final String commandLabel = event.getCommandLabel();
         }
     }
+    
 }
