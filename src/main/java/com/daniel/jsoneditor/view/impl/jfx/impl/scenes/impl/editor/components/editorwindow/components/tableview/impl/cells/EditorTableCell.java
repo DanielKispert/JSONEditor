@@ -225,7 +225,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             for (ReferenceToObjectInstance referenceToObjectInstance : model.getReferencesToObjectForPath(item.getPath()))
             {
                 JsonNodeWithPath referencingNode = model.getNodeForPath(referenceToObjectInstance.getPath());
-                String pathToChange = referencingNode.getPath() + "/" + referenceToObjectInstance.getReference().getObjectKey();
+                String pathToChange = referencingNode.getPath() + referenceToObjectInstance.getReference().getObjectKey();
                 controller.setValueAtPath(pathToChange, (!newValue.isEmpty() || column.isRequired()) ? newValue : null);
             }
         }
