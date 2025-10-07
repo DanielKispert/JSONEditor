@@ -392,7 +392,7 @@ public class ControllerImpl implements Controller, Observer
         else
         {
             view.showToast(Toasts.ERROR_TOAST);
-            System.out.println("Failed to copy to clipboard, " + path + " is not a valid path");
+            logger.error("Failed to copy to clipboard, " + path + " is not a valid path");
         }
     }
     

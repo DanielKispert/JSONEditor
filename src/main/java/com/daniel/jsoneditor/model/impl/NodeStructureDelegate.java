@@ -1,18 +1,20 @@
 package com.daniel.jsoneditor.model.impl;
 
-import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import com.daniel.jsoneditor.model.ReadableModel;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class NodeStructureDelegate
 {
+    private static final Logger logger = LoggerFactory.getLogger(NodeStructureDelegate.class);
     private static final String INTEGER_REGEX = "^\\d+$";
     
     public static JsonNode getExportStructureForNodes(ReadableModel model, List<String> paths)
@@ -29,7 +31,7 @@ public abstract class NodeStructureDelegate
             Iterator<String> elementsIterator = Arrays.stream(pathElements).iterator();
             structure = getPartialStructure(model, structure, path, elementsIterator);
         }
-        System.out.println("Created export structure for " + paths.size() + " nodes");
+        logger.info("Created export structure for " + paths.size() + " nodes");
         return structure;
     }
     

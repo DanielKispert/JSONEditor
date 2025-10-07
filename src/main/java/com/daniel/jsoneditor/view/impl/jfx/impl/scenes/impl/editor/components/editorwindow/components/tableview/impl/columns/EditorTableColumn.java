@@ -30,10 +30,13 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
 {
+    private static final Logger logger = LoggerFactory.getLogger(EditorTableColumn.class);
     
     private final String propertyName;
     
@@ -164,7 +167,7 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
      */
     public List<String> getSelectedValues()
     {
-        System.out.println("selected values for column " + propertyName + ": " + filterButton.getSelectedValues());
+        logger.debug("selected values for column " + propertyName + ": " + filterButton.getSelectedValues());
         return filterButton.getSelectedValues();
     }
     

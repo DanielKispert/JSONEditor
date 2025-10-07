@@ -175,12 +175,11 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     }
     
     @Override
-    public Object setValueAtPath(String parentPath, String propertyName, Object value)
+    public void setValueAtPath(String parentPath, String propertyName, Object value)
     {
         JsonNodeWithPath nodeWithPath = getNodeForPath(parentPath);
         logger.debug("Setting value at path {} with property {} to {}", parentPath, propertyName, value);
         nodeWithPath.setProperty(propertyName, value);
-        return null; //TODO
     }
     
     @Override

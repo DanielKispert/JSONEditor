@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +15,8 @@ import java.util.Set;
 
 public class SchemaHelper
 {
+    private static final Logger logger = LoggerFactory.getLogger(SchemaHelper.class);
+    
     public static JsonSchema resolveJsonRefsInSchema(JsonSchema root)
     {
         JsonNode schemaNode = root.getSchemaNode();
@@ -28,8 +32,12 @@ public class SchemaHelper
         Set<ValidationMessage> messages = schema.validate(json);
         for (ValidationMessage message : messages)
         {
-            System.out.println("Validation Error: " + message.getMessage() + " with element content " + json.at(
-                    convertToJSONPointer(message.getPath())));
+            final JsonNode elementContent = json.at(convertToJSONPointer(message.getPath()));
+            final String contentPreview = elementContent.toString().length() > 100
+                ? elementContent.toString().substring(0, 100) + "..."
+                : elementContent.toString();
+            logger.error("Validation Error: {} at path {} with element preview: {}",
+                message.getMessage(), message.getPath(), contentPreview);
         }
         return messages.isEmpty();
     }

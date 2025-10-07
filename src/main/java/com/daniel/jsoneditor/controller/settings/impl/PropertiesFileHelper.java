@@ -6,9 +6,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class PropertiesFileHelper
 {
+    private static final Logger logger = LoggerFactory.getLogger(PropertiesFileHelper.class);
+    
     public static void writePropertiesToFile(Properties properties)
     {
         try (FileOutputStream output = new FileOutputStream("jsoneditor.properties"))
@@ -17,7 +22,7 @@ public class PropertiesFileHelper
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            logger.error("IOException while writing properties file", e);
         }
     }
     
@@ -30,11 +35,11 @@ public class PropertiesFileHelper
         }
         catch (FileNotFoundException e)
         {
-            System.out.println("jsoneditor.properties not found");
+            logger.info("jsoneditor.properties not found");
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            logger.error("IOException while reading properties file", e);
         }
         return properties;
     }

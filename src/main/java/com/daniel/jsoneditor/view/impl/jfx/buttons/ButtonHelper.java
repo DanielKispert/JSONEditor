@@ -4,10 +4,14 @@ import java.net.URL;
 
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ButtonHelper
 {
+    private static final Logger logger = LoggerFactory.getLogger(ButtonHelper.class);
+
     public static void setButtonImage(Button button, String path)
     {
         if (button == null || path == null)
@@ -17,7 +21,7 @@ public class ButtonHelper
         URL image = ButtonHelper.class.getResource(path);
         if (image == null)
         {
-            System.out.println("Image at " + path + " not found");
+            logger.warn("Image at {} not found", path);
             return;
         }
         ImageView imageView = new ImageView(image.toExternalForm());

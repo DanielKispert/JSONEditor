@@ -33,9 +33,8 @@ public interface WritableModel extends ReadableModel
      * @param parentPath
      * @param propertyName property name of the value that should be set. does not need a "/"
      * @param value
-     * @return the old value that was at the path, or null if there was no value before
      */
-    Object setValueAtPath(String parentPath, String propertyName, Object value);
+    void setValueAtPath(String parentPath, String propertyName, Object value);
     
 
 

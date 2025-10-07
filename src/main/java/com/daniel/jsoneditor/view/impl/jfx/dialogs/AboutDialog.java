@@ -5,10 +5,14 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import javafx.scene.control.Alert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class AboutDialog extends ThemedAlert
 {
+    private static final Logger logger = LoggerFactory.getLogger(AboutDialog.class);
+
     public AboutDialog()
     {
         super(AlertType.INFORMATION);
@@ -20,7 +24,7 @@ public class AboutDialog extends ThemedAlert
         }
         catch (IOException e)
         {
-            System.out.println("IOException on trying to load version property");
+            logger.error("IOException on trying to load version property", e);
         }
         String versionNumber = versionProperties.getProperty("version");
         setTitle("About");

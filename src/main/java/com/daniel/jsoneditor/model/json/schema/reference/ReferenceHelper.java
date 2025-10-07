@@ -16,10 +16,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ReferenceHelper
 {
+    private static final Logger logger = LoggerFactory.getLogger(ReferenceHelper.class);
     
     public static String resolveReference(ReadableModel model, ReferenceToObjectInstance reference)
     {
@@ -45,7 +48,7 @@ public class ReferenceHelper
         ReferenceableObject object = getReferenceableObject(model, objectReferencingKey);
         if (object == null)
         {
-            System.out.println("Could not find a referenceable object for reference " + node.getDisplayName());
+            logger.warn("Could not find a referenceable object for reference " + node.getDisplayName());
             return null;
         }
         JsonNodeWithPath objectNode = model.getNodeForPath(object.getPath());
@@ -386,7 +389,7 @@ public class ReferenceHelper
                 }
                 catch (NumberFormatException e)
                 {
-                    System.out.println("Could not parse key to number: " + newKey);
+                    logger.error("Could not parse key to number: " + newKey);
                 }
             }
             
