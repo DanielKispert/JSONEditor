@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.controller.impl.json;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 
@@ -9,7 +10,7 @@ public interface JsonFileReaderAndWriter
 {
     JsonNode getJsonFromFile(File file);
     
-    JsonNode getNodeFromString(String content);
+    JsonNode getNodeFromString(String content) throws JsonProcessingException;
     
     <T> T getJsonFromFile(File file, Class<T> classOfObject, boolean ignoreUnknownProperties);
     

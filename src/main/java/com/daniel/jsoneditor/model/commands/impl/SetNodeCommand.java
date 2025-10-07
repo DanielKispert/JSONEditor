@@ -55,7 +55,7 @@ public class SetNodeCommand extends BaseCommand
         {
             return List.of(ModelChange.remove(path, oldNode));
         }
-        if (!oldMissing && !newMissing && !oldNode.equals(actualNewNode))
+        if (!oldMissing && !oldNode.equals(actualNewNode))
         {
             return List.of(ModelChange.replace(path, oldNode, actualNewNode));
         }

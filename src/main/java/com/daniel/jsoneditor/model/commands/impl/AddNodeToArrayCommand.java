@@ -41,7 +41,6 @@ public class AddNodeToArrayCommand extends BaseCommand
         }
         // kept for potential future reference (e.g. follow-up commands)
         final String pathOfAddedNode = pathToArray + "/" + addedIndex;
-        model.sendEvent(new Event(EventEnum.ADDED_ITEM_TO_ARRAY_FROM_ARRAY, pathOfAddedNode));
         return List.of(ModelChange.add(pathOfAddedNode, newNode));
     }
 }

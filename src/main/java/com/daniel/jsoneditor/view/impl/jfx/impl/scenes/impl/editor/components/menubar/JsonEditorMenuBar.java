@@ -32,7 +32,7 @@ public class JsonEditorMenuBar extends MenuBar
         saveItem.setOnAction(event -> controller.saveToFile());
         saveItem.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
         MenuItem refreshItem = new MenuItem("Refresh");
-        refreshItem.setOnAction(event -> controller.refreshFromFile());
+        refreshItem.setOnAction(event -> controller.refreshFromDisk());
         refreshItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN));
         MenuItem settingsItem = new MenuItem("Settings...");
         settingsItem.setOnAction(event -> new SettingsDialog(controller.getSettingsController()).showAndWait());

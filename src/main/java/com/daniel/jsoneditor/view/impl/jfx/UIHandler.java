@@ -28,6 +28,13 @@ public interface UIHandler
     void showToast(Toasts toast);
     
     /**
+     * Updates the window title with the given unsaved changes count.
+     *
+     * @param unsavedChangesCount number of unsaved changes
+     */
+    void updateWindowTitle(int unsavedChangesCount);
+    
+    /**
      * Handles command execution events (execute/undo/redo)
      * @param event event containing command metadata and changes
      */

@@ -45,7 +45,7 @@ public interface Controller
     
     void saveToFile();
     
-    void refreshFromFile();
+    void refreshFromDisk();
     
     String searchForNode(String path, String value);
     

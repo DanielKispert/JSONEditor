@@ -15,7 +15,7 @@ public interface WritableModel extends ReadableModel
     
     void jsonAndSchemaSuccessfullyValidated(File jsonFile, File schemaFile, JsonNode json, JsonSchema schema);
     
-    void refreshJsonNode(JsonNode jsonNode);
+    void resetRootNode(JsonNode jsonNode);
     
     void setSettings(Settings settings);
     
