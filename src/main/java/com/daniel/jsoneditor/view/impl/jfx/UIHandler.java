@@ -1,7 +1,5 @@
 package com.daniel.jsoneditor.view.impl.jfx;
 
-import javax.annotation.processing.SupportedAnnotationTypes;
-
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 
@@ -14,10 +12,6 @@ public interface UIHandler
     void showMainEditor();
     
     void handleAddedReferenceableObject(String pathOfObject);
-    
-    void handleAddedArrayItem(String pathOfArrayItem);
-    
-    void updateEditorSceneWithSelectedJson();
     
     void updateEditorSceneWithRemovedJson();
     

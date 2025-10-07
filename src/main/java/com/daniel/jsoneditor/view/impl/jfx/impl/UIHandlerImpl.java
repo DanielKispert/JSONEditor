@@ -63,15 +63,6 @@ public class UIHandlerImpl implements UIHandler
     }
     
     @Override
-    public void handleAddedArrayItem(String pathOfArrayItem)
-    {
-        if (editorScene != null)
-        {
-            editorScene.handleAddedArrayItem(pathOfArrayItem);
-        }
-    }
-    
-    @Override
     public void handleAddedReferenceableObject(String pathOfObject)
     {
         if (editorScene != null)
@@ -79,15 +70,6 @@ public class UIHandlerImpl implements UIHandler
             editorScene.handleAddedReferenceableObject(pathOfObject);
         }
         
-    }
-    
-    @Override
-    public void updateEditorSceneWithSelectedJson()
-    {
-        if (editorScene != null)
-        {
-            editorScene.updateEverything();
-        }
     }
     
     @Override

@@ -62,12 +62,12 @@ public class FilterColumnPopup extends BasePopup<List<String>>
             vbox.getChildren().add(checkBox);
         }
     }
-    
+
     private String escapeUnderscores(String value)
     {
         return value.replaceAll("_", "__");
     }
-    
+
     private String revertUnderscores(String value)
     {
         return value.replaceAll("__", "_");

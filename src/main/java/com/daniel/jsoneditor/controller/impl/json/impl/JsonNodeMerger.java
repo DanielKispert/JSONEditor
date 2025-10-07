@@ -19,7 +19,7 @@ public class JsonNodeMerger
         }
         if (updateNode == null)
         {
-            return baseNode.getNode();
+            return baseNode.getNode().deepCopy();
         }
         if (baseNode.isArray() && updateNode.isArray())
         {
@@ -38,7 +38,7 @@ public class JsonNodeMerger
     
     private static ArrayNode mergeArrays(ReadableModel model, JsonNodeWithPath baseNode, ArrayNode updateNode)
     {
-        ArrayNode baseArray = (ArrayNode) baseNode.getNode();
+        ArrayNode baseArray = baseNode.getNode().deepCopy();
         // check if the base node is an array of referenceable objects
         Instanceable arrayOfObjectsOrReferences = getInstanceableOfArray(model, baseNode.getPath());
         
@@ -115,7 +115,7 @@ public class JsonNodeMerger
     
     private static ObjectNode mergeObjects(ReadableModel model, JsonNodeWithPath baseNode, ObjectNode updateNode)
     {
-        ObjectNode baseObject = (ObjectNode) baseNode.getNode();
+        ObjectNode baseObject = baseNode.getNode().deepCopy();
         // Recursively merge object properties
         updateNode.fields().forEachRemaining(entry -> {
             String key = entry.getKey();
