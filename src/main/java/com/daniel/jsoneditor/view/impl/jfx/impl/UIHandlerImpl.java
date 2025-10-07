@@ -99,6 +99,25 @@ public class UIHandlerImpl implements UIHandler
         }
     }
     
+    /**
+     * Updates the window title to show unsaved changes count.
+     *
+     * @param unsavedChangesCount number of unsaved changes
+     */
+    public void updateWindowTitle(final int unsavedChangesCount)
+    {
+        final String baseTitle = "JSON Editor";
+        if (unsavedChangesCount > 0)
+        {
+            stage.setTitle(baseTitle + " - " + unsavedChangesCount + " unsaved change" +
+                          (unsavedChangesCount == 1 ? "" : "s"));
+        }
+        else
+        {
+            stage.setTitle(baseTitle);
+        }
+    }
+    
     @Override
     public void updateEditorSceneWithUpdatedStructure()
     {

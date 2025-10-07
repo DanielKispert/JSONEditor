@@ -10,7 +10,7 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.settings.IdentifierSetting;
-import com.daniel.jsoneditor.model.statemachine.StateMachine;
+import com.daniel.jsoneditor.model.statemachine.EventSender;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
@@ -46,7 +46,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     
     private static final String NUMBER_REGEX = "-?\\d+(\\.\\d+)?";
     
-    private final StateMachine stateMachine;
+    private final EventSender eventSender;
     
     private File jsonFile;
     
@@ -58,9 +58,9 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     
     private Settings settings;
     
-    public ModelImpl(StateMachine stateMachine)
+    public ModelImpl(EventSender eventSender)
     {
-        this.stateMachine = stateMachine;
+        this.eventSender = eventSender;
         this.settings = new Settings(null, null);
     }
     
@@ -91,13 +91,13 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     @Override
     public Event getLatestEvent()
     {
-        return stateMachine.getState();
+        return eventSender.getState();
     }
     
     @Override
     public Subject getForObservation()
     {
-        return stateMachine;
+        return eventSender;
     }
     
     @Override
@@ -111,11 +111,12 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     }
     
     @Override
-    public void refreshJsonNode(JsonNode jsonNode)
+    public void resetRootNode(JsonNode jsonNode)
     {
         setRootJson(jsonNode);
-        // TODO can be improved
-        sendEvent(new Event(EventEnum.REFRESH_SUCCESSFUL));
+        // Notify UI that the entire JSON structure has been updated
+        sendEvent(new Event(EventEnum.RELOADED_JSON_FROM_DISK, ""));
+        sendEvent(new Event(EventEnum.RESET_SUCCESSFUL));
     }
     
     @Override
@@ -152,7 +153,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     
     public void sendEvent(Event state)
     {
-        stateMachine.setState(state);
+        eventSender.sendEvent(state);
     }
     
     @Override
@@ -517,46 +518,46 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         if (itemToDuplicate == null) {
             return;
         }
-        
+
         // Retrieve the parent node of the reference
         JsonNodeWithPath referencingNode = getNodeForPath(referencePath);
         if (referencingNode == null || !referencingNode.isObject()) {
             return;
         }
         ReferenceToObject reference = getReferenceToObject(referencePath);
-        
+
         // duplicate the node
         String clonedPath = duplicateItem(pathToItemToDuplicate);
-        
+
         JsonNodeWithPath clonedNode = getNodeForPath(clonedPath);
-        
+
         String newKeyName = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath).getKeyOfInstance(clonedNode.getNode());
-        
+
         //set the objectKey of the reference to the key of the object
         ReferenceHelper.setObjectKeyOfInstance(this, reference, referencePath, newKeyName);
     }
-    
+
     private String duplicateItem(String pathToItemToDuplicate)
     {
         JsonNodeWithPath itemToDuplicate = getNodeForPath(pathToItemToDuplicate);
-        
+
         JsonNodeWithPath parentArray = getNodeForPath(PathHelper.getParentPath(pathToItemToDuplicate));
-        
+
         if (parentArray == null || !parentArray.getNode().isArray())
         {
             return null;
         }
         ArrayNode arrayNode = (ArrayNode) parentArray.getNode();
-        
+
         // Get the index of the item to be cloned so that we can insert the next item at that index + 1
         int indexToClone = Integer.parseInt(SchemaHelper.getLastPathSegment(pathToItemToDuplicate));
-        
+
         JsonNode clonedNode = itemToDuplicate.getNode().deepCopy();
         // Insert the cloned item at indexToClone + 1
         arrayNode.insert(indexToClone + 1, clonedNode);
-        
+
         String clonedPath = PathHelper.getParentPath(itemToDuplicate.getPath()) + "/" + (indexToClone + 1);
-        
+
         //check if the cloned node is a referenceable object, if yes then we want to offer to change its name
         ReferenceableObject object = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath);
         if (object != null)
@@ -567,7 +568,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return clonedPath;
     }
-    
+
     @Override
     public void removeNodes(List<String> paths)
     {
@@ -578,7 +579,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             removeOrSetNode(paths.get(i), null);
         }
     }
-    
+
     @Override
     public void removeNode(String path)
     {
@@ -670,7 +671,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     {
         removeOrSetNode(path, content);
     }
-    
+
     @Override
     public JsonSchema getSubschemaForPath(String path)
     {

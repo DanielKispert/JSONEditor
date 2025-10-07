@@ -11,6 +11,7 @@ import com.daniel.jsoneditor.model.commands.impl.MoveItemCommand;
 import com.daniel.jsoneditor.model.commands.impl.CreateReferenceableObjectCommand;
 import com.daniel.jsoneditor.model.commands.impl.DuplicateArrayItemCommand;
 import com.daniel.jsoneditor.model.commands.impl.DuplicateReferenceAndLinkCommand;
+import com.fasterxml.jackson.databind.JsonNode;
 
 
 public class CommandFactory
@@ -68,7 +69,7 @@ public class CommandFactory
         return new DuplicateReferenceAndLinkCommand(model, referencePath, pathToDuplicate);
     }
     
-    public SetNodeCommand setNodeCommand(String path, com.fasterxml.jackson.databind.JsonNode newNode)
+    public SetNodeCommand setNodeCommand(String path, JsonNode newNode)
     {
         return new SetNodeCommand(model, path, newNode);
     }

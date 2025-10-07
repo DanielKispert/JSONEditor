@@ -7,6 +7,8 @@ public enum Toasts
 {
     SAVE_SUCCESSFUL_TOAST("saved", Color.GREEN, 2),
     IMPORT_SUCCESSFUL_TOAST("Import successful", Color.GREEN, 2),
+    IMPORT_VALIDATION_FAILED_TOAST("Import failed: Schema validation error", Color.RED, 3),
+    IMPORT_PARSING_FAILED_TOAST("Import failed: Invalid JSON format", Color.RED, 3),
     EXPORT_SUCCESSFUL_TOAST("Export succeessful", Color.GREEN, 2),
     REFRESH_SUCCESSFUL_TOAST("Reloaded", Color.GREEN, 2),
     COPIED_TO_CLIPBOARD_TOAST("Copied to clipboard", Color.GREEN, 2),

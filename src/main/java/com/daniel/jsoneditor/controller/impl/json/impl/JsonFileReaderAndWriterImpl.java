@@ -2,18 +2,16 @@ package com.daniel.jsoneditor.controller.impl.json.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 import com.daniel.jsoneditor.controller.impl.json.JsonPrettyPrinter;
 import com.daniel.jsoneditor.model.json.schema.CustomSchemaFactory;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
-import com.networknt.schema.ValidationMessage;
 
 public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
 {
@@ -41,21 +39,15 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     }
     
     @Override
-    public JsonNode getNodeFromString(String content)
+    public JsonNode getNodeFromString(String content) throws JsonProcessingException
     {
-        // we validate that the content is a proper JsonNode, and transform it into that
-        try
+        if (content == null)
         {
-            ObjectMapper objectMapper = new ObjectMapper();
-            
-            return objectMapper.readTree(content);
-            
+            throw new IllegalArgumentException("Content cannot be null");
         }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            return null;
-        }
+        
+        final ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readTree(content);
     }
     
     @Override

@@ -90,4 +90,11 @@ public final class ModelChange
     {
         return toIndex;
     }
+    
+    @Override
+    public String toString()
+    {
+        return "ModelChange{" + "type=" + type + ", path='" + path + '\'' + ", oldValue=" + oldValue + ", newValue=" + newValue
+                + ", fromIndex=" + fromIndex + ", toIndex=" + toIndex + '}';
+    }
 }

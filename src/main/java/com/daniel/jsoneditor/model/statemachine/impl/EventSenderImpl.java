@@ -1,22 +1,22 @@
 package com.daniel.jsoneditor.model.statemachine.impl;
 
 import com.daniel.jsoneditor.model.observe.Observer;
-import com.daniel.jsoneditor.model.statemachine.StateMachine;
+import com.daniel.jsoneditor.model.statemachine.EventSender;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class StateMachineImpl implements StateMachine
+public class EventSenderImpl implements EventSender
 {
     
     private Event currentState;
     
     private List<Observer> observers;
     
-    public StateMachineImpl()
+    public EventSenderImpl()
     {
         this.observers = new ArrayList<>();
-        setState(new Event(EventEnum.LAUNCHING));
+        sendEvent(new Event(EventEnum.LAUNCHING));
     }
     
     @Override
@@ -33,9 +33,8 @@ public class StateMachineImpl implements StateMachine
     }
     
     @Override
-    public void setState(Event newState)
+    public void sendEvent(Event newState)
     {
-        System.out.println("State Machine entering state " + newState);
         this.currentState = newState;
         notifyObservers();
     }

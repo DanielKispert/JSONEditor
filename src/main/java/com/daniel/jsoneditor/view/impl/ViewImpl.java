@@ -51,16 +51,13 @@ public class ViewImpl implements View
             case MAIN_EDITOR:
                 uiHandler.showMainEditor();
                 break;
-            case ADDED_ITEM_TO_ARRAY_FROM_ARRAY:
-                uiHandler.handleAddedArrayItem(newEvent.getPath());
-                break;
             case ADDED_REFERENCEABLE_OBJECT:
                 uiHandler.handleAddedReferenceableObject(newEvent.getPath());
                 break;
-            case REFRESH_SUCCESSFUL:
+            case RESET_SUCCESSFUL:
                 uiHandler.showToast(Toasts.REFRESH_SUCCESSFUL_TOAST);
                 break;
-            case UPDATED_JSON_STRUCTURE:
+            case RELOADED_JSON_FROM_DISK:
                 uiHandler.updateEditorSceneWithUpdatedStructure();
                 break;
             case REMOVED_SELECTED_JSON_NODE:
@@ -112,5 +109,11 @@ public class ViewImpl implements View
     public void showToast(Toasts toast)
     {
         uiHandler.showToast(toast);
+    }
+    
+    @Override
+    public void updateWindowTitle(final int unsavedChangesCount)
+    {
+        uiHandler.updateWindowTitle(unsavedChangesCount);
     }
 }

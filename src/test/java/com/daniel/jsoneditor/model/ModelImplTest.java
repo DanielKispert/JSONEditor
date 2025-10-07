@@ -1,12 +1,12 @@
 package com.daniel.jsoneditor.model;
 
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
+import com.daniel.jsoneditor.controller.impl.commands.CommandManagerImpl;
 import com.daniel.jsoneditor.model.changes.ChangeType;
 import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.commands.impl.*;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
-import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.statemachine.impl.StateMachineImpl;
+import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -75,7 +75,7 @@ public class ModelImplTest
             schemaRoot.set("properties", properties);
             
             final JsonSchema schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(schemaRoot);
-            final ModelImpl model = new ModelImpl(new StateMachineImpl());
+            final ModelImpl model = new ModelImpl(new EventSenderImpl());
             model.jsonAndSchemaSuccessfullyValidated(new File("dummy.json"), new File("dummy_schema.json"), root, schema);
             return model;
         }
@@ -100,7 +100,7 @@ public class ModelImplTest
     void testAddNodeToArray()
     {
         final ModelImpl model = createModel();
-        final CommandManager mgr = new CommandManager(model);
+        final CommandManager mgr = new CommandManagerImpl(model);
         final List<ModelChange> add = mgr.executeCommand(new AddNodeToArrayCommand(model, "/arr"));
         assertSingle(add, ChangeType.ADD, "/arr/0");
         final JsonNode arr = model.getNodeForPath("/arr").getNode();
@@ -114,7 +114,7 @@ public class ModelImplTest
     void testSetAndRemoveNode()
     {
         final ModelImpl model = createModel();
-        final CommandManager mgr = new CommandManager(model);
+        final CommandManager mgr = new CommandManagerImpl(model);
         final ObjectNode obj = MAPPER.createObjectNode();
         obj.put("name", "First");
         final List<ModelChange> add = mgr.executeCommand(new SetNodeCommand(model, "/arr/0", obj));
@@ -132,7 +132,7 @@ public class ModelImplTest
     void testMoveItemToIndex()
     {
         final ModelImpl model = createModel();
-        final CommandManager mgr = new CommandManager(model);
+        final CommandManager mgr = new CommandManagerImpl(model);
         final ObjectNode first = MAPPER.createObjectNode();
         first.put("name", "First");
         final ObjectNode second = MAPPER.createObjectNode();
@@ -154,7 +154,7 @@ public class ModelImplTest
     void testDuplicateArrayItem()
     {
         final ModelImpl model = createModel();
-        final CommandManager mgr = new CommandManager(model);
+        final CommandManager mgr = new CommandManagerImpl(model);
         final ObjectNode first = MAPPER.createObjectNode();
         first.put("name", "Orig");
         mgr.executeCommand(new SetNodeCommand(model, "/arr/0", first));
@@ -174,7 +174,7 @@ public class ModelImplTest
     void testSortArrayStrings()
     {
         final ModelImpl model = createModel();
-        final CommandManager mgr = new CommandManager(model);
+        final CommandManager mgr = new CommandManagerImpl(model);
         final ArrayNode pre = (ArrayNode) model.getNodeForPath("/strings").getNode().deepCopy();
         final List<ModelChange> sort = mgr.executeCommand(new SortArrayCommand(model, "/strings"));
         if (!sort.isEmpty())
@@ -197,7 +197,7 @@ public class ModelImplTest
     void testSortArrayNumbers()
     {
         final ModelImpl model = createModel();
-        final CommandManager mgr = new CommandManager(model);
+        final CommandManager mgr = new CommandManagerImpl(model);
         final ArrayNode pre = (ArrayNode) model.getNodeForPath("/numbers").getNode().deepCopy();
         final List<ModelChange> sort = mgr.executeCommand(new SortArrayCommand(model, "/numbers"));
         if (!sort.isEmpty())
@@ -218,7 +218,7 @@ public class ModelImplTest
     void testReplaceNode()
     {
         final ModelImpl model = createModel();
-        final CommandManager mgr = new CommandManager(model);
+        final CommandManager mgr = new CommandManagerImpl(model);
         final ObjectNode a = MAPPER.createObjectNode();
         a.put("name", "A");
         final ObjectNode b = MAPPER.createObjectNode();
@@ -236,7 +236,7 @@ public class ModelImplTest
     void testNoOpSet()
     {
         final ModelImpl model = createModel();
-        final CommandManager mgr = new CommandManager(model);
+        final CommandManager mgr = new CommandManagerImpl(model);
         final ObjectNode a = MAPPER.createObjectNode();
         a.put("name", "Same");
         mgr.executeCommand(new SetNodeCommand(model, "/arr/0", a));
