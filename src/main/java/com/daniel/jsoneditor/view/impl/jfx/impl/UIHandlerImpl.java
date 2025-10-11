@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.controller.settings.impl.EditorDimensions;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.changes.ChangeType;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.ReferenceableObjectCommand;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelectionScene;
@@ -58,18 +59,9 @@ public class UIHandlerImpl implements UIHandler
         stage.setX((screenBounds.getWidth() - dimensions.getWidth()) / 2);
         stage.setY((screenBounds.getHeight() - dimensions.getHeight()) / 2);
         this.editorScene = new EditorScene(this, controller, model);
+        updateWindowTitle(0);
         stage.setScene(editorScene.getScene(stage));
         stage.show();
-    }
-    
-    @Override
-    public void handleAddedReferenceableObject(String pathOfObject)
-    {
-        if (editorScene != null)
-        {
-            editorScene.handleAddedReferenceableObject(pathOfObject);
-        }
-        
     }
     
     @Override
@@ -132,17 +124,15 @@ public class UIHandlerImpl implements UIHandler
             // Process each model change granularly
             for (final ModelChange change : event.getChanges())
             {
-                handleModelChange(change);
+                handleModelChange(change, event);
             }
         }
     }
-    
+
     /**
      * Handles individual model changes with granular UI updates.
-     *
-     * @param change the specific model change to handle
      */
-    private void handleModelChange(ModelChange change)
+    private void handleModelChange(ModelChange change, Event commandEvent)
     {
         final String path = change.getPath();
         final ChangeType type = change.getType();
@@ -150,7 +140,7 @@ public class UIHandlerImpl implements UIHandler
         switch (type)
         {
             case ADD:
-                handleAdd(path);
+                handleAdd(path, commandEvent);
                 break;
             case REMOVE:
                 handleRemove(path);
@@ -170,31 +160,38 @@ public class UIHandlerImpl implements UIHandler
         }
     }
     
-    private void handleAdd(String path)
+    private void handleAdd(String path, Event commandEvent)
     {
-        // Update navbar to show new node
         editorScene.getNavbar().handlePathAdded(path);
-        // Update any open editors that might display the parent
         editorScene.getEditorWindowManager().handlePathAdded(path);
-        // Select the newly added item
         editorScene.getNavbar().selectPath(path);
+        
+        // Special handling for referenceable objects created by specific commands
+        if (isReferenceableObjectCommand(commandEvent))
+        {
+            final ReferenceableObjectCommand refCommand = (ReferenceableObjectCommand) commandEvent.getCommand();
+            final String createdObjectPath = refCommand.getCreatedObjectPath();
+            
+            editorScene.getEditorWindowManager().updateEditors();
+            editorScene.getEditorWindowManager().openInNewWindowIfPossible(createdObjectPath);
+        }
+    }
+    
+    private boolean isReferenceableObjectCommand(Event commandEvent)
+    {
+        return commandEvent.getCommand() instanceof ReferenceableObjectCommand;
     }
     
     private void handleRemove(String path)
     {
-        // Update navbar to remove the node
         editorScene.getNavbar().handlePathRemoved(path);
-        // Update any open editors that might have displayed this path
         editorScene.getEditorWindowManager().handlePathRemoved(path);
-        // Clear selection if removed path was selected
         editorScene.getNavbar().handleRemovedSelection(path);
     }
     
     private void handleReplace(String path)
     {
-        // Update navbar display for the changed node
         editorScene.getNavbar().handlePathChanged(path);
-        // Update any open editors showing this path
         editorScene.getEditorWindowManager().handlePathChanged(path);
     }
     

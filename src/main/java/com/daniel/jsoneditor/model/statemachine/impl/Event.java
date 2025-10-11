@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.model.statemachine.impl;
 
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.Command;
 
 import java.util.List;
 
@@ -20,6 +21,8 @@ public class Event
     
     private final List<ModelChange> changes;
     
+    private final Command command; // actual command object for type-safe detection
+    
     public Event(EventEnum eventEnum)
     {
         this.eventEnum = eventEnum;
@@ -28,6 +31,7 @@ public class Event
         this.commandCategory = null;
         this.commandPhase = null;
         this.changes = null;
+        this.command = null;
     }
     
     public Event(EventEnum eventEnum, String path)
@@ -38,6 +42,7 @@ public class Event
         this.commandCategory = null;
         this.commandPhase = null;
         this.changes = null;
+        this.command = null;
     }
     
     /**
@@ -51,6 +56,21 @@ public class Event
         this.commandCategory = commandCategory;
         this.commandPhase = commandPhase;
         this.changes = changes;
+        this.command = null;
+    }
+    
+    /**
+     * Enhanced constructor for COMMAND_APPLIED events with actual command object.
+     */
+    public Event(EventEnum eventEnum, Command command, String commandPhase, List<ModelChange> changes)
+    {
+        this.eventEnum = eventEnum;
+        this.path = null;
+        this.commandLabel = command.getLabel();
+        this.commandCategory = command.getCategory();
+        this.commandPhase = commandPhase;
+        this.changes = changes;
+        this.command = command;
     }
     
     public EventEnum getEvent()
@@ -81,5 +101,10 @@ public class Event
     public List<ModelChange> getChanges()
     {
         return changes;
+    }
+    
+    public Command getCommand()
+    {
+        return command;
     }
 }

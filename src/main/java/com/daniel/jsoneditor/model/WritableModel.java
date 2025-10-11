@@ -62,9 +62,4 @@ public interface WritableModel extends ReadableModel
      * sets a path to a node, replacing everything that was there before
      */
     void setNode(String path, JsonNode content);
-
-    /**
-     * adds a new node to the JSON for the
-     */
-    void addReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key);
 }

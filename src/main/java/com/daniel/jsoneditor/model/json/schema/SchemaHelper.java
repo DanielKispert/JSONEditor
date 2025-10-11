@@ -33,10 +33,10 @@ public class SchemaHelper
         for (ValidationMessage message : messages)
         {
             final JsonNode elementContent = json.at(convertToJSONPointer(message.getPath()));
-            final String contentPreview = elementContent.toString().length() > 100
-                ? elementContent.toString().substring(0, 100) + "..."
+            final String contentPreview = elementContent.toString().length() > 100 
+                ? elementContent.toString().substring(0, 100) + "..." 
                 : elementContent.toString();
-            logger.error("Validation Error: {} at path {} with element preview: {}",
+            logger.error("Validation Error: {} at path {} with element preview: {}", 
                 message.getMessage(), message.getPath(), contentPreview);
         }
         return messages.isEmpty();

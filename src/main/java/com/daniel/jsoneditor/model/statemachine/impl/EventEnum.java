@@ -12,10 +12,6 @@ public enum EventEnum
     
     MAIN_EDITOR,
     
-    ADDED_REFERENCEABLE_OBJECT,
-    
-    ADDED_ITEM_TO_ARRAY_FROM_ARRAY,
-    
     RELOADED_JSON_FROM_DISK,
     
     CREATED_NODE_FOR_LINKING,

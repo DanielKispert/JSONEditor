@@ -22,6 +22,8 @@ import javafx.scene.control.Control;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,8 @@ import java.util.Objects;
  */
 public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String>
 {
+    private static final Logger logger = LoggerFactory.getLogger(EditorTableCell.class);
+    
     protected final Controller controller;
     
     private final EditorWindowManager manager;
@@ -42,9 +46,8 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     
     protected final boolean holdsKeyOfReferenceableObject;
     
-    private String previouslyCommittedValue;
-    
-    protected String displayedValue;
+    protected String currentValue; // What the user is currently seeing/typing
+    protected String committedValue; // What was last saved to the model (also serves as previouslyCommittedValue)
     
     protected CreateNewReferenceableObjectButton createNewReferenceableObjectButton;
     
@@ -58,6 +61,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         this.controller = controller;
         this.model = model;
         this.holdsKeyOfReferenceableObject = holdsObjectKey;
+        this.createNewReferenceableObjectButton = new CreateNewReferenceableObjectButton(event -> handleCreateNewReferenceableObject());
         this.fittingObjectsPopup = new FittingObjectsPopup(model, this::onFittingObjectSelected, this::onDuplicateItemButtonClicked);
         setMaxWidth(Double.MAX_VALUE);
         Platform.runLater(() -> {
@@ -117,9 +121,9 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         fittingObjectsPopup.hide();
     }
     
-    protected String getValue()
+    private String getCellValue()
     {
-        return displayedValue;
+        return currentValue;
     }
     
     public List<ReferenceableObjectInstance> getFittingReferenceableObjects()
@@ -133,7 +137,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         ReferenceableObject referenceableObject = model.getReferenceableObjectByReferencingKey(objectReferencingKey);
         for (ReferenceableObjectInstance instance : model.getReferenceableObjectInstances(referenceableObject))
         {
-                String value = getValue();
+                String value = getCellValue();
                 if (value == null || instance.getKey().contains(value))
                 {
                     fittingObjects.add(instance);
@@ -150,7 +154,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             return false;
         }
         
-        String cellValue = getValue();
+        String cellValue = getCellValue();
         if (cellValue == null || cellValue.isEmpty())
         {
             return false;
@@ -162,7 +166,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             return false; //if no referenceable object exists, we can't create a new instance of it. Don't show the button
         }
         // we made sure the object exists, but does an instance with the key exist?
-        return model.getReferenceableObjectInstanceWithKey(objectWithKey, getValue()) == null;
+        return model.getReferenceableObjectInstanceWithKey(objectWithKey, getCellValue()) == null;
     }
     
     private String getObjectReferencingKey()
@@ -181,14 +185,14 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         return referenceToObject.getObjectReferencingKeyOfInstance(parentItem.getNode());
     }
     
-    protected void handleCreateNewReferenceableObject()
+    private void handleCreateNewReferenceableObject()
     {
         String objectReferencingKey = getObjectReferencingKey();
         ReferenceableObject referenceableObject = model.getReferenceableObjectByReferencingKey(objectReferencingKey);
         if (referenceableObject != null)
         {
             // create a new referenceable object instance from the model
-            controller.createNewReferenceableObjectNodeWithKey(referenceableObject.getPath(), getValue());
+            controller.createNewReferenceableObjectNodeWithKey(referenceableObject.getPath(), getCellValue());
         }
     }
     
@@ -200,19 +204,23 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     @Override
     public final void commitEdit(String newValue)
     {
-        if (Objects.equals(newValue, previouslyCommittedValue))
+        if (Objects.equals(newValue, committedValue))
         {
-            return; //in case the value is already committed, we don't need to change anything
+            return; // in case the value is already committed, we don't need to change anything
         }
         super.commitEdit(newValue);
+        
+        // Update our state tracking - both values sync when committed
+        currentValue = newValue;
+        committedValue = newValue;
+        
         EditorTableColumn column = ((EditorTableColumn) getTableColumn());
         TableRow<JsonNodeWithPath> tableRow = getTableRow();
         if (tableRow == null || tableRow.getItem() == null)
         {
             return;
         }
-        // from this point on we likely will save the value, so we remember it for next time
-        previouslyCommittedValue = newValue;
+        
         JsonNodeWithPath item = tableRow.getItem();
         String propertyName = column.getPropertyName();
         JsonNode jsonNode = item.getNode().get(propertyName);
@@ -263,9 +271,9 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     
     public void onUserChangedText(String enteredText)
     {
-        if (!Objects.equals(enteredText, displayedValue))
+        if (!Objects.equals(enteredText, currentValue))
         {
-            displayedValue = enteredText;
+            currentValue = enteredText;
             toggleCreateNewReferenceableObjectButtonVisibility();
             fittingObjectsPopup.setItems(getFittingReferenceableObjects());
         }
@@ -273,16 +281,12 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     
     protected void toggleCreateNewReferenceableObjectButtonVisibility()
     {
-        if (createNewReferenceableObjectButton == null)
-        {
-            return;
-        }
-        if (holdsKeyOfReferenceableObjectThatDoesNotExist())
+        if (!createNewReferenceableObjectButton.isVisible() && holdsKeyOfReferenceableObjectThatDoesNotExist())
         {
             createNewReferenceableObjectButton.setVisible(true);
             createNewReferenceableObjectButton.setManaged(true);
         }
-        else
+        else if (createNewReferenceableObjectButton.isVisible() && !holdsKeyOfReferenceableObjectThatDoesNotExist())
         {
             createNewReferenceableObjectButton.setVisible(false);
             createNewReferenceableObjectButton.setManaged(false);

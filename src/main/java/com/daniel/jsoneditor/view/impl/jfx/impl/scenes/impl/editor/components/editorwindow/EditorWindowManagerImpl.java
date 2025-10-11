@@ -72,7 +72,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
             // if no window exists, we create a new one and open it in there
             openInNewWindowIfPossible(path, openObjectParentOfArray);
         }
-        
+
     }
     
     @Override
@@ -86,7 +86,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
         {
             openPath(path, openObjectParentOfArray);
         }
-        
+
     }
     
     private JsonEditorEditorWindow addWindow()

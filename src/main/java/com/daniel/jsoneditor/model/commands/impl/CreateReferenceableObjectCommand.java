@@ -2,15 +2,17 @@ package com.daniel.jsoneditor.model.commands.impl;
 
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.ReferenceableObjectCommand;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 
-public class CreateReferenceableObjectCommand extends BaseCommand
+public class CreateReferenceableObjectCommand extends BaseCommand implements ReferenceableObjectCommand
 {
     private final String referenceableObjectPath;
     private final String key;
+    private String createdObjectPath;
     
     public CreateReferenceableObjectCommand(final WritableModelInternal model, final String referenceableObjectPath, final String key)
     {
@@ -33,7 +35,6 @@ public class CreateReferenceableObjectCommand extends BaseCommand
         {
             return noChanges();
         }
-        // ensure path points to an array container
         String path = refObj.getPath();
         JsonNode newItem = model.makeArrayNode(path);
         int addedIndex = model.addNodeToArray(path, newItem);
@@ -42,9 +43,15 @@ public class CreateReferenceableObjectCommand extends BaseCommand
             return noChanges();
         }
         String newNodePath = path + "/" + addedIndex;
-        // set key of instance
+        this.createdObjectPath = newNodePath;
         ReferenceHelper.setKeyOfInstance(model, refObj, newNodePath, key);
+        
         return List.of(ModelChange.add(newNodePath, model.getNodeForPath(newNodePath).getNode()));
     }
+    
+    @Override
+    public String getCreatedObjectPath()
+    {
+        return createdObjectPath;
+    }
 }
-

@@ -79,7 +79,7 @@ public class CommandManagerImpl implements CommandManager
         // notify UI regardless of undoability when something happened
         if (!changes.isEmpty())
         {
-            model.sendEvent(new Event(EventEnum.COMMAND_APPLIED, cmd.getLabel(), cmd.getCategory(), "EXECUTE", changes));
+            model.sendEvent(new Event(EventEnum.COMMAND_APPLIED, cmd, "EXECUTE", changes));
         }
         return changes;
     }
@@ -98,8 +98,7 @@ public class CommandManagerImpl implements CommandManager
         notifyUnsavedChangesCount(); // Notify about changes count update
         if (!inverted.isEmpty())
         {
-            model.sendEvent(new Event(EventEnum.COMMAND_APPLIED, entry.getCommand().getLabel(), entry.getCommand().getCategory(), "UNDO",
-                    inverted));
+            model.sendEvent(new Event(EventEnum.COMMAND_APPLIED, entry.getCommand(), "UNDO", inverted));
         }
         return inverted; // return inverse (REMOVE for previous ADD)
     }
@@ -117,8 +116,7 @@ public class CommandManagerImpl implements CommandManager
         notifyUnsavedChangesCount(); // Notify about changes count update
         if (!entry.getChanges().isEmpty())
         {
-            model.sendEvent(new Event(EventEnum.COMMAND_APPLIED, entry.getCommand().getLabel(), entry.getCommand().getCategory(), "REDO",
-                    entry.getChanges()));
+            model.sendEvent(new Event(EventEnum.COMMAND_APPLIED, entry.getCommand(), "REDO", entry.getChanges()));
         }
         return entry.getChanges();
     }
