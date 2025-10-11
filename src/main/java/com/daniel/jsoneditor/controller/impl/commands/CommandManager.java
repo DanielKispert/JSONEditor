@@ -64,3 +64,4 @@ public interface CommandManager
         void onUnsavedChangesCountChanged(int unsavedChangesCount);
     }
 }
+

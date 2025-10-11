@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.ReferenceableObjectCommand;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,10 +14,11 @@ import com.fasterxml.jackson.databind.JsonNode;
  * Duplicates an object at pathToItemToDuplicate and updates the referencing node at referencePath to point to the new key.
  * Undo removes the duplicated object and restores the referencing node snapshot (via REPLACE inversion).
  */
-public class DuplicateReferenceAndLinkCommand extends BaseCommand
+public class DuplicateReferenceAndLinkCommand extends BaseCommand implements ReferenceableObjectCommand
 {
     private final String referencePath;
     private final String pathToItemToDuplicate;
+    private String createdObjectPath;
     
     public DuplicateReferenceAndLinkCommand(final WritableModelInternal model, final String referencePath, final String pathToItemToDuplicate)
     {
@@ -40,11 +42,10 @@ public class DuplicateReferenceAndLinkCommand extends BaseCommand
         {
             return noChanges();
         }
-        // compute new item path (duplicate inserted after original index)
         final String parentPath = PathHelper.getParentPath(pathToItemToDuplicate);
         final int originalIndex = Integer.parseInt(PathHelper.getLastPathSegment(pathToItemToDuplicate));
         final String newItemPath = parentPath + "/" + (originalIndex + 1);
-        // perform duplication and linking using existing model method
+        this.createdObjectPath = newItemPath;
         model.duplicateNodeAndLink(referencePath, pathToItemToDuplicate);
         JsonNode newItem = model.getNodeForPath(newItemPath).getNode();
         if (newItem == null || newItem.isMissingNode())
@@ -56,9 +57,15 @@ public class DuplicateReferenceAndLinkCommand extends BaseCommand
         out.add(ModelChange.add(newItemPath, newItem));
         if (!oldRefSnapshot.equals(newRefSnapshot))
         {
-            out.add(ModelChange.replace(referencePath, (JsonNode) oldRefSnapshot, (JsonNode) newRefSnapshot));
+            out.add(ModelChange.replace(referencePath, oldRefSnapshot, newRefSnapshot));
         }
+        
         return out;
     }
+    
+    @Override
+    public String getCreatedObjectPath()
+    {
+        return createdObjectPath;
+    }
 }
-

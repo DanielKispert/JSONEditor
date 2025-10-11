@@ -68,26 +68,6 @@ public class EditorScene extends SceneHandlerImpl
         return splitPane;
     }
     
-    public void handleAddedArrayItem(String pathOfAddedArrayItem)
-    {
-        editorWindowManager.updateEditors();
-        navbar.handleUpdate();
-        // desired navbar behavior: select the item that we just added if it's not already selected
-        navbar.selectPath(pathOfAddedArrayItem);
-        // desired editor behavior: if array is already open, scroll to the added item. If no array is open, open an array and scroll
-        editorWindowManager.focusOnArrayItem(pathOfAddedArrayItem);
-    }
-    
-    public void handleAddedReferenceableObject(String pathOfAddedObject)
-    {
-        editorWindowManager.updateEditors();
-        navbar.handleUpdate();
-        // desired navbar behavior: select the item that we just added if it's not already selected
-        navbar.selectPath(pathOfAddedObject);
-        editorWindowManager.openInNewWindowIfPossible(pathOfAddedObject);
-    }
-    
-    
     public void updateEverything()
     {
         // we also update the windows because they could show the parent array, which just had something added/removed/changed

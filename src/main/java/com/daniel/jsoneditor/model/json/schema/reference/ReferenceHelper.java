@@ -5,13 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.WritableModel;
-import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
-import com.daniel.jsoneditor.model.statemachine.impl.Event;
-import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,7 +59,7 @@ public class ReferenceHelper
                 }
                 index++;
             }
-            return objectNode.getPath() + "/" + 0;
+            return null;
         }
         else
         {
@@ -116,35 +112,6 @@ public class ReferenceHelper
         {
             // the referenceable object is the object itself, so we get its key
             return Collections.singletonList(new ReferenceableObjectInstance(model, referenceableObject, objectInstance));
-        }
-    }
-    
-    public static void createAndInsertReferenceableObject(ReadableModel readableModel, WritableModelInternal model, String referenceableObjectPath, String newKey)
-    {
-        // Get the ReferenceableObject using the referenceableObjectPath
-        ReferenceableObject referenceableObject = getReferenceableObjectOfPath(readableModel, referenceableObjectPath);
-        if (referenceableObject == null)
-        {
-            throw new IllegalArgumentException("ReferenceableObject not found for the given path: " + referenceableObjectPath);
-        }
-        
-        // Check if the ReferenceableObject is an array
-        JsonNodeWithPath referenceableObjectNode = readableModel.getNodeForPath(referenceableObject.getPath());
-        if (referenceableObjectNode.isArray())
-        {
-            String path = referenceableObject.getPath();
-            JsonNode newItem = readableModel.makeArrayNode(path);
-            int addedIndex = model.addNodeToArray(path, newItem);
-            String newNodePath = referenceableObject.getPath() + "/" + addedIndex;
-            
-            // Set the key of the new node
-            setKeyOfInstance(readableModel, referenceableObject, newNodePath, newKey);
-            model.sendEvent(new Event(EventEnum.ADDED_REFERENCEABLE_OBJECT, newNodePath));
-        }
-        else
-        {
-            // good point for future development
-            throw new IllegalArgumentException("ReferenceableObject is not an array: " + referenceableObjectPath);
         }
     }
     

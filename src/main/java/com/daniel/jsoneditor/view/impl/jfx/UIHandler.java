@@ -11,8 +11,6 @@ public interface UIHandler
     
     void showMainEditor();
     
-    void handleAddedReferenceableObject(String pathOfObject);
-    
     void updateEditorSceneWithRemovedJson();
     
     void updateEditorSceneWithUpdatedStructure();

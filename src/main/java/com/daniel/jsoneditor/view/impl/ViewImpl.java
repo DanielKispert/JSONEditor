@@ -51,9 +51,6 @@ public class ViewImpl implements View
             case MAIN_EDITOR:
                 uiHandler.showMainEditor();
                 break;
-            case ADDED_REFERENCEABLE_OBJECT:
-                uiHandler.handleAddedReferenceableObject(newEvent.getPath());
-                break;
             case RESET_SUCCESSFUL:
                 uiHandler.showToast(Toasts.REFRESH_SUCCESSFUL_TOAST);
                 break;

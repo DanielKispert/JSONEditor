@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
+import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
@@ -13,6 +14,8 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.EditorTableColumn;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.FollowRefOrOpenColumn;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -50,11 +53,7 @@ public class EditorTableViewImpl extends EditorTableView
     
     private final ReadableModel model;
     
-    private final EditorWindowManager manager;
-    
     private final Controller controller;
-    
-    private final JsonEditorEditorWindow window;
     
     //this list contains all items before the ui-filtering occurs
     private ObservableList<JsonNodeWithPath> allItems;
@@ -73,8 +72,6 @@ public class EditorTableViewImpl extends EditorTableView
     
     public EditorTableViewImpl(EditorWindowManager manager, JsonEditorEditorWindow window, ReadableModel model, Controller controller)
     {
-        this.window = window;
-        this.manager = manager;
         this.model = model;
         this.controller = controller;
         this.schemaProcessor = new TableSchemaProcessor(model);
@@ -299,15 +296,6 @@ public class EditorTableViewImpl extends EditorTableView
         }
     }
     
-    private Button makeRemoveButton(String path)
-    {
-        Button removeButton = new Button();
-        ButtonHelper.setButtonImage(removeButton, "/icons/material/darkmode/outline_delete_white_24dp.png");
-        removeButton.setOnAction(event -> controller.removeNode(path));
-        removeButton.setMaxHeight(Double.MAX_VALUE);
-        return removeButton;
-    }
-    
     // Granular update methods for specific model changes
     public void handleItemAdded(String path)
     {
@@ -331,11 +319,31 @@ public class EditorTableViewImpl extends EditorTableView
     
     public void handleItemChanged(String path)
     {
+        String parentPath = PathHelper.getParentPath(path);
         // Find and update the specific item in the table
         for (int i = 0; i < allItems.size(); i++)
         {
-            if (allItems.get(i).getPath().equals(path))
+            JsonNodeWithPath item = allItems.get(i);
+            String listItemPath = item.getPath();
+            if (listItemPath.equals(parentPath))
             {
+                // the item that changed is a child of this item
+                JsonNodeWithPath updatedChild = model.getNodeForPath(path);
+                String childPath = PathHelper.getLastPathSegment(path);
+                if (item.isArray())
+                {
+                    ArrayNode array = (ArrayNode) item.getNode();
+                    int index = Integer.parseInt(childPath);
+                    array.set(index, updatedChild.getNode());
+                }
+                else if (item.isObject())
+                {
+                    ((ObjectNode) item.getNode()).set(childPath, updatedChild.getNode());
+                }
+            }
+            if (listItemPath.equals(path))
+            {
+                // the item itself changed
                 JsonNodeWithPath updatedNode = model.getNodeForPath(path);
                 if (updatedNode != null)
                 {
@@ -344,7 +352,6 @@ public class EditorTableViewImpl extends EditorTableView
                 break;
             }
         }
-        refresh();
     }
     
     public void handleItemMoved(String path)

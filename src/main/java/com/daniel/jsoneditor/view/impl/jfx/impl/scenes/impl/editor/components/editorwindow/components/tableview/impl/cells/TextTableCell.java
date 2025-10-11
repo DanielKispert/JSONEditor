@@ -15,10 +15,8 @@ import javafx.util.Pair;
 import java.util.Collections;
 import java.util.List;
 
-
 public class TextTableCell extends EditorTableCell
 {
-    
     private final ReadableModel model;
     
     private final boolean alsoAllowNumbers;
@@ -68,13 +66,17 @@ public class TextTableCell extends EditorTableCell
         if (empty || item == null)
         {
             setGraphicWithResizing(null);
-            createNewReferenceableObjectButton = null;
+            currentValue = null;
+            committedValue = null;
         }
         else
         {
             Pair<Boolean, List<String>> suggestions = getSuggestions();
             HBox fieldGraphic = new HBox();
-            displayedValue = item;
+            
+            committedValue = item;
+            currentValue = item;
+            
             if (suggestions.getValue().isEmpty())
             {
                 currentTextEnterGraphic = new EditorTextField(this, item);
@@ -84,8 +86,6 @@ public class TextTableCell extends EditorTableCell
                 currentTextEnterGraphic = new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey());
             }
             HBox.setHgrow(currentTextEnterGraphic, Priority.ALWAYS);
-            createNewReferenceableObjectButton = new CreateNewReferenceableObjectButton();
-            createNewReferenceableObjectButton.setOnAction(event -> handleCreateNewReferenceableObject());
             fieldGraphic.getChildren().addAll(currentTextEnterGraphic, createNewReferenceableObjectButton);
             toggleCreateNewReferenceableObjectButtonVisibility();
             
