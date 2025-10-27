@@ -132,7 +132,7 @@ public class CommandManagerImpl implements CommandManager
                     model.setNode(c.getPath(), c.getNewValue());
                     break;
                 case REMOVE:
-                    model.removeNode(c.getPath());
+                    model.removeNodes(List.of(c.getPath()));
                     break;
                 case MOVE:
                     applyMove(c);

@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.n
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -198,7 +199,7 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
             if (selectedItem != null)
             {
                 JsonNodeWithPath selectedNode = selectedItem.getValue();
-                controller.removeNode(selectedNode.getPath());
+                controller.removeNodes(List.of(selectedNode.getPath()));
             }
         });
         importItem.setOnAction(event -> {

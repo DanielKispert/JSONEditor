@@ -514,49 +514,51 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     public void duplicateNodeAndLink(String referencePath, String pathToItemToDuplicate)
     {
         JsonNodeWithPath itemToDuplicate = getNodeForPath(pathToItemToDuplicate);
-        if (itemToDuplicate == null) {
+        if (itemToDuplicate == null)
+        {
             return;
         }
-
+        
         // Retrieve the parent node of the reference
         JsonNodeWithPath referencingNode = getNodeForPath(referencePath);
-        if (referencingNode == null || !referencingNode.isObject()) {
+        if (referencingNode == null || !referencingNode.isObject())
+        {
             return;
         }
         ReferenceToObject reference = getReferenceToObject(referencePath);
-
+        
         // duplicate the node
         String clonedPath = duplicateItem(pathToItemToDuplicate);
-
+        
         JsonNodeWithPath clonedNode = getNodeForPath(clonedPath);
-
+        
         String newKeyName = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath).getKeyOfInstance(clonedNode.getNode());
-
+        
         //set the objectKey of the reference to the key of the object
         ReferenceHelper.setObjectKeyOfInstance(this, reference, referencePath, newKeyName);
     }
-
+    
     private String duplicateItem(String pathToItemToDuplicate)
     {
         JsonNodeWithPath itemToDuplicate = getNodeForPath(pathToItemToDuplicate);
-
+        
         JsonNodeWithPath parentArray = getNodeForPath(PathHelper.getParentPath(pathToItemToDuplicate));
-
+        
         if (parentArray == null || !parentArray.getNode().isArray())
         {
             return null;
         }
         ArrayNode arrayNode = (ArrayNode) parentArray.getNode();
-
+        
         // Get the index of the item to be cloned so that we can insert the next item at that index + 1
         int indexToClone = Integer.parseInt(SchemaHelper.getLastPathSegment(pathToItemToDuplicate));
-
+        
         JsonNode clonedNode = itemToDuplicate.getNode().deepCopy();
         // Insert the cloned item at indexToClone + 1
         arrayNode.insert(indexToClone + 1, clonedNode);
-
+        
         String clonedPath = PathHelper.getParentPath(itemToDuplicate.getPath()) + "/" + (indexToClone + 1);
-
+        
         //check if the cloned node is a referenceable object, if yes then we want to offer to change its name
         ReferenceableObject object = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath);
         if (object != null)
@@ -567,10 +569,15 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return clonedPath;
     }
-
+    
     @Override
     public void removeNodes(List<String> paths)
     {
+        if (paths == null)
+        {
+            return;
+        }
+        
         // dirty hack: remove the last item first to avoid removing unintended items
         // this will break once we add sorting
         for (int i = paths.size() - 1; i >= 0; i--)
@@ -578,15 +585,10 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             removeOrSetNode(paths.get(i), null);
         }
     }
-
-    @Override
-    public void removeNode(String path)
-    {
-        removeOrSetNode(path, null);
-    }
     
     /**
-     * changes the JSON structure by setting the defined content at the defined path. If you want to notify the UI of these changes, set notifyUI to true.
+     * changes the JSON structure by setting the defined content at the defined path. If you want to notify the UI of these changes, set
+     * notifyUI to true.
      */
     private void removeOrSetNode(String path, JsonNode content)
     {
@@ -663,7 +665,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     {
         removeOrSetNode(path, content);
     }
-
+    
     @Override
     public JsonSchema getSubschemaForPath(String path)
     {

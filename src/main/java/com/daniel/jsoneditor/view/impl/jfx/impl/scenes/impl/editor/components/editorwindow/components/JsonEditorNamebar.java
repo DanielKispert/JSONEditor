@@ -1,5 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components;
 
+import java.util.List;
+
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
@@ -101,7 +103,7 @@ public class JsonEditorNamebar extends HBox
             dialog.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.YES)
                 {
-                    controller.removeNode(selectedPath);
+                    controller.removeNodes(List.of(selectedPath));
                 }
             });
         });

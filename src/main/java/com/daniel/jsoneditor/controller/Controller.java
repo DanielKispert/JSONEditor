@@ -31,8 +31,6 @@ public interface Controller
     
     void removeNodes(List<String> paths);
     
-    void removeNode(String path);
-    
     void addNewNodeToArray(String path);
     
     void createNewReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key);

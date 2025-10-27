@@ -56,8 +56,6 @@ public interface WritableModel extends ReadableModel
 
     void removeNodes(List<String> paths);
 
-    void removeNode(String path);
-
     /**
      * sets a path to a node, replacing everything that was there before
      */

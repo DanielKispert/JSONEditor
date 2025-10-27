@@ -2,15 +2,14 @@ package com.daniel.jsoneditor.model.commands;
 
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.commands.impl.AddNodeToArrayCommand;
-import com.daniel.jsoneditor.model.commands.impl.SetValueAtNodeCommand;
-import com.daniel.jsoneditor.model.commands.impl.SetNodeCommand;
-import com.daniel.jsoneditor.model.commands.impl.RemoveNodeCommand;
-import com.daniel.jsoneditor.model.commands.impl.SortArrayCommand;
-import com.daniel.jsoneditor.model.commands.impl.RemoveNodesCommand;
-import com.daniel.jsoneditor.model.commands.impl.MoveItemCommand;
 import com.daniel.jsoneditor.model.commands.impl.CreateReferenceableObjectCommand;
 import com.daniel.jsoneditor.model.commands.impl.DuplicateArrayItemCommand;
 import com.daniel.jsoneditor.model.commands.impl.DuplicateReferenceAndLinkCommand;
+import com.daniel.jsoneditor.model.commands.impl.MoveItemCommand;
+import com.daniel.jsoneditor.model.commands.impl.RemoveNodesCommand;
+import com.daniel.jsoneditor.model.commands.impl.SetNodeCommand;
+import com.daniel.jsoneditor.model.commands.impl.SetValueAtNodeCommand;
+import com.daniel.jsoneditor.model.commands.impl.SortArrayCommand;
 import com.fasterxml.jackson.databind.JsonNode;
 
 
@@ -32,11 +31,6 @@ public class CommandFactory
     public SetValueAtNodeCommand setValueAtNodeCommand(String parentPath, String propertyName, Object value)
     {
         return new SetValueAtNodeCommand(model, parentPath, propertyName, value);
-    }
-    
-    public RemoveNodeCommand removeNodeCommand(String path)
-    {
-        return new RemoveNodeCommand(model, path);
     }
     
     public RemoveNodesCommand removeNodesCommand(java.util.List<String> paths)
