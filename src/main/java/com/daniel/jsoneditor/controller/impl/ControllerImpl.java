@@ -265,16 +265,6 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
-    public void removeNode(String path)
-    {
-        if (path == null)
-        {
-            return;
-        }
-        commandManager.executeCommand(commandFactory.removeNodeCommand(path));
-    }
-    
-    @Override
     public void addNewNodeToArray(String path)
     {
         commandManager.executeCommand(commandFactory.addNodeToArrayCommand(path));

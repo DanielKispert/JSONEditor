@@ -106,7 +106,7 @@ public class TableColumnFactory
     {
         final Button removeButton = new Button();
         ButtonHelper.setButtonImage(removeButton, "/icons/material/darkmode/outline_delete_white_24dp.png");
-        removeButton.setOnAction(event -> controller.removeNode(path));
+        removeButton.setOnAction(event -> controller.removeNodes(List.of(path)));
         removeButton.setMaxHeight(Double.MAX_VALUE);
         return removeButton;
     }
