@@ -146,4 +146,18 @@ public class SettingsControllerImpl implements SettingsController
         // default is false
         return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_REMEMBER_PATHS));
     }
+    
+    @Override
+    public void setDebugMode(boolean debugMode)
+    {
+        properties.setProperty(PropertyFileKeys.PROPERTY_DEBUG_MODE, debugMode ? "true" : "false");
+        PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public boolean isDebugMode()
+    {
+        // default is false
+        return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_DEBUG_MODE));
+    }
 }

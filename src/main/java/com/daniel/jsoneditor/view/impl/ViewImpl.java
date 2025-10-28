@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ThemedAlert;
+import com.daniel.jsoneditor.view.impl.jfx.toast.DebugToastMessageGenerator;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -75,6 +76,12 @@ public class ViewImpl implements View
                 break;
             case COMMAND_APPLIED:
                 uiHandler.handleCommandApplied(newEvent);
+                // Show debug toast if debug mode is enabled
+                if (controller.getSettingsController().isDebugMode())
+                {
+                    final String debugMessage = DebugToastMessageGenerator.generateMessage(newEvent);
+                    uiHandler.showToast(Toasts.createDebugToast(debugMessage));
+                }
                 break;
         }
     

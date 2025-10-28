@@ -5,7 +5,6 @@ import javafx.geometry.Insets;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -20,6 +19,8 @@ public class SettingsDialog extends ThemedDialog<Void>
     
     private boolean tmpRenameReferences;
     
+    private boolean tmpDebugMode;
+    
     private String tmpClusterShape;
     
     private final SettingsController settingsController;
@@ -31,6 +32,7 @@ public class SettingsDialog extends ThemedDialog<Void>
         
         this.tmpHideEmptyColumns = settingsController.hideEmptyColumns();
         this.tmpRenameReferences = settingsController.renameReferencesWhenRenamingObject();
+        this.tmpDebugMode = settingsController.isDebugMode();
         this.tmpClusterShape = settingsController.getClusterShape();
         
         setTitle("Settings");
@@ -49,6 +51,7 @@ public class SettingsDialog extends ThemedDialog<Void>
             {
                 settingsController.setHideEmptyColumns(tmpHideEmptyColumns);
                 settingsController.setRenameReferencesWhenRenamingObject(tmpRenameReferences);
+                settingsController.setDebugMode(tmpDebugMode);
                 settingsController.setClusterShape(tmpClusterShape);
             }
             return null;
@@ -70,7 +73,12 @@ public class SettingsDialog extends ThemedDialog<Void>
         VBox displayBox = new VBox(createDisplaySettings(), createClusterShapeSettings());
         displayTab.setContent(displayBox);
         
-        tabs.getTabs().addAll(automationTab, displayTab);
+        // Debug Tab
+        Tab debugTab = new Tab("Debug");
+        VBox debugBox = new VBox(createDebugSettings());
+        debugTab.setContent(debugBox);
+        
+        tabs.getTabs().addAll(automationTab, displayTab, debugTab);
         
         return tabs;
     }
@@ -89,6 +97,14 @@ public class SettingsDialog extends ThemedDialog<Void>
         hideEmptyColumnsCheckBox.setSelected(tmpHideEmptyColumns);
         hideEmptyColumnsCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> tmpHideEmptyColumns = newValue);
         return hideEmptyColumnsCheckBox;
+    }
+    
+    private CheckBox createDebugSettings()
+    {
+        CheckBox debugModeCheckBox = new CheckBox("Show toast notification on model changes");
+        debugModeCheckBox.setSelected(tmpDebugMode);
+        debugModeCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> tmpDebugMode = newValue);
+        return debugModeCheckBox;
     }
     
     private HBox createClusterShapeSettings()
