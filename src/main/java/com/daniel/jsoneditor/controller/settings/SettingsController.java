@@ -29,4 +29,8 @@ public interface SettingsController
     String getLastSettingsPath();
     
     boolean rememberPaths();
+    
+    void setDebugMode(boolean debugMode);
+    
+    boolean isDebugMode();
 }
