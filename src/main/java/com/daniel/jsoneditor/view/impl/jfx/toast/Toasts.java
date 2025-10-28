@@ -3,7 +3,7 @@ package com.daniel.jsoneditor.view.impl.jfx.toast;
 import javafx.scene.paint.Color;
 
 
-public enum Toasts
+public enum Toasts implements ToastLike
 {
     SAVE_SUCCESSFUL_TOAST("saved", Color.GREEN, 2),
     IMPORT_SUCCESSFUL_TOAST("Import successful", Color.GREEN, 2),
@@ -44,5 +44,36 @@ public enum Toasts
     public int getDuration()
     {
         return duration;
+    }
+    
+    /**
+     * Creates a debug toast with a custom message.
+     * Returns an object that implements the same interface as enum constants.
+     *
+     * @param message the custom debug message
+     * @return a toast-like object for debug purposes
+     */
+    public static ToastLike createDebugToast(final String message)
+    {
+        return new ToastLike()
+        {
+            @Override
+            public String getMessage()
+            {
+                return message;
+            }
+            
+            @Override
+            public Color getColor()
+            {
+                return Color.ORANGE;
+            }
+            
+            @Override
+            public int getDuration()
+            {
+                return 2;
+            }
+        };
     }
 }

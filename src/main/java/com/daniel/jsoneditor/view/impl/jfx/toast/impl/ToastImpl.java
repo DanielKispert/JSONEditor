@@ -5,6 +5,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.ParallelTransition;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -21,6 +22,7 @@ import javafx.util.Duration;
 public class ToastImpl implements Toast
 {
     private static final int SLIDE_DURATION = 250;
+    
     private static final int FADE_DURATION = 250;
     
     @Override
@@ -34,9 +36,17 @@ public class ToastImpl implements Toast
         scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
         toastPopup.getContent().add(root);
         
-        toastPopup.show(ownerStage,
-                ownerStage.getX() + (ownerStage.getWidth() - root.getWidth()) / 2,
-                ownerStage.getY() + ownerStage.getHeight() - 55);
+        // Show popup initially off-screen to calculate dimensions
+        toastPopup.show(ownerStage, -1000, -1000);
+        
+        // Use Platform.runLater to center horizontally after layout calculation
+        Platform.runLater(() -> {
+            final double centerX = ownerStage.getX() + (ownerStage.getWidth() - root.getBoundsInLocal().getWidth()) / 2;
+            final double bottomY = ownerStage.getY() + ownerStage.getHeight() - 55;
+            
+            toastPopup.setX(centerX);
+            toastPopup.setY(bottomY);
+        });
         
         root.setTranslateY(10);
         root.setOpacity(0);
@@ -87,6 +97,10 @@ public class ToastImpl implements Toast
         if (color.equals(Color.GREEN))
         {
             icon = new ImageView(new Image("/icons/material/darkmode/outline_checkmark_24dp.png"));
+        }
+        else if (color.equals(Color.ORANGE))
+        {
+            icon = new ImageView(new Image("/icons/material/darkmode/outline_pageview_white_24dp.png"));
         }
         else
         {

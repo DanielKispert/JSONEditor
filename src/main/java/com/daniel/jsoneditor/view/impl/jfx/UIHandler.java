@@ -1,7 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
-import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
+import com.daniel.jsoneditor.view.impl.jfx.toast.ToastLike;
 
 
 public interface UIHandler
@@ -17,7 +17,8 @@ public interface UIHandler
     
     void updateEditorSceneWithMovedJson();
     
-    void showToast(Toasts toast);
+
+    void showToast(ToastLike toast);
     
     /**
      * Updates the window title with the given unsaved changes count.
