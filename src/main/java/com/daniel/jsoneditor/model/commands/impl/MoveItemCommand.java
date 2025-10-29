@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.commands.impl;
 
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.CommandCategory;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -22,7 +23,7 @@ public class MoveItemCommand extends BaseCommand
     }
     
     @Override
-    public String getCategory() { return "STRUCTURE"; }
+    public CommandCategory getCategory() { return CommandCategory.STRUCTURE; }
     
     @Override
     public String getLabel() { return "Move Item"; }

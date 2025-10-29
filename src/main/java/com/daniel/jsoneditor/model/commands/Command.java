@@ -19,9 +19,9 @@ public interface Command {
     default String getLabel() { return getClass().getSimpleName(); }
     
     /**
-     * @return category grouping (STRUCTURE, VALUE, REFERENCE, SETTINGS, OTHER)
+     * @return category grouping for command classification
      */
-    default String getCategory() { return "OTHER"; }
+    default CommandCategory getCategory() { return CommandCategory.OTHER; }
     
     /**
      * @return true if command should be placed on undo stack.

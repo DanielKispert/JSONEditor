@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.commands.impl;
 
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.CommandCategory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.util.List;
@@ -17,7 +18,7 @@ public class SortArrayCommand extends BaseCommand
     }
     
     @Override
-    public String getCategory() { return "STRUCTURE"; }
+    public CommandCategory getCategory() { return CommandCategory.STRUCTURE; }
     
     @Override
     public String getLabel() { return "Sort Array"; }

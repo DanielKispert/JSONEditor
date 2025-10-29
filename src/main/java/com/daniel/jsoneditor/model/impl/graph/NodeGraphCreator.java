@@ -16,19 +16,18 @@ public class NodeGraphCreator
 {
     /**
      * if the path contains a node, we build a graph with this as the "center". The graph is directed and contains all
-     * ReferenceToObjectInstances that point to this node, and also all references that go out from it
+     * ReferenceToObjectInstances that point to this node, and also all references that go out from it. Will return an empty graph on null path.
      */
     public static NodeGraph createGraph(ReadableModel model, String path)
     {
         if (path == null)
         {
-            return null;
+            return new NodeGraph();
         }
-        NodeGraph graph = new NodeGraph();
+        final NodeGraph graph = new NodeGraph();
         graph.insertVertex(path);
         addIncomingReferences(model, path, graph);
         addOutgoingReferences(model, path, graph);
-        
         return graph;
     }
     

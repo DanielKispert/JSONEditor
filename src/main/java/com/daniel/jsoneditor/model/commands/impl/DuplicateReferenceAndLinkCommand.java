@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.CommandCategory;
 import com.daniel.jsoneditor.model.commands.ReferenceableObjectCommand;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -28,7 +29,7 @@ public class DuplicateReferenceAndLinkCommand extends BaseCommand implements Ref
     }
     
     @Override
-    public String getCategory() { return "STRUCTURE"; }
+    public CommandCategory getCategory() { return CommandCategory.STRUCTURE; }
     
     @Override
     public String getLabel() { return "Duplicate Ref & Link"; }
