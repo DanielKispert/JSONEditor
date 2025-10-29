@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.commands.impl;
 
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.CommandCategory;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class SetNodeCommand extends BaseCommand
     }
     
     @Override
-    public String getCategory() { return "NODE"; }
+    public CommandCategory getCategory() { return CommandCategory.NODE; }
     
     @Override
     public String getLabel() { return "Set Node"; }

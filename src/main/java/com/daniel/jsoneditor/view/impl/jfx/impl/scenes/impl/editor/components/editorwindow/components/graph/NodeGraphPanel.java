@@ -32,8 +32,6 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     private final ReadableModel model;
     
-    private final Controller controller;
-    
     public NodeGraphPanel(ReadableModel model, Controller controller, String path, SmartGraphProperties properties,
             SmartPlacementStrategy placementStrategy,
             URI cssFile)
@@ -41,7 +39,6 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         super(model.getJsonAsGraph(path), properties, placementStrategy, cssFile);
         this.placementStrategy = placementStrategy;
         this.model = model;
-        this.controller = controller;
         HBox.setHgrow(this, Priority.ALWAYS);
         VBox.setVgrow(this, Priority.ALWAYS);
         this.setAutomaticLayout(true);

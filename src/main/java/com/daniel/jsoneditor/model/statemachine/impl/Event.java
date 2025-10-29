@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.statemachine.impl;
 
 import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.commands.Command;
+import com.daniel.jsoneditor.model.commands.CommandCategory;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class Event
     // command metadata (only set for COMMAND_APPLIED)
     private final String commandLabel;
     
-    private final String commandCategory;
+    private final CommandCategory commandCategory;
     
     private final String commandPhase; // EXECUTE | UNDO | REDO
     
@@ -48,7 +49,7 @@ public class Event
     /**
      * Constructor for COMMAND_APPLIED events.
      */
-    public Event(EventEnum eventEnum, String commandLabel, String commandCategory, String commandPhase, List<ModelChange> changes)
+    public Event(EventEnum eventEnum, String commandLabel, CommandCategory commandCategory, String commandPhase, List<ModelChange> changes)
     {
         this.eventEnum = eventEnum;
         this.path = null;
@@ -88,7 +89,7 @@ public class Event
         return commandLabel;
     }
     
-    public String getCommandCategory()
+    public CommandCategory getCommandCategory()
     {
         return commandCategory;
     }

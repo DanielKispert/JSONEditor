@@ -1,12 +1,11 @@
 package com.daniel.jsoneditor.model.commands.impl;
 
+import java.util.List;
+
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
-import com.daniel.jsoneditor.model.statemachine.impl.Event;
-import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
+import com.daniel.jsoneditor.model.commands.CommandCategory;
 import com.fasterxml.jackson.databind.JsonNode;
-
-import java.util.List;
 
 
 public class AddNodeToArrayCommand extends BaseCommand
@@ -20,7 +19,7 @@ public class AddNodeToArrayCommand extends BaseCommand
     }
     
     @Override
-    public String getCategory() { return "STRUCTURE"; }
+    public CommandCategory getCategory() { return CommandCategory.STRUCTURE; }
     
     @Override
     public String getLabel() { return "Add Array Element"; }

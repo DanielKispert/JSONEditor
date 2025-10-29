@@ -1,12 +1,12 @@
 package com.daniel.jsoneditor.model.commands.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.CommandCategory;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 public class RemoveNodesCommand extends BaseCommand
 {
@@ -19,7 +19,7 @@ public class RemoveNodesCommand extends BaseCommand
     }
     
     @Override
-    public String getCategory() { return "STRUCTURE"; }
+    public CommandCategory getCategory() { return CommandCategory.STRUCTURE; }
     
     @Override
     public String getLabel() { return "Remove Multiple Nodes"; }

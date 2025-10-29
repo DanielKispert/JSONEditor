@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.commands.impl;
 
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.changes.ModelChange;
+import com.daniel.jsoneditor.model.commands.CommandCategory;
 import com.daniel.jsoneditor.model.commands.ReferenceableObjectCommand;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
@@ -22,7 +23,7 @@ public class CreateReferenceableObjectCommand extends BaseCommand implements Ref
     }
     
     @Override
-    public String getCategory() { return "STRUCTURE"; }
+    public CommandCategory getCategory() { return CommandCategory.STRUCTURE; }
     
     @Override
     public String getLabel() { return "Create Referenceable Object"; }
