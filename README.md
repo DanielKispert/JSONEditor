@@ -54,3 +54,6 @@ Any string in <> will be assumed to be a variable and can be filled out by the j
 
 This project is using the google material icons (https://fonts.google.com/icons?icon.set=Material+Icons), which are licensed under the Apache License.
 You can find the license in the resources folder or in their Github repository (https://github.com/google/material-design-icons/blob/master/LICENSE).
+
+## Column Visibility
+Empty non-required columns in array tables auto-hide (default ON). Click the eye (left of table name) to show all columns until the table refreshes; click again to hide. If you type a value into a previously empty column it stays visible.
