@@ -299,8 +299,23 @@ public class JsonEditorEditorWindow extends VBox
         }
     }
     
+    /**
+     * Refreshes visibility toggle buttons when hideEmptyColumns setting changes
+     */
+    public void refreshVisibilityToggleButtons()
+    {
+        for (TableViewWithCompactNamebar childTable : childTableViews)
+        {
+            childTable.refreshButtonVisibility();
+        }
+    }
+    
+    /**
+     * Called when settings are changed to update UI accordingly
+     */
     public void handleSettingsChanged()
     {
+        refreshVisibilityToggleButtons();
         // Refresh the entire window to apply new settings
         setSelectedPath(selectedPath);
     }

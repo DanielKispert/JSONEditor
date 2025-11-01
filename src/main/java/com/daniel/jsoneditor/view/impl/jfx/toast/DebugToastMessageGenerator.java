@@ -64,8 +64,6 @@ public final class DebugToastMessageGenerator
                 return String.format("%s: Moved in %s (%d→%d)", commandPhase, path, change.getFromIndex(), change.getToIndex());
             case SORT:
                 return String.format("%s: Sorted %s", commandPhase, path);
-            case SETTINGS_CHANGED:
-                return String.format("%s: Settings updated", commandPhase);
             default:
                 return String.format("%s: %s at %s", commandPhase, type, path);
         }
