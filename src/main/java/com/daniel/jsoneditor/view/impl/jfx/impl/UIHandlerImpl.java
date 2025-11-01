@@ -155,9 +155,6 @@ public class UIHandlerImpl implements UIHandler
             case SORT:
                 handleSort(path);
                 break;
-            case SETTINGS_CHANGED:
-                handleSettingsChange();
-                break;
         }
     }
     

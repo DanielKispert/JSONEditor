@@ -137,9 +137,6 @@ public class CommandManagerImpl implements CommandManager
                 case MOVE:
                     applyMove(c);
                     break;
-                case SETTINGS_CHANGED:
-                    // TODO settings changes not yet implemented
-                    break;
                 case SORT:
                     applySort(c);
                     break;
@@ -203,9 +200,6 @@ public class CommandManagerImpl implements CommandManager
                     break;
                 case MOVE:
                     out.add(ModelChange.move(c.getPath(), c.getToIndex(), c.getFromIndex()));
-                    break;
-                case SETTINGS_CHANGED:
-                    out.add(ModelChange.settingsChanged(c.getNewValue(), c.getOldValue()));
                     break;
                 case SORT:
                     out.add(ModelChange.sort(c.getPath(), c.getNewValue(), c.getOldValue()));

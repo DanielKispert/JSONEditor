@@ -1,27 +1,22 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.impl.NodeSearcher;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
-import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.EditorTableColumn;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.FollowRefOrOpenColumn;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -29,16 +24,8 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 
 /**
@@ -68,7 +55,11 @@ public class EditorTableViewImpl extends EditorTableView
     
     // Extracted helper classes to reduce complexity
     private final TableSchemaProcessor schemaProcessor;
+    
     private final TableColumnFactory columnFactory;
+    
+    // temporary override for hide empty columns setting
+    private boolean temporaryShowAllColumns = false;
     
     public EditorTableViewImpl(EditorWindowManager manager, JsonEditorEditorWindow window, ReadableModel model, Controller controller)
     {
@@ -123,15 +114,12 @@ public class EditorTableViewImpl extends EditorTableView
         
         long shownItems = filteredItems.stream().count();
         long totalItems = getItems().size();
-        logger.debug("Selected values for columns: " + getColumns().stream()
-                                                               .filter(column -> column instanceof EditorTableColumn)
-                                                               .map(column -> ((EditorTableColumn) column).getSelectedValues())
-                                                               .collect(Collectors.toList()) +
-                             ". Showing " + shownItems + " of " + totalItems + " items.");
+        logger.debug("Selected values for columns: " + getColumns().stream().filter(column -> column instanceof EditorTableColumn)
+                .map(column -> ((EditorTableColumn) column).getSelectedValues()).collect(Collectors.toList()) + ". Showing " + shownItems
+                + " of " + totalItems + " items.");
         
         // trigger a resizing for all columns since their info could have changed now
-        getColumns().forEach(column ->
-        {
+        getColumns().forEach(column -> {
             if (column instanceof EditorTableColumn)
             {
                 ((EditorTableColumn) column).updatePrefWidth();
@@ -151,7 +139,6 @@ public class EditorTableViewImpl extends EditorTableView
             {
                 EditorTableColumn editorColumn = (EditorTableColumn) column;
                 List<String> selectedValues = editorColumn.getSelectedValues();
-
                 
                 // If the list is null, show nothing
                 if (selectedValues == null)
@@ -164,7 +151,7 @@ public class EditorTableViewImpl extends EditorTableView
                 {
                     continue;
                 }
-
+                
                 JsonNode propertyNode = item.getNode().get(editorColumn.getPropertyName());
                 if (propertyNode == null)
                 {
@@ -181,7 +168,6 @@ public class EditorTableViewImpl extends EditorTableView
         return true;
     }
     
-    
     @Override
     public String getSelectedPath()
     {
@@ -197,6 +183,9 @@ public class EditorTableViewImpl extends EditorTableView
     public void setSelection(JsonNodeWithPath nodeWithPath)
     {
         parentPath = nodeWithPath.getPath();
+        
+        // Reset temporary override on new selection
+        temporaryShowAllColumns = false;
         
         ReferenceToObject reference = model.getReferenceToObject(nodeWithPath.getPath());
         if (reference != null)
@@ -254,18 +243,15 @@ public class EditorTableViewImpl extends EditorTableView
         this.allItems = tableData.getNodes();
         
         // Use the column factory to create columns
-        final List<TableColumn<JsonNodeWithPath, String>> columns = columnFactory.createColumns(
-            tableData.getProperties(),
-            tableData.isArray(),
-            this
-        );
+        final List<TableColumn<JsonNodeWithPath, String>> columns = columnFactory.createColumns(tableData.getProperties(),
+                tableData.isArray(), this);
         
         filteredItems = new FilteredList<>(allItems);
         setItems(filteredItems);
         getColumns().clear();
         getColumns().addAll(columns);
         
-        if (tableData.isArray() && controller.getSettingsController().hideEmptyColumns())
+        if (tableData.isArray() && controller.getSettingsController().hideEmptyColumns() && !temporaryShowAllColumns)
         {
             hideEmptyColumns();
         }
@@ -319,6 +305,8 @@ public class EditorTableViewImpl extends EditorTableView
     
     public void handleItemChanged(String path)
     {
+        // update visibility button state
+        
         String parentPath = PathHelper.getParentPath(path);
         // Find and update the specific item in the table
         for (int i = 0; i < allItems.size(); i++)
@@ -371,6 +359,49 @@ public class EditorTableViewImpl extends EditorTableView
         if (parentNode != null)
         {
             setSelection(parentNode);
+        }
+    }
+    
+    /**
+     * Toggles the temporary override for showing all columns
+     */
+    public void toggleTemporaryShowAllColumns()
+    {
+        temporaryShowAllColumns = !temporaryShowAllColumns;
+        refreshColumnVisibility();
+    }
+    
+    /**
+     * Returns true if all columns are currently shown due to temporary override
+     */
+    public boolean isTemporaryShowAllColumns()
+    {
+        return temporaryShowAllColumns;
+    }
+    
+    /**
+     * Refreshes column visibility based on current settings and temporary override
+     */
+    private void refreshColumnVisibility()
+    {
+        if (temporaryShowAllColumns)
+        {
+            showAllColumns();
+        }
+        else if (controller.getSettingsController().hideEmptyColumns())
+        {
+            hideEmptyColumns();
+        }
+    }
+    
+    /**
+     * Shows all columns regardless of empty state
+     */
+    private void showAllColumns()
+    {
+        for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
+        {
+            column.setVisible(true);
         }
     }
 }

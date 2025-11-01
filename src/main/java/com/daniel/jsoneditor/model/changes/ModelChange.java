@@ -51,11 +51,6 @@ public final class ModelChange
         return new ModelChange(ChangeType.MOVE, path, null, null, fromIndex, toIndex);
     }
     
-    public static ModelChange settingsChanged(JsonNode oldSettings, JsonNode newSettings)
-    {
-        return new ModelChange(ChangeType.SETTINGS_CHANGED, "__settings__", oldSettings, newSettings, null, null);
-    }
-    
     public static ModelChange sort(String path, JsonNode oldArraySnapshot, JsonNode newArraySnapshot)
     {
         return new ModelChange(ChangeType.SORT, path, oldArraySnapshot, newArraySnapshot, null, null);

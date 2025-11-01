@@ -38,4 +38,14 @@ public abstract class EditorTableView extends TableView<JsonNodeWithPath>
     public abstract void handleItemMoved(String path);
     
     public abstract void handleSorted(String path);
+    
+    /**
+     * Toggles the temporary override for showing all columns
+     */
+    public abstract void toggleTemporaryShowAllColumns();
+    
+    /**
+     * Returns true if all columns are currently shown due to temporary override
+     */
+    public abstract boolean isTemporaryShowAllColumns();
 }

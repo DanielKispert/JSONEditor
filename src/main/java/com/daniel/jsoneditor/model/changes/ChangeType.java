@@ -8,6 +8,5 @@ public enum ChangeType {
     REMOVE,
     REPLACE,
     MOVE,
-    SETTINGS_CHANGED,
     SORT // array order changed as single atomic operation
 }
