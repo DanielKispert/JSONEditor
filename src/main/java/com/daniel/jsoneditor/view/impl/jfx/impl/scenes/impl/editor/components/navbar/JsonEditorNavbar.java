@@ -32,7 +32,7 @@ public class JsonEditorNavbar extends VBox
         this.model = model;
         buttonBar = makeButtonBar();
         navTreeView = new EditorNavTree(this, model, controller, editorWindowManager, stage);
-        graphView = GraphPanelContainer.create(this,controller, model);
+        graphView = GraphPanelContainer.create(controller, model);
         windowContainer = makeWindowContainer();
         getChildren().addAll(buttonBar, windowContainer);
         VBox.setVgrow(this, Priority.ALWAYS);
