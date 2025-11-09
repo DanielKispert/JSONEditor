@@ -141,3 +141,25 @@
     -fx-min-height: 15px;
     -fx-alignment: center;
 }
+
+.floating-transparent-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+    -fx-background-radius: 12;
+    -fx-min-width: 24;
+    -fx-min-height: 24;
+    -fx-pref-width: 24;
+    -fx-pref-height: 24;
+}
+
+.floating-transparent-button:hover {
+    -fx-background-color: -accent-color;
+    -fx-opacity: 0.8;
+}
+
+.floating-transparent-button:disabled {
+    -fx-opacity: 1.0;
+    -fx-cursor: default;
+}
