@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.AutoAdjustingSplitPane;
@@ -232,15 +233,16 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     }
     
     @Override
-    public void handlePathMoved(String path)
+    public void handlePathMoved(ModelChange change)
     {
+        final String path = change.getPath();
         // Update any windows showing the parent array that contains the moved item
         for (Node node : editorWindowContainer.getItems())
         {
             final JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
             if (path.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(path))
             {
-                window.handleChildMoved(path);
+                window.handleChildMoved(change);
             }
         }
     }

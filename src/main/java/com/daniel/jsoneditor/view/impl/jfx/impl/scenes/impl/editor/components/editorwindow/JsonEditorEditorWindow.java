@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.AutoAdjustingSplitPane;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.JsonEditorNamebar;
@@ -208,19 +209,18 @@ public class JsonEditorEditorWindow extends VBox
         return editorTables;
     }
     
-    // Granular update methods for specific model changes
     public void handleChildAdded(String path)
     {
-        // Update main table if it displays the parent
-        if (selectedPath.equals(PathHelper.getParentPath(path)))
+        final String parentPath = PathHelper.getParentPath(path);
+        
+        if (selectedPath.equals(parentPath))
         {
             mainTableView.handleItemAdded(path);
         }
         
-        // Update any child table views that might display the parent
         for (TableViewWithCompactNamebar childTable : childTableViews)
         {
-            if (childTable.getSelectedPath().equals(PathHelper.getParentPath(path)))
+            if (childTable.getSelectedPath().equals(parentPath))
             {
                 childTable.handleItemAdded(path);
             }
@@ -229,16 +229,16 @@ public class JsonEditorEditorWindow extends VBox
     
     public void handleChildRemoved(String path)
     {
-        // Update main table if it displays the parent
-        if (selectedPath.equals(PathHelper.getParentPath(path)))
+        final String parentPath = PathHelper.getParentPath(path);
+        
+        if (selectedPath.equals(parentPath))
         {
             mainTableView.handleItemRemoved(path);
         }
         
-        // Update any child table views that might display the parent
         for (TableViewWithCompactNamebar childTable : childTableViews)
         {
-            if (childTable.getSelectedPath().equals(PathHelper.getParentPath(path)))
+            if (childTable.getSelectedPath().equals(parentPath))
             {
                 childTable.handleItemRemoved(path);
             }
@@ -247,49 +247,45 @@ public class JsonEditorEditorWindow extends VBox
     
     public void handlePathChanged(String path)
     {
-        // Update if this window shows the changed path
-        if (selectedPath.equals(path) || path.startsWith(selectedPath))
+        if (selectedPath.equals(path))
         {
             mainTableView.handleItemChanged(path);
         }
         
-        // Update any child table views
         for (TableViewWithCompactNamebar childTable : childTableViews)
         {
-            if (childTable.getSelectedPath().equals(path) || path.startsWith(childTable.getSelectedPath()))
+            if (childTable.getSelectedPath().equals(path) || path.startsWith(childTable.getSelectedPath() + "/"))
             {
                 childTable.handleItemChanged(path);
             }
         }
     }
     
-    public void handleChildMoved(String path)
+    public void handleChildMoved(ModelChange change)
     {
-        // Update main table if it displays the parent array
-        if (selectedPath.equals(PathHelper.getParentPath(path)))
+        final String path = change.getPath();
+        
+        if (selectedPath.equals(path))
         {
-            mainTableView.handleItemMoved(path);
+            mainTableView.handleItemMoved(change);
         }
         
-        // Update any child table views
         for (TableViewWithCompactNamebar childTable : childTableViews)
         {
-            if (childTable.getSelectedPath().equals(PathHelper.getParentPath(path)))
+            if (childTable.getSelectedPath().equals(path))
             {
-                childTable.handleItemMoved(path);
+                childTable.handleItemMoved(change);
             }
         }
     }
     
     public void handleSorted(String path)
     {
-        // Update if this window shows the sorted array
         if (selectedPath.equals(path))
         {
             mainTableView.handleSorted(path);
         }
         
-        // Update any child table views
         for (TableViewWithCompactNamebar childTable : childTableViews)
         {
             if (childTable.getSelectedPath().equals(path))

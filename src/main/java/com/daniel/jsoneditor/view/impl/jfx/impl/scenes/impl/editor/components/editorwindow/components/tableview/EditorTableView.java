@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview;
 
+import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TableView;
@@ -35,7 +36,7 @@ public abstract class EditorTableView extends TableView<JsonNodeWithPath>
     
     public abstract void handleItemChanged(String path);
     
-    public abstract void handleItemMoved(String path);
+    public abstract void handleItemMoved(ModelChange change);
     
     public abstract void handleSorted(String path);
     

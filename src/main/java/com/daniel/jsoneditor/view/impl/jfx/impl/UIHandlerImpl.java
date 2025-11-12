@@ -150,7 +150,7 @@ public class UIHandlerImpl implements UIHandler
                 handleReplace(path);
                 break;
             case MOVE:
-                handleMove(path);
+                handleMove(change);
                 break;
             case SORT:
                 handleSort(path);
@@ -193,12 +193,13 @@ public class UIHandlerImpl implements UIHandler
         editorScene.getEditorWindowManager().handlePathChanged(path);
     }
     
-    private void handleMove(String path)
+    private void handleMove(ModelChange change)
     {
+        final String path = change.getPath();
         // Update navbar to reflect new order
         editorScene.getNavbar().handlePathMoved(path);
         // Update any open editors showing the parent array
-        editorScene.getEditorWindowManager().handlePathMoved(path);
+        editorScene.getEditorWindowManager().handlePathMoved(change);
     }
     
     private void handleSort(String path)
