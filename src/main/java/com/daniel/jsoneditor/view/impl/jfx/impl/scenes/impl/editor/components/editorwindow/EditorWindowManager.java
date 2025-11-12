@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
+import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.scene.control.SplitPane;
 
@@ -55,7 +56,7 @@ public interface EditorWindowManager
     
     void handlePathChanged(String path);
     
-    void handlePathMoved(String path);
+    void handlePathMoved(ModelChange change);
     
     void handlePathSorted(String path);
     

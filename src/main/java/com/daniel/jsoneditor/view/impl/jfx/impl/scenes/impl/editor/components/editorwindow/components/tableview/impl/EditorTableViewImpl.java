@@ -5,9 +5,9 @@ import java.util.stream.Collectors;
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
@@ -35,29 +35,29 @@ import org.slf4j.LoggerFactory;
  */
 public class EditorTableViewImpl extends EditorTableView
 {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(EditorTableViewImpl.class);
     
     private final ReadableModel model;
-    
+
     private final Controller controller;
-    
+
     //this list contains all items before the ui-filtering occurs
     private ObservableList<JsonNodeWithPath> allItems;
-    
+
     private FilteredList<JsonNodeWithPath> filteredItems;
-    
+
     /**
      * our table view shows one child item per row. We save the path of the parent item in case we want to paste something and there are no
      * child views to grab the parent path from
      */
     private String parentPath;
-    
+
     // Extracted helper classes to reduce complexity
     private final TableSchemaProcessor schemaProcessor;
-    
+
     private final TableColumnFactory columnFactory;
-    
+
     // temporary override for hide empty columns setting
     private boolean temporaryShowAllColumns = false;
     
@@ -112,7 +112,7 @@ public class EditorTableViewImpl extends EditorTableView
     {
         filteredItems.setPredicate(this::filterItem);
         
-        long shownItems = filteredItems.stream().count();
+        long shownItems = filteredItems.size();
         long totalItems = getItems().size();
         logger.debug("Selected values for columns: " + getColumns().stream().filter(column -> column instanceof EditorTableColumn)
                 .map(column -> ((EditorTableColumn) column).getSelectedValues()).collect(Collectors.toList()) + ". Showing " + shownItems
@@ -124,13 +124,13 @@ public class EditorTableViewImpl extends EditorTableView
             {
                 ((EditorTableColumn) column).updatePrefWidth();
             }
+
         });
-        
     }
-    
     /**
      * true if the item should be shown in the list, false if not
      */
+    
     private boolean filterItem(JsonNodeWithPath item)
     {
         for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
@@ -183,16 +183,10 @@ public class EditorTableViewImpl extends EditorTableView
     public void setSelection(JsonNodeWithPath nodeWithPath)
     {
         parentPath = nodeWithPath.getPath();
-        
+
         // Reset temporary override on new selection
         temporaryShowAllColumns = false;
-        
-        ReferenceToObject reference = model.getReferenceToObject(nodeWithPath.getPath());
-        if (reference != null)
-        {
-            // TODO: Handle references
-        }
-        
+
         // Use the extracted schema processor to handle complex logic
         final TableSchemaProcessor.TableData tableData = schemaProcessor.processNode(nodeWithPath);
         setView(tableData);
@@ -216,8 +210,8 @@ public class EditorTableViewImpl extends EditorTableView
                 System.err.println("Couldn't parse index from path: " + itemPath);
                 return;
             }
-            
             // Check if the index is within the bounds of TableView's items
+            
             if (index >= 0 && index < getItems().size())
             {
                 scrollTo(index);
@@ -241,8 +235,8 @@ public class EditorTableViewImpl extends EditorTableView
     private void setView(TableSchemaProcessor.TableData tableData)
     {
         this.allItems = tableData.getNodes();
-        
         // Use the column factory to create columns
+        
         final List<TableColumn<JsonNodeWithPath, String>> columns = columnFactory.createColumns(tableData.getProperties(),
                 tableData.isArray(), this);
         
@@ -281,11 +275,10 @@ public class EditorTableViewImpl extends EditorTableView
             }
         }
     }
-    
     // Granular update methods for specific model changes
+    
     public void handleItemAdded(String path)
     {
-        // Refresh the table to show the new item
         JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
         if (parentNode != null)
         {
@@ -295,7 +288,6 @@ public class EditorTableViewImpl extends EditorTableView
     
     public void handleItemRemoved(String path)
     {
-        // Refresh the table to remove the deleted item
         JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
         if (parentNode != null)
         {
@@ -305,17 +297,12 @@ public class EditorTableViewImpl extends EditorTableView
     
     public void handleItemChanged(String path)
     {
-        // update visibility button state
-        
-        String parentPath = PathHelper.getParentPath(path);
-        // Find and update the specific item in the table
         for (int i = 0; i < allItems.size(); i++)
         {
             JsonNodeWithPath item = allItems.get(i);
             String listItemPath = item.getPath();
-            if (listItemPath.equals(parentPath))
+            if (listItemPath.equals(PathHelper.getParentPath(path)))
             {
-                // the item that changed is a child of this item
                 JsonNodeWithPath updatedChild = model.getNodeForPath(path);
                 String childPath = PathHelper.getLastPathSegment(path);
                 if (item.isArray())
@@ -331,7 +318,6 @@ public class EditorTableViewImpl extends EditorTableView
             }
             if (listItemPath.equals(path))
             {
-                // the item itself changed
                 JsonNodeWithPath updatedNode = model.getNodeForPath(path);
                 if (updatedNode != null)
                 {
@@ -342,9 +328,19 @@ public class EditorTableViewImpl extends EditorTableView
         }
     }
     
-    public void handleItemMoved(String path)
+    public void handleItemMoved(ModelChange change)
     {
-        // Refresh the entire table to show new order
+        if (change == null)
+        {
+            return;
+        }
+
+        final String path = change.getPath();
+        if (!path.equals(parentPath))
+        {
+            return;
+        }
+
         JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
         if (parentNode != null)
         {
@@ -354,34 +350,23 @@ public class EditorTableViewImpl extends EditorTableView
     
     public void handleSorted(String path)
     {
-        // Refresh the entire table to show sorted order
         JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
         if (parentNode != null)
         {
             setSelection(parentNode);
         }
     }
-    
-    /**
-     * Toggles the temporary override for showing all columns
-     */
     public void toggleTemporaryShowAllColumns()
     {
         temporaryShowAllColumns = !temporaryShowAllColumns;
         refreshColumnVisibility();
     }
     
-    /**
-     * Returns true if all columns are currently shown due to temporary override
-     */
     public boolean isTemporaryShowAllColumns()
     {
         return temporaryShowAllColumns;
     }
     
-    /**
-     * Refreshes column visibility based on current settings and temporary override
-     */
     private void refreshColumnVisibility()
     {
         if (temporaryShowAllColumns)
@@ -394,9 +379,6 @@ public class EditorTableViewImpl extends EditorTableView
         }
     }
     
-    /**
-     * Shows all columns regardless of empty state
-     */
     private void showAllColumns()
     {
         for (TableColumn<JsonNodeWithPath, ?> column : getColumns())

@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.CollapseButton;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.VisibilityToggleButton;
@@ -174,9 +175,9 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
         tableView.handleItemChanged(path);
     }
     
-    public void handleItemMoved(String path)
+    public void handleItemMoved(ModelChange change)
     {
-        tableView.handleItemMoved(path);
+        tableView.handleItemMoved(change);
     }
     
     public void handleSorted(String path)

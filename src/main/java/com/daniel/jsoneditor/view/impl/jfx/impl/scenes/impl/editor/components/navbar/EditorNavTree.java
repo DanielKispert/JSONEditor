@@ -449,16 +449,15 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     
     public void handlePathMoved(String path)
     {
-        // For moves within arrays, refresh the parent array structure
-        final String parentPath = PathHelper.getParentPath(path);
+        // For moves, path is the parent array path that contains the moved items
         final TreeItem<JsonNodeWithPath> rootItem = getRoot();
-        final TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(rootItem, parentPath);
+        final TreeItem<JsonNodeWithPath> arrayItem = findNavbarItem(rootItem, path);
         
-        if (parentItem != null)
+        if (arrayItem != null)
         {
             // Clear and rebuild children to reflect new order
-            parentItem.getChildren().clear();
-            populateItem((NavbarItem) parentItem);
+            arrayItem.getChildren().clear();
+            populateItem((NavbarItem) arrayItem);
         }
     }
     
