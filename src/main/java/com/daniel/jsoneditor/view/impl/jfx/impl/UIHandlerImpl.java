@@ -139,6 +139,7 @@ public class UIHandlerImpl implements UIHandler
      */
     private void handleModelChange(ModelChange change, Event commandEvent)
     {
+        logger.debug("UI received model change: {}", change);
         final String path = change.getPath();
         final ChangeType type = change.getType();
         
