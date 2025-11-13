@@ -61,6 +61,18 @@ public class EditorTableViewImpl extends EditorTableView
     // temporary override for hide empty columns setting
     private boolean temporaryShowAllColumns = false;
     
+    /**
+     * Helper method to refresh parent selection - eliminates code duplication
+     */
+    private void refreshTable()
+    {
+        final JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
+        if (parentNode != null)
+        {
+            setSelection(parentNode);
+        }
+    }
+    
     public EditorTableViewImpl(EditorWindowManager manager, JsonEditorEditorWindow window, ReadableModel model, Controller controller)
     {
         this.model = model;
@@ -110,59 +122,47 @@ public class EditorTableViewImpl extends EditorTableView
     @Override
     public void filter()
     {
-        filteredItems.setPredicate(this::filterItem);
+        final List<EditorTableColumn> editorColumns = getColumns().stream()
+                .filter(column -> column instanceof EditorTableColumn)
+                .map(column -> (EditorTableColumn) column)
+                .collect(Collectors.toList());
         
-        long shownItems = filteredItems.size();
-        long totalItems = getItems().size();
-        logger.debug("Selected values for columns: " + getColumns().stream().filter(column -> column instanceof EditorTableColumn)
-                .map(column -> ((EditorTableColumn) column).getSelectedValues()).collect(Collectors.toList()) + ". Showing " + shownItems
-                + " of " + totalItems + " items.");
+        filteredItems.setPredicate(item -> filterItem(item, editorColumns));
         
-        // trigger a resizing for all columns since their info could have changed now
-        getColumns().forEach(column -> {
-            if (column instanceof EditorTableColumn)
-            {
-                ((EditorTableColumn) column).updatePrefWidth();
-            }
-
-        });
+        final long shownItems = filteredItems.size();
+        final long totalItems = getItems().size();
+        logger.debug("Selected values for columns: " + editorColumns.stream()
+                .map(EditorTableColumn::getSelectedValues)
+                .collect(Collectors.toList()) + ". Showing " + shownItems + " of " + totalItems + " items.");
+        
+        editorColumns.forEach(EditorTableColumn::updatePrefWidth);
     }
     /**
-     * true if the item should be shown in the list, false if not
+     * @param item the item to filter
+     * @param editorColumns pre-filtered list of EditorTableColumn instances
+     * @return true if the item should be shown in the list, false if not
      */
-    
-    private boolean filterItem(JsonNodeWithPath item)
+    private boolean filterItem(JsonNodeWithPath item, List<EditorTableColumn> editorColumns)
     {
-        for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
+        for (final EditorTableColumn editorColumn : editorColumns)
         {
-            if (column instanceof EditorTableColumn)
+            final List<String> selectedValues = editorColumn.getSelectedValues();
+            
+            if (selectedValues == null)
             {
-                EditorTableColumn editorColumn = (EditorTableColumn) column;
-                List<String> selectedValues = editorColumn.getSelectedValues();
-                
-                // If the list is null, show nothing
-                if (selectedValues == null)
-                {
-                    return false;
-                }
-                
-                // if the list is an empty list, then this column allows everything. Check the next column
-                if (selectedValues.isEmpty())
-                {
-                    continue;
-                }
-                
-                JsonNode propertyNode = item.getNode().get(editorColumn.getPropertyName());
-                if (propertyNode == null)
-                {
-                    // If property doesn't exist, treat as empty string
-                    return selectedValues.contains("");
-                }
-                String cellValue = propertyNode.asText();
-                if (!selectedValues.contains(cellValue))
-                {
-                    return false;
-                }
+                return false;
+            }
+            
+            if (selectedValues.isEmpty())
+            {
+                continue;
+            }
+            
+            final JsonNode propertyNode = item.getNode().get(editorColumn.getPropertyName());
+            final String cellValue = propertyNode == null ? "" : propertyNode.asText();
+            if (!selectedValues.contains(cellValue))
+            {
+                return false;
             }
         }
         return true;
@@ -279,52 +279,41 @@ public class EditorTableViewImpl extends EditorTableView
     
     public void handleItemAdded(String path)
     {
-        JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
-        if (parentNode != null)
-        {
-            setSelection(parentNode);
-        }
+        refreshTable();
     }
     
     public void handleItemRemoved(String path)
     {
-        JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
-        if (parentNode != null)
-        {
-            setSelection(parentNode);
-        }
+        refreshTable();
     }
     
     public void handleItemChanged(String path)
     {
-        for (int i = 0; i < allItems.size(); i++)
+        // Check if the changed path affects any of our table items
+        final String changedParentPath = PathHelper.getParentPath(path);
+        boolean needsRefresh = false;
+        
+        for (JsonNodeWithPath item : allItems)
         {
-            JsonNodeWithPath item = allItems.get(i);
-            String listItemPath = item.getPath();
-            if (listItemPath.equals(PathHelper.getParentPath(path)))
+            // If the changed path is a child of one of our table items
+            if (item.getPath().equals(changedParentPath))
             {
-                JsonNodeWithPath updatedChild = model.getNodeForPath(path);
-                String childPath = PathHelper.getLastPathSegment(path);
-                if (item.isArray())
-                {
-                    ArrayNode array = (ArrayNode) item.getNode();
-                    int index = Integer.parseInt(childPath);
-                    array.set(index, updatedChild.getNode());
-                }
-                else if (item.isObject())
-                {
-                    ((ObjectNode) item.getNode()).set(childPath, updatedChild.getNode());
-                }
-            }
-            if (listItemPath.equals(path))
-            {
-                JsonNodeWithPath updatedNode = model.getNodeForPath(path);
-                if (updatedNode != null)
-                {
-                    allItems.set(i, updatedNode);
-                }
+                needsRefresh = true;
                 break;
             }
+            
+            // If the changed path is one of our table items directly
+            if (item.getPath().equals(path))
+            {
+                needsRefresh = true;
+                break;
+            }
+        }
+        
+        // If any of our table items or their children changed, refresh the table
+        if (needsRefresh)
+        {
+            refreshTable();
         }
     }
     
@@ -341,20 +330,12 @@ public class EditorTableViewImpl extends EditorTableView
             return;
         }
 
-        JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
-        if (parentNode != null)
-        {
-            setSelection(parentNode);
-        }
+        refreshTable();
     }
     
     public void handleSorted(String path)
     {
-        JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
-        if (parentNode != null)
-        {
-            setSelection(parentNode);
-        }
+        refreshTable();
     }
     public void toggleTemporaryShowAllColumns()
     {

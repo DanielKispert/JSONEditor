@@ -15,10 +15,14 @@ import com.daniel.jsoneditor.view.impl.jfx.toast.impl.ToastImpl;
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class UIHandlerImpl implements UIHandler
 {
+    private static final Logger logger = LoggerFactory.getLogger(UIHandlerImpl.class);
+    
     private final Controller controller;
     
     private final Stage stage;
@@ -208,12 +212,5 @@ public class UIHandlerImpl implements UIHandler
         editorScene.getNavbar().handlePathSorted(path);
         // Update any open editors showing the sorted array
         editorScene.getEditorWindowManager().handlePathSorted(path);
-    }
-    
-    private void handleSettingsChange()
-    {
-        // Refresh UI elements affected by settings
-        editorScene.getNavbar().handleSettingsChanged();
-        editorScene.getEditorWindowManager().handleSettingsChanged();
     }
 }
