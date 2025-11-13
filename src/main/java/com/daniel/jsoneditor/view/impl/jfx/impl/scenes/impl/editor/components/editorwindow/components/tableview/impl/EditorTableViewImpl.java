@@ -13,8 +13,6 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.EditorTableColumn;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.TableColumn;
@@ -272,45 +270,76 @@ public class EditorTableViewImpl extends EditorTableView
             }
         }
     }
-    // Granular update methods for specific model changes
     
     public void handleItemAdded(String path)
     {
+        final String parentPath = PathHelper.getParentPath(path);
+        
+        if (this.parentPath.equals(parentPath))
+        {
+            JsonNodeWithPath newItem = model.getNodeForPath(path);
+            if (newItem != null)
+            {
+                allItems.add(newItem);
+                return;
+            }
+        }
+        
         refreshTable();
     }
     
     public void handleItemRemoved(String path)
     {
+        final String parentPath = PathHelper.getParentPath(path);
+        
+        if (this.parentPath.equals(parentPath))
+        {
+            allItems.removeIf(item -> item.getPath().equals(path));
+            return;
+        }
+        
         refreshTable();
     }
     
     public void handleItemChanged(String path)
     {
-        // Check if the changed path affects any of our table items
         final String changedParentPath = PathHelper.getParentPath(path);
-        boolean needsRefresh = false;
+        boolean itemUpdated = false;
         
-        for (JsonNodeWithPath item : allItems)
+        for (int i = 0; i < allItems.size(); i++)
         {
-            // If the changed path is a child of one of our table items
+            JsonNodeWithPath item = allItems.get(i);
+            
             if (item.getPath().equals(changedParentPath))
             {
-                needsRefresh = true;
+                JsonNodeWithPath updatedItem = model.getNodeForPath(item.getPath());
+                if (updatedItem != null)
+                {
+                    allItems.set(i, updatedItem);
+                    itemUpdated = true;
+                }
                 break;
             }
             
-            // If the changed path is one of our table items directly
             if (item.getPath().equals(path))
             {
-                needsRefresh = true;
+                JsonNodeWithPath updatedItem = model.getNodeForPath(path);
+                if (updatedItem != null)
+                {
+                    allItems.set(i, updatedItem);
+                    itemUpdated = true;
+                }
                 break;
             }
         }
         
-        // If any of our table items or their children changed, refresh the table
-        if (needsRefresh)
+        if (!itemUpdated)
         {
             refreshTable();
+        }
+        else
+        {
+            refresh();
         }
     }
     
