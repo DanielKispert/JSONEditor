@@ -41,6 +41,11 @@ public abstract class BasePopup<T>
         }
     }
     
+    public boolean isShowing()
+    {
+        return popup.isShowing();
+    }
+    
     protected void moveVertically(double newHeight)
     {
         popup.setY(posY - newHeight);

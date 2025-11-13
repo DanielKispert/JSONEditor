@@ -50,6 +50,71 @@
     -fx-background-color: -accent-color;
 }
 
+/* History dialog styles */
+.history-entry-box {
+    -fx-background-color: -background-color;
+    -fx-border-color: -accent-color;
+    -fx-border-width: 0 0 1 0;
+}
+
+.history-entry-box:hover {
+    -fx-background-color: -accent-color;
+}
+
+/* History entry styles (for popup list items) */
+.history-entry {
+    -fx-background-color: transparent;
+    -fx-border-color: -accent-color;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 4px;
+}
+
+.history-entry:hover {
+    -fx-background-color: -selection-color;
+    -fx-cursor: hand;
+}
+
+.history-command-text {
+    -fx-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.history-time-text {
+    -fx-fill: -accent-color;
+    -fx-font-size: 10px;
+}
+
+.history-bookmark-indicator {
+    -fx-fill: gold;
+    -fx-font-size: 10px;
+}
+
+.history-empty-text {
+    -fx-text-fill: -accent-color;
+    -fx-font-style: italic;
+}
+
+.small-button {
+    -fx-pref-width: 20px;
+    -fx-pref-height: 20px;
+    -fx-padding: 2px;
+}
+
+.popup-button {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.popup-button:hover {
+    -fx-background-color: -selection-color;
+}
+
+.dialog-empty-text {
+    -fx-text-fill: -accent-color;
+    -fx-font-style: italic;
+}
+
 .popup-list-view {
     -fx-border-color: black;
     -fx-border-width: 1;

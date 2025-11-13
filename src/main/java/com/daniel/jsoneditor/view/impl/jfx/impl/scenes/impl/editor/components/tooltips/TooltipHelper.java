@@ -9,6 +9,7 @@ import java.util.stream.StreamSupport;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.scene.Node;
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
 
@@ -50,6 +51,11 @@ public class TooltipHelper
         Tooltip tooltip = new Tooltip(text);
         tooltip.setShowDuration(Duration.INDEFINITE);
         return tooltip;
+    }
+    
+    public static void addTooltip(Node node, String text)
+    {
+        Tooltip.install(node, makeTooltipFromText(text));
     }
     
     private static boolean objectHasOnlyValueNodes(JsonNode jsonNode)

@@ -227,7 +227,45 @@ public class CommandManagerImpl implements CommandManager
     public void markAsSaved()
     {
         savedStateIndex = undoStack.size();
-        notifyUnsavedChangesCount(); // Notify about changes count update
+        notifyUnsavedChangesCount();
+    }
+    
+    @Override
+    public List<CommandManager.HistoryEntry> getUndoHistory()
+    {
+        return new ArrayList<>(undoStack);
+    }
+    
+    @Override
+    public List<ModelChange> revertToHistoryEntry(CommandManager.HistoryEntry targetEntry)
+    {
+        final List<ModelChange> allChanges = new ArrayList<>();
+        
+        // Find the target entry in undo stack
+        final List<HistoryEntry> undoList = new ArrayList<>(undoStack);
+        int targetIndex = -1;
+        for (int i = 0; i < undoList.size(); i++)
+        {
+            if (undoList.get(i) == targetEntry)
+            {
+                targetIndex = i;
+                break;
+            }
+        }
+        
+        if (targetIndex == -1)
+        {
+            return allChanges; // Entry not found
+        }
+        
+        // Undo commands until we reach the target (inclusive)
+        for (int i = 0; i <= targetIndex; i++)
+        {
+            final List<ModelChange> changes = undo();
+            allChanges.addAll(changes);
+        }
+        
+        return allChanges;
     }
     
     private int getUnsavedChangesCount()
@@ -235,26 +273,51 @@ public class CommandManagerImpl implements CommandManager
         return Math.abs(undoStack.size() - savedStateIndex);
     }
     
-    private static final class HistoryEntry
+    private static final class HistoryEntry implements CommandManager.HistoryEntry
     {
         private final Command command;
         
         private final List<ModelChange> changes;
         
+        private final long timestamp;
+        
+        private boolean bookmarked = false;
+        
         HistoryEntry(Command command, List<ModelChange> changes)
         {
             this.command = command;
             this.changes = changes;
+            this.timestamp = System.currentTimeMillis();
         }
         
-        Command getCommand()
+        @Override
+        public Command getCommand()
         {
             return command;
         }
         
-        List<ModelChange> getChanges()
+        @Override
+        public List<ModelChange> getChanges()
         {
             return changes;
+        }
+        
+        @Override
+        public long getTimestamp()
+        {
+            return timestamp;
+        }
+        
+        @Override
+        public boolean isBookmarked()
+        {
+            return bookmarked;
+        }
+        
+        @Override
+        public void setBookmarked(boolean bookmarked)
+        {
+            this.bookmarked = bookmarked;
         }
     }
 }

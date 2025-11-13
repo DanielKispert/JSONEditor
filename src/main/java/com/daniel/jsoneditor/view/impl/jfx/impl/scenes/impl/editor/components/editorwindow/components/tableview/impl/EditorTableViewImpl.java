@@ -61,9 +61,6 @@ public class EditorTableViewImpl extends EditorTableView
     // temporary override for hide empty columns setting
     private boolean temporaryShowAllColumns = false;
     
-    /**
-     * Helper method to refresh parent selection - eliminates code duplication
-     */
     private void refreshTable()
     {
         final JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
