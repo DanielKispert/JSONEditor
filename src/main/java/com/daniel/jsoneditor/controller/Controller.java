@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.controller;
 
+import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 
@@ -13,6 +14,24 @@ public interface Controller
      * Other controller methods for nested controllers
      */
     SettingsController getSettingsController();
+    
+    /**
+     * Gets the command manager for accessing command history
+     * @return the command manager instance
+     */
+    CommandManager getCommandManager();
+    
+    /**
+     * Undo the last action performed by the user.
+     * If no action can be undone, this method does nothing.
+     */
+    void undo();
+    
+    /**
+     * Redo the last undone action performed by the user.
+     * If no action can be redone, this method does nothing.
+     */
+    void redo();
     
 
     void launchFinished();
@@ -61,18 +80,5 @@ public interface Controller
     void pasteFromClipboardReplacingChild(String pathToInsert);
     
     void pasteFromClipboardIntoParent(String parentPath);
-    
-    /**
-     * Undo the last action performed by the user.
-     * If no action can be undone, this method does nothing.
-     */
-    void undoLastAction();
-    
-    /**
-     * Redo the last undone action performed by the user.
-     * If no action can be redone, this method does nothing.
-     */
-    void redoLastAction();
-    
 
 }

@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.n
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.HistoryButton;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.NavBarSwitchButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph.GraphPanelContainer;
@@ -18,6 +19,10 @@ public class JsonEditorNavbar extends VBox
 {
     private final ReadableModel model;
     
+    private final Controller controller;
+    
+    private final Stage stage;
+    
     private final HBox buttonBar;
     
     private final StackPane windowContainer;
@@ -30,6 +35,8 @@ public class JsonEditorNavbar extends VBox
     public JsonEditorNavbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager, Stage stage)
     {
         this.model = model;
+        this.controller = controller;
+        this.stage = stage;
         buttonBar = makeButtonBar();
         navTreeView = new EditorNavTree(this, model, controller, editorWindowManager, stage);
         graphView = GraphPanelContainer.create(controller, model);
@@ -42,8 +49,9 @@ public class JsonEditorNavbar extends VBox
     private HBox makeButtonBar()
     {
         HBox buttonBar = new HBox();
+        HistoryButton historyButton = new HistoryButton(controller, stage);
         NavBarSwitchButton navBarSwitchButton = new NavBarSwitchButton(model, this);
-        buttonBar.getChildren().add(navBarSwitchButton);
+        buttonBar.getChildren().addAll(historyButton, navBarSwitchButton);
         HBox.setHgrow(buttonBar, Priority.NEVER);
         return buttonBar;
     }

@@ -45,10 +45,10 @@ public class JsonEditorMenuBar extends MenuBar
         
         Menu editMenu = new Menu("Edit");
         MenuItem undoItem = new MenuItem("Undo");
-        undoItem.setOnAction(event -> controller.undoLastAction());
+        undoItem.setOnAction(event -> controller.undo());
         undoItem.setAccelerator(new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN));
         MenuItem redoItem = new MenuItem("Redo");
-        redoItem.setOnAction(event -> controller.redoLastAction());
+        redoItem.setOnAction(event -> controller.redo());
         redoItem.setAccelerator(new KeyCodeCombination(KeyCode.Y, KeyCombination.SHORTCUT_DOWN));
         editMenu.getItems().addAll(undoItem, redoItem);
         

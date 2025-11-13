@@ -88,6 +88,12 @@ public class ControllerImpl implements Controller, Observer
         return settingsController;
     }
     
+    @Override
+    public CommandManager getCommandManager()
+    {
+        return commandManager;
+    }
+    
     
     @Override
     public void update()
@@ -485,13 +491,13 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
-    public void undoLastAction()
+    public void undo()
     {
         commandManager.undo();
     }
     
     @Override
-    public void redoLastAction()
+    public void redo()
     {
         commandManager.redo();
     }

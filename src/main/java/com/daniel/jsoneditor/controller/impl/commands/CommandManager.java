@@ -1,6 +1,5 @@
 package com.daniel.jsoneditor.controller.impl.commands;
 
-import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.commands.Command;
 
@@ -49,6 +48,63 @@ public interface CommandManager
      * @param callback callback to notify about unsaved changes count updates
      */
     void setUnsavedChangesCallback(UnsavedChangesCallback callback);
+    
+    /**
+     * Returns the list of history entries that can be undone (most recent first).
+     *
+     * @return list of undoable history entries
+     */
+    List<HistoryEntry> getUndoHistory();
+    
+    /**
+     * Undoes commands until reaching the specified history entry (inclusive).
+     * If the entry is not found in undo history, does nothing.
+     *
+     * @param targetEntry the history entry to revert to
+     * @return list of changes applied during the revert operation
+     */
+    List<ModelChange> revertToHistoryEntry(HistoryEntry targetEntry);
+    
+    /**
+     * Represents a single entry in the command history.
+     */
+    interface HistoryEntry
+    {
+        /**
+         * Gets the command that was executed.
+         *
+         * @return the executed command
+         */
+        Command getCommand();
+        
+        /**
+         * Gets the changes that resulted from executing the command.
+         *
+         * @return list of model changes
+         */
+        List<ModelChange> getChanges();
+        
+        /**
+         * Gets a timestamp when this entry was created.
+         *
+         * @return timestamp in milliseconds
+         */
+        long getTimestamp();
+        
+        /**
+         * Checks if this history entry is bookmarked.
+         *
+         * @return true if bookmarked, false otherwise
+         */
+        boolean isBookmarked();
+        
+        /**
+         * Sets the bookmark status of this history entry.
+         *
+         * @param bookmarked true to bookmark, false to remove bookmark
+         */
+        void setBookmarked(boolean bookmarked);
+    }
     
     /**
      * Callback interface for unsaved changes notifications.
