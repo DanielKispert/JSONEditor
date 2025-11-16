@@ -5,97 +5,40 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 public class NodeGraphCreator
 {
+    private static final Logger logger = LoggerFactory.getLogger(NodeGraphCreator.class);
+
     /**
-     * if the path contains a node, we build a graph with this as the "center". The graph is directed and contains all
-     * ReferenceToObjectInstances that point to this node, and also all references that go out from it. Will return an empty graph on null path.
+     * Creates a graph with incoming and outgoing references for the given path
+     * @param allowedEdgeNames set of edge names to include, null means include all
      */
-    public static NodeGraph createGraph(ReadableModel model, String path)
+    public static NodeGraph createGraph(ReadableModel model, String path, Set<String> allowedEdgeNames)
     {
+        logger.debug("Graph request - path: {}, allowedEdgeNames: {}", path, allowedEdgeNames);
+        
         if (path == null)
         {
             return new NodeGraph();
         }
         final NodeGraph graph = new NodeGraph();
         graph.insertVertex(path);
-        addIncomingReferences(model, path, graph);
-        addOutgoingReferences(model, path, graph);
+        addIncomingReferences(model, path, graph, allowedEdgeNames);
+        addOutgoingReferences(model, path, graph, allowedEdgeNames);
         return graph;
     }
     
-    public static void addOutgoingReferences(ReadableModel model, String currentPath, NodeGraph graph)
-    {
-        List<ReferenceToObjectInstance> references = ReferenceHelper.findOutgoingReferences(currentPath, model);
-        Map<String, List<ReferenceToObjectInstance>> referencesGroupedByRemarks = new HashMap<>();
-        
-        for (ReferenceToObjectInstance ref : references)
-        {
-            referencesGroupedByRemarks.computeIfAbsent(ref.getRemarks(), k -> new ArrayList<>()).add(ref);
-        }
-        
-        for (Map.Entry<String, List<ReferenceToObjectInstance>> entry : referencesGroupedByRemarks.entrySet())
-        {
-            String remarks = entry.getKey();
-            List<ReferenceToObjectInstance> referencesWithSameRemarks = entry.getValue();
-            Map<String, List<ReferenceToObjectInstance>> referencesWithSameParent = new HashMap<>();
-            for (ReferenceToObjectInstance ref : referencesWithSameRemarks)
-            {
-                String toPath = ReferenceHelper.resolveReference(model, ref);
-                if (toPath == null)
-                {
-                    continue;
-                }
-                String parentPath = PathHelper.getParentPath(toPath);
-                referencesWithSameParent.computeIfAbsent(parentPath, k -> new ArrayList<>()).add(ref);
-            }
-            for (Map.Entry<String, List<ReferenceToObjectInstance>> refEntry : referencesWithSameParent.entrySet())
-            {
-                String parentPath = refEntry.getKey();
-                List<ReferenceToObjectInstance> refs = refEntry.getValue();
-                // if the parent points to an array
-                JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
-                if (parentNode.isArray() && refs.size() > 1)
-                {
-                    List<String> toPaths = new ArrayList<>();
-                    for (ReferenceToObjectInstance ref : refs)
-                    {
-                        String toPath = ReferenceHelper.resolveReference(model, ref);
-                        if (toPath == null)
-                        {
-                            continue;
-                        }
-                        toPaths.add(toPath);
-                    }
-                    //there are more than one references with the same parent and remarks, so we cluster them in a common node
-                    EdgeIdentifier edgeToCluster = new EdgeIdentifier(currentPath, parentPath, remarks);
-                    addClusterNodeToGraph(graph, parentPath, toPaths);
-                    addEdgeToGraph(graph, edgeToCluster);
-                }
-                else
-                {
-                    // we add the references one by one since either their parent isn't an array or there is only one reference
-                    for (ReferenceToObjectInstance ref : refs)
-                    {
-                        String toPath = ReferenceHelper.resolveReference(model, ref);
-                        if (toPath == null)
-                        {
-                            continue;
-                        }
-                        EdgeIdentifier edge = new EdgeIdentifier(currentPath, toPath, ref.getRemarks());
-                        addEdgeToGraph(graph, edge);
-                    }
-                }
-            }
-        }
-    }
+
     
     private static void addClusterNodeToGraph(NodeGraph graph, String path, List<String> clusteredPaths)
     {
@@ -121,17 +64,87 @@ public class NodeGraphCreator
         }
     }
     
-    private static void addIncomingReferences(ReadableModel model, String path, NodeGraph graph)
+
+    
+    private static void addIncomingReferences(ReadableModel model, String path, NodeGraph graph, Set<String> allowedEdgeNames)
     {
         List<ReferenceToObjectInstance> incomingReferences = ReferenceHelper.getReferencesOfObject(model, path);
         for (ReferenceToObjectInstance ref : incomingReferences)
         {
-            //the path is the parent object of that reference
-            String fromPath = ReferenceHelper.getParentObjectOfReference(model, ref.getPath());
-            // check if the edge exists already. If yes, we don't need to add it
-            EdgeIdentifier edgeToInsert = new EdgeIdentifier(fromPath, path, ref.getRemarks());
-            addEdgeToGraph(graph, edgeToInsert);
+            if (allowedEdgeNames == null || allowedEdgeNames.contains(ref.getRemarks()))
+            {
+                String fromPath = ReferenceHelper.getParentObjectOfReference(model, ref.getPath());
+                EdgeIdentifier edgeToInsert = new EdgeIdentifier(fromPath, path, ref.getRemarks());
+                addEdgeToGraph(graph, edgeToInsert);
+            }
         }
     }
     
+    private static void addOutgoingReferences(ReadableModel model, String currentPath, NodeGraph graph, Set<String> allowedEdgeNames)
+    {
+        List<ReferenceToObjectInstance> references = ReferenceHelper.findOutgoingReferences(currentPath, model);
+        Map<String, List<ReferenceToObjectInstance>> referencesGroupedByRemarks = new HashMap<>();
+        
+        for (ReferenceToObjectInstance ref : references)
+        {
+            if (allowedEdgeNames == null || allowedEdgeNames.contains(ref.getRemarks()))
+            {
+                referencesGroupedByRemarks.computeIfAbsent(ref.getRemarks(), k -> new ArrayList<>()).add(ref);
+            }
+        }
+        
+        for (Map.Entry<String, List<ReferenceToObjectInstance>> entry : referencesGroupedByRemarks.entrySet())
+        {
+            String remarks = entry.getKey();
+            List<ReferenceToObjectInstance> referencesWithSameRemarks = entry.getValue();
+            Map<String, List<ReferenceToObjectInstance>> referencesWithSameParent = new HashMap<>();
+            for (ReferenceToObjectInstance ref : referencesWithSameRemarks)
+            {
+                String toPath = ReferenceHelper.resolveReference(model, ref);
+                if (toPath == null)
+                {
+                    continue;
+                }
+                String parentPath = PathHelper.getParentPath(toPath);
+                referencesWithSameParent.computeIfAbsent(parentPath, k -> new ArrayList<>()).add(ref);
+            }
+            for (Map.Entry<String, List<ReferenceToObjectInstance>> refEntry : referencesWithSameParent.entrySet())
+            {
+                String parentPath = refEntry.getKey();
+                List<ReferenceToObjectInstance> refs = refEntry.getValue();
+                JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
+                if (parentNode.isArray() && refs.size() > 1)
+                {
+                    List<String> toPaths = new ArrayList<>();
+                    for (ReferenceToObjectInstance ref : refs)
+                    {
+                        String toPath = ReferenceHelper.resolveReference(model, ref);
+                        if (toPath == null)
+                        {
+                            continue;
+                        }
+                        toPaths.add(toPath);
+                    }
+                    EdgeIdentifier edgeToCluster = new EdgeIdentifier(currentPath, parentPath, remarks);
+                    addClusterNodeToGraph(graph, parentPath, toPaths);
+                    addEdgeToGraph(graph, edgeToCluster);
+                }
+                else
+                {
+                    for (ReferenceToObjectInstance ref : refs)
+                    {
+                        String toPath = ReferenceHelper.resolveReference(model, ref);
+                        if (toPath == null)
+                        {
+                            continue;
+                        }
+                        EdgeIdentifier edge = new EdgeIdentifier(currentPath, toPath, ref.getRemarks());
+                        addEdgeToGraph(graph, edge);
+                    }
+                }
+            }
+        }
+    }
+    
+
 }

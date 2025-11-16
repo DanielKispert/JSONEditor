@@ -1,6 +1,5 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     
     private final Controller controller;
     
-    // reference to the stage is required to post a dialog
     private final Stage stage;
     
     private final JsonEditorNavbar navbar;
@@ -104,7 +102,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
             }
         });
         
-        // Add key event handler for copy and paste
         addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
     }
     
@@ -161,7 +158,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
             {
                 JsonNodeWithPath selectedNode = selectedItem.getValue();
                 controller.addNewNodeToArray(selectedNode.getPath());
-                
             }
         });
         duplicateItem.setOnAction(event -> {
@@ -346,7 +342,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
                 NavbarItem newItem = new NavbarItem(model, newNode.getPath());
                 populateItem(newItem);
                 parentItem.getChildren().add(newItem);
-                
             }
         }
     }
@@ -404,7 +399,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         setRoot(makeTree());
     }
     
-    // Granular update methods for specific model changes
     public void handlePathAdded(String path)
     {
         final TreeItem<JsonNodeWithPath> rootItem = getRoot();
@@ -419,7 +413,7 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
                 final NavbarItem newItem = new NavbarItem(model, path);
                 populateItem(newItem);
                 parentItem.getChildren().add(newItem);
-                parentItem.setExpanded(true); // expand parent to show new item
+                parentItem.setExpanded(true);
             }
         }
     }
@@ -433,7 +427,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         {
             itemToRemove.getParent().getChildren().remove(itemToRemove);
             
-            // Clear selection if removed item was selected
             if (path.equals(selectedPath))
             {
                 getSelectionModel().clearSelection();
@@ -449,13 +442,11 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     
     public void handlePathMoved(String path)
     {
-        // For moves, path is the parent array path that contains the moved items
         final TreeItem<JsonNodeWithPath> rootItem = getRoot();
         final TreeItem<JsonNodeWithPath> arrayItem = findNavbarItem(rootItem, path);
         
         if (arrayItem != null)
         {
-            // Clear and rebuild children to reflect new order
             arrayItem.getChildren().clear();
             populateItem((NavbarItem) arrayItem);
         }
@@ -463,7 +454,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     
     public void handlePathSorted(String path)
     {
-        // Refresh the sorted array to show new order
         final TreeItem<JsonNodeWithPath> rootItem = getRoot();
         final TreeItem<JsonNodeWithPath> sortedItem = findNavbarItem(rootItem, path);
         
@@ -485,7 +475,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     
     public void handleSettingsChanged()
     {
-        // Refresh tree view to apply new settings (e.g., display preferences)
         updateView();
     }
 }

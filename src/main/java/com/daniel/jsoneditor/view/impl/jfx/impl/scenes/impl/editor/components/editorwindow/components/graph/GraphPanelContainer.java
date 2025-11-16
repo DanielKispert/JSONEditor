@@ -9,14 +9,19 @@ import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.GraphFilterButton;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.GraphInfoButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.NavbarElement;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -40,6 +45,10 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     private final URI cssFile;
     
     private String selectedPath;
+    
+    private GraphFilterButton filterButton;
+    
+    private Set<String> currentFilteredEdgeNames = null; // null means show all edges
     
     private GraphPanelContainer(Controller controller, ReadableModel model, SmartGraphProperties properties, URI cssFile)
     {
@@ -78,27 +87,85 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     public void updateView()
     {
         this.getChildren().clear();
-        this.graphView = new NodeGraphPanel(model, controller, selectedPath, properties, initialPlacement, cssFile);
+        this.graphView = new NodeGraphPanel(model, controller, selectedPath, properties, initialPlacement, cssFile, currentFilteredEdgeNames);
+        this.graphView.setFilterUpdateCallback(this::handleNewEdgeNames);
 
-        final StackPane stack = new StackPane();
+        final VBox mainContainer = new VBox();
+        VBox.setVgrow(mainContainer, Priority.ALWAYS);
+        HBox.setHgrow(mainContainer, Priority.ALWAYS);
+        
+        final HBox buttonsContainer = new HBox();
+        buttonsContainer.setAlignment(Pos.CENTER);
+        buttonsContainer.setPadding(new Insets(8));
+        
+        if (this.filterButton == null)
+        {
+            this.filterButton = new GraphFilterButton(this::getAvailableEdgeNames, this::applyEdgeFilter);
+        }
+        
+        final Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        final GraphInfoButton infoButton = new GraphInfoButton();
+        
+        buttonsContainer.getChildren().addAll(filterButton, spacer, infoButton);
+        
+        final StackPane graphContainer = new StackPane();
         StackPane.setAlignment(graphView, Pos.CENTER);
-        stack.getChildren().add(graphView);
-
-        final Button infoButton = new GraphInfoButton();
-        StackPane.setAlignment(infoButton, Pos.TOP_RIGHT);
-        StackPane.setMargin(infoButton, new Insets(8));
-        stack.getChildren().add(infoButton);
-
-        HBox.setHgrow(stack, Priority.ALWAYS);
-        this.getChildren().add(stack);
-
+        graphContainer.getChildren().add(graphView);
+        VBox.setVgrow(graphContainer, Priority.ALWAYS);
+        
+        mainContainer.getChildren().addAll(buttonsContainer, graphContainer);
+        
+        HBox.setHgrow(mainContainer, Priority.ALWAYS);
+        this.getChildren().add(mainContainer);
+        
         Platform.runLater(() -> {
             graphView.init();
-            graphView.update();//hacky hack so the labels are properly loaded
+            graphView.update();
         });
     }
     
-
+    private Collection<String> getAvailableEdgeNames()
+    {
+        if (graphView != null)
+        {
+            return graphView.getAllEdgeNames();
+        }
+        return java.util.Collections.emptyList();
+    }
+    
+    private void applyEdgeFilter()
+    {
+        if (filterButton != null)
+        {
+            final List<String> selectedEdgeNames = filterButton.getSelectedEdgeNames();
+            
+            if (selectedEdgeNames == null)
+            {
+                currentFilteredEdgeNames = java.util.Collections.emptySet();
+            }
+            else if (selectedEdgeNames.isEmpty())
+            {
+                currentFilteredEdgeNames = null;
+            }
+            else
+            {
+                currentFilteredEdgeNames = new java.util.HashSet<>(selectedEdgeNames);
+            }
+            
+            updateView();
+        }
+    }
+    
+    private void handleNewEdgeNames()
+    {
+        if (filterButton != null)
+        {
+            Collection<String> allEdgeNames = getAvailableEdgeNames();
+            filterButton.addNewItemsAsSelected(allEdgeNames);
+        }
+    }
 
     @Override
     public void selectPath(String path)
@@ -113,38 +180,31 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     @Override
     public void updateSingleElement(String path)
     {
-        // For graph, do complete update for now
         updateView();
     }
     
-    // Granular update methods for specific model changes
     public void handlePathAdded(String path)
     {
-        // For graph, do complete update for now
         updateView();
     }
     
     public void handlePathRemoved(String path)
     {
-        // For graph, do complete update for now
         updateView();
     }
     
     public void handlePathChanged(String path)
     {
-        // For graph, do complete update for now
         updateView();
     }
     
     public void handlePathMoved(String path)
     {
-        // For graph, do complete update for now
         updateView();
     }
     
     public void handlePathSorted(String path)
     {
-        // For graph, do complete update for now
         updateView();
     }
     
@@ -154,13 +214,11 @@ public class GraphPanelContainer extends HBox implements NavbarElement
         {
             selectedPath = null;
         }
-        // Do complete update for now
         updateView();
     }
     
     public void handleSettingsChanged()
     {
-        // Refresh graph to apply new settings
         updateView();
     }
 }
