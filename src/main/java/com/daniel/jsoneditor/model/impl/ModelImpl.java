@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -464,9 +465,9 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     }
     
     @Override
-    public NodeGraph getJsonAsGraph(String path)
+    public NodeGraph getJsonAsGraph(String path, Set<String> allowedEdgeNames)
     {
-        return NodeGraphCreator.createGraph(this, path);
+        return NodeGraphCreator.createGraph(this, path, allowedEdgeNames);
     }
     
     @Override

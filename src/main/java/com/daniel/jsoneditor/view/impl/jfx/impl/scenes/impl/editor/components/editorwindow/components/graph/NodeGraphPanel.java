@@ -4,6 +4,9 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.HashSet;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.brunomnsilva.smartgraph.graph.Edge;
 import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.brunomnsilva.smartgraph.graphview.*;
@@ -11,7 +14,7 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
-import com.daniel.jsoneditor.model.impl.graph.NodeGraphCreator;
+
 import com.daniel.jsoneditor.model.impl.graph.NodeIdentifier;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
 import javafx.application.Platform;
@@ -23,7 +26,6 @@ import javafx.scene.layout.VBox;
 
 public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifier>
 {
-    
     public static final int MIN_PIXELS_PER_NODE = 50;
     
     public static final int MAX_NAME_LENGTH = 30;
@@ -32,22 +34,28 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     private final ReadableModel model;
     
+    private final String path;
+    
+    private final Set<String> allowedEdgeNames;
+    
+    private Runnable filterUpdateCallback;
+    
     public NodeGraphPanel(ReadableModel model, Controller controller, String path, SmartGraphProperties properties,
             SmartPlacementStrategy placementStrategy,
-            URI cssFile)
+            URI cssFile, Set<String> allowedEdgeNames)
     {
-        super(model.getJsonAsGraph(path), properties, placementStrategy, cssFile);
+        super(model.getJsonAsGraph(path, allowedEdgeNames), properties, placementStrategy, cssFile);
         this.placementStrategy = placementStrategy;
         this.model = model;
+        this.path = path;
+        this.allowedEdgeNames = allowedEdgeNames;
         HBox.setHgrow(this, Priority.ALWAYS);
         VBox.setVgrow(this, Priority.ALWAYS);
         this.setAutomaticLayout(true);
         setEdgeLabelProvider(EdgeIdentifier::getName);
-        setVertexLabelProvider(s ->
-        {
+        setVertexLabelProvider(s -> {
             String unshortenedName = model.getNodeForPath(s.getPath()).getDisplayName();
             int length = unshortenedName.length();
-            //the shortened name is the last X-3 characters of the name, with an ellipsis in front
             return length > (MAX_NAME_LENGTH - 3) ? "..." + unshortenedName.substring(length - (MAX_NAME_LENGTH - 3)) : unshortenedName;
         });
         setAutomaticLayoutStrategy(new JsonForcePlacementStrategy());
@@ -57,6 +65,7 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         setVertexShapeTypeProvider(nodeIdentifier -> nodeIdentifier.isCluster() ? clusterSymbol : "circle");
         setVertexRadiusProvider(nodeIdentifier -> nodeIdentifier.isCluster() ? 20 + (nodeIdentifier.getClusterPaths().size() / 2.0) : 15);
     }
+
     
     private void updateTooltipsOfVertices()
     {
@@ -82,14 +91,13 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     }
     
     /**
-     * remove the vertex that the edge is pointing to, and all vertices that that vertex, but no other vertex that is not being deleted, is pointing to, recursively.
-     * @param
+     * Remove the vertex that the edge is pointing to, and all vertices that that vertex, but no other vertex that is not being deleted, is pointing to, recursively.
+     * @param edge The edge whose target vertex should be removed
      */
     private void handleEdgeDoubleClick(SmartGraphEdge<EdgeIdentifier, NodeIdentifier> edge)
     {
         NodeGraph graph = (NodeGraph) getModel();
-        Vertex<NodeIdentifier> targetVertex = edge.getUnderlyingEdge()
-                .vertices()[1]; // The 2nd vertex in the edge is the "target" of the edge
+        Vertex<NodeIdentifier> targetVertex = edge.getUnderlyingEdge().vertices()[1];
         if (!targetVertex.element().isCluster())
         {
             removeVertexAndConnected(graph, targetVertex);
@@ -110,20 +118,15 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     {
         for (Edge<EdgeIdentifier, NodeIdentifier> outboundEdge : graph.outboundEdges(startingVertex))
         {
-            // remove the vertex this edge points to if this is the only inbound edge this vertex had (= it would be orphaned by removing it)
             Vertex<NodeIdentifier> targetVertex = outboundEdge.vertices()[1];
             if (graph.incidentEdges(targetVertex).size() == 1)
             {
                 collectVerticesToRemove(graph, targetVertex, verticesToRemove);
-                verticesToRemove.add(targetVertex);
             }
             verticesToRemove.add(targetVertex);
         }
     }
     
-    /**
-     * overridden update method also updates the vertex positions and tooltips. Otherwise changes after the panel generation (like expanding vertexes) would not get a layer or tooltips
-     */
     @Override
     public void update()
     {
@@ -137,11 +140,10 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     private void handleVertexDoubleClick(SmartGraphVertex<NodeIdentifier> vertex)
     {
-        if (!vertex.getUnderlyingVertex().element().isCluster())
+        NodeIdentifier nodeId = vertex.getUnderlyingVertex().element();
+        if (!nodeId.isCluster())
         {
-            //add all outgoing references of the vertex to our graph
-            NodeGraphCreator.addOutgoingReferences(model, vertex.getUnderlyingVertex().element().getPath(), (NodeGraph) getModel());
-            update();
+            expandVertex(nodeId.getPath());
         }
     }
     
@@ -150,5 +152,62 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         return getSmartVertices();
     }
     
+    public Collection<String> getAllEdgeNames()
+    {
+        return model.getJsonAsGraph(path, null).edges().stream()
+                .map(edge -> edge.element().getName())
+                .sorted()
+                .collect(Collectors.toList());
+    }
+    
+    public void setFilterUpdateCallback(Runnable callback)
+    {
+        this.filterUpdateCallback = callback;
+    }
+    
+    private void expandVertex(String vertexPath)
+    {
+        NodeGraph currentGraph = (NodeGraph) getModel();
+        NodeGraph expandedGraph = model.getJsonAsGraph(vertexPath, allowedEdgeNames);
+        
+        Set<String> currentEdgeNames = currentGraph.edges().stream()
+                .map(edge -> edge.element().getName())
+                .collect(Collectors.toSet());
+        
+        Set<String> newEdgeNames = expandedGraph.edges().stream()
+                .map(edge -> edge.element().getName())
+                .filter(name -> !currentEdgeNames.contains(name))
+                .collect(Collectors.toSet());
+        
+        for (Vertex<NodeIdentifier> vertex : expandedGraph.vertices())
+        {
+            if (currentGraph.vertices().stream().noneMatch(v -> v.element().getPath().equals(vertex.element().getPath())))
+            {
+                if (vertex.element().isCluster())
+                {
+                    currentGraph.insertClusterVertex(vertex.element().getPath(), vertex.element().getClusterPaths());
+                }
+                else
+                {
+                    currentGraph.insertVertex(vertex.element().getPath());
+                }
+            }
+        }
+        
+        for (Edge<EdgeIdentifier, NodeIdentifier> edge : expandedGraph.edges())
+        {
+            if (currentGraph.edges().stream().noneMatch(e -> e.element().equals(edge.element())))
+            {
+                currentGraph.insertEdge(edge.element().getFrom(), edge.element().getTo(), edge.element());
+            }
+        }
+        
+        if (!newEdgeNames.isEmpty() && filterUpdateCallback != null)
+        {
+            filterUpdateCallback.run();
+        }
+        
+        update();
+    }
     
 }

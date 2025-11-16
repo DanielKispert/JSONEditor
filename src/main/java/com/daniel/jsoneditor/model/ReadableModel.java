@@ -13,6 +13,7 @@ import com.daniel.jsoneditor.model.settings.Settings;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 public interface ReadableModel extends ReadableState
 {
@@ -51,8 +52,10 @@ public interface ReadableModel extends ReadableState
     
     /**
      * @return a graph of the path and its direct incoming and outgoing references
+     * @param path the path to create graph for
+     * @param allowedEdgeNames set of edge names to include, null means include all
      */
-    NodeGraph getJsonAsGraph(String path);
+    NodeGraph getJsonAsGraph(String path, Set<String> allowedEdgeNames);
     
     /**
      * @param path this points to the path of a json node inside our currently selected json. It can match an existing node, or it doesn't.
