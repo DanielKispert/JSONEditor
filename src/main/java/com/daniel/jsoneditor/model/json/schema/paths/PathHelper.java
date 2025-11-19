@@ -127,4 +127,21 @@ public class PathHelper
         
         return segments[segments.length - 1];
     }
+    
+    /**
+     * Builds a path by combining a parent path with an index.
+     *
+     * @param parentPath the parent path
+     * @param index the index to append
+     * @return the combined path
+     */
+    public static String buildPath(String parentPath, int index)
+    {
+        if (parentPath == null)
+        {
+            return String.valueOf(index);
+        }
+        
+        return parentPath + "/" + index;
+    }
 }
