@@ -285,6 +285,8 @@ public class EditorTableViewImpl extends EditorTableView
                 {
                     allItems.add(addedIndex, newItem);
                     updatePathsAfterIndex(addedIndex + 1, addedIndex + 1);
+                    getSelectionModel().select(addedIndex);
+                    scrollTo(addedIndex);
                     return;
                 }
             }
@@ -324,6 +326,9 @@ public class EditorTableViewImpl extends EditorTableView
                 if (updatedItem != null)
                 {
                     allItems.set(changedIndex, updatedItem);
+                    
+                    getSelectionModel().select(changedIndex);
+                    scrollTo(changedIndex);
                     return;
                 }
             }
