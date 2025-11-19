@@ -277,11 +277,16 @@ public class EditorTableViewImpl extends EditorTableView
         
         if (this.parentPath.equals(parentPath))
         {
-            JsonNodeWithPath newItem = model.getNodeForPath(path);
-            if (newItem != null)
+            final int addedIndex = getIndexFromPath(path);
+            if (addedIndex >= 0 && addedIndex <= allItems.size())
             {
-                allItems.add(newItem);
-                return;
+                final JsonNodeWithPath newItem = model.getNodeForPath(path);
+                if (newItem != null)
+                {
+                    allItems.add(addedIndex, newItem);
+                    updatePathsAfterIndex(addedIndex + 1, addedIndex + 1);
+                    return;
+                }
             }
         }
         
@@ -294,8 +299,13 @@ public class EditorTableViewImpl extends EditorTableView
         
         if (this.parentPath.equals(parentPath))
         {
-            allItems.removeIf(item -> item.getPath().equals(path));
-            return;
+            final int removedIndex = getIndexFromPath(path);
+            if (removedIndex >= 0 && removedIndex < allItems.size())
+            {
+                allItems.remove(removedIndex);
+                updatePathsAfterIndex(removedIndex, removedIndex);
+                return;
+            }
         }
         
         refreshTable();
@@ -304,49 +314,29 @@ public class EditorTableViewImpl extends EditorTableView
     public void handleItemChanged(String path)
     {
         final String changedParentPath = PathHelper.getParentPath(path);
-        boolean itemUpdated = false;
         
-        for (int i = 0; i < allItems.size(); i++)
+        if (this.parentPath.equals(changedParentPath))
         {
-            JsonNodeWithPath item = allItems.get(i);
-            
-            if (item.getPath().equals(changedParentPath))
+            final int changedIndex = getIndexFromPath(path);
+            if (changedIndex >= 0 && changedIndex < allItems.size())
             {
-                JsonNodeWithPath updatedItem = model.getNodeForPath(item.getPath());
+                final JsonNodeWithPath updatedItem = model.getNodeForPath(path);
                 if (updatedItem != null)
                 {
-                    allItems.set(i, updatedItem);
-                    itemUpdated = true;
+                    allItems.set(changedIndex, updatedItem);
+                    return;
                 }
-                break;
-            }
-            
-            if (item.getPath().equals(path))
-            {
-                JsonNodeWithPath updatedItem = model.getNodeForPath(path);
-                if (updatedItem != null)
-                {
-                    allItems.set(i, updatedItem);
-                    itemUpdated = true;
-                }
-                break;
             }
         }
         
-        if (!itemUpdated)
-        {
-            refreshTable();
-        }
-        else
-        {
-            refresh();
-        }
+        refreshTable();
     }
     
     public void handleItemMoved(ModelChange change)
     {
-        if (change == null)
+        if (change == null || change.getFromIndex() == null || change.getToIndex() == null)
         {
+            refreshTable();
             return;
         }
 
@@ -356,7 +346,20 @@ public class EditorTableViewImpl extends EditorTableView
             return;
         }
 
-        refreshTable();
+        final int fromIndex = change.getFromIndex();
+        final int toIndex = change.getToIndex();
+        
+        if (fromIndex < 0 || fromIndex >= allItems.size() || toIndex < 0 || toIndex >= allItems.size())
+        {
+            refreshTable();
+            return;
+        }
+
+        final JsonNodeWithPath movedItem = allItems.remove(fromIndex);
+        allItems.add(toIndex, movedItem);
+        
+        final int minIndex = Math.min(fromIndex, toIndex);
+        updatePathsAfterIndex(minIndex, minIndex);
     }
     
     public void handleSorted(String path)
@@ -391,6 +394,39 @@ public class EditorTableViewImpl extends EditorTableView
         for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
         {
             column.setVisible(true);
+        }
+    }
+    
+    private int getIndexFromPath(String path)
+    {
+        final String lastSegment = PathHelper.getLastPathSegment(path);
+        if (lastSegment == null)
+        {
+            return -1;
+        }
+        
+        try
+        {
+            return Integer.parseInt(lastSegment);
+        }
+        catch (NumberFormatException e)
+        {
+            return -1;
+        }
+    }
+    
+    private void updatePathsAfterIndex(int startListIndex, int startArrayIndex)
+    {
+        for (int i = startListIndex; i < allItems.size(); i++)
+        {
+            final int arrayIndex = startArrayIndex + (i - startListIndex);
+            final String newPath = PathHelper.buildPath(parentPath, arrayIndex);
+            final JsonNodeWithPath updatedItem = model.getNodeForPath(newPath);
+            
+            if (updatedItem != null)
+            {
+                allItems.set(i, updatedItem);
+            }
         }
     }
 }
