@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.brunomnsilva.smartgraph.graph.Edge;
 import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.brunomnsilva.smartgraph.graphview.*;
-import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.graph.EdgeIdentifier;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
@@ -22,10 +22,14 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifier>
 {
+    private static final Logger logger = LoggerFactory.getLogger(NodeGraphPanel.class);
+    
     public static final int MIN_PIXELS_PER_NODE = 50;
     
     public static final int MAX_NAME_LENGTH = 30;
@@ -34,19 +38,22 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     private final ReadableModel model;
     
+    private final SettingsController settingsController;
+    
     private final String path;
     
     private final Set<String> allowedEdgeNames;
     
     private Runnable filterUpdateCallback;
     
-    public NodeGraphPanel(ReadableModel model, Controller controller, String path, SmartGraphProperties properties,
+    public NodeGraphPanel(ReadableModel model, SettingsController settingsController, String path, SmartGraphProperties properties,
             SmartPlacementStrategy placementStrategy,
             URI cssFile, Set<String> allowedEdgeNames)
     {
-        super(model.getJsonAsGraph(path, allowedEdgeNames), properties, placementStrategy, cssFile);
+        super(createInitialGraph(model, settingsController, path, allowedEdgeNames), properties, placementStrategy, cssFile);
         this.placementStrategy = placementStrategy;
         this.model = model;
+        this.settingsController = settingsController;
         this.path = path;
         this.allowedEdgeNames = allowedEdgeNames;
         HBox.setHgrow(this, Priority.ALWAYS);
@@ -61,7 +68,7 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         setAutomaticLayoutStrategy(new JsonForcePlacementStrategy());
         setEdgeDoubleClickAction(this::handleEdgeDoubleClick);
         setVertexDoubleClickAction(this::handleVertexDoubleClick);
-        String clusterSymbol = controller.getSettingsController().getClusterShape();
+        String clusterSymbol = settingsController.getClusterShape();
         setVertexShapeTypeProvider(nodeIdentifier -> nodeIdentifier.isCluster() ? clusterSymbol : "circle");
         setVertexRadiusProvider(nodeIdentifier -> nodeIdentifier.isCluster() ? 20 + (nodeIdentifier.getClusterPaths().size() / 2.0) : 15);
     }
@@ -152,8 +159,23 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         return getSmartVertices();
     }
     
+    private static NodeGraph createInitialGraph(ReadableModel model, SettingsController settingsController, String path, Set<String> allowedEdgeNames)
+    {
+        logGraphRequest(settingsController, path, allowedEdgeNames);
+        return model.getJsonAsGraph(path, allowedEdgeNames);
+    }
+    
+    private static void logGraphRequest(SettingsController settingsController, String path, Set<String> allowedEdgeNames)
+    {
+        if (settingsController.isLogGraphRequests())
+        {
+            logger.debug("Graph request - path: {}, allowedEdgeNames: {}", path, allowedEdgeNames);
+        }
+    }
+    
     public Collection<String> getAllEdgeNames()
     {
+        logGraphRequest(settingsController, path, null);
         return model.getJsonAsGraph(path, null).edges().stream()
                 .map(edge -> edge.element().getName())
                 .sorted()
@@ -168,6 +190,7 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     private void expandVertex(String vertexPath)
     {
         NodeGraph currentGraph = (NodeGraph) getModel();
+        logGraphRequest(settingsController, vertexPath, allowedEdgeNames);
         NodeGraph expandedGraph = model.getJsonAsGraph(vertexPath, allowedEdgeNames);
         
         Set<String> currentEdgeNames = currentGraph.edges().stream()

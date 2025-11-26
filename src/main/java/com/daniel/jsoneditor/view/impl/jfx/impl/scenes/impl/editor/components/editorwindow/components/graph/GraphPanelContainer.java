@@ -87,7 +87,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     public void updateView()
     {
         this.getChildren().clear();
-        this.graphView = new NodeGraphPanel(model, controller, selectedPath, properties, initialPlacement, cssFile, currentFilteredEdgeNames);
+        this.graphView = new NodeGraphPanel(model, controller.getSettingsController(), selectedPath, properties, initialPlacement, cssFile, currentFilteredEdgeNames);
         this.graphView.setFilterUpdateCallback(this::handleNewEdgeNames);
 
         final VBox mainContainer = new VBox();

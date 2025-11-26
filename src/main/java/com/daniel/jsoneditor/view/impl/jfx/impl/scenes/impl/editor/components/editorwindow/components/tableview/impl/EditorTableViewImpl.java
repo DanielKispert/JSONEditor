@@ -315,14 +315,16 @@ public class EditorTableViewImpl extends EditorTableView
     
     public void handleItemChanged(String path)
     {
-        final String changedParentPath = PathHelper.getParentPath(path);
+        final String arrayItemPath = PathHelper.getParentPath(path); //path to single items in the array/table
+        //path to object or array that this table is showing the children of
+        final String changedParentPath = PathHelper.getParentPath(arrayItemPath);
         
         if (this.parentPath.equals(changedParentPath))
         {
-            final int changedIndex = getIndexFromPath(path);
+            final int changedIndex = getIndexFromPath(arrayItemPath);
             if (changedIndex >= 0 && changedIndex < allItems.size())
             {
-                final JsonNodeWithPath updatedItem = model.getNodeForPath(path);
+                final JsonNodeWithPath updatedItem = model.getNodeForPath(arrayItemPath);
                 if (updatedItem != null)
                 {
                     allItems.set(changedIndex, updatedItem);

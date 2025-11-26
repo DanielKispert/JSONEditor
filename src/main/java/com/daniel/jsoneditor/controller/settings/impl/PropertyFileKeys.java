@@ -21,4 +21,6 @@ public class PropertyFileKeys
     public final static String PROPERTY_RENAME_REFERENCES_WHEN_RENAMING_OBJECT = "rename_references_when_renaming_object";
     
     public final static String PROPERTY_DEBUG_MODE = "debug_mode";
+    
+    public final static String PROPERTY_LOG_GRAPH_REQUESTS = "log_graph_requests";
 }
