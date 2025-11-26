@@ -33,4 +33,8 @@ public interface SettingsController
     void setDebugMode(boolean debugMode);
     
     boolean isDebugMode();
+    
+    void setLogGraphRequests(boolean logGraphRequests);
+    
+    boolean isLogGraphRequests();
 }

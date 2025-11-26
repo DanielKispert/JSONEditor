@@ -25,8 +25,6 @@ public class NodeGraphCreator
      */
     public static NodeGraph createGraph(ReadableModel model, String path, Set<String> allowedEdgeNames)
     {
-        logger.debug("Graph request - path: {}, allowedEdgeNames: {}", path, allowedEdgeNames);
-        
         if (path == null)
         {
             return new NodeGraph();

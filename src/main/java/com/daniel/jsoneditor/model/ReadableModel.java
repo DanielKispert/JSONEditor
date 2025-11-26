@@ -52,7 +52,6 @@ public interface ReadableModel extends ReadableState
     
     /**
      * @return a graph of the path and its direct incoming and outgoing references
-     * @param path the path to create graph for
      * @param allowedEdgeNames set of edge names to include, null means include all
      */
     NodeGraph getJsonAsGraph(String path, Set<String> allowedEdgeNames);

@@ -160,4 +160,17 @@ public class SettingsControllerImpl implements SettingsController
         // default is false
         return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_DEBUG_MODE));
     }
+    
+    @Override
+    public void setLogGraphRequests(boolean logGraphRequests)
+    {
+        properties.setProperty(PropertyFileKeys.PROPERTY_LOG_GRAPH_REQUESTS, logGraphRequests ? "true" : "false");
+        PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public boolean isLogGraphRequests()
+    {
+        return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_LOG_GRAPH_REQUESTS));
+    }
 }

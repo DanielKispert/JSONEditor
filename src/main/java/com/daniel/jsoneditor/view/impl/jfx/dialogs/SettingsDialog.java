@@ -21,6 +21,8 @@ public class SettingsDialog extends ThemedDialog<Void>
     
     private boolean tmpDebugMode;
     
+    private boolean tmpLogGraphRequests;
+    
     private String tmpClusterShape;
     
     private final SettingsController settingsController;
@@ -33,6 +35,7 @@ public class SettingsDialog extends ThemedDialog<Void>
         this.tmpHideEmptyColumns = settingsController.hideEmptyColumns();
         this.tmpRenameReferences = settingsController.renameReferencesWhenRenamingObject();
         this.tmpDebugMode = settingsController.isDebugMode();
+        this.tmpLogGraphRequests = settingsController.isLogGraphRequests();
         this.tmpClusterShape = settingsController.getClusterShape();
         
         setTitle("Settings");
@@ -52,6 +55,7 @@ public class SettingsDialog extends ThemedDialog<Void>
                 settingsController.setHideEmptyColumns(tmpHideEmptyColumns);
                 settingsController.setRenameReferencesWhenRenamingObject(tmpRenameReferences);
                 settingsController.setDebugMode(tmpDebugMode);
+                settingsController.setLogGraphRequests(tmpLogGraphRequests);
                 settingsController.setClusterShape(tmpClusterShape);
             }
             return null;
@@ -75,7 +79,7 @@ public class SettingsDialog extends ThemedDialog<Void>
         
         // Debug Tab
         Tab debugTab = new Tab("Debug");
-        VBox debugBox = new VBox(createDebugSettings());
+        VBox debugBox = new VBox(createDebugToastsSetting(), createLogGraphRequestsSettings());
         debugTab.setContent(debugBox);
         
         tabs.getTabs().addAll(automationTab, displayTab, debugTab);
@@ -99,12 +103,20 @@ public class SettingsDialog extends ThemedDialog<Void>
         return hideEmptyColumnsCheckBox;
     }
     
-    private CheckBox createDebugSettings()
+    private CheckBox createDebugToastsSetting()
     {
         CheckBox debugModeCheckBox = new CheckBox("Show toast notification on model changes");
         debugModeCheckBox.setSelected(tmpDebugMode);
         debugModeCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> tmpDebugMode = newValue);
         return debugModeCheckBox;
+    }
+    
+    private CheckBox createLogGraphRequestsSettings()
+    {
+        CheckBox logGraphRequestsCheckBox = new CheckBox("Log graph requests");
+        logGraphRequestsCheckBox.setSelected(tmpLogGraphRequests);
+        logGraphRequestsCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> tmpLogGraphRequests = newValue);
+        return logGraphRequestsCheckBox;
     }
     
     private HBox createClusterShapeSettings()
