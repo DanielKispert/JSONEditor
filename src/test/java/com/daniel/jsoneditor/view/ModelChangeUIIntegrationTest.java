@@ -21,15 +21,12 @@ import com.networknt.schema.SpecVersion;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -39,7 +36,6 @@ class ModelChangeUIIntegrationTest
 {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     
-    private Stage stage;
     private ModelImpl model;
     private CommandManager commandManager;
     private EditorTableViewImpl tableView;
@@ -47,33 +43,32 @@ class ModelChangeUIIntegrationTest
     @Start
     void start(Stage stage)
     {
-        this.stage = stage;
-    }
-    
-    @BeforeEach
-    void setup() throws Exception
-    {
         model = createTestModel();
         commandManager = new CommandManagerImpl(model);
         final Controller mockController = mock(Controller.class);
         final EditorWindowManager mockManager = mock(EditorWindowManager.class);
         final JsonEditorEditorWindow mockWindow = mock(JsonEditorEditorWindow.class);
         
-        FxToolkit.setupStage(s -> {
-            tableView = new EditorTableViewImpl(mockManager, mockWindow, model, mockController);
-            
-            final Scene scene = new Scene(tableView, 800, 600);
-            stage.setScene(scene);
-            stage.show();
-            
-            final JsonNodeWithPath root = model.getNodeForPath("");
-            tableView.setSelection(root);
-        });
+        tableView = new EditorTableViewImpl(mockManager, mockWindow, model, mockController);
+        
+        final Scene scene = new Scene(tableView, 800, 600);
+        stage.setScene(scene);
+        stage.show();
+    }
+    
+    private void resetToInitialState()
+    {
+        model = createTestModel();
+        commandManager = new CommandManagerImpl(model);
+        final JsonNodeWithPath root = model.getNodeForPath("");
+        tableView.setSelection(root);
     }
     
     @Test
     void shouldUpdateTableWhenItemAdded()
     {
+        resetToInitialState();
+        
         final JsonNodeWithPath arrayNode = model.getNodeForPath("/items");
         tableView.setSelection(arrayNode);
         
@@ -94,6 +89,8 @@ class ModelChangeUIIntegrationTest
     @Test
     void shouldUpdateTableWhenItemRemoved()
     {
+        resetToInitialState();
+        
         final JsonNodeWithPath arrayNode = model.getNodeForPath("/items");
         tableView.setSelection(arrayNode);
         
@@ -113,6 +110,8 @@ class ModelChangeUIIntegrationTest
     @Test
     void shouldUpdateTableWhenItemChanged()
     {
+        resetToInitialState();
+        
         final JsonNodeWithPath arrayNode = model.getNodeForPath("/items");
         tableView.setSelection(arrayNode);
         
@@ -139,6 +138,8 @@ class ModelChangeUIIntegrationTest
     @Test
     void shouldUpdateTableWhenItemMoved()
     {
+        resetToInitialState();
+        
         final JsonNodeWithPath arrayNode = model.getNodeForPath("/items");
         tableView.setSelection(arrayNode);
         
@@ -158,6 +159,8 @@ class ModelChangeUIIntegrationTest
     @Test
     void shouldUpdateTableWhenArraySorted()
     {
+        resetToInitialState();
+        
         final JsonNodeWithPath arrayNode = model.getNodeForPath("/numbers");
         tableView.setSelection(arrayNode);
         
@@ -176,6 +179,8 @@ class ModelChangeUIIntegrationTest
     @Test
     void shouldHandleMultipleSequentialChanges()
     {
+        resetToInitialState();
+        
         final JsonNodeWithPath arrayNode = model.getNodeForPath("/items");
         tableView.setSelection(arrayNode);
         
@@ -209,6 +214,8 @@ class ModelChangeUIIntegrationTest
     @Test
     void shouldMaintainTableStateAcrossParentChanges()
     {
+        resetToInitialState();
+        
         final JsonNodeWithPath itemsNode = model.getNodeForPath("/items");
         tableView.setSelection(itemsNode);
         
@@ -226,6 +233,8 @@ class ModelChangeUIIntegrationTest
     @Test
     void shouldHandleNestedObjectPropertyChanges()
     {
+        resetToInitialState();
+        
         final JsonNodeWithPath rootNode = model.getNodeForPath("");
         tableView.setSelection(rootNode);
         
@@ -246,6 +255,8 @@ class ModelChangeUIIntegrationTest
     @Test
     void shouldFilterAndDisplayCorrectItems()
     {
+        resetToInitialState();
+        
         final JsonNodeWithPath itemsNode = model.getNodeForPath("/items");
         tableView.setSelection(itemsNode);
         
