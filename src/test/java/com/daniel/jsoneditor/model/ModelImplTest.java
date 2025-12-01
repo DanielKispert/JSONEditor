@@ -120,7 +120,7 @@ public class ModelImplTest
         final List<ModelChange> add = mgr.executeCommand(new SetNodeCommand(model, "/arr/0", obj));
         assertSingle(add, ChangeType.ADD, "/arr/0");
         assertEquals("First", model.getNodeForPath("/arr/0").getNode().get("name").asText());
-        final List<ModelChange> rem = mgr.executeCommand(new RemoveNodeCommand(model, "/arr/0"));
+        final List<ModelChange> rem = mgr.executeCommand(new RemoveNodesCommand(model, List.of("/arr/0")));
         assertSingle(rem, ChangeType.REMOVE, "/arr/0");
         assertEquals(0, model.getNodeForPath("/arr").getNode().size());
     }

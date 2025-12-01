@@ -26,9 +26,13 @@ dependencies {
     implementation 'com.networknt:json-schema-validator:1.0.87'
     implementation 'ch.qos.logback:logback-classic:1.4.14'
     implementation name: 'smartgraph-2.0.0' //local jar that has been recompiled to run on java 11
-    // Tests: JUnit 5 baseline for model behavior before introducing ModelChange refactor
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testImplementation 'org.testfx:testfx-core:4.0.18'
+    testImplementation 'org.testfx:testfx-junit5:4.0.18'
+    testRuntimeOnly 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
+    testImplementation 'org.mockito:mockito-core:5.7.0'
+    testImplementation 'org.hamcrest:hamcrest:2.2'
 }
 
 test {
