@@ -247,9 +247,22 @@ public class JsonEditorEditorWindow extends VBox
     
     public void handlePathChanged(String path)
     {
+        boolean shouldUpdateNamebar = false;
+        
         if (selectedPath.equals(path))
         {
             mainTableView.handleItemChanged(path);
+            shouldUpdateNamebar = true;
+        }
+        else if (path.startsWith(selectedPath + "/") || selectedPath.startsWith(path + "/"))
+        {
+            shouldUpdateNamebar = true;
+        }
+        
+        if (shouldUpdateNamebar)
+        {
+            final JsonNodeWithPath currentNode = model.getNodeForPath(selectedPath);
+            nameBar.setSelection(currentNode);
         }
         
         for (TableViewWithCompactNamebar childTable : childTableViews)
