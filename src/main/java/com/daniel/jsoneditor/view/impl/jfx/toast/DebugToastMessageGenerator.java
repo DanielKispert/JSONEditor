@@ -36,18 +36,18 @@ public final class DebugToastMessageGenerator
         
         if (changes.size() == 1)
         {
-            return generateSingleChangeMessage(commandPhase, changes.get(0));
+            return generateSingleChangeMessage(changes.get(0));
         }
         else
         {
-            return generateMultipleChangesMessage(commandPhase, changes);
+            return generateMultipleChangesMessage(changes);
         }
     }
     
     /**
      * Generates a message for a single model change.
      */
-    private static String generateSingleChangeMessage(final String commandPhase, final ModelChange change)
+    private static String generateSingleChangeMessage(final ModelChange change)
     {
         final ChangeType type = change.getType();
         final String path = simplifyPath(change.getPath());
@@ -55,61 +55,89 @@ public final class DebugToastMessageGenerator
         switch (type)
         {
             case ADD:
-                return String.format("%s: Added at %s", commandPhase, path);
+                final String addedValue = shortenValue(change.getNewValue());
+                return String.format("➕ %s = %s", path, addedValue);
             case REMOVE:
-                return String.format("%s: Removed from %s", commandPhase, path);
+                final String removedValue = shortenValue(change.getOldValue());
+                return String.format("➖ %s = %s", path, removedValue);
             case REPLACE:
-                return String.format("%s: Changed %s", commandPhase, path);
+                final String oldVal = shortenValue(change.getOldValue());
+                final String newVal = shortenValue(change.getNewValue());
+                return String.format("✏️ %s: %s→%s", path, oldVal, newVal);
             case MOVE:
-                return String.format("%s: Moved in %s (%d→%d)", commandPhase, path, change.getFromIndex(), change.getToIndex());
+                return String.format("↕️ %s (%d→%d)", path, change.getFromIndex(), change.getToIndex());
             case SORT:
-                return String.format("%s: Sorted %s", commandPhase, path);
+                return String.format("🔄 %s", path);
             default:
-                return String.format("%s: %s at %s", commandPhase, type, path);
+                return String.format("%s %s", type, path);
         }
     }
     
     /**
      * Generates a message for multiple model changes.
      */
-    private static String generateMultipleChangesMessage(final String commandPhase, final List<ModelChange> changes)
+    private static String generateMultipleChangesMessage(final List<ModelChange> changes)
     {
         final long addCount = changes.stream().mapToLong(c -> c.getType() == ChangeType.ADD ? 1 : 0).sum();
         final long removeCount = changes.stream().mapToLong(c -> c.getType() == ChangeType.REMOVE ? 1 : 0).sum();
         final long replaceCount = changes.stream().mapToLong(c -> c.getType() == ChangeType.REPLACE ? 1 : 0).sum();
         final long moveCount = changes.stream().mapToLong(c -> c.getType() == ChangeType.MOVE ? 1 : 0).sum();
         
-        final StringBuilder message = new StringBuilder(commandPhase).append(": ");
+        final StringBuilder message = new StringBuilder();
         
-        if (addCount > 0) message.append(addCount).append(" added ");
-        if (removeCount > 0) message.append(removeCount).append(" removed ");
-        if (replaceCount > 0) message.append(replaceCount).append(" changed ");
-        if (moveCount > 0) message.append(moveCount).append(" moved ");
+        if (addCount > 0) message.append("➕").append(addCount).append(" ");
+        if (removeCount > 0) message.append("➖").append(removeCount).append(" ");
+        if (replaceCount > 0) message.append("✏️").append(replaceCount).append(" ");
+        if (moveCount > 0) message.append("↕️").append(moveCount).append(" ");
         
         return message.toString().trim();
     }
     
     /**
-     * Simplifies JSON paths for display in toasts by showing only the last few segments.
+     * Simplifies JSON paths for display in toasts by showing the last 3 segments.
      */
     private static String simplifyPath(final String path)
     {
         if (path == null || path.isEmpty())
         {
-            return "root";
+            return "/";
         }
         
-        // Remove leading slash and split by slash
         final String cleanPath = path.startsWith("/") ? path.substring(1) : path;
+        if (cleanPath.isEmpty())
+        {
+            return "/";
+        }
+        
         final String[] segments = cleanPath.split("/");
         
-        if (segments.length <= 2)
+        if (segments.length <= 3)
         {
-            return cleanPath.isEmpty() ? "root" : cleanPath;
+            return cleanPath;
         }
         
-        // Show last 2 segments for readability
-        return ".../" + segments[segments.length - 2] + "/" + segments[segments.length - 1];
+        return "…/" + segments[segments.length - 3] + "/" + segments[segments.length - 2] + "/" + segments[segments.length - 1];
+    }
+    
+    /**
+     * Shortens a value for display in toasts. Limits length and handles different types.
+     */
+    private static String shortenValue(final Object value)
+    {
+        if (value == null)
+        {
+            return "null";
+        }
+        
+        final String str = value.toString();
+        final int maxLength = 30;
+        
+        if (str.length() <= maxLength)
+        {
+            return str;
+        }
+        
+        return str.substring(0, maxLength) + "…";
     }
 }
 

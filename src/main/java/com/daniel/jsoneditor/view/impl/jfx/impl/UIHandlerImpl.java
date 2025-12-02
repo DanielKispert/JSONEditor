@@ -11,7 +11,7 @@ import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelectionScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import com.daniel.jsoneditor.view.impl.jfx.toast.ToastLike;
-import com.daniel.jsoneditor.view.impl.jfx.toast.impl.ToastImpl;
+import com.daniel.jsoneditor.view.impl.jfx.toast.impl.ToastManager;
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -28,6 +28,8 @@ public class UIHandlerImpl implements UIHandler
     private final Stage stage;
     
     private final ReadableModel model;
+    
+    private final ToastManager toastManager = new ToastManager();
     
     private EditorScene editorScene;
     
@@ -118,7 +120,7 @@ public class UIHandlerImpl implements UIHandler
     @Override
     public void showToast(ToastLike toast)
     {
-        new ToastImpl().show(stage, toast.getMessage(), toast.getColor(), toast.getDuration());
+        toastManager.showToast(stage, toast.getMessage(), toast.getColor(), toast.getDuration());
     }
     
     @Override
