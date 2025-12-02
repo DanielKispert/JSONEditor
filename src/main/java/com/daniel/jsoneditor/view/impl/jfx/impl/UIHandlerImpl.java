@@ -120,7 +120,13 @@ public class UIHandlerImpl implements UIHandler
     @Override
     public void showToast(ToastLike toast)
     {
-        toastManager.showToast(stage, toast.getMessage(), toast.getColor(), toast.getDuration());
+        toastManager.showToast(stage, toast.getMessage(), toast.getColor());
+    }
+    
+    @Override
+    public void showToastMessage(String message, javafx.scene.paint.Color color)
+    {
+        toastManager.showToast(stage, message, color);
     }
     
     @Override

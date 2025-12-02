@@ -6,5 +6,5 @@ import javafx.stage.Stage;
 
 public interface Toast
 {
-    void show(Stage stage, String message, Color color, int duration);
+    void show(Stage stage, String message, Color color);
 }

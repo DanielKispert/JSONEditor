@@ -10,5 +10,4 @@ public interface ToastLike
 {
     String getMessage();
     Color getColor();
-    int getDuration();
 }

@@ -31,14 +31,14 @@ public class ToastImpl implements Toast
     private static final int MS_PER_CHARACTER = 100;
     
     @Override
-    public void show(Stage ownerStage, String message, Color color, int duration)
+    public void show(Stage ownerStage, String message, Color color)
     {
-        show(ownerStage, message, color, duration, null);
+        show(ownerStage, message, color, null);
     }
     
-    public void show(Stage ownerStage, String message, Color color, int duration, Runnable onFinished)
+    public void show(Stage ownerStage, String message, Color color, Runnable onFinished)
     {
-        final int actualDuration = calculateDuration(message, duration);
+        final int actualDuration = calculateDuration(message);
         
         final Popup toastPopup = new Popup();
         
@@ -156,16 +156,10 @@ public class ToastImpl implements Toast
      * Minimum 1.5 seconds, maximum 5 seconds, then 100ms per character (reading speed ~300 words per minute).
      *
      * @param message The message to display
-     * @param providedDuration The duration provided by caller (in seconds, ignored if 0)
      * @return Duration in milliseconds
      */
-    private int calculateDuration(String message, int providedDuration)
+    private int calculateDuration(String message)
     {
-        if (providedDuration > 0)
-        {
-            return Math.min(providedDuration * 1000, MAX_DURATION_MS);
-        }
-        
         final int calculatedDuration = message.length() * MS_PER_CHARACTER;
         return Math.min(Math.max(MIN_DURATION_MS, calculatedDuration), MAX_DURATION_MS);
     }

@@ -21,6 +21,14 @@ public interface UIHandler
     void showToast(ToastLike toast);
     
     /**
+     * Shows a toast with a custom message and color.
+     *
+     * @param message The message to display
+     * @param color The color of the toast
+     */
+    void showToastMessage(String message, javafx.scene.paint.Color color);
+    
+    /**
      * Updates the window title with the given unsaved changes count.
      *
      * @param unsavedChangesCount number of unsaved changes
