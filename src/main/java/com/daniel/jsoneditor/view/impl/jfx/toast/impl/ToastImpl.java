@@ -13,7 +13,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -25,13 +24,26 @@ public class ToastImpl implements Toast
     
     private static final int FADE_DURATION = 250;
     
+    private static final int MIN_DURATION_MS = 1500;
+    
+    private static final int MAX_DURATION_MS = 5000;
+    
+    private static final int MS_PER_CHARACTER = 100;
+    
     @Override
     public void show(Stage ownerStage, String message, Color color, int duration)
     {
-        Popup toastPopup = new Popup();
+        show(ownerStage, message, color, duration, null);
+    }
+    
+    public void show(Stage ownerStage, String message, Color color, int duration, Runnable onFinished)
+    {
+        final int actualDuration = calculateDuration(message, duration);
         
-        HBox root = createToastView(message, color);
-        Scene scene = new Scene(root);
+        final Popup toastPopup = new Popup();
+        
+        final HBox root = createToastView(message, color);
+        final Scene scene = new Scene(root);
         scene.setFill(Color.TRANSPARENT);
         scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
         toastPopup.getContent().add(root);
@@ -66,7 +78,7 @@ public class ToastImpl implements Toast
             new Thread(() -> {
                 try
                 {
-                    Thread.sleep(duration * 1000L);
+                    Thread.sleep(actualDuration);
                 }
                 catch (InterruptedException e)
                 {
@@ -81,7 +93,13 @@ public class ToastImpl implements Toast
                 fadeOutTimeline.getKeyFrames().add(fadeOutKey);
                 
                 ParallelTransition hideTransition = new ParallelTransition(moveDownTimeline, fadeOutTimeline);
-                hideTransition.setOnFinished((aeb) -> toastPopup.hide());
+                hideTransition.setOnFinished((aeb) -> {
+                    toastPopup.hide();
+                    if (onFinished != null)
+                    {
+                        onFinished.run();
+                    }
+                });
                 hideTransition.play();
             }).start();
         });
@@ -89,9 +107,11 @@ public class ToastImpl implements Toast
     
     private HBox createToastView(String message, Color color)
     {
-        Text text = new Text(message);
-        text.setFill(color);
-        text.getStyleClass().add("toast");
+        final Label textLabel = new Label(message);
+        textLabel.setTextFill(color);
+        textLabel.getStyleClass().add("toast");
+        textLabel.setWrapText(true);
+        textLabel.setMaxWidth(600);
         
         ImageView icon;
         if (color.equals(Color.GREEN))
@@ -109,16 +129,18 @@ public class ToastImpl implements Toast
         icon.setFitHeight(15);
         icon.setFitWidth(15);
         
-        Label iconArea = new Label("", icon);
+        final Label iconArea = new Label("", icon);
         iconArea.setStyle("-fx-background-color: " + toRgbString(color) + ";");
         iconArea.getStyleClass().add("toast-icon-area");
         iconArea.setMaxSize(20, 20);
+        iconArea.setMinSize(20, 20);
         
-        HBox borderBox = new HBox(iconArea, text);
+        final HBox borderBox = new HBox(iconArea, textLabel);
         borderBox.setStyle("-fx-border-color: " + toRgbString(color) + ";");
         borderBox.getStyleClass().add("toast");
-        borderBox.setAlignment(Pos.CENTER);
+        borderBox.setAlignment(Pos.CENTER_LEFT);
         borderBox.setSpacing(5);
+        borderBox.setMaxWidth(650);
         
         return borderBox;
     }
@@ -127,5 +149,24 @@ public class ToastImpl implements Toast
     {
         return String.format("rgba(%d, %d, %d, %f)", (int) (color.getRed() * 255), (int) (color.getGreen() * 255),
                 (int) (color.getBlue() * 255), color.getOpacity());
+    }
+    
+    /**
+     * Calculates the display duration based on message length.
+     * Minimum 1.5 seconds, maximum 5 seconds, then 100ms per character (reading speed ~300 words per minute).
+     *
+     * @param message The message to display
+     * @param providedDuration The duration provided by caller (in seconds, ignored if 0)
+     * @return Duration in milliseconds
+     */
+    private int calculateDuration(String message, int providedDuration)
+    {
+        if (providedDuration > 0)
+        {
+            return Math.min(providedDuration * 1000, MAX_DURATION_MS);
+        }
+        
+        final int calculatedDuration = message.length() * MS_PER_CHARACTER;
+        return Math.min(Math.max(MIN_DURATION_MS, calculatedDuration), MAX_DURATION_MS);
     }
 }
