@@ -21,13 +21,12 @@ public class ToastManager
      * @param ownerStage The stage to show the toast on
      * @param message The message to display
      * @param color The color of the toast
-     * @param duration Duration in seconds
      */
-    public void showToast(Stage ownerStage, String message, Color color, int duration)
+    public void showToast(Stage ownerStage, String message, Color color)
     {
         synchronized (lock)
         {
-            pendingToasts.offer(new PendingToast(ownerStage, message, color, duration));
+            pendingToasts.offer(new PendingToast(ownerStage, message, color));
             processNextToast();
         }
     }
@@ -54,8 +53,7 @@ public class ToastManager
     private void displayToast(PendingToast pending)
     {
         Platform.runLater(() -> {
-            new ToastImpl().show(pending.ownerStage, pending.message, pending.color, pending.duration,
-                    this::onToastFinished);
+            new ToastImpl().show(pending.ownerStage, pending.message, pending.color, this::onToastFinished);
         });
     }
     
@@ -73,14 +71,12 @@ public class ToastManager
         final Stage ownerStage;
         final String message;
         final Color color;
-        final int duration;
         
-        PendingToast(Stage ownerStage, String message, Color color, int duration)
+        PendingToast(Stage ownerStage, String message, Color color)
         {
             this.ownerStage = ownerStage;
             this.message = message;
             this.color = color;
-            this.duration = duration;
         }
     }
 }

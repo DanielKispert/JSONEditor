@@ -26,6 +26,9 @@ import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
+import com.daniel.jsoneditor.model.validation.ReferenceValidator;
+import com.daniel.jsoneditor.model.validation.ValidationError;
+import com.daniel.jsoneditor.model.validation.ValidationResult;
 import com.daniel.jsoneditor.view.View;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
@@ -319,6 +322,17 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void saveToFile()
     {
+        final ValidationResult validationResult = ReferenceValidator.validateReferences(readableModel);
+        
+        if (!validationResult.isValid())
+        {
+            for (ValidationError error : validationResult.getErrors())
+            {
+                view.showCustomToast(error.getMessage(), javafx.scene.paint.Color.RED);
+            }
+            return;
+        }
+        
         final JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();
         jsonWriter.writeJsonToFile(readableModel.getRootJson(), readableModel.getCurrentJSONFile());
         commandManager.markAsSaved(); // Mark current state as saved

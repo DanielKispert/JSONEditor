@@ -5,30 +5,26 @@ import javafx.scene.paint.Color;
 
 public enum Toasts implements ToastLike
 {
-    SAVE_SUCCESSFUL_TOAST("saved", Color.GREEN, 2),
-    IMPORT_SUCCESSFUL_TOAST("Import successful", Color.GREEN, 2),
-    IMPORT_VALIDATION_FAILED_TOAST("Import failed: Schema validation error", Color.RED, 3),
-    IMPORT_PARSING_FAILED_TOAST("Import failed: Invalid JSON format", Color.RED, 3),
-    EXPORT_SUCCESSFUL_TOAST("Export succeessful", Color.GREEN, 2),
-    REFRESH_SUCCESSFUL_TOAST("Reloaded", Color.GREEN, 2),
-    COPIED_TO_CLIPBOARD_TOAST("Copied to clipboard", Color.GREEN, 2),
-    ERROR_TOAST("Error", Color.RED, 2),
-    EXPORT_FAILED_DEPENDENCY_LOOP_TOAST("Export failed, resolve circular dependencies first", Color.RED, 2),
-    PASTED_FROM_CLIPBOARD_TOAST("Pasted", Color.GREEN, 2),
-    SAVE_FAILED_TOAST("Save failed", Color.RED, 3),
-    NO_REFERENCES_TOAST("No references found", Color.RED, 2);
+    SAVE_SUCCESSFUL_TOAST("saved", Color.GREEN),
+    IMPORT_SUCCESSFUL_TOAST("Import successful", Color.GREEN),
+    IMPORT_VALIDATION_FAILED_TOAST("Import failed: Schema validation error", Color.RED),
+    IMPORT_PARSING_FAILED_TOAST("Import failed: Invalid JSON format", Color.RED),
+    EXPORT_SUCCESSFUL_TOAST("Export succeessful", Color.GREEN),
+    REFRESH_SUCCESSFUL_TOAST("Reloaded", Color.GREEN),
+    COPIED_TO_CLIPBOARD_TOAST("Copied to clipboard", Color.GREEN),
+    ERROR_TOAST("Error", Color.RED),
+    EXPORT_FAILED_DEPENDENCY_LOOP_TOAST("Export failed, resolve circular dependencies first", Color.RED),
+    PASTED_FROM_CLIPBOARD_TOAST("Pasted", Color.GREEN),
+    NO_REFERENCES_TOAST("No references found", Color.RED);
     
     private final String message;
     
     private final Color color;
     
-    private final int duration;
-    
-    Toasts(String message, Color color, int duration)
+    Toasts(String message, Color color)
     {
         this.message = message;
         this.color = color;
-        this.duration = duration;
     }
     
     public String getMessage()
@@ -41,39 +37,4 @@ public enum Toasts implements ToastLike
         return color;
     }
     
-    public int getDuration()
-    {
-        return duration;
-    }
-    
-    /**
-     * Creates a debug toast with a custom message.
-     * Returns an object that implements the same interface as enum constants.
-     *
-     * @param message the custom debug message
-     * @return a toast-like object for debug purposes
-     */
-    public static ToastLike createDebugToast(final String message)
-    {
-        return new ToastLike()
-        {
-            @Override
-            public String getMessage()
-            {
-                return message;
-            }
-            
-            @Override
-            public Color getColor()
-            {
-                return Color.ORANGE;
-            }
-            
-            @Override
-            public int getDuration()
-            {
-                return 2;
-            }
-        };
-    }
 }

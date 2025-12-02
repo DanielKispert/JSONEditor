@@ -6,6 +6,7 @@ import com.daniel.jsoneditor.view.impl.jfx.toast.DebugToastMessageGenerator;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -53,7 +54,7 @@ public class ViewImpl implements View
                 uiHandler.showMainEditor();
                 break;
             case RESET_SUCCESSFUL:
-                uiHandler.showToast(Toasts.REFRESH_SUCCESSFUL_TOAST);
+                showToast(Toasts.REFRESH_SUCCESSFUL_TOAST);
                 break;
             case RELOADED_JSON_FROM_DISK:
                 uiHandler.updateEditorSceneWithUpdatedStructure();
@@ -66,21 +67,20 @@ public class ViewImpl implements View
                 break;
             case CREATED_NODE_FOR_LINKING:
             case SAVING_SUCCESSFUL:
-                uiHandler.showToast(Toasts.SAVE_SUCCESSFUL_TOAST);
+                showToast(Toasts.SAVE_SUCCESSFUL_TOAST);
                 break;
             case EXPORT_SUCCESSFUL:
-                uiHandler.showToast(Toasts.EXPORT_SUCCESSFUL_TOAST);
+                showToast(Toasts.EXPORT_SUCCESSFUL_TOAST);
                 break;
             case IMPORT_SUCCESSFUL:
-                uiHandler.showToast(Toasts.IMPORT_SUCCESSFUL_TOAST);
+                showToast(Toasts.IMPORT_SUCCESSFUL_TOAST);
                 break;
             case COMMAND_APPLIED:
                 uiHandler.handleCommandApplied(newEvent);
-                // Show debug toast if debug mode is enabled
                 if (controller.getSettingsController().isDebugMode())
                 {
                     final String debugMessage = DebugToastMessageGenerator.generateMessage(newEvent);
-                    uiHandler.showToast(Toasts.createDebugToast(debugMessage));
+                    showCustomToast(debugMessage, javafx.scene.paint.Color.ORANGE);
                 }
                 break;
         }
@@ -112,7 +112,13 @@ public class ViewImpl implements View
     @Override
     public void showToast(Toasts toast)
     {
-        uiHandler.showToast(toast);
+        uiHandler.showToastMessage(toast.getMessage(), toast.getColor());
+    }
+    
+    @Override
+    public void showCustomToast(String message, Color color)
+    {
+        uiHandler.showToastMessage(message, color);
     }
     
     @Override
