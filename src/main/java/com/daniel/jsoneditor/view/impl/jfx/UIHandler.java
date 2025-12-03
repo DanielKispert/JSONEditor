@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.view.impl.jfx.toast.ToastLike;
+import javafx.scene.paint.Color;
 
 
 public interface UIHandler
@@ -26,7 +27,7 @@ public interface UIHandler
      * @param message The message to display
      * @param color The color of the toast
      */
-    void showToastMessage(String message, javafx.scene.paint.Color color);
+    void showToastMessage(String message, Color color);
     
     /**
      * Updates the window title with the given unsaved changes count.
