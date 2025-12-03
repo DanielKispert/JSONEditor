@@ -10,6 +10,7 @@ import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.slf4j.Logger;
@@ -363,7 +364,7 @@ public class ReferenceHelper
         }
     }
     
-    private static List<ReferenceToObjectInstance> getInstancesOfReferenceToObject(ReadableModel model, ReferenceToObject object)
+    public static List<ReferenceToObjectInstance> getInstancesOfReferenceToObject(ReadableModel model, ReferenceToObject object)
     {
         List<ReferenceToObjectInstance> instances = new ArrayList<>();
         if (object == null)

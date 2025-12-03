@@ -1,11 +1,12 @@
 package com.daniel.jsoneditor.model.validation;
 
 import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
-import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,12 +14,15 @@ import java.util.List;
 
 public final class ReferenceValidator
 {
+    private static final Logger logger = LoggerFactory.getLogger(ReferenceValidator.class);
+    
     private ReferenceValidator()
     {
     }
     
     /**
      * Validates all references in the JSON to ensure they point to valid referenceable objects.
+     * Uses data already extracted by ReferenceToObjectInstance for optimal performance.
      *
      * @param model The model containing the JSON and schema
      * @return A validation result containing all invalid references
@@ -26,118 +30,60 @@ public final class ReferenceValidator
     public static ValidationResult validateReferences(ReadableModel model)
     {
         final List<ValidationError> errors = new ArrayList<>();
+        final List<ReferenceToObject> referenceDefinitions = ReferenceHelper.getReferenceToObjectNodes(model);
         
-        collectInvalidReferences(model, "", model.getNodeForPath(""), errors);
+        int totalInstances = 0;
+        
+        for (ReferenceToObject referenceDefinition : referenceDefinitions)
+        {
+            final List<ReferenceToObjectInstance> instances = ReferenceHelper.getInstancesOfReferenceToObject(model, referenceDefinition);
+            totalInstances += instances.size();
+            
+            for (ReferenceToObjectInstance instance : instances)
+            {
+                validateReferenceInstance(model, instance, errors);
+            }
+        }
+        
+        logger.debug("Validated {} reference instances, found {} errors", totalInstances, errors.size());
         
         return new ValidationResult(errors);
     }
     
-    private static void collectInvalidReferences(ReadableModel model, String currentPath, JsonNodeWithPath node, List<ValidationError> errors)
+    private static void validateReferenceInstance(ReadableModel model, ReferenceToObjectInstance instance, List<ValidationError> errors)
     {
-        if (node == null || node.getNode() == null)
+        final String path = instance.getPath();
+        final String objectKey = instance.getKey();
+        
+        if (objectKey == null || objectKey.isEmpty())
         {
+            errors.add(new ValidationError(path, String.format(
+                "Invalid reference at '%s': Empty or missing reference key",
+                path
+            )));
             return;
         }
         
-        final ReferenceToObject referenceToObject = model.getReferenceToObject(currentPath);
+        final String resolvedPath = ReferenceHelper.resolveReference(model, instance);
         
-        if (referenceToObject != null)
+        if (resolvedPath == null)
         {
-            final JsonNode referencingKeyNode = node.getNode().at(referenceToObject.getObjectReferencingKey());
-            final JsonNode objectKeyNode = node.getNode().at(referenceToObject.getObjectKey());
+            final ReferenceableObject refObject = ReferenceHelper.getReferenceableObject(model,
+                instance.getReference().getObjectReferencingKey());
             
-            if (referencingKeyNode.isMissingNode() || referencingKeyNode.isNull())
+            if (refObject == null)
             {
-                errors.add(new ValidationError(currentPath, String.format(
-                    "Invalid reference at '%s': Missing required field '%s'",
-                    formatPath(currentPath),
-                    referenceToObject.getObjectReferencingKey()
-                )));
                 return;
             }
             
-            if (objectKeyNode.isMissingNode() || objectKeyNode.isNull())
-            {
-                errors.add(new ValidationError(currentPath, String.format(
-                    "Invalid reference at '%s': Missing required field '%s'",
-                    formatPath(currentPath),
-                    referenceToObject.getObjectKey()
-                )));
-                return;
-            }
-            
-            final String objectReferencingKey = referencingKeyNode.asText();
-            final String objectKey = objectKeyNode.asText();
-            
-            if (objectReferencingKey.isEmpty())
-            {
-                errors.add(new ValidationError(currentPath, String.format(
-                    "Invalid reference at '%s': Empty value for '%s'",
-                    formatPath(currentPath),
-                    referenceToObject.getObjectReferencingKey()
-                )));
-                return;
-            }
-            
-            if (objectKey.isEmpty())
-            {
-                errors.add(new ValidationError(currentPath, String.format(
-                    "Invalid reference at '%s': Empty value for '%s'",
-                    formatPath(currentPath),
-                    referenceToObject.getObjectKey()
-                )));
-                return;
-            }
-            
-            final String resolvedPath = ReferenceHelper.resolveReference(node, model);
-            
-            if (resolvedPath == null)
-            {
-                final ReferenceableObject refObject = ReferenceHelper.getReferenceableObject(model, objectReferencingKey);
-                
-                if (refObject == null)
-                {
-                    errors.add(new ValidationError(currentPath, String.format(
-                        "Invalid reference at '%s': Unknown reference type '%s' (expected one of the defined referenceableObjects)",
-                        formatPath(currentPath),
-                        objectReferencingKey
-                    )));
-                }
-                else
-                {
-                    errors.add(new ValidationError(currentPath, String.format(
-                        "Invalid reference at '%s': Cannot find %s with key '%s' in '%s'",
-                        formatPath(currentPath),
-                        objectReferencingKey,
-                        objectKey,
-                        refObject.getPath()
-                    )));
-                }
-            }
+            errors.add(new ValidationError(path, String.format(
+                "Invalid reference at '%s': Cannot find %s with key '%s' in '%s'",
+                path,
+                refObject.getReferencingKey(),
+                objectKey,
+                refObject.getPath()
+            )));
         }
-        
-        if (node.getNode().isObject())
-        {
-            node.getNode().fields().forEachRemaining(entry -> {
-                final String childPath = currentPath.isEmpty() ? "/" + entry.getKey() : currentPath + "/" + entry.getKey();
-                final JsonNodeWithPath childNode = model.getNodeForPath(childPath);
-                collectInvalidReferences(model, childPath, childNode, errors);
-            });
-        }
-        else if (node.getNode().isArray())
-        {
-            for (int i = 0; i < node.getNode().size(); i++)
-            {
-                final String childPath = currentPath + "/" + i;
-                final JsonNodeWithPath childNode = model.getNodeForPath(childPath);
-                collectInvalidReferences(model, childPath, childNode, errors);
-            }
-        }
-    }
-    
-    private static String formatPath(String path)
-    {
-        return path.isEmpty() ? "/" : path;
     }
 }
 
