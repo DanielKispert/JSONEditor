@@ -38,6 +38,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -328,7 +329,7 @@ public class ControllerImpl implements Controller, Observer
         {
             for (ValidationError error : validationResult.getErrors())
             {
-                view.showCustomToast(error.getMessage(), javafx.scene.paint.Color.RED);
+                view.showCustomToast(error.getMessage(), Color.RED);
             }
             return;
         }

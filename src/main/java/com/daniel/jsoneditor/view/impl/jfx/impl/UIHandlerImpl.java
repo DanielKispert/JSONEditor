@@ -13,6 +13,7 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import com.daniel.jsoneditor.view.impl.jfx.toast.ToastLike;
 import com.daniel.jsoneditor.view.impl.jfx.toast.impl.ToastManager;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -124,7 +125,7 @@ public class UIHandlerImpl implements UIHandler
     }
     
     @Override
-    public void showToastMessage(String message, javafx.scene.paint.Color color)
+    public void showToastMessage(String message, Color color)
     {
         toastManager.showToast(stage, message, color);
     }
