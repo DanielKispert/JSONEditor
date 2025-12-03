@@ -4,6 +4,8 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,21 +43,76 @@ public final class ReferenceValidator
         
         if (referenceToObject != null)
         {
+            final JsonNode referencingKeyNode = node.getNode().at(referenceToObject.getObjectReferencingKey());
+            final JsonNode objectKeyNode = node.getNode().at(referenceToObject.getObjectKey());
+            
+            if (referencingKeyNode.isMissingNode() || referencingKeyNode.isNull())
+            {
+                errors.add(new ValidationError(currentPath, String.format(
+                    "Invalid reference at '%s': Missing required field '%s'",
+                    formatPath(currentPath),
+                    referenceToObject.getObjectReferencingKey()
+                )));
+                return;
+            }
+            
+            if (objectKeyNode.isMissingNode() || objectKeyNode.isNull())
+            {
+                errors.add(new ValidationError(currentPath, String.format(
+                    "Invalid reference at '%s': Missing required field '%s'",
+                    formatPath(currentPath),
+                    referenceToObject.getObjectKey()
+                )));
+                return;
+            }
+            
+            final String objectReferencingKey = referencingKeyNode.asText();
+            final String objectKey = objectKeyNode.asText();
+            
+            if (objectReferencingKey.isEmpty())
+            {
+                errors.add(new ValidationError(currentPath, String.format(
+                    "Invalid reference at '%s': Empty value for '%s'",
+                    formatPath(currentPath),
+                    referenceToObject.getObjectReferencingKey()
+                )));
+                return;
+            }
+            
+            if (objectKey.isEmpty())
+            {
+                errors.add(new ValidationError(currentPath, String.format(
+                    "Invalid reference at '%s': Empty value for '%s'",
+                    formatPath(currentPath),
+                    referenceToObject.getObjectKey()
+                )));
+                return;
+            }
+            
             final String resolvedPath = ReferenceHelper.resolveReference(node, model);
             
             if (resolvedPath == null)
             {
-                final String objectReferencingKey = node.getNode().at(referenceToObject.getObjectReferencingKey()).asText();
-                final String objectKey = node.getNode().at(referenceToObject.getObjectKey()).asText();
+                final ReferenceableObject refObject = ReferenceHelper.getReferenceableObject(model, objectReferencingKey);
                 
-                final String errorMessage = String.format(
-                    "Invalid reference at '%s': Cannot resolve reference with type='%s' and key='%s'",
-                    currentPath.isEmpty() ? "/" : currentPath,
-                    objectReferencingKey,
-                    objectKey
-                );
-                
-                errors.add(new ValidationError(currentPath, errorMessage));
+                if (refObject == null)
+                {
+                    errors.add(new ValidationError(currentPath, String.format(
+                        "Invalid reference at '%s': Unknown reference type '%s' (expected one of the defined referenceableObjects)",
+                        formatPath(currentPath),
+                        objectReferencingKey
+                    )));
+                }
+                else
+                {
+                    errors.add(new ValidationError(currentPath, String.format(
+                        "Invalid reference at '%s': Cannot find %s with key '%s' in '%s'",
+                        formatPath(currentPath),
+                        objectReferencingKey,
+                        objectKey,
+                        refObject.getPath()
+                    )));
+                }
             }
         }
         
@@ -76,6 +133,11 @@ public final class ReferenceValidator
                 collectInvalidReferences(model, childPath, childNode, errors);
             }
         }
+    }
+    
+    private static String formatPath(String path)
+    {
+        return path.isEmpty() ? "/" : path;
     }
 }
 
