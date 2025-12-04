@@ -228,3 +228,26 @@
     -fx-opacity: 1.0;
     -fx-cursor: default;
 }
+
+/* Diff dialog styles */
+.diff-icon-added {
+    -fx-fill: green;
+    -fx-font-size: 16px;
+}
+
+.diff-icon-removed {
+    -fx-fill: red;
+    -fx-font-size: 16px;
+}
+
+.diff-icon-modified {
+    -fx-fill: orange;
+    -fx-font-size: 16px;
+}
+
+.diff-entry-type-indicator {
+    -fx-fill: -accent-color;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+

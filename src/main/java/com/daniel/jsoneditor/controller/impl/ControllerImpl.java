@@ -18,6 +18,8 @@ import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.commands.CommandFactory;
+import com.daniel.jsoneditor.model.diff.DiffEntry;
+import com.daniel.jsoneditor.model.diff.JsonDiffer;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -390,6 +392,16 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void overrideNodeAtPath(String path, JsonNode node)
+    {
+        if (path == null || node == null)
+        {
+            return;
+        }
+        commandManager.executeCommand(commandFactory.setNodeCommand(path, node));
+    }
+    
+    @Override
     public void copyToClipboard(String path)
     {
         JsonNodeWithPath item = readableModel.getNodeForPath(path);
@@ -515,5 +527,28 @@ public class ControllerImpl implements Controller, Observer
     public void redo()
     {
         commandManager.redo();
+    }
+    
+    @Override
+    public List<DiffEntry> calculateJsonDiff()
+    {
+        final JsonFileReaderAndWriter jsonReader = new JsonFileReaderAndWriterImpl();
+        final JsonNode savedJson = jsonReader.getJsonFromFile(readableModel.getCurrentJSONFile());
+        
+        if (savedJson == null)
+        {
+            logger.error("Failed to read saved JSON from file: {}", readableModel.getCurrentJSONFile());
+            return new ArrayList<>();
+        }
+        
+        final JsonNode currentJson = readableModel.getRootJson();
+        
+        if (currentJson == null)
+        {
+            logger.error("Current JSON in model is null");
+            return new ArrayList<>();
+        }
+        
+        return JsonDiffer.calculateDiff(savedJson, currentJson, readableModel);
     }
 }
