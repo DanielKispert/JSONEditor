@@ -204,13 +204,18 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     @Override
     public final void commitEdit(String newValue)
     {
+
+        if (!isEditing())
+        {
+            return;
+        }
+        
         if (Objects.equals(newValue, committedValue))
         {
-            return; // in case the value is already committed, we don't need to change anything
+            return;
         }
         super.commitEdit(newValue);
         
-        // Update our state tracking - both values sync when committed
         currentValue = newValue;
         committedValue = newValue;
         
@@ -220,7 +225,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         {
             return;
         }
-        
+
         JsonNodeWithPath item = tableRow.getItem();
         String propertyName = column.getPropertyName();
         JsonNode jsonNode = item.getNode().get(propertyName);

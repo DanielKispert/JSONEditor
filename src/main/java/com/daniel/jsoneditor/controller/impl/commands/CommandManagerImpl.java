@@ -64,7 +64,15 @@ public class CommandManagerImpl implements CommandManager
     @Override
     public List<ModelChange> executeCommand(final Command cmd)
     {
-        logger.debug("Executing command: {}", cmd.getLabel());
+        if (logger.isDebugEnabled())
+        {
+            final StackTraceElement caller = Thread.currentThread().getStackTrace()[3];
+            logger.debug("Executing command: {} (called from {}.{}:{})",
+                cmd.getLabel(),
+                caller.getClassName().substring(caller.getClassName().lastIndexOf('.') + 1),
+                caller.getMethodName(),
+                caller.getLineNumber());
+        }
         final List<ModelChange> changes = safeList(cmd.execute());
         for (final ModelChange change : changes)
         {
