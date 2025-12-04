@@ -2,7 +2,9 @@ package com.daniel.jsoneditor.controller;
 
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
+import com.daniel.jsoneditor.model.diff.DiffEntry;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.File;
 import java.util.List;
@@ -73,6 +75,15 @@ public interface Controller
     void setValueAtPath(String path, Object value);
     
     /**
+     * Sets a complete JSON node at the given path.
+     * Used for reverting diff entries to their saved state.
+     *
+     * @param path The path to the node
+     * @param node The JsonNode to set
+     */
+    void overrideNodeAtPath(String path, JsonNode node);
+    
+    /**
      * copy the node at the path to the clipboard
      */
     void copyToClipboard(String path);
@@ -80,5 +91,12 @@ public interface Controller
     void pasteFromClipboardReplacingChild(String pathToInsert);
     
     void pasteFromClipboardIntoParent(String parentPath);
+    
+    /**
+     * Calculates differences between the JSON currently in the editor and the JSON saved on disk.
+     *
+     * @return List of differences, empty list if no differences found
+     */
+    List<DiffEntry> calculateJsonDiff();
 
 }

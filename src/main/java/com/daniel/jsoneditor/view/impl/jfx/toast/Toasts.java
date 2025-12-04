@@ -15,7 +15,8 @@ public enum Toasts implements ToastLike
     ERROR_TOAST("Error", Color.RED),
     EXPORT_FAILED_DEPENDENCY_LOOP_TOAST("Export failed, resolve circular dependencies first", Color.RED),
     PASTED_FROM_CLIPBOARD_TOAST("Pasted", Color.GREEN),
-    NO_REFERENCES_TOAST("No references found", Color.RED);
+    NO_REFERENCES_TOAST("No references found", Color.RED),
+    NO_DIFFERENCES_TOAST("No differences found", Color.GREEN);
     
     private final String message;
     
