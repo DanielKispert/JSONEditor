@@ -3,7 +3,6 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.view.impl.jfx.buttons.CreateNewReferenceableObjectButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.EditorTableColumn;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.AutofillField;
@@ -63,6 +62,7 @@ public class TextTableCell extends EditorTableCell
     protected void updateItem(String item, boolean empty)
     {
         super.updateItem(item, empty);
+        
         if (empty || item == null)
         {
             setGraphicWithResizing(null);
@@ -71,12 +71,13 @@ public class TextTableCell extends EditorTableCell
         }
         else
         {
+            currentValue = item;
+            committedValue = item;
+            
             Pair<Boolean, List<String>> suggestions = getSuggestions();
             HBox fieldGraphic = new HBox();
             
-            committedValue = item;
-            currentValue = item;
-            
+
             if (suggestions.getValue().isEmpty())
             {
                 currentTextEnterGraphic = new EditorTextField(this, item);
