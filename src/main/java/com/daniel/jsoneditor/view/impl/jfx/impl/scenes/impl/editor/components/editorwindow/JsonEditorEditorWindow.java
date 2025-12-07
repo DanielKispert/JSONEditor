@@ -248,13 +248,28 @@ public class JsonEditorEditorWindow extends VBox
     public void handlePathChanged(String path)
     {
         boolean shouldUpdateNamebar = false;
+        boolean handledByChildTable = false;
+        
+        for (TableViewWithCompactNamebar childTable : childTableViews)
+        {
+            if (childTable.getSelectedPath().equals(path) || path.startsWith(childTable.getSelectedPath() + "/"))
+            {
+                childTable.handleItemChanged(path);
+                handledByChildTable = true;
+            }
+        }
         
         if (selectedPath.equals(path))
         {
             mainTableView.handleItemChanged(path);
             shouldUpdateNamebar = true;
         }
-        else if (path.startsWith(selectedPath + "/") || selectedPath.startsWith(path + "/"))
+        else if (path.startsWith(selectedPath + "/") && !handledByChildTable)
+        {
+            mainTableView.handleItemChanged(path);
+            shouldUpdateNamebar = true;
+        }
+        else if (selectedPath.startsWith(path + "/"))
         {
             shouldUpdateNamebar = true;
         }
@@ -263,14 +278,6 @@ public class JsonEditorEditorWindow extends VBox
         {
             final JsonNodeWithPath currentNode = model.getNodeForPath(selectedPath);
             nameBar.setSelection(currentNode);
-        }
-        
-        for (TableViewWithCompactNamebar childTable : childTableViews)
-        {
-            if (childTable.getSelectedPath().equals(path) || path.startsWith(childTable.getSelectedPath() + "/"))
-            {
-                childTable.handleItemChanged(path);
-            }
         }
     }
     
