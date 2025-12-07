@@ -49,6 +49,9 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     protected String currentValue; // What the user is currently seeing/typing
     protected String committedValue; // What was last saved to the model (also serves as previouslyCommittedValue)
     
+    protected Control currentTextInputControl; // Tracks the active TextField/AutofillField to validate commit sources
+    private boolean isLegitimateCommit = false; // Flag to allow commits from current text field even if not in edit mode
+    
     protected CreateNewReferenceableObjectButton createNewReferenceableObjectButton;
     
     private final FittingObjectsPopup fittingObjectsPopup;
@@ -88,7 +91,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         {
             ((EditorTextField) currentTextEnterGraphic).setText(selectedItem.getKey());
         }
-        commitEdit(selectedItem.getKey());
+        commitEditFromCurrentControl(selectedItem.getKey(), currentTextEnterGraphic);
     }
     
     public void contentFocusChanged(boolean isNowFocused)
@@ -204,8 +207,7 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
     @Override
     public final void commitEdit(String newValue)
     {
-
-        if (!isEditing())
+        if (!isEditing() && !isLegitimateCommit)
         {
             return;
         }
@@ -281,6 +283,20 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             currentValue = enteredText;
             toggleCreateNewReferenceableObjectButtonVisibility();
             fittingObjectsPopup.setItems(getFittingReferenceableObjects());
+        }
+    }
+    
+    /**
+     * Initiates a legitimate commit from the current text input control.
+     * This bypasses the isEditing() guard to allow commits after table refreshes.
+     */
+    public void commitEditFromCurrentControl(String newValue, Control source)
+    {
+        if (source == currentTextInputControl)
+        {
+            isLegitimateCommit = true;
+            commitEdit(newValue);
+            isLegitimateCommit = false;
         }
     }
     

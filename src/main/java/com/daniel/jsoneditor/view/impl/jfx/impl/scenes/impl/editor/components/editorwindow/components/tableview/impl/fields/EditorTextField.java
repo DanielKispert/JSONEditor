@@ -18,18 +18,18 @@ public class EditorTextField extends TextField
             parent.onUserChangedText(newValue);
         });
         setText(text);
-        setOnAction(event -> parent.commitEdit(getText()));
+        setOnAction(event -> parent.commitEditFromCurrentControl(getText(), this));
         focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
             if (wasFocused && !isNowFocused)
             {
-                parent.commitEdit(getText());
+                parent.commitEditFromCurrentControl(getText(), this);
             }
             parent.contentFocusChanged(isNowFocused);
         });
         setOnKeyReleased(t -> {
             if (t.getCode() == KeyCode.ENTER)
             {
-                parent.commitEdit(getText());
+                parent.commitEditFromCurrentControl(getText(), this);
             }
         });
         setMaxWidth(Double.MAX_VALUE);

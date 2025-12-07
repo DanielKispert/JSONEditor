@@ -26,18 +26,18 @@ public class AutofillField extends ComboBox<String>
             getEditor().setPrefWidth(width + 50);
             parent.onUserChangedText(newValue);
         });
-        setOnAction(event -> parent.commitEdit(getEditor().getText()));
+        setOnAction(event -> parent.commitEditFromCurrentControl(getEditor().getText(), this));
         getEditor().focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
             if (wasFocused && !isNowFocused)
             {
-                parent.commitEdit(getEditor().getText());
+                parent.commitEditFromCurrentControl(getEditor().getText(), this);
             }
             parent.contentFocusChanged(isNowFocused);
         });
         getEditor().setOnKeyReleased(t -> {
             if (t.getCode() == KeyCode.ENTER)
             {
-                parent.commitEdit(getEditor().getText());
+                parent.commitEditFromCurrentControl(getEditor().getText(), this);
             }
         });
         getItems().setAll(allSuggestions);
