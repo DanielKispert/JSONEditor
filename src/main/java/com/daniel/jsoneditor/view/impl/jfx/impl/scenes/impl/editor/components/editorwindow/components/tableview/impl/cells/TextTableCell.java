@@ -86,6 +86,8 @@ public class TextTableCell extends EditorTableCell
             {
                 currentTextEnterGraphic = new AutofillField(this, item, suggestions.getValue(), !suggestions.getKey());
             }
+            currentTextInputControl = currentTextEnterGraphic;
+            
             HBox.setHgrow(currentTextEnterGraphic, Priority.ALWAYS);
             fieldGraphic.getChildren().addAll(currentTextEnterGraphic, createNewReferenceableObjectButton);
             toggleCreateNewReferenceableObjectButtonVisibility();
