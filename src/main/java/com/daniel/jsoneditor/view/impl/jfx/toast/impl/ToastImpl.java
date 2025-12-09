@@ -87,11 +87,11 @@ public class ToastImpl implements Toast
                 Timeline moveDownTimeline = new Timeline();
                 KeyFrame moveDownKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), 10));
                 moveDownTimeline.getKeyFrames().add(moveDownKey);
-                
+
                 Timeline fadeOutTimeline = new Timeline();
                 KeyFrame fadeOutKey = new KeyFrame(Duration.millis(FADE_DURATION), new KeyValue(root.opacityProperty(), 0));
                 fadeOutTimeline.getKeyFrames().add(fadeOutKey);
-                
+
                 ParallelTransition hideTransition = new ParallelTransition(moveDownTimeline, fadeOutTimeline);
                 hideTransition.setOnFinished((aeb) -> {
                     toastPopup.hide();
