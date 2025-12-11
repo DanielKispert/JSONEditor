@@ -203,12 +203,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         {
             return null;
         }
-        JsonNode nodeAtPath = getRootJson().at(path);
-        if (nodeAtPath.isMissingNode())
-        {
-            return null;
-        }
-        return new JsonNodeWithPath(nodeAtPath, path);
+        return new JsonNodeWithPath(getRootJson().at(path), path);
     }
     
     @Override
