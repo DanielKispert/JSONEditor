@@ -117,6 +117,14 @@ public final class JsonNodeWithPath
         return node != null && node.isObject();
     }
     
+    /**
+     * the JSON node with path points to a node that doesn't actually exist in our JSON file
+     */
+    public boolean isMissing()
+    {
+        return node == null || node.isMissingNode();
+    }
+    
     public String makeNameIncludingPath(ReadableModel model)
     {
         String path = getPath();

@@ -96,6 +96,10 @@ public class ReferenceHelper
             return new ArrayList<>();
         }
         JsonNodeWithPath objectInstance = model.getNodeForPath(referenceableObject.getPath());
+        if (objectInstance.isMissing())
+        {
+            return new ArrayList<>();
+        }
         if (objectInstance.isArray())
         {
             List<ReferenceableObjectInstance> instances = new ArrayList<>();
@@ -392,7 +396,7 @@ public class ReferenceHelper
     {
         List<ReferenceToObjectInstance> instances = new ArrayList<>();
         JsonNodeWithPath node = model.getNodeForPath(path);
-        if (node == null)
+        if (node == null || node.isMissing())
         {
             return instances;
         }
