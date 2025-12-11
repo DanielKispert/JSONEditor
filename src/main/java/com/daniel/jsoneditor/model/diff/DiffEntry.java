@@ -112,15 +112,89 @@ public class DiffEntry
         }
         if (node.isObject())
         {
-            final int fieldCount = node.size();
-            return fieldCount == 0 ? "{}" : "{" + fieldCount + " fields}";
+            if (node.size() == 0)
+            {
+                return "{}";
+            }
+            final StringBuilder sb = new StringBuilder("{");
+            int count = 0;
+            final int maxFields = 3;
+            final var fields = node.fields();
+            while (fields.hasNext() && count < maxFields)
+            {
+                final var entry = fields.next();
+                if (count > 0)
+                {
+                    sb.append(", ");
+                }
+                sb.append(entry.getKey()).append(": ");
+                final String fieldValue = formatFieldPreview(entry.getValue());
+                sb.append(fieldValue);
+                count++;
+            }
+            if (node.size() > maxFields)
+            {
+                sb.append(", ...");
+            }
+            sb.append("}");
+            final String result = sb.toString();
+            return result.length() > 120 ? result.substring(0, 117) + "...}" : result;
         }
         if (node.isArray())
         {
-            final int size = node.size();
-            return size == 0 ? "[]" : "[" + size + " items]";
+            if (node.size() == 0)
+            {
+                return "[]";
+            }
+            final StringBuilder sb = new StringBuilder("[");
+            final int maxItems = 3;
+            for (int i = 0; i < Math.min(node.size(), maxItems); i++)
+            {
+                if (i > 0)
+                {
+                    sb.append(", ");
+                }
+                sb.append(formatFieldPreview(node.get(i)));
+            }
+            if (node.size() > maxItems)
+            {
+                sb.append(", ...");
+            }
+            sb.append("]");
+            final String result = sb.toString();
+            return result.length() > 120 ? result.substring(0, 117) + "...]" : result;
         }
         return node.toString();
+    }
+    
+    private String formatFieldPreview(JsonNode value)
+    {
+        if (value == null || value.isNull())
+        {
+            return "null";
+        }
+        if (value.isTextual())
+        {
+            final String text = value.asText();
+            if (text.length() > 30)
+            {
+                return "\"" + text.substring(0, 27) + "...\"";
+            }
+            return "\"" + text + "\"";
+        }
+        if (value.isNumber() || value.isBoolean())
+        {
+            return value.asText();
+        }
+        if (value.isObject())
+        {
+            return "{" + value.size() + "}";
+        }
+        if (value.isArray())
+        {
+            return "[" + value.size() + "]";
+        }
+        return value.toString();
     }
 }
 
