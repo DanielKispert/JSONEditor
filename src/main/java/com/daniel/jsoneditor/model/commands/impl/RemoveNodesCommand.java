@@ -22,7 +22,14 @@ public class RemoveNodesCommand extends BaseCommand
     public CommandCategory getCategory() { return CommandCategory.STRUCTURE; }
     
     @Override
-    public String getLabel() { return "Remove Multiple Nodes"; }
+    public String getLabel()
+    {
+        if (paths.size() == 1)
+        {
+            return "Remove 1 Node";
+        }
+        return "Remove " + paths.size() + " Nodes";
+    }
     
     @Override
     public List<ModelChange> execute()
