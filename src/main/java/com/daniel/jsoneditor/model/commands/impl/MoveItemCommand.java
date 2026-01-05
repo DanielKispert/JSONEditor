@@ -59,7 +59,7 @@ public class MoveItemCommand extends BaseCommand
             adjustedTarget = targetIndex - 1;
         }
         array.insert(adjustedTarget, moved);
-        return List.of(ModelChange.move(parentPath, fromIndex, targetIndex));
+        return List.of(ModelChange.move(parentPath, fromIndex, adjustedTarget));
     }
 }
 

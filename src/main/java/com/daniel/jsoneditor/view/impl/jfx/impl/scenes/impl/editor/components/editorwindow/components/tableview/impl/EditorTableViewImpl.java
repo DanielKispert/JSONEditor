@@ -357,14 +357,22 @@ public class EditorTableViewImpl extends EditorTableView
         final int fromIndex = change.getFromIndex();
         final int toIndex = change.getToIndex();
         
-        if (fromIndex < 0 || fromIndex >= allItems.size() || toIndex < 0 || toIndex >= allItems.size())
+        if (fromIndex < 0 || fromIndex >= allItems.size())
         {
             refreshTable();
             return;
         }
 
         final JsonNodeWithPath movedItem = allItems.remove(fromIndex);
-        allItems.add(toIndex, movedItem);
+        
+        if (toIndex < 0 || toIndex >= allItems.size())
+        {
+            allItems.add(movedItem);
+        }
+        else
+        {
+            allItems.add(toIndex, movedItem);
+        }
         
         final int minIndex = Math.min(fromIndex, toIndex);
         updatePathsAfterIndex(minIndex, minIndex);
