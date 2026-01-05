@@ -116,9 +116,15 @@ public class EditorTableRow extends TableRow<JsonNodeWithPath>
             if (draggedIndex != dropIndex)
             {
                 JsonNodeWithPath draggedItem = tableView.getItems().get(draggedIndex);
-                controller.moveItemToIndex(null, draggedItem,
-                        dropIndex); // Assuming newParent is null for reordering within the same parent
-                tableView.getSelectionModel().select(dropIndex);
+                
+                int targetIndex = dropIndex;
+                if (dropIndex > draggedIndex)
+                {
+                    targetIndex = dropIndex - 1;
+                }
+                
+                controller.moveItemToIndex(null, draggedItem, targetIndex);
+                tableView.getSelectionModel().select(targetIndex);
             }
             event.setDropCompleted(true);
         }
