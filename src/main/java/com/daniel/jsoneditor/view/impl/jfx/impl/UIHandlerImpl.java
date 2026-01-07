@@ -19,6 +19,8 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+
 
 public class UIHandlerImpl implements UIHandler
 {
@@ -89,14 +91,21 @@ public class UIHandlerImpl implements UIHandler
     public void updateWindowTitle(final int unsavedChangesCount)
     {
         final String baseTitle = "JSON Editor";
+        final File currentFile = model.getCurrentJSONFile();
+        final String fileName = currentFile != null ? currentFile.getName() : "";
+        
+        final StringBuilder title = new StringBuilder(baseTitle);
+        if (!fileName.isEmpty())
+        {
+            title.append(" - ").append(fileName);
+        }
+        
         if (unsavedChangesCount > 0)
         {
-            stage.setTitle(baseTitle + " - " + unsavedChangesCount + " unsaved change" + (unsavedChangesCount == 1 ? "" : "s"));
+            title.append(" - ").append(unsavedChangesCount).append(" unsaved change").append(unsavedChangesCount == 1 ? "" : "s");
         }
-        else
-        {
-            stage.setTitle(baseTitle);
-        }
+        
+        stage.setTitle(title.toString());
     }
     
     @Override
