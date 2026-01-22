@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -528,8 +529,11 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         ReferenceToObject reference = getReferenceToObject(referencePath);
         
-        // duplicate the node
         String clonedPath = duplicateItem(pathToItemToDuplicate);
+        if (clonedPath == null)
+        {
+            return;
+        }
         
         JsonNodeWithPath clonedNode = getNodeForPath(clonedPath);
         
@@ -560,13 +564,20 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         
         String clonedPath = PathHelper.getParentPath(itemToDuplicate.getPath()) + "/" + (indexToClone + 1);
         
-        //check if the cloned node is a referenceable object, if yes then we want to offer to change its name
         ReferenceableObject object = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath);
         if (object != null)
         {
             String currentKey = object.getKeyOfInstance(itemToDuplicate.getNode());
-            new RenameKeyDialog(currentKey).showAndWait().ifPresent(
-                    newKey -> ReferenceHelper.setKeyOfInstance(this, object, clonedPath, newKey));
+            Optional<String> newKey = new RenameKeyDialog(currentKey).showAndWait();
+            if (newKey.isPresent())
+            {
+                ReferenceHelper.setKeyOfInstance(this, object, clonedPath, newKey.get());
+            }
+            else
+            {
+                arrayNode.remove(indexToClone + 1);
+                return null;
+            }
         }
         return clonedPath;
     }
