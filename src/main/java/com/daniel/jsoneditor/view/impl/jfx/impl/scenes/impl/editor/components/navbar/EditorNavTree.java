@@ -425,7 +425,15 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         
         if (itemToRemove != null && itemToRemove.getParent() != null)
         {
-            itemToRemove.getParent().getChildren().remove(itemToRemove);
+            final TreeItem<JsonNodeWithPath> parent = itemToRemove.getParent();
+            parent.getChildren().remove(itemToRemove);
+            
+            if (parent.getValue() != null && parent.getValue().isArray())
+            {
+                parent.setValue(model.getNodeForPath(parent.getValue().getPath()));
+                parent.getChildren().clear();
+                populateItem((NavbarItem) parent);
+            }
             
             if (path.equals(selectedPath))
             {
