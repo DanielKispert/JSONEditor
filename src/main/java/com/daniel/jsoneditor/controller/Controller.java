@@ -58,6 +58,8 @@ public interface Controller
     
     void sortArray(String path);
     
+    void reorderArray(String path, List<Integer> newIndices);
+    
     void duplicateArrayNode(String path);
     
     void duplicateReferenceableObjectForLinking(String referencePath, String pathToDuplicate);

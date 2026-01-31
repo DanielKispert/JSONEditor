@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.CollapseButton;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.ReorderButton;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.VisibilityToggleButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.elements.Collapsible;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
@@ -35,6 +36,8 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
     
     private final VisibilityToggleButton visibilityToggleButton;
     
+    private final ReorderButton reorderButton;
+    
     private boolean collapsed;
     
     private String selectedPath;
@@ -51,6 +54,7 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
         this.buttonBar = new TableViewButtonBar(model, controller, tableView::getCurrentlyDisplayedPaths, () -> selectedPath);
         this.collapseButton = createCollapseButton(window);
         this.visibilityToggleButton = new VisibilityToggleButton(tableView);
+        this.reorderButton = new ReorderButton(model, controller, () -> selectedPath);
         this.getChildren().addAll(nameBar, tableView, buttonBar);
     }
     
@@ -63,10 +67,14 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
         nameBar.getChildren().clear();
         nameBar.getChildren().add(createNameLabel(selection.getDisplayName()));
         
-        // Add visibility toggle button if hideEmptyColumns setting is enabled and this is an array
-        if (controller.getSettingsController().hideEmptyColumns() && model.getNodeForPath(selectedPath).isArray())
+        if (model.getNodeForPath(selectedPath).isArray())
         {
-            nameBar.getChildren().add(visibilityToggleButton);
+            nameBar.getChildren().add(reorderButton);
+            
+            if (controller.getSettingsController().hideEmptyColumns())
+            {
+                nameBar.getChildren().add(visibilityToggleButton);
+            }
         }
         
         buttonBar.updateBottomBar(model.canAddMoreItems(selectedPath), !tableView.getCurrentlyDisplayedPaths().isEmpty());
@@ -142,9 +150,14 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
             nameBar.getChildren().clear();
             nameBar.getChildren().add(createNameLabel(model.getNodeForPath(selectedPath).getDisplayName()));
             
-            if (controller.getSettingsController().hideEmptyColumns() && model.getNodeForPath(selectedPath).isArray())
+            if (model.getNodeForPath(selectedPath).isArray())
             {
-                nameBar.getChildren().add(visibilityToggleButton);
+                nameBar.getChildren().add(reorderButton);
+                
+                if (controller.getSettingsController().hideEmptyColumns())
+                {
+                    nameBar.getChildren().add(visibilityToggleButton);
+                }
             }
             
             // Refresh the table to apply new settings
