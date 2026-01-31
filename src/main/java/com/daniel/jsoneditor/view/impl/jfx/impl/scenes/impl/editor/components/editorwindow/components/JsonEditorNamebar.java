@@ -6,6 +6,7 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ShowUsagesButton;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.WindowGitBlameToggleButton;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.AreYouSureDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
@@ -48,8 +49,15 @@ public class JsonEditorNamebar extends HBox
         nameLabel.setAlignment(Pos.CENTER);
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
         showUsagesButton = new ShowUsagesButton(model, manager);
-        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showUsagesButton, makeDeleteItemButton(),
-                makeCloseWindowButton());
+        
+        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showUsagesButton);
+        
+        if (model.isGitBlameAvailable())
+        {
+            this.getChildren().add(new WindowGitBlameToggleButton(editorWindow));
+        }
+        
+        this.getChildren().addAll(makeDeleteItemButton(), makeCloseWindowButton());
     }
     
     public void setSelection(JsonNodeWithPath selection)

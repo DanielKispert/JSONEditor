@@ -184,4 +184,9 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
     {
         tableView.handleSorted(path);
     }
+    
+    public void toggleGitBlame()
+    {
+        tableView.toggleGitBlameColumn();
+    }
 }

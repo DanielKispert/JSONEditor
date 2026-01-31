@@ -2,6 +2,8 @@ package com.daniel.jsoneditor.model.impl;
 
 import com.daniel.jsoneditor.model.WritableModelInternal;
 import com.daniel.jsoneditor.model.commands.CommandFactory;
+import com.daniel.jsoneditor.model.git.GitBlameIntegration;
+import com.daniel.jsoneditor.model.git.GitBlameInfo;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraphCreator;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -59,6 +61,8 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     private JsonSchema rootSchema;
     
     private Settings settings;
+    
+    private final GitBlameIntegration gitBlameIntegration = new GitBlameIntegration();
     
     public ModelImpl(EventSender eventSender)
     {
@@ -136,6 +140,10 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     public void setCurrentJSONFile(File json)
     {
         this.jsonFile = json;
+        if (json != null)
+        {
+            gitBlameIntegration.initialize(json.toPath());
+        }
     }
     
     private void setCurrentSchemaFile(File schema)
@@ -760,5 +768,17 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             }
         }
         return null;
+    }
+    
+    @Override
+    public GitBlameInfo getBlameForPath(String jsonPath)
+    {
+        return gitBlameIntegration.getBlameForPath(jsonPath);
+    }
+    
+    @Override
+    public boolean isGitBlameAvailable()
+    {
+        return gitBlameIntegration.isAvailable();
     }
 }

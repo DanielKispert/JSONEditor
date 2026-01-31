@@ -24,7 +24,8 @@ javafx {
 
 dependencies {
     implementation 'com.networknt:json-schema-validator:1.0.87'
-    implementation 'ch.qos.logback:logback-classic:1.4.14'
+    implementation 'ch.qos.logback:logback-classic:1.5.17'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
     implementation name: 'smartgraph-2.0.0' //local jar that has been recompiled to run on java 11
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
