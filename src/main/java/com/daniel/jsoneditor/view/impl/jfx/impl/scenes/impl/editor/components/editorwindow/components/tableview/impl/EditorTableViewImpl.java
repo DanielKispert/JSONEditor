@@ -12,6 +12,7 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.EditorTableColumn;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.GitBlameColumn;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -22,7 +23,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +59,8 @@ public class EditorTableViewImpl extends EditorTableView
 
     // temporary override for hide empty columns setting
     private boolean temporaryShowAllColumns = false;
+    
+    private boolean gitBlameColumnVisible = false;
     
     private void refreshTable()
     {
@@ -442,6 +444,30 @@ public class EditorTableViewImpl extends EditorTableView
             if (updatedItem != null)
             {
                 allItems.set(i, updatedItem);
+            }
+        }
+    }
+    
+    @Override
+    public void toggleGitBlameColumn()
+    {
+        gitBlameColumnVisible = !gitBlameColumnVisible;
+        refreshGitBlameColumnVisibility();
+    }
+    
+    @Override
+    public boolean isGitBlameColumnVisible()
+    {
+        return gitBlameColumnVisible;
+    }
+    
+    private void refreshGitBlameColumnVisibility()
+    {
+        for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
+        {
+            if (column instanceof GitBlameColumn)
+            {
+                column.setVisible(gitBlameColumnVisible);
             }
         }
     }

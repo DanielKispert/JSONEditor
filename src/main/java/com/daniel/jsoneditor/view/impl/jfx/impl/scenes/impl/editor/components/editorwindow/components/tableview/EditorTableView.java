@@ -49,4 +49,14 @@ public abstract class EditorTableView extends TableView<JsonNodeWithPath>
      * Returns true if all columns are currently shown due to temporary override
      */
     public abstract boolean isTemporaryShowAllColumns();
+    
+    /**
+     * Toggles the visibility of the git blame column
+     */
+    public abstract void toggleGitBlameColumn();
+    
+    /**
+     * Returns true if git blame column is currently visible
+     */
+    public abstract boolean isGitBlameColumnVisible();
 }

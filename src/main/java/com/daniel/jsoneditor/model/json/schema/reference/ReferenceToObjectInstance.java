@@ -61,6 +61,9 @@ public class ReferenceToObjectInstance implements ReferencingInstance
     
     public boolean refersToObject(ReferenceableObjectInstance objectInstance)
     {
-        return objectInstance.getKey().equals(key) && objectInstance.getReferencingKey().equals(referencingKey);
+        final String objectKey = objectInstance.getKey();
+        final String objectReferencingKey = objectInstance.getReferencingKey();
+        return objectKey != null && objectKey.equals(key)
+            && objectReferencingKey != null && objectReferencingKey.equals(referencingKey);
     }
 }

@@ -8,6 +8,7 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.EditorTableColumn;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.FollowRefOrOpenColumn;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.columns.GitBlameColumn;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Button;
@@ -52,6 +53,13 @@ public class TableColumnFactory
             EditorTableViewImpl parentTableView)
     {
         final List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>(createPropertyColumns(properties, parentTableView));
+        
+        if (model.isGitBlameAvailable())
+        {
+            final GitBlameColumn blameColumn = new GitBlameColumn(model);
+            blameColumn.setVisible(false);
+            columns.add(blameColumn);
+        }
         
         if (isArray)
         {
