@@ -303,6 +303,16 @@ public class ControllerImpl implements Controller, Observer
     }
     
     @Override
+    public void reorderArray(String path, List<Integer> newIndices)
+    {
+        if (path == null || newIndices == null)
+        {
+            return;
+        }
+        commandManager.executeCommand(commandFactory.reorderArrayCommand(path, newIndices));
+    }
+    
+    @Override
     public void duplicateArrayNode(String path)
     {
         if (path == null)

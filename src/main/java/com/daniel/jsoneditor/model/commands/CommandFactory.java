@@ -7,6 +7,7 @@ import com.daniel.jsoneditor.model.commands.impl.DuplicateArrayItemCommand;
 import com.daniel.jsoneditor.model.commands.impl.DuplicateReferenceAndLinkCommand;
 import com.daniel.jsoneditor.model.commands.impl.MoveItemCommand;
 import com.daniel.jsoneditor.model.commands.impl.RemoveNodesCommand;
+import com.daniel.jsoneditor.model.commands.impl.ReorderArrayCommand;
 import com.daniel.jsoneditor.model.commands.impl.SetNodeCommand;
 import com.daniel.jsoneditor.model.commands.impl.SetValueAtNodeCommand;
 import com.daniel.jsoneditor.model.commands.impl.SortArrayCommand;
@@ -41,6 +42,11 @@ public class CommandFactory
     public SortArrayCommand sortArrayCommand(String path)
     {
         return new SortArrayCommand(model, path);
+    }
+    
+    public ReorderArrayCommand reorderArrayCommand(String path, java.util.List<Integer> newIndices)
+    {
+        return new ReorderArrayCommand(model, path, newIndices);
     }
     
     public MoveItemCommand moveItemCommand(String itemPath, int targetIndex)
