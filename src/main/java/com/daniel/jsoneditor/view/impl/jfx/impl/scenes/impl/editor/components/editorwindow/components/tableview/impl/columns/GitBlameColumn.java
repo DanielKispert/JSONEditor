@@ -25,12 +25,9 @@ public class GitBlameColumn extends TableColumn<JsonNodeWithPath, String>
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         .withZone(ZoneId.systemDefault());
     
-    private final ReadableModel model;
-    
     public GitBlameColumn(ReadableModel model)
     {
         super("Last Modified");
-        this.model = model;
         
         setMinWidth(100);
         setPrefWidth(150);
