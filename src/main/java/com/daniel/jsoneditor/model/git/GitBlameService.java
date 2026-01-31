@@ -140,19 +140,6 @@ public class GitBlameService
         return null;
     }
     
-    public boolean isInitialized()
-    {
-        return git != null && repository != null;
-    }
-    
-    /**
-     * Clear the blame cache. Should be called when file content changes.
-     */
-    public void clearCache()
-    {
-        blameCache.clear();
-    }
-    
     /**
      * Close the git repository and release resources.
      */

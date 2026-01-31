@@ -24,17 +24,17 @@ public class GitBlameIntegration
      * Initialize with a JSON file.
      * Checks if file is in a git repository and builds path-to-line mapping.
      *
-     * @param jsonFilePath absolute path to JSON file
-     * @return true if successfully initialized
+     * @param jsonFilePath
+     *         absolute path to JSON file
      */
-    public boolean initialize(Path jsonFilePath)
+    public void initialize(Path jsonFilePath)
     {
         close();
         
         if (!blameService.initialize(jsonFilePath))
         {
             logger.debug("Git blame not available for: {}", jsonFilePath);
-            return false;
+            return;
         }
         
         relativeFilePath = blameService.getRelativePath(jsonFilePath);
@@ -42,13 +42,12 @@ public class GitBlameIntegration
         {
             logger.warn("Could not determine relative path for: {}", jsonFilePath);
             close();
-            return false;
+            return;
         }
         
         lineMapper.buildMapping(jsonFilePath);
         initialized = true;
         logger.info("Git blame initialized for: {} ({})", jsonFilePath, relativeFilePath);
-        return true;
     }
     
     /**
@@ -77,19 +76,6 @@ public class GitBlameIntegration
     public boolean isAvailable()
     {
         return initialized;
-    }
-    
-    /**
-     * Refresh the line mapping after file changes.
-     * Should be called after saving the file.
-     */
-    public void refresh(Path jsonFilePath)
-    {
-        if (initialized)
-        {
-            lineMapper.buildMapping(jsonFilePath);
-            blameService.clearCache();
-        }
     }
     
     public void close()
