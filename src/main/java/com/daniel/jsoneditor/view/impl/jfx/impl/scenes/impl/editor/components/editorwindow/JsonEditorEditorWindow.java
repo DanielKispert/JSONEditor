@@ -49,16 +49,18 @@ public class JsonEditorEditorWindow extends VBox
     
     private List<TableViewWithCompactNamebar> childTableViews;
     
+    private boolean gitBlameVisible = false;
+    
     public JsonEditorEditorWindow(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
         this.model = model;
         this.manager = manager;
         this.controller = controller;
-        nameBar = new JsonEditorNamebar(manager, this, model, controller);
         childTableViews = new ArrayList<>();
         editorTables = new AutoAdjustingSplitPane();
         editorTables.setOrientation(javafx.geometry.Orientation.VERTICAL);
         mainTableView = new EditorTableViewImpl(manager, this, model, controller);
+        nameBar = new JsonEditorNamebar(manager, this, model, controller);
         buttonBar = new TableViewButtonBar(model, controller, mainTableView::getCurrentlyDisplayedPaths, () -> selectedPath);
         
         VBox.setVgrow(buttonBar, Priority.NEVER);
@@ -334,6 +336,27 @@ public class JsonEditorEditorWindow extends VBox
         refreshVisibilityToggleButtons();
         // Refresh the entire window to apply new settings
         setSelectedPath(selectedPath);
+    }
+    
+    /**
+     * Toggle git blame column visibility for all tables in this window
+     */
+    public void toggleGitBlameForAllTables()
+    {
+        gitBlameVisible = !gitBlameVisible;
+        mainTableView.toggleGitBlameColumn();
+        for (TableViewWithCompactNamebar childTable : childTableViews)
+        {
+            childTable.toggleGitBlame();
+        }
+    }
+    
+    /**
+     * @return true if git blame columns are currently visible
+     */
+    public boolean isGitBlameVisible()
+    {
+        return gitBlameVisible;
     }
     
     @Override

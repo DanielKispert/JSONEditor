@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.model;
 
 import com.daniel.jsoneditor.model.commands.CommandFactory;
+import com.daniel.jsoneditor.model.git.GitBlameInfo;
 import com.daniel.jsoneditor.model.impl.graph.NodeGraph;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
@@ -105,5 +106,20 @@ public interface ReadableModel extends ReadableState
     JsonSchema getSubschemaForPath(String path);
     
     String getIdentifier(String pathOfParent, JsonNode child);
+    
+    /**
+     * Get git blame information for a JSON path.
+     *
+     * @param jsonPath JSON path (e.g., "/root/child/property")
+     * @return blame info or null if not available or not in git repo
+     */
+    GitBlameInfo getBlameForPath(String jsonPath);
+    
+    /**
+     * Check if git blame is available for the current file.
+     *
+     * @return true if file is in a git repository
+     */
+    boolean isGitBlameAvailable();
     
 }
