@@ -2,6 +2,7 @@ plugins {
     id 'application'
     id 'java'
     id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'org.beryx.runtime' version '2.0.1'
 }
 
 repositories {
@@ -30,7 +31,7 @@ java {
 dependencies {
     implementation 'io.github.copilot-community-sdk:copilot-sdk:1.0.5'
     implementation 'com.networknt:json-schema-validator:1.0.87'
-    implementation 'ch.qos.logback:logback-classic:1.4.14'
+    implementation 'ch.qos.logback:logback-classic:1.5.13'
     implementation 'com.brunomnsilva:smartgraph:2.3.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
@@ -44,4 +45,18 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+runtime {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+
+    jpackage {
+        imageName = 'JSONEditor'
+        installerType = 'exe'
+        appVersion = project.version ?: '1.0.0'
+        installerOptions = [
+            '--win-shortcut',
+            '--win-menu'
+        ]
+    }
 }
