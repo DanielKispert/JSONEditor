@@ -1,10 +1,7 @@
 plugins {
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.13'
-}
-
-configurations {
-    javafx
+    id 'java'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 repositories {
@@ -14,11 +11,19 @@ repositories {
     }
 }
 
-mainClassName = 'com.daniel.jsoneditor.Main'
+application {
+    mainClass.set('com.daniel.jsoneditor.Main')
+}
 
 javafx {
     version = '19.0.2.1'
     modules = [ 'javafx.controls' ]
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 
@@ -26,12 +31,13 @@ dependencies {
     implementation 'io.github.copilot-community-sdk:copilot-sdk:1.0.5'
     implementation 'com.networknt:json-schema-validator:1.0.87'
     implementation 'ch.qos.logback:logback-classic:1.4.14'
-    implementation name: 'smartgraph-2.0.0' //local jar that has been recompiled to run on java 11
+    implementation 'com.brunomnsilva:smartgraph:2.3.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
     testImplementation 'org.testfx:testfx-core:4.0.18'
     testImplementation 'org.testfx:testfx-junit5:4.0.18'
     testRuntimeOnly 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
+
     testImplementation 'org.mockito:mockito-core:5.7.0'
     testImplementation 'org.hamcrest:hamcrest:2.2'
 }
