@@ -235,7 +235,7 @@ public class EditorTableViewImpl extends EditorTableView
         this.allItems = tableData.getNodes();
         // Use the column factory to create columns
         
-        final List<TableColumn<JsonNodeWithPath, String>> columns = columnFactory.createColumns(tableData.getProperties(),
+        final List<TableColumn<JsonNodeWithPath, ?>> columns = columnFactory.createColumns(tableData.getProperties(),
                 tableData.isArray(), this);
         
         filteredItems = new FilteredList<>(allItems);

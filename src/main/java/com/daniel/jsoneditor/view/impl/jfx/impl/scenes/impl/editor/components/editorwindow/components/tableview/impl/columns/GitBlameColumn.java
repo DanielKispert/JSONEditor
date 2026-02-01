@@ -3,7 +3,10 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.git.GitBlameInfo;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import javafx.beans.property.SimpleStringProperty;
+import com.daniel.jsoneditor.model.observe.Observer;
+import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -20,14 +23,18 @@ import java.time.format.DateTimeFormatter;
 /**
  * Table column showing git blame information (last author and commit).
  */
-public class GitBlameColumn extends TableColumn<JsonNodeWithPath, String>
+public class GitBlameColumn extends TableColumn<JsonNodeWithPath, GitBlameInfo> implements Observer
 {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         .withZone(ZoneId.systemDefault());
     
+    private final ReadableModel model;
+    
     public GitBlameColumn(ReadableModel model)
     {
         super("Last Modified");
+        
+        this.model = model;
         
         setMinWidth(100);
         setPrefWidth(150);
@@ -36,12 +43,7 @@ public class GitBlameColumn extends TableColumn<JsonNodeWithPath, String>
         setCellValueFactory(data -> {
             final JsonNodeWithPath nodeWithPath = data.getValue();
             final GitBlameInfo blameInfo = model.getBlameForPath(nodeWithPath.getPath());
-            
-            if (blameInfo != null)
-            {
-                return new SimpleStringProperty(blameInfo.toString());
-            }
-            return new SimpleStringProperty("");
+            return new SimpleObjectProperty<>(blameInfo);
         });
         
         setCellFactory(column -> new TableCell<>()
@@ -59,11 +61,11 @@ public class GitBlameColumn extends TableColumn<JsonNodeWithPath, String>
             }
             
             @Override
-            protected void updateItem(String item, boolean empty)
+            protected void updateItem(GitBlameInfo blameInfo, boolean empty)
             {
-                super.updateItem(item, empty);
+                super.updateItem(blameInfo, empty);
                 
-                if (empty || item == null || item.isEmpty())
+                if (empty || blameInfo == null)
                 {
                     setText(null);
                     setGraphic(null);
@@ -72,36 +74,46 @@ public class GitBlameColumn extends TableColumn<JsonNodeWithPath, String>
                 }
                 
                 setText(null);
-                textLabel.setText(item);
+                textLabel.setText(blameInfo.toString());
+                colorIndicator.setStyle("-fx-fill: " + blameInfo.getCommitColor() + ";");
                 
-                final JsonNodeWithPath nodeWithPath = getTableRow().getItem();
-                if (nodeWithPath != null)
-                {
-                    final GitBlameInfo blameInfo = model.getBlameForPath(nodeWithPath.getPath());
-                    if (blameInfo != null)
-                    {
-                        colorIndicator.setStyle("-fx-fill: " + blameInfo.getCommitColor() + ";");
-                        
-                        final String tooltipText = String.format(
-                            "Author: %s <%s>\nCommit: %s\nDate: %s\n\n%s",
-                            blameInfo.getAuthorName(),
-                            blameInfo.getAuthorEmail(),
-                            blameInfo.getShortCommitHash(),
-                            DATE_FORMATTER.format(blameInfo.getCommitTime()),
-                            blameInfo.getShortCommitMessage()
-                        );
-                        
-                        final Tooltip tooltip = new Tooltip(tooltipText);
-                        tooltip.setShowDelay(Duration.millis(300));
-                        setTooltip(tooltip);
-                        
-                        setGraphic(content);
-                        return;
-                    }
-                }
+                final String tooltipText = String.format(
+                    "Author: %s <%s>\nCommit: %s\nDate: %s\n\n%s",
+                    blameInfo.getAuthorName(),
+                    blameInfo.getAuthorEmail(),
+                    blameInfo.getShortCommitHash(),
+                    DATE_FORMATTER.format(blameInfo.getCommitTime()),
+                    blameInfo.getShortCommitMessage()
+                );
                 
-                setGraphic(null);
+                final Tooltip tooltip = new Tooltip(tooltipText);
+                tooltip.setShowDelay(Duration.millis(300));
+                setTooltip(tooltip);
+                
+                setGraphic(content);
             }
         });
+        
+        model.getForObservation().registerObserver(this);
+    }
+    
+    @Override
+    public void observe(com.daniel.jsoneditor.model.observe.Subject subjectToObserve)
+    {
+        subjectToObserve.registerObserver(this);
+    }
+    
+    @Override
+    public void update()
+    {
+        if (model.getLatestEvent().getEvent() == EventEnum.GIT_BLAME_LOADED)
+        {
+            Platform.runLater(() -> {
+                if (getTableView() != null)
+                {
+                    getTableView().refresh();
+                }
+            });
+        }
     }
 }

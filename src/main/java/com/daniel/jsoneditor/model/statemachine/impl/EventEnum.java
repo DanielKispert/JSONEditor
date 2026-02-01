@@ -32,5 +32,7 @@ public enum EventEnum
     
     SAVING_FAILED,
     
-    COMMAND_APPLIED // new command (execute/undo/redo) with metadata
+    COMMAND_APPLIED, // new command (execute/undo/redo) with metadata
+    
+    GIT_BLAME_LOADED
 }

@@ -9,6 +9,7 @@ public class GitBlameInfo
     private final String commitHash;
     private final Instant commitTime;
     private final String commitMessage;
+    private final String commitColor;
     
     public GitBlameInfo(String authorName, String authorEmail, String commitHash, Instant commitTime, String commitMessage)
     {
@@ -17,6 +18,7 @@ public class GitBlameInfo
         this.commitHash = commitHash;
         this.commitTime = commitTime;
         this.commitMessage = commitMessage;
+        this.commitColor = calculateCommitColor();
     }
     
     public String getAuthorName()
@@ -29,11 +31,6 @@ public class GitBlameInfo
         return authorEmail;
     }
     
-    public String getCommitHash()
-    {
-        return commitHash;
-    }
-    
     public String getShortCommitHash()
     {
         return commitHash != null && commitHash.length() > 7 ? commitHash.substring(0, 7) : commitHash;
@@ -44,11 +41,6 @@ public class GitBlameInfo
         return commitTime;
     }
     
-    public String getCommitMessage()
-    {
-        return commitMessage;
-    }
-    
     public String getShortCommitMessage()
     {
         if (commitMessage == null) return "";
@@ -56,11 +48,12 @@ public class GitBlameInfo
         return newlineIndex > 0 ? commitMessage.substring(0, newlineIndex) : commitMessage;
     }
     
-    /**
-     * Get a color derived from the commit hash for visual distinction.
-     * Returns a web color string like "#A3B5C7"
-     */
     public String getCommitColor()
+    {
+        return commitColor;
+    }
+    
+    private String calculateCommitColor()
     {
         if (commitHash == null || commitHash.isEmpty())
         {

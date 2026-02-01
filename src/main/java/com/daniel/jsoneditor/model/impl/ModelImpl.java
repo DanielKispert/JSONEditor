@@ -142,7 +142,10 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         this.jsonFile = json;
         if (json != null)
         {
-            gitBlameIntegration.initialize(json.toPath());
+            gitBlameIntegration.initialize(json.toPath()).thenRun(() -> {
+                logger.info("Git blame loading completed");
+                sendEvent(new Event(EventEnum.GIT_BLAME_LOADED));
+            });
         }
     }
     
@@ -780,5 +783,11 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     public boolean isGitBlameAvailable()
     {
         return gitBlameIntegration.isAvailable();
+    }
+    
+    @Override
+    public boolean isGitBlameLoading()
+    {
+        return gitBlameIntegration.isLoading();
     }
 }

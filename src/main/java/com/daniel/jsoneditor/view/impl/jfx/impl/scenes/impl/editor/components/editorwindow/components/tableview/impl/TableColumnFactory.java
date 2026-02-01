@@ -47,12 +47,12 @@ public class TableColumnFactory
      * @param parentTableView reference to the parent table view
      * @return list of created columns
      */
-    public List<TableColumn<JsonNodeWithPath, String>> createColumns(
+    public List<TableColumn<JsonNodeWithPath, ?>> createColumns(
             List<Pair<Pair<String, Boolean>, JsonNode>> properties,
             boolean isArray,
             EditorTableViewImpl parentTableView)
     {
-        final List<TableColumn<JsonNodeWithPath, String>> columns = new ArrayList<>(createPropertyColumns(properties, parentTableView));
+        final List<TableColumn<JsonNodeWithPath, ?>> columns = new ArrayList<>(createPropertyColumns(properties, parentTableView));
         
         if (model.isGitBlameAvailable())
         {
