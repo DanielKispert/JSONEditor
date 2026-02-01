@@ -784,10 +784,4 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     {
         return gitBlameIntegration.isAvailable();
     }
-    
-    @Override
-    public boolean isGitBlameLoading()
-    {
-        return gitBlameIntegration.isLoading();
-    }
 }

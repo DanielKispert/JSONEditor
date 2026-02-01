@@ -122,11 +122,4 @@ public interface ReadableModel extends ReadableState
      */
     boolean isGitBlameAvailable();
     
-    /**
-     * Check if git blame is currently loading.
-     *
-     * @return true if git blame is being loaded in background
-     */
-    boolean isGitBlameLoading();
-    
 }

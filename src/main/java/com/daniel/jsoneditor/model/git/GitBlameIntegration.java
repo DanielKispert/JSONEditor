@@ -115,11 +115,6 @@ public class GitBlameIntegration
         return initialized.get() || initializing.get();
     }
     
-    public boolean isLoading()
-    {
-        return initializing.get();
-    }
-    
     public void close()
     {
         blameService.close();
