@@ -65,7 +65,14 @@ runtime {
 
     jpackage {
         imageName = 'JSONEditor'
-        appVersion = version
+        // macOS jpackage requires first version number > 0, so increment by 1: 0.16.0 -> 1.16.0
+        def versionParts = version.toString().split('\\.')
+        def majorVersion = versionParts[0] as int
+        if (majorVersion == 0) {
+            appVersion = "1.${versionParts[1]}.${versionParts[2]}"
+        } else {
+            appVersion = version
+        }
         skipInstaller = true
     }
 }
