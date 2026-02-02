@@ -57,3 +57,9 @@ You can find the license in the resources folder or in their Github repository (
 
 ## Column Visibility
 Empty non-required columns in array tables auto-hide (default ON). Click the eye (left of table name) to show all columns until the table refreshes; click again to hide. If you type a value into a previously empty column it stays visible.
+
+# Installation Instructions
+
+## MacOS
+
+https://support.apple.com/de-de/guide/mac-help/mh40616/mac
