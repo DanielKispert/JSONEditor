@@ -411,7 +411,10 @@ public class EditorTableViewImpl extends EditorTableView
     {
         for (TableColumn<JsonNodeWithPath, ?> column : getColumns())
         {
-            column.setVisible(true);
+            if (column instanceof EditorTableColumn)
+            {
+                column.setVisible(true);
+            }
         }
     }
     
