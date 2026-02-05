@@ -359,6 +359,21 @@ public class JsonEditorEditorWindow extends VBox
         return gitBlameVisible;
     }
     
+    /**
+     * Called when git blame data has been loaded to refresh the blame columns.
+     */
+    public void handleGitBlameLoaded()
+    {
+        if (gitBlameVisible)
+        {
+            mainTableView.refresh();
+            for (TableViewWithCompactNamebar childTable : childTableViews)
+            {
+                childTable.refresh();
+            }
+        }
+    }
+    
     @Override
     protected double computePrefWidth(double v)
     {

@@ -29,6 +29,7 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
+import javafx.application.Platform;
 import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +145,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         {
             gitBlameIntegration.initialize(json.toPath()).thenRun(() -> {
                 logger.info("Git blame loading completed");
-                sendEvent(new Event(EventEnum.GIT_BLAME_LOADED));
+                Platform.runLater(() -> sendEvent(new Event(EventEnum.GIT_BLAME_LOADED)));
             });
         }
     }
