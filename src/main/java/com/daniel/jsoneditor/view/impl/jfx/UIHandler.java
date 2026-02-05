@@ -42,4 +42,9 @@ public interface UIHandler
      */
     void handleCommandApplied(Event event);
     
+    /**
+     * Handles git blame data being loaded, refreshes relevant UI components.
+     */
+    void handleGitBlameLoaded();
+    
 }

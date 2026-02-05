@@ -271,4 +271,14 @@ public class EditorWindowManagerImpl implements EditorWindowManager
             window.handleSettingsChanged();
         }
     }
+    
+    @Override
+    public void handleGitBlameLoaded()
+    {
+        for (Node node : editorWindowContainer.getItems())
+        {
+            final JsonEditorEditorWindow window = (JsonEditorEditorWindow) node;
+            window.handleGitBlameLoaded();
+        }
+    }
 }

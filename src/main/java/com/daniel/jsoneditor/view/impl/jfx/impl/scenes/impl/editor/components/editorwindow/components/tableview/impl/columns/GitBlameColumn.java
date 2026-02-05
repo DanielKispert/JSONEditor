@@ -3,9 +3,6 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.e
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.git.GitBlameInfo;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.observe.Observer;
-import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,18 +20,14 @@ import java.time.format.DateTimeFormatter;
 /**
  * Table column showing git blame information (last author and commit).
  */
-public class GitBlameColumn extends TableColumn<JsonNodeWithPath, GitBlameInfo> implements Observer
+public class GitBlameColumn extends TableColumn<JsonNodeWithPath, GitBlameInfo>
 {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         .withZone(ZoneId.systemDefault());
     
-    private final ReadableModel model;
-    
     public GitBlameColumn(ReadableModel model)
     {
         super("Last Modified");
-        
-        this.model = model;
         
         setMinWidth(100);
         setPrefWidth(150);
@@ -93,27 +86,5 @@ public class GitBlameColumn extends TableColumn<JsonNodeWithPath, GitBlameInfo> 
                 setGraphic(content);
             }
         });
-        
-        model.getForObservation().registerObserver(this);
-    }
-    
-    @Override
-    public void observe(com.daniel.jsoneditor.model.observe.Subject subjectToObserve)
-    {
-        subjectToObserve.registerObserver(this);
-    }
-    
-    @Override
-    public void update()
-    {
-        if (model.getLatestEvent().getEvent() == EventEnum.GIT_BLAME_LOADED)
-        {
-            Platform.runLater(() -> {
-                if (getTableView() != null)
-                {
-                    getTableView().refresh();
-                }
-            });
-        }
     }
 }

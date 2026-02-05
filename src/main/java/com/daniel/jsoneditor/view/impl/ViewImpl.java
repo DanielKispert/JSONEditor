@@ -83,6 +83,9 @@ public class ViewImpl implements View
                     showCustomToast(debugMessage, javafx.scene.paint.Color.ORANGE);
                 }
                 break;
+            case GIT_BLAME_LOADED:
+                uiHandler.handleGitBlameLoaded();
+                break;
         }
     
     }

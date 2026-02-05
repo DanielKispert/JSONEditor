@@ -29,7 +29,7 @@ public class EventSenderImpl implements EventSender
     @Override
     public void notifyObservers()
     {
-        observers.forEach(Observer::update);
+        new ArrayList<>(observers).forEach(Observer::update);
     }
     
     @Override

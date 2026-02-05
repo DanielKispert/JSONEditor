@@ -232,4 +232,13 @@ public class UIHandlerImpl implements UIHandler
         // Update any open editors showing the sorted array
         editorScene.getEditorWindowManager().handlePathSorted(path);
     }
+    
+    @Override
+    public void handleGitBlameLoaded()
+    {
+        if (editorScene != null)
+        {
+            editorScene.getEditorWindowManager().handleGitBlameLoaded();
+        }
+    }
 }

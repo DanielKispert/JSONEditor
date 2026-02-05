@@ -61,4 +61,6 @@ public interface EditorWindowManager
     void handlePathSorted(String path);
     
     void handleSettingsChanged();
+    
+    void handleGitBlameLoaded();
 }

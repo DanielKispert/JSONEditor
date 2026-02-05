@@ -44,8 +44,8 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
     // auto-scroll while dragging
     private final Timeline autoScrollTimeline;
     private double lastMouseY = -1;
-    private static final double SCROLL_MARGIN = 24.0; // px near top/bottom to trigger
-    private static final Duration SCROLL_INTERVAL = Duration.millis(80);
+    private static final double SCROLL_MARGIN = 40.0; // px near top/bottom to trigger
+    private static final Duration SCROLL_INTERVAL = Duration.millis(150);
     private static final int SCROLL_STEP = 1; // rows per tick
 
     /**
@@ -192,15 +192,17 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
             return;
         }
 
-        int adjustedTarget = toIndex;
+        int adjustedTarget = Math.max(0, Math.min(listView.getItems().size(), toIndex));
+        
+        int itemsBeforeTarget = 0;
         for (int idx : sorted)
         {
             if (idx < toIndex)
             {
-                adjustedTarget--;
+                itemsBeforeTarget++;
             }
         }
-        adjustedTarget = Math.max(0, Math.min(listView.getItems().size() - sorted.size(), adjustedTarget));
+        adjustedTarget -= itemsBeforeTarget;
 
         final List<Integer> descending = new ArrayList<>(sorted);
         descending.sort(Comparator.reverseOrder());
