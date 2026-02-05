@@ -36,7 +36,7 @@ public class JsonEditorMenuBar extends MenuBar
         refreshItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN));
         MenuItem settingsItem = new MenuItem("Settings...");
         settingsItem.setOnAction(event -> {
-            SettingsDialog dialog = new SettingsDialog(controller.getSettingsController());
+            SettingsDialog dialog = new SettingsDialog(controller.getSettingsController(), controller.getMcpController());
             dialog.showAndWait();
             // Trigger settings change handling using existing infrastructure
             manager.handleSettingsChanged();

@@ -12,14 +12,23 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
 {
-    private final ObjectMapper mapper;
+    private static final Logger logger = LoggerFactory.getLogger(JsonFileReaderAndWriterImpl.class);
+    
+    private final ObjectMapper regularMapper;
+    
+    private final ObjectMapper mapperIgnoringUnknownProperties;
     
     public JsonFileReaderAndWriterImpl()
     {
-        this.mapper = new ObjectMapper();
+        this.regularMapper = new ObjectMapper();
+        
+        this.mapperIgnoringUnknownProperties = new ObjectMapper();
+        this.mapperIgnoringUnknownProperties.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
     
 
@@ -29,11 +38,11 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     {
         try
         {
-            return mapper.readTree(file);
+            return regularMapper.readTree(file);
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            logger.error("Failed to read JSON from file: {}", file.getAbsolutePath(), e);
         }
         return null;
     }
@@ -46,8 +55,7 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
             throw new IllegalArgumentException("Content cannot be null");
         }
         
-        final ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readTree(content);
+        return regularMapper.readTree(content);
     }
     
     @Override
@@ -57,18 +65,16 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         {
             if (ignoreUnknownProperties)
             {
-                ObjectMapper newMapper = new ObjectMapper();
-                newMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return newMapper.readValue(file, classOfObject);
+                return mapperIgnoringUnknownProperties.readValue(file, classOfObject);
             }
             else
             {
-                return mapper.readValue(file, classOfObject);
+                return regularMapper.readValue(file, classOfObject);
             }
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            logger.error("Failed to read JSON from file {} as {}: {}", file.getAbsolutePath(), classOfObject.getSimpleName(), e.getMessage(), e);
         }
         return null;
     }
@@ -82,10 +88,9 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
     @Override
     public boolean writeJsonToFile(JsonNode json, File file)
     {
-        ObjectMapper mapper = new ObjectMapper();
         try
         {
-            mapper.writer(new JsonPrettyPrinter()).writeValue(file, json);
+            regularMapper.writer(new JsonPrettyPrinter()).writeValue(file, json);
         }
         catch (IOException e)
         {

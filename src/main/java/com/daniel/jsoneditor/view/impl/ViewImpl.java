@@ -52,6 +52,11 @@ public class ViewImpl implements View
                 break;
             case MAIN_EDITOR:
                 uiHandler.showMainEditor();
+                //autostart if enabled
+                if (controller.getSettingsController().isMcpServerEnabled())
+                {
+                    controller.getMcpController().startMcpServer();
+                }
                 break;
             case RESET_SUCCESSFUL:
                 showToast(Toasts.REFRESH_SUCCESSFUL_TOAST);
