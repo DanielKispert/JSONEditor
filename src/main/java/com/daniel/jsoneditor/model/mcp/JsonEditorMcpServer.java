@@ -1,14 +1,10 @@
 package com.daniel.jsoneditor.model.mcp;
 
-import com.daniel.jsoneditor.model.ReadableModel;
-import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
+import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.util.VersionUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -20,12 +16,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 
 /**
  * MCP (Model Context Protocol) Server for the JSON Editor.
- * Provides read-only access to the current editor session via HTTP JSON-RPC.
+ * Provides read-only and (optionally) write access to the current editor session via HTTP JSON-RPC.
  * Listens only on localhost for security.
  */
 public class JsonEditorMcpServer
@@ -42,7 +37,18 @@ public class JsonEditorMcpServer
     
     public static final int DEFAULT_PORT = 3000;
     
-    private final ReadableModel model;
+    private static final int HTTP_OK = 200;
+    private static final int HTTP_BAD_REQUEST = 400;
+    private static final int HTTP_METHOD_NOT_ALLOWED = 405;
+    private static final int HTTP_INTERNAL_ERROR = 500;
+    
+    private static final int JSONRPC_PARSE_ERROR = -32700;
+    private static final int JSONRPC_INVALID_REQUEST = -32600;
+    private static final int JSONRPC_METHOD_NOT_FOUND = -32601;
+    private static final int JSONRPC_INVALID_PARAMS = -32602;
+    private static final int JSONRPC_INTERNAL_ERROR = -32603;
+    
+    private final McpToolRegistry toolRegistry;
     
     private HttpServer server;
     
@@ -50,13 +56,20 @@ public class JsonEditorMcpServer
     
     private volatile boolean running;
     
-    public JsonEditorMcpServer(final ReadableModel model)
+    /**
+     * Creates MCP server with both readable and writable model.
+     * WritableModel is passed to registry for future write-tool support.
+     * Currently only read-only tools are enabled in registry.
+     *
+     * @param writableModel for read and write operations (passed to tools when enabled)
+     */
+    public JsonEditorMcpServer(final WritableModel writableModel)
     {
-        if (model == null)
+        if (writableModel == null)
         {
-            throw new IllegalArgumentException("model cannot be null");
+            throw new IllegalArgumentException("writableModel cannot be null");
         }
-        this.model = model;
+        this.toolRegistry = new McpToolRegistry(writableModel);
         this.running = false;
     }
     
@@ -133,14 +146,14 @@ public class JsonEditorMcpServer
     private void handleHealthCheck(final HttpExchange exchange) throws IOException
     {
         final String response = "{\"status\":\"ok\",\"service\":\"json-editor-mcp\"}";
-        sendJsonResponse(exchange, 200, response);
+        sendJsonResponse(exchange, HTTP_OK, response);
     }
     
     private void handleMcpRequest(final HttpExchange exchange) throws IOException
     {
         if (!"POST".equals(exchange.getRequestMethod()))
         {
-            sendJsonResponse(exchange, 405, createErrorResponse(null, -32600, "Method not allowed"));
+            sendJsonResponse(exchange, HTTP_METHOD_NOT_ALLOWED, createErrorResponse(null, JSONRPC_INVALID_REQUEST, "Method not allowed"));
             return;
         }
         
@@ -155,17 +168,12 @@ public class JsonEditorMcpServer
             final JsonNode id = request.path("id");
             
             final String response = processMethod(method, params, id);
-            sendJsonResponse(exchange, 200, response);
+            sendJsonResponse(exchange, HTTP_OK, response);
         }
         catch (JsonProcessingException e)
         {
             logger.error("Invalid JSON in request: {}", requestBody, e);
-            sendJsonResponse(exchange, 400, createErrorResponse(null, -32700, "Parse error"));
-        }
-        catch (Exception e)
-        {
-            logger.error("Error processing MCP request", e);
-            sendJsonResponse(exchange, 500, createErrorResponse(null, -32603, "Internal error"));
+            sendJsonResponse(exchange, HTTP_BAD_REQUEST, createErrorResponse(null, JSONRPC_PARSE_ERROR, "Parse error"));
         }
     }
     
@@ -176,7 +184,7 @@ public class JsonEditorMcpServer
             case "initialize" -> handleInitialize(id);
             case "tools/list" -> handleToolsList(id);
             case "tools/call" -> handleToolsCall(params, id);
-            default -> createErrorResponse(id, -32601, "Method not found: " + method);
+            default -> createErrorResponse(id, JSONRPC_METHOD_NOT_FOUND, "Method not found: " + method);
         };
     }
     
@@ -200,28 +208,8 @@ public class JsonEditorMcpServer
     
     private String handleToolsList(final JsonNode id) throws JsonProcessingException
     {
-        final ArrayNode tools = OBJECT_MAPPER.createArrayNode();
-        
-        tools.add(createToolDefinition("get_current_file", "Get information about the currently open JSON file",
-                OBJECT_MAPPER.createObjectNode()));
-        
-        tools.add(createToolDefinition("get_node", "Get a JSON node at a specific path",
-                createSchemaWithProperty("path", "string", "JSON path (e.g., /root/child)")));
-        
-        tools.add(createToolDefinition("get_referenceable_objects", "List all referenceable object types defined in the schema",
-                OBJECT_MAPPER.createObjectNode()));
-        
-        tools.add(createToolDefinition("get_referenceable_instances", "Get all instances of a referenceable object type",
-                createSchemaWithProperty("referencing_key", "string", "The referencing key of the referenceable object type")));
-        
-        tools.add(createToolDefinition("get_examples", "Get example values for a JSON path",
-                createSchemaWithProperty("path", "string", "JSON path to get examples for")));
-        
-        tools.add(createToolDefinition("get_schema_for_path", "Get the JSON schema definition for a specific path",
-                createSchemaWithProperty("path", "string", "JSON path to get schema for")));
-        
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        result.set("tools", tools);
+        result.set("tools", toolRegistry.getToolDefinitions());
         return createSuccessResponse(id, result);
     }
     
@@ -230,186 +218,27 @@ public class JsonEditorMcpServer
         final String toolName = params.path("name").asText();
         final JsonNode arguments = params.path("arguments");
         
-        return switch (toolName)
+        final McpTool tool = toolRegistry.getTool(toolName);
+        if (tool == null)
         {
-            case "get_current_file" -> executeGetCurrentFile(id);
-            case "get_node" -> executeGetNode(arguments, id);
-            case "get_referenceable_objects" -> executeGetReferenceableObjects(id);
-            case "get_referenceable_instances" -> executeGetReferenceableInstances(arguments, id);
-            case "get_examples" -> executeGetExamples(arguments, id);
-            case "get_schema_for_path" -> executeGetSchemaForPath(arguments, id);
-            default -> createErrorResponse(id, -32602, "Unknown tool: " + toolName);
-        };
+            return createErrorResponse(id, JSONRPC_INVALID_PARAMS, "Unknown tool: " + toolName);
+        }
+
+        // Lightweight validation: check types of provided arguments against tool.getInputSchema() properties
+        final ObjectNode inputSchemaProps = tool.getInputSchema();
+        try
+        {
+            McpArgumentValidator.validate(inputSchemaProps, arguments);
+        }
+        catch (ValidationException e)
+        {
+            // Validation failed in a known way -> return invalid params error
+            return createErrorResponse(id, JSONRPC_INVALID_PARAMS, e.getMessage());
+        }
+        
+        return tool.execute(arguments, id);
     }
-    
-    private String executeGetCurrentFile(final JsonNode id) throws JsonProcessingException
-    {
-        final ObjectNode content = OBJECT_MAPPER.createObjectNode();
-        
-        if (model.getCurrentJSONFile() != null)
-        {
-            content.put("file_path", model.getCurrentJSONFile().getAbsolutePath());
-            content.put("file_name", model.getCurrentJSONFile().getName());
-        }
-        else
-        {
-            content.putNull("file_path");
-            content.putNull("file_name");
-        }
-        
-        if (model.getCurrentSchemaFile() != null)
-        {
-            content.put("schema_path", model.getCurrentSchemaFile().getAbsolutePath());
-        }
-        else
-        {
-            content.putNull("schema_path");
-        }
-        
-        content.put("has_content", model.getRootJson() != null);
-        
-        return createToolResult(id, content.toString());
-    }
-    
-    private String executeGetNode(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
-    {
-        final String path = arguments.path("path").asText("");
-        
-        if (path.isEmpty())
-        {
-            return createToolResult(id, "Error: path parameter is required");
-        }
-        
-        final JsonNodeWithPath node = model.getNodeForPath(path);
-        if (node == null)
-        {
-            return createToolResult(id, "Error: No node found at path: " + path);
-        }
-        
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        result.put("path", node.getPath());
-        result.put("display_name", node.getDisplayName());
-        result.set("value", node.getNode());
-        result.put("is_array", node.isArray());
-        result.put("is_object", node.getNode().isObject());
-        
-        return createToolResult(id, OBJECT_MAPPER.writeValueAsString(result));
-    }
-    
-    private String executeGetReferenceableObjects(final JsonNode id) throws JsonProcessingException
-    {
-        final List<ReferenceableObject> objects = model.getReferenceableObjects();
-        final ArrayNode result = OBJECT_MAPPER.createArrayNode();
-        
-        for (final ReferenceableObject obj : objects)
-        {
-            final ObjectNode objNode = OBJECT_MAPPER.createObjectNode();
-            objNode.put("path", obj.getPath());
-            objNode.put("referencing_key", obj.getReferencingKey());
-            objNode.put("key_property", obj.getKey());
-            result.add(objNode);
-        }
-        
-        return createToolResult(id, OBJECT_MAPPER.writeValueAsString(result));
-    }
-    
-    private String executeGetReferenceableInstances(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
-    {
-        final String referencingKey = arguments.path("referencing_key").asText("");
-        
-        if (referencingKey.isEmpty())
-        {
-            return createToolResult(id, "Error: referencing_key parameter is required");
-        }
-        
-        final ReferenceableObject refObject = model.getReferenceableObjectByReferencingKey(referencingKey);
-        if (refObject == null)
-        {
-            return createToolResult(id, "Error: No referenceable object found with key: " + referencingKey);
-        }
-        
-        final List<ReferenceableObjectInstance> instances = model.getReferenceableObjectInstances(refObject);
-        final ArrayNode result = OBJECT_MAPPER.createArrayNode();
-        
-        for (final ReferenceableObjectInstance instance : instances)
-        {
-            final ObjectNode instNode = OBJECT_MAPPER.createObjectNode();
-            instNode.put("path", instance.getPath());
-            instNode.put("key", instance.getKey());
-            instNode.put("display_name", instance.getFancyName());
-            result.add(instNode);
-        }
-        
-        return createToolResult(id, OBJECT_MAPPER.writeValueAsString(result));
-    }
-    
-    private String executeGetExamples(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
-    {
-        final String path = arguments.path("path").asText("");
-        
-        if (path.isEmpty())
-        {
-            return createToolResult(id, "Error: path parameter is required");
-        }
-        
-        final List<String> examples = model.getStringExamplesForPath(path);
-        final List<String> allowedValues = model.getAllowedStringValuesForPath(path);
-        
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        
-        final ArrayNode examplesArray = OBJECT_MAPPER.createArrayNode();
-        examples.forEach(examplesArray::add);
-        result.set("examples", examplesArray);
-        
-        final ArrayNode allowedArray = OBJECT_MAPPER.createArrayNode();
-        allowedValues.forEach(allowedArray::add);
-        result.set("allowed_values", allowedArray);
-        
-        return createToolResult(id, OBJECT_MAPPER.writeValueAsString(result));
-    }
-    
-    private String executeGetSchemaForPath(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
-    {
-        final String path = arguments.path("path").asText("");
-        
-        if (path.isEmpty())
-        {
-            return createToolResult(id, "Error: path parameter is required");
-        }
-        
-        final var schema = model.getSubschemaForPath(path);
-        if (schema == null)
-        {
-            return createToolResult(id, "Error: No schema found for path: " + path);
-        }
-        
-        return createToolResult(id, schema.getSchemaNode().toString());
-    }
-    
-    private ObjectNode createToolDefinition(final String name, final String description, final ObjectNode inputSchema)
-    {
-        final ObjectNode tool = OBJECT_MAPPER.createObjectNode();
-        tool.put("name", name);
-        tool.put("description", description);
-        
-        final ObjectNode schema = OBJECT_MAPPER.createObjectNode();
-        schema.put("type", "object");
-        schema.set("properties", inputSchema);
-        tool.set("inputSchema", schema);
-        
-        return tool;
-    }
-    
-    private ObjectNode createSchemaWithProperty(final String propName, final String propType, final String description)
-    {
-        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
-        final ObjectNode prop = OBJECT_MAPPER.createObjectNode();
-        prop.put("type", propType);
-        prop.put("description", description);
-        props.set(propName, prop);
-        return props;
-    }
-    
+
     private String createSuccessResponse(final JsonNode id, final JsonNode result) throws JsonProcessingException
     {
         final ObjectNode response = OBJECT_MAPPER.createObjectNode();
@@ -419,19 +248,7 @@ public class JsonEditorMcpServer
         return OBJECT_MAPPER.writeValueAsString(response);
     }
     
-    private String createToolResult(final JsonNode id, final String content) throws JsonProcessingException
-    {
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        final ArrayNode contentArray = OBJECT_MAPPER.createArrayNode();
-        final ObjectNode textContent = OBJECT_MAPPER.createObjectNode();
-        textContent.put("type", "text");
-        textContent.put("text", content);
-        contentArray.add(textContent);
-        result.set("content", contentArray);
-        
-        return createSuccessResponse(id, result);
-    }
-    
+
     private String createErrorResponse(final JsonNode id, final int code, final String message)
     {
         try

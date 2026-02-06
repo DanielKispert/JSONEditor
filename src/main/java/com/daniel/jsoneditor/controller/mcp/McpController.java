@@ -1,12 +1,12 @@
 package com.daniel.jsoneditor.controller.mcp;
 
+import java.io.IOException;
+
 import com.daniel.jsoneditor.controller.settings.SettingsController;
-import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.mcp.JsonEditorMcpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 public class McpController
 {
@@ -16,15 +16,14 @@ public class McpController
     
     private final SettingsController settingsController;
     
-    public McpController(final ReadableModel model, final SettingsController settingsController)
+    public McpController(final WritableModel writableModel, final SettingsController settingsController)
     {
-        this.mcpServer = new JsonEditorMcpServer(model);
+        this.mcpServer = new JsonEditorMcpServer(writableModel);
         this.settingsController = settingsController;
     }
     
     /**
      * Starts the MCP server.
-     * Logs errors but does not throw exceptions.
      */
     public void startMcpServer()
     {

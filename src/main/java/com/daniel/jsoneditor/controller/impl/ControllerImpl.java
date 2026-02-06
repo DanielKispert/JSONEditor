@@ -78,7 +78,7 @@ public class ControllerImpl implements Controller, Observer
         this.subjects = new ArrayList<>();
         this.view = new ViewImpl(readableModel, this, stage);
         this.view.observe(this.readableModel.getForObservation());
-        this.mcpController = new McpController(readableModel, settingsController);
+        this.mcpController = new McpController(model, settingsController);
         
         // Set up callback for unsaved changes notifications from CommandManager
         this.commandManager.setUnsavedChangesCallback(this::updateWindowTitle);
