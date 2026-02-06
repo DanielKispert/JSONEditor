@@ -1,13 +1,14 @@
 package com.daniel.jsoneditor.controller;
 
+import java.io.File;
+import java.util.List;
+
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.mcp.McpController;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.diff.DiffEntry;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-
-import java.io.File;
-import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
 
 
 public interface Controller
