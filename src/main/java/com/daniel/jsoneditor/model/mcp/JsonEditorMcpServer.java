@@ -224,15 +224,14 @@ public class JsonEditorMcpServer
             return createErrorResponse(id, JSONRPC_INVALID_PARAMS, "Unknown tool: " + toolName);
         }
 
-        // Lightweight validation: check types of provided arguments against tool.getInputSchema() properties
-        final ObjectNode inputSchemaProps = tool.getInputSchema();
+        // Validate arguments against complete input schema (including required properties)
+        final ObjectNode inputSchema = McpToolRegistry.buildInputSchema(tool);
         try
         {
-            McpArgumentValidator.validate(inputSchemaProps, arguments);
+            McpArgumentValidator.validate(inputSchema, arguments);
         }
         catch (ValidationException e)
         {
-            // Validation failed in a known way -> return invalid params error
             return createErrorResponse(id, JSONRPC_INVALID_PARAMS, e.getMessage());
         }
         
@@ -250,6 +249,27 @@ public class JsonEditorMcpServer
     
 
     private String createErrorResponse(final JsonNode id, final int code, final String message)
+    {
+        try
+        {
+            final ObjectNode response = OBJECT_MAPPER.createObjectNode();
+            response.put("jsonrpc", "2.0");
+            response.set("id", id);
+            
+            final ObjectNode error = OBJECT_MAPPER.createObjectNode();
+            error.put("code", code);
+            error.put("message", message);
+            response.set("error", error);
+            
+            return OBJECT_MAPPER.writeValueAsString(response);
+        }
+        catch (JsonProcessingException e)
+        {
+            return "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Internal error\"}}";
+        }
+    }
+
+    public static String createErrorResponseStatic(final JsonNode id, final int code, final String message)
     {
         try
         {

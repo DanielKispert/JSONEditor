@@ -81,10 +81,17 @@ public class McpToolRegistry
             toolDef.put("name", tool.getName());
             toolDef.put("description", tool.getDescription());
             
-            final ObjectNode schema = OBJECT_MAPPER.createObjectNode();
-            schema.put("type", "object");
-            schema.set("properties", tool.getInputSchema());
-            toolDef.set("inputSchema", schema);
+            toolDef.set("inputSchema", buildInputSchema(tool));
+
+            // include output schema if available
+            final ObjectNode outputSchema = tool.getOutputSchema();
+            if (outputSchema != null)
+            {
+                final ObjectNode outWrap = OBJECT_MAPPER.createObjectNode();
+                outWrap.put("type", "object");
+                outWrap.set("properties", outputSchema);
+                toolDef.set("outputSchema", outWrap);
+            }
             
             toolsArray.add(toolDef);
         }
@@ -92,14 +99,38 @@ public class McpToolRegistry
         return toolsArray;
     }
     
-    protected static String createToolResult(final JsonNode id, final String content) throws JsonProcessingException
+    /**
+     * Build complete input schema for a tool including type, properties, required, and additionalProperties.
+     * This is the canonical schema used both for tools/list and for validation.
+     */
+    public static ObjectNode buildInputSchema(final McpTool tool)
+    {
+        final ObjectNode schema = OBJECT_MAPPER.createObjectNode();
+        schema.put("type", "object");
+        schema.set("properties", tool.getInputSchema());
+        schema.put("additionalProperties", false);
+        
+        final ArrayNode required = tool.getRequiredInputProperties();
+        if (required != null && !required.isEmpty())
+        {
+            schema.set("required", required);
+        }
+        
+        return schema;
+    }
+    
+    /**
+     * Create a tool result where content contains a single JSON payload element.
+     * The payload is placed under the "json" field so clients can inspect it directly.
+     */
+    protected static String createToolResult(final JsonNode id, final JsonNode payload) throws JsonProcessingException
     {
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
         final ArrayNode contentArray = OBJECT_MAPPER.createArrayNode();
-        final ObjectNode textContent = OBJECT_MAPPER.createObjectNode();
-        textContent.put("type", "text");
-        textContent.put("text", content);
-        contentArray.add(textContent);
+        final ObjectNode jsonContent = OBJECT_MAPPER.createObjectNode();
+        jsonContent.put("type", "json");
+        jsonContent.set("json", payload == null ? OBJECT_MAPPER.nullNode() : payload);
+        contentArray.add(jsonContent);
         result.set("content", contentArray);
         
         final ObjectNode response = OBJECT_MAPPER.createObjectNode();

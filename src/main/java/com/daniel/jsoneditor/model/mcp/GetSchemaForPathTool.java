@@ -4,6 +4,7 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import org.slf4j.Logger;
@@ -37,30 +38,36 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
     {
         return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get schema for");
     }
+
+    @Override
+    public ArrayNode getRequiredInputProperties()
+    {
+        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        arr.add("path");
+        return arr;
+    }
+    
+    @Override
+    public ObjectNode getOutputSchema()
+    {
+        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
+        props.set("schema", OBJECT_MAPPER.createObjectNode());
+        return props;
+    }
     
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final String path = arguments.path("path").asText("");
-        if (path.isEmpty())
+        
+        final JsonSchema schema = model.getSubschemaForPath(path);
+        if (schema == null)
         {
-            return McpToolRegistry.createToolResult(id, "Error: path parameter is required");
+            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "No schema found for path: " + path);
         }
         
-        try
-        {
-            final JsonSchema schema = model.getSubschemaForPath(path);
-            if (schema == null)
-            {
-                return McpToolRegistry.createToolResult(id, String.format("Error: No schema found for path: %s", path));
-            }
-            
-            return McpToolRegistry.createToolResult(id, schema.getSchemaNode().toString());
-        }
-        catch (Exception e)
-        {
-            logger.error("Error executing get_schema_for_path for path: {}", path, e);
-            return McpToolRegistry.createToolResult(id, String.format("Error: Failed to get schema for path: %s", path));
-        }
+        final ObjectNode out = OBJECT_MAPPER.createObjectNode();
+        out.set("schema", OBJECT_MAPPER.readTree(schema.getSchemaNode().toString()));
+        return McpToolRegistry.createToolResult(id, out);
     }
 }

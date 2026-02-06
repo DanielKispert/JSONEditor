@@ -64,6 +64,6 @@ class GetCurrentFileTool extends ReadOnlyMcpTool
         
         content.put("has_content", model.getRootJson() != null);
         
-        return McpToolRegistry.createToolResult(id, content.toString());
+        return McpToolRegistry.createToolResult(id, content);
     }
 }

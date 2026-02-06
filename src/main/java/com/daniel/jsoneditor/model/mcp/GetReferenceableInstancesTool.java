@@ -42,47 +42,53 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
         return McpToolRegistry.createSchemaWithProperty("referencing_key", "string",
                 "The referencing key of the referenceable object type");
     }
+
+    @Override
+    public ArrayNode getRequiredInputProperties()
+    {
+        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        arr.add("referencing_key");
+        return arr;
+    }
+    
+    @Override
+    public ObjectNode getOutputSchema()
+    {
+        final ObjectNode item = OBJECT_MAPPER.createObjectNode();
+        item.set("path", McpToolRegistry.createSchemaWithProperty("path", "string", ""));
+        item.set("key", McpToolRegistry.createSchemaWithProperty("key", "string", ""));
+        item.set("display_name", McpToolRegistry.createSchemaWithProperty("display_name", "string", ""));
+        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
+        props.set("items", item);
+        return props;
+    }
     
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final String referencingKey = arguments.path("referencing_key").asText("");
-        if (referencingKey.isEmpty())
+        
+        final ReferenceableObject refObject = model.getReferenceableObjectByReferencingKey(referencingKey);
+        if (refObject == null)
         {
-            return McpToolRegistry.createToolResult(id, "Error: referencing_key parameter is required");
+            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "No referenceable object found with key: " + referencingKey);
         }
         
-        try
+        final List<ReferenceableObjectInstance> instances = model.getReferenceableObjectInstances(refObject);
+        final ArrayNode result = OBJECT_MAPPER.createArrayNode();
+        
+        if (instances != null)
         {
-            final ReferenceableObject refObject = model.getReferenceableObjectByReferencingKey(referencingKey);
-            if (refObject == null)
+            for (final ReferenceableObjectInstance instance : instances)
             {
-                return McpToolRegistry.createToolResult(id,
-                        String.format("Error: No referenceable object found with key: %s", referencingKey));
+                final ObjectNode instNode = OBJECT_MAPPER.createObjectNode();
+                instNode.put("path", instance.getPath());
+                instNode.put("key", instance.getKey());
+                instNode.put("display_name", instance.getFancyName());
+                result.add(instNode);
             }
-            
-            final List<ReferenceableObjectInstance> instances = model.getReferenceableObjectInstances(refObject);
-            final ArrayNode result = OBJECT_MAPPER.createArrayNode();
-            
-            if (instances != null)
-            {
-                for (final ReferenceableObjectInstance instance : instances)
-                {
-                    final ObjectNode instNode = OBJECT_MAPPER.createObjectNode();
-                    instNode.put("path", instance.getPath());
-                    instNode.put("key", instance.getKey());
-                    instNode.put("display_name", instance.getFancyName());
-                    result.add(instNode);
-                }
-            }
-            
-            return McpToolRegistry.createToolResult(id, OBJECT_MAPPER.writeValueAsString(result));
         }
-        catch (Exception e)
-        {
-            logger.error("Error executing get_referenceable_instances for key: {}", referencingKey, e);
-            return McpToolRegistry.createToolResult(id,
-                    String.format("Error: Failed to retrieve instances for key: %s", referencingKey));
-        }
+        
+        return McpToolRegistry.createToolResult(id, result);
     }
 }

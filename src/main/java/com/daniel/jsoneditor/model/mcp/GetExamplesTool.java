@@ -39,43 +39,48 @@ class GetExamplesTool extends ReadOnlyMcpTool
     {
         return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get examples for");
     }
+
+    @Override
+    public ArrayNode getRequiredInputProperties()
+    {
+        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        arr.add("path");
+        return arr;
+    }
+    
+    @Override
+    public ObjectNode getOutputSchema()
+    {
+        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
+        props.set("examples", OBJECT_MAPPER.createArrayNode());
+        props.set("allowed_values", OBJECT_MAPPER.createArrayNode());
+        return props;
+    }
     
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final String path = arguments.path("path").asText("");
-        if (path.isEmpty())
-        {
-            return McpToolRegistry.createToolResult(id, "Error: path parameter is required");
-        }
         
-        try
+        final List<String> examples = model.getStringExamplesForPath(path);
+        final List<String> allowedValues = model.getAllowedStringValuesForPath(path);
+        
+        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
+        
+        final ArrayNode examplesArray = OBJECT_MAPPER.createArrayNode();
+        if (examples != null)
         {
-            final List<String> examples = model.getStringExamplesForPath(path);
-            final List<String> allowedValues = model.getAllowedStringValuesForPath(path);
-            
-            final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-            
-            final ArrayNode examplesArray = OBJECT_MAPPER.createArrayNode();
-            if (examples != null)
-            {
-                examples.forEach(examplesArray::add);
-            }
-            result.set("examples", examplesArray);
-            
-            final ArrayNode allowedArray = OBJECT_MAPPER.createArrayNode();
-            if (allowedValues != null)
-            {
-                allowedValues.forEach(allowedArray::add);
-            }
-            result.set("allowed_values", allowedArray);
-            
-            return McpToolRegistry.createToolResult(id, OBJECT_MAPPER.writeValueAsString(result));
+            examples.forEach(examplesArray::add);
         }
-        catch (Exception e)
+        result.set("examples", examplesArray);
+        
+        final ArrayNode allowedArray = OBJECT_MAPPER.createArrayNode();
+        if (allowedValues != null)
         {
-            logger.error("Error executing get_examples for path: {}", path, e);
-            return McpToolRegistry.createToolResult(id, String.format("Error: Failed to get examples for path: %s", path));
+            allowedValues.forEach(allowedArray::add);
         }
+        result.set("allowed_values", allowedArray);
+        
+        return McpToolRegistry.createToolResult(id, result);
     }
 }

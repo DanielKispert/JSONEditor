@@ -42,18 +42,25 @@ class GetReferenceableObjectsTool extends ReadOnlyMcpTool
     }
     
     @Override
+    public ObjectNode getOutputSchema()
+    {
+        final ObjectNode item = OBJECT_MAPPER.createObjectNode();
+        item.set("path", McpToolRegistry.createSchemaWithProperty("path", "string", ""));
+        item.set("referencing_key", McpToolRegistry.createSchemaWithProperty("referencing_key", "string", ""));
+        item.set("key_property", McpToolRegistry.createSchemaWithProperty("key_property", "string", ""));
+        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
+        props.set("items", item);
+        return props;
+    }
+    
+    @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        try
+        final List<ReferenceableObject> objects = model.getReferenceableObjects();
+        final ArrayNode result = OBJECT_MAPPER.createArrayNode();
+        
+        if (objects != null)
         {
-            final List<ReferenceableObject> objects = model.getReferenceableObjects();
-            if (objects == null)
-            {
-                return McpToolRegistry.createToolResult(id, "[]");
-            }
-            
-            final ArrayNode result = OBJECT_MAPPER.createArrayNode();
-            
             for (final ReferenceableObject obj : objects)
             {
                 final ObjectNode objNode = OBJECT_MAPPER.createObjectNode();
@@ -62,13 +69,8 @@ class GetReferenceableObjectsTool extends ReadOnlyMcpTool
                 objNode.put("key_property", obj.getKey());
                 result.add(objNode);
             }
-            
-            return McpToolRegistry.createToolResult(id, OBJECT_MAPPER.writeValueAsString(result));
         }
-        catch (Exception e)
-        {
-            logger.error("Error executing get_referenceable_objects", e);
-            return McpToolRegistry.createToolResult(id, "Error: Failed to retrieve referenceable objects");
-        }
+        
+        return McpToolRegistry.createToolResult(id, result);
     }
 }

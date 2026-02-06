@@ -1,8 +1,6 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
@@ -12,36 +10,39 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Lightweight validator for MCP tool arguments based on the tool's input schema.
- * Uses networknt JsonSchema validation library already present in the project.
+ * Validator for MCP tool arguments using JSON Schema validation.
+ * Accepts a complete JSON Schema object (with properties, required, etc.)
+ * and validates arguments against it using the networknt library.
  */
 public final class McpArgumentValidator
 {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final JsonSchemaFactory SCHEMA_FACTORY = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
     
     private McpArgumentValidator() { /* utility */ }
 
     /**
-     * Validate arguments against input schema using JSON Schema validation.
+     * Validate arguments against a complete JSON Schema.
      *
-     * @param inputSchema ObjectNode representing the inputSchema with properties
+     * @param schemaNode Complete JSON Schema (type=object, properties, required, etc.)
      * @param arguments JsonNode with actual arguments
-     * @throws ValidationException if validation fails
+     * @throws ValidationException if validation fails with all error messages
      */
-    public static void validate(final ObjectNode inputSchema, final JsonNode arguments) throws ValidationException
+    public static void validate(final JsonNode schemaNode, final JsonNode arguments) throws ValidationException
     {
-        if (inputSchema == null || inputSchema.isEmpty())
+        if (schemaNode == null || schemaNode.isEmpty())
         {
             return;
         }
 
-        if (arguments == null || arguments.isMissingNode() || arguments.isNull())
+        if (arguments == null || arguments.isMissingNode())
         {
+            if (schemaNode.has("required") && schemaNode.get("required").size() > 0)
+            {
+                throw new ValidationException("Missing required parameters");
+            }
             return;
         }
 
-        final ObjectNode schemaNode = buildValidationSchema(inputSchema);
         final JsonSchema schema = SCHEMA_FACTORY.getSchema(schemaNode);
         final Set<ValidationMessage> errors = schema.validate(arguments);
 
@@ -50,16 +51,7 @@ public final class McpArgumentValidator
             final String errorMessage = errors.stream()
                     .map(ValidationMessage::getMessage)
                     .collect(Collectors.joining("; "));
-            throw new ValidationException("Invalid parameters: " + errorMessage);
+            throw new ValidationException(errorMessage);
         }
-    }
-
-    private static ObjectNode buildValidationSchema(final ObjectNode inputSchema)
-    {
-        final ObjectNode schemaNode = MAPPER.createObjectNode();
-        schemaNode.put("type", "object");
-        schemaNode.set("properties", inputSchema);
-        schemaNode.put("additionalProperties", false);
-        return schemaNode;
     }
 }

@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,37 +38,45 @@ class GetNodeTool extends ReadOnlyMcpTool
     {
         return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path (e.g., /root/child)");
     }
+
+    @Override
+    public ArrayNode getRequiredInputProperties()
+    {
+        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        arr.add("path");
+        return arr;
+    }
+    
+    @Override
+    public ObjectNode getOutputSchema()
+    {
+        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
+        props.set("path", McpToolRegistry.createSchemaWithProperty("path", "string", ""));
+        props.set("display_name", McpToolRegistry.createSchemaWithProperty("display_name", "string", ""));
+        props.set("value", OBJECT_MAPPER.createObjectNode());
+        props.set("is_array", McpToolRegistry.createSchemaWithProperty("is_array", "boolean", ""));
+        props.set("is_object", McpToolRegistry.createSchemaWithProperty("is_object", "boolean", ""));
+        return props;
+    }
     
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final String path = arguments.path("path").asText("");
-        if (path.isEmpty())
+        
+        final JsonNodeWithPath node = model.getNodeForPath(path);
+        if (node == null)
         {
-            return McpToolRegistry.createToolResult(id, "Error: path parameter is required");
+            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "No node found at path: " + path);
         }
         
-        try
-        {
-            final JsonNodeWithPath node = model.getNodeForPath(path);
-            if (node == null)
-            {
-                return McpToolRegistry.createToolResult(id, String.format("Error: No node found at path: %s", path));
-            }
-            
-            final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-            result.put("path", node.getPath());
-            result.put("display_name", node.getDisplayName());
-            result.set("value", node.getNode());
-            result.put("is_array", node.isArray());
-            result.put("is_object", node.getNode().isObject());
-            
-            return McpToolRegistry.createToolResult(id, OBJECT_MAPPER.writeValueAsString(result));
-        }
-        catch (Exception e)
-        {
-            logger.error("Error executing get_node for path: {}", path, e);
-            return McpToolRegistry.createToolResult(id, String.format("Error: Failed to get node at path: %s", path));
-        }
+        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
+        result.put("path", node.getPath());
+        result.put("display_name", node.getDisplayName());
+        result.set("value", node.getNode());
+        result.put("is_array", node.isArray());
+        result.put("is_object", node.getNode().isObject());
+        
+        return McpToolRegistry.createToolResult(id, result);
     }
 }

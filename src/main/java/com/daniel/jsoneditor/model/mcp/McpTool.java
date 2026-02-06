@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.mcp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 
@@ -22,9 +23,25 @@ public abstract class McpTool
     public abstract String getDescription();
     
     /**
-     * @return JSON Schema for input parameters (ObjectNode with properties)
+     * @return JSON Schema "properties" object for input parameters (ObjectNode)
      */
     public abstract ObjectNode getInputSchema();
+    
+    /**
+     * Optional: return an output schema describing the tool result (may be null)
+     */
+    public ObjectNode getOutputSchema()
+    {
+        return null;
+    }
+    
+    /**
+     * Optional: return a JSON array of required input property names (may be null)
+     */
+    public ArrayNode getRequiredInputProperties()
+    {
+        return null;
+    }
     
     /**
      * Execute the tool with given arguments.
