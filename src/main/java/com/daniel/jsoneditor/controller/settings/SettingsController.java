@@ -37,4 +37,12 @@ public interface SettingsController
     void setLogGraphRequests(boolean logGraphRequests);
     
     boolean isLogGraphRequests();
+    
+    void setMcpServerEnabled(boolean enabled);
+    
+    boolean isMcpServerEnabled();
+    
+    void setMcpServerPort(int port);
+    
+    int getMcpServerPort();
 }

@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 import com.daniel.jsoneditor.controller.settings.SettingsController;
+import com.daniel.jsoneditor.model.mcp.JsonEditorMcpServer;
 
 
 public class SettingsControllerImpl implements SettingsController
@@ -172,5 +173,43 @@ public class SettingsControllerImpl implements SettingsController
     public boolean isLogGraphRequests()
     {
         return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_LOG_GRAPH_REQUESTS));
+    }
+    
+    @Override
+    public void setMcpServerEnabled(boolean enabled)
+    {
+        properties.setProperty(PropertyFileKeys.PROPERTY_MCP_SERVER_ENABLED, enabled ? "true" : "false");
+        PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public boolean isMcpServerEnabled()
+    {
+        return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_MCP_SERVER_ENABLED));
+    }
+    
+    @Override
+    public void setMcpServerPort(int port)
+    {
+        properties.setProperty(PropertyFileKeys.PROPERTY_MCP_SERVER_PORT, String.valueOf(port));
+        PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public int getMcpServerPort()
+    {
+        final String portStr = properties.getProperty(PropertyFileKeys.PROPERTY_MCP_SERVER_PORT);
+        if (portStr == null)
+        {
+            return JsonEditorMcpServer.DEFAULT_PORT;
+        }
+        try
+        {
+            return Integer.parseInt(portStr);
+        }
+        catch (NumberFormatException e)
+        {
+            return JsonEditorMcpServer.DEFAULT_PORT;
+        }
     }
 }

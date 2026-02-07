@@ -23,4 +23,8 @@ public class PropertyFileKeys
     public final static String PROPERTY_DEBUG_MODE = "debug_mode";
     
     public final static String PROPERTY_LOG_GRAPH_REQUESTS = "log_graph_requests";
+    
+    public final static String PROPERTY_MCP_SERVER_ENABLED = "autostart_mcp_server";
+    
+    public final static String PROPERTY_MCP_SERVER_PORT = "mcp_server_port";
 }

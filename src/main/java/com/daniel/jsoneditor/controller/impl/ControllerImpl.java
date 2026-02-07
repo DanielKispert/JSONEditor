@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.controller.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
 import com.daniel.jsoneditor.controller.impl.json.VariableHelper;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
+import com.daniel.jsoneditor.controller.mcp.McpController;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -64,6 +66,8 @@ public class ControllerImpl implements Controller, Observer
     
     private final CommandFactory commandFactory;
     
+    private final McpController mcpController;
+    
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
     {
         this.settingsController = new SettingsControllerImpl();
@@ -74,6 +78,7 @@ public class ControllerImpl implements Controller, Observer
         this.subjects = new ArrayList<>();
         this.view = new ViewImpl(readableModel, this, stage);
         this.view.observe(this.readableModel.getForObservation());
+        this.mcpController = new McpController(model, settingsController);
         
         // Set up callback for unsaved changes notifications from CommandManager
         this.commandManager.setUnsavedChangesCallback(this::updateWindowTitle);
@@ -92,6 +97,12 @@ public class ControllerImpl implements Controller, Observer
     public SettingsController getSettingsController()
     {
         return settingsController;
+    }
+    
+    @Override
+    public McpController getMcpController()
+    {
+        return mcpController;
     }
     
     @Override
@@ -125,7 +136,7 @@ public class ControllerImpl implements Controller, Observer
     {
         if (jsonFile != null && schemaFile != null)
         {
-            // grab json from files and validate
+            // grab Json from files and validate
             JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
             JsonNode json = reader.getJsonFromFile(jsonFile);
             JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);

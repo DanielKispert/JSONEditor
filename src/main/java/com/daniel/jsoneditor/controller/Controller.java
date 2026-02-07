@@ -1,21 +1,21 @@
 package com.daniel.jsoneditor.controller;
 
+import java.io.File;
+import java.util.List;
+
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
+import com.daniel.jsoneditor.controller.mcp.McpController;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.diff.DiffEntry;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.io.File;
-import java.util.List;
-
 
 public interface Controller
 {
-    /*
-     * Other controller methods for nested controllers
-     */
     SettingsController getSettingsController();
+    
+    McpController getMcpController();
     
     /**
      * Gets the command manager for accessing command history
@@ -100,5 +100,6 @@ public interface Controller
      * @return List of differences, empty list if no differences found
      */
     List<DiffEntry> calculateJsonDiff();
+
 
 }
