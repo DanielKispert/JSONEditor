@@ -44,6 +44,9 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic:1.5.17'
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
     implementation 'com.brunomnsilva:smartgraph:2.3.0'
+    implementation('io.modelcontextprotocol.sdk:mcp:0.17.2') {
+        exclude group: 'com.networknt', module: 'json-schema-validator'
+    }
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
     testImplementation 'org.testfx:testfx-core:4.0.18'
