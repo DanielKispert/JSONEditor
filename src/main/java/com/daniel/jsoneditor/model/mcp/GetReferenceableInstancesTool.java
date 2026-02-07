@@ -52,18 +52,6 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
     }
     
     @Override
-    public ObjectNode getOutputSchema()
-    {
-        final ObjectNode item = OBJECT_MAPPER.createObjectNode();
-        item.set("path", McpToolRegistry.createSchemaWithProperty("path", "string", ""));
-        item.set("key", McpToolRegistry.createSchemaWithProperty("key", "string", ""));
-        item.set("display_name", McpToolRegistry.createSchemaWithProperty("display_name", "string", ""));
-        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
-        props.set("items", item);
-        return props;
-    }
-    
-    @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final String referencingKey = arguments.path("referencing_key").asText("");

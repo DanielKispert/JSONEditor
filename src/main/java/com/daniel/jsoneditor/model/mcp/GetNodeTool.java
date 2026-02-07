@@ -48,18 +48,6 @@ class GetNodeTool extends ReadOnlyMcpTool
     }
     
     @Override
-    public ObjectNode getOutputSchema()
-    {
-        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
-        props.set("path", McpToolRegistry.createSchemaWithProperty("path", "string", ""));
-        props.set("display_name", McpToolRegistry.createSchemaWithProperty("display_name", "string", ""));
-        props.set("value", OBJECT_MAPPER.createObjectNode());
-        props.set("is_array", McpToolRegistry.createSchemaWithProperty("is_array", "boolean", ""));
-        props.set("is_object", McpToolRegistry.createSchemaWithProperty("is_object", "boolean", ""));
-        return props;
-    }
-    
-    @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final String path = arguments.path("path").asText("");

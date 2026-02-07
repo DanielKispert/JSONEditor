@@ -48,14 +48,6 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
     }
     
     @Override
-    public ObjectNode getOutputSchema()
-    {
-        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
-        props.set("schema", OBJECT_MAPPER.createObjectNode());
-        return props;
-    }
-    
-    @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final String path = arguments.path("path").asText("");

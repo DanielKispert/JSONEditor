@@ -49,15 +49,6 @@ class GetExamplesTool extends ReadOnlyMcpTool
     }
     
     @Override
-    public ObjectNode getOutputSchema()
-    {
-        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
-        props.set("examples", OBJECT_MAPPER.createArrayNode());
-        props.set("allowed_values", OBJECT_MAPPER.createArrayNode());
-        return props;
-    }
-    
-    @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final String path = arguments.path("path").asText("");

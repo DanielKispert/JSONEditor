@@ -9,12 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-class GetCurrentFileTool extends ReadOnlyMcpTool
+class GetFileInfoTool extends ReadOnlyMcpTool
 {
-    private static final Logger logger = LoggerFactory.getLogger(GetCurrentFileTool.class);
+    private static final Logger logger = LoggerFactory.getLogger(GetFileInfoTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
-    public GetCurrentFileTool(final ReadableModel model)
+    public GetFileInfoTool(final ReadableModel model)
     {
         super(model);
     }
@@ -22,13 +22,13 @@ class GetCurrentFileTool extends ReadOnlyMcpTool
     @Override
     public String getName()
     {
-        return "get_current_file";
+        return "get_file_info";
     }
     
     @Override
     public String getDescription()
     {
-        return "Get information about the currently open JSON file";
+        return "Get information about the currently open JSON file and schema";
     }
     
     @Override

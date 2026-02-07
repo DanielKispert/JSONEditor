@@ -70,16 +70,6 @@ class SetNodeTool extends WriteMcpTool
     }
     
     @Override
-    public ObjectNode getOutputSchema()
-    {
-        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
-        props.set("success", McpToolRegistry.createSchemaWithProperty("success", "boolean", ""));
-        props.set("path", McpToolRegistry.createSchemaWithProperty("path", "string", ""));
-        props.set("property", McpToolRegistry.createSchemaWithProperty("property", "string", ""));
-        return props;
-    }
-    
-    @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final String path = arguments.path("path").asText("");

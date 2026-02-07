@@ -31,12 +31,13 @@ public class McpToolRegistry
     public McpToolRegistry(final WritableModel model)
     {
         this.tools = List.of(
-                new GetCurrentFileTool(model),
+                new GetFileInfoTool(model),
                 new GetNodeTool(model),
                 new GetSchemaForPathTool(model),
                 new GetExamplesTool(model),
                 new GetReferenceableObjectsTool(model),
-                new GetReferenceableInstancesTool(model)
+                new GetReferenceableInstancesTool(model),
+                new FindReferencesToTool(model)
         );
     }
     
@@ -82,16 +83,6 @@ public class McpToolRegistry
             toolDef.put("description", tool.getDescription());
             
             toolDef.set("inputSchema", buildInputSchema(tool));
-
-            // include output schema if available
-            final ObjectNode outputSchema = tool.getOutputSchema();
-            if (outputSchema != null)
-            {
-                final ObjectNode outWrap = OBJECT_MAPPER.createObjectNode();
-                outWrap.put("type", "object");
-                outWrap.set("properties", outputSchema);
-                toolDef.set("outputSchema", outWrap);
-            }
             
             toolsArray.add(toolDef);
         }
@@ -120,17 +111,18 @@ public class McpToolRegistry
     }
     
     /**
-     * Create a tool result where content contains a single JSON payload element.
-     * The payload is placed under the "json" field so clients can inspect it directly.
+     * Create a tool result where content contains a single text element with JSON payload.
+     * The payload is serialized as a JSON string in the "text" field per MCP specification.
      */
     protected static String createToolResult(final JsonNode id, final JsonNode payload) throws JsonProcessingException
     {
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
         final ArrayNode contentArray = OBJECT_MAPPER.createArrayNode();
-        final ObjectNode jsonContent = OBJECT_MAPPER.createObjectNode();
-        jsonContent.put("type", "json");
-        jsonContent.set("json", payload == null ? OBJECT_MAPPER.nullNode() : payload);
-        contentArray.add(jsonContent);
+        final ObjectNode textContent = OBJECT_MAPPER.createObjectNode();
+        textContent.put("type", "text");
+        final String jsonText = OBJECT_MAPPER.writeValueAsString(payload == null ? OBJECT_MAPPER.nullNode() : payload);
+        textContent.put("text", jsonText);
+        contentArray.add(textContent);
         result.set("content", contentArray);
         
         final ObjectNode response = OBJECT_MAPPER.createObjectNode();

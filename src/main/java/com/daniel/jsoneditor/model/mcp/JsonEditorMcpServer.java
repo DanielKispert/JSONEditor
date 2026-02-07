@@ -218,9 +218,12 @@ public class JsonEditorMcpServer
         final String toolName = params.path("name").asText();
         final JsonNode arguments = params.path("arguments");
         
+        logger.info("MCP tool called: {} with arguments: {}", toolName, arguments);
+        
         final McpTool tool = toolRegistry.getTool(toolName);
         if (tool == null)
         {
+            logger.warn("Unknown tool requested: {}", toolName);
             return createErrorResponse(id, JSONRPC_INVALID_PARAMS, "Unknown tool: " + toolName);
         }
 
@@ -232,10 +235,13 @@ public class JsonEditorMcpServer
         }
         catch (ValidationException e)
         {
+            logger.warn("Tool {} validation failed: {}", toolName, e.getMessage());
             return createErrorResponse(id, JSONRPC_INVALID_PARAMS, e.getMessage());
         }
         
-        return tool.execute(arguments, id);
+        final String result = tool.execute(arguments, id);
+        logger.debug("Tool {} completed successfully", toolName);
+        return result;
     }
 
     private String createSuccessResponse(final JsonNode id, final JsonNode result) throws JsonProcessingException
