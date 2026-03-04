@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor;
 
 import com.daniel.jsoneditor.controller.settings.impl.EditorDimensions;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.ToggleSidebarButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.menubar.JsonEditorMenuBar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.JsonEditorToolbar;
@@ -20,16 +21,26 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 
 public class EditorScene extends SceneHandlerImpl
 {
+    private static final double DEFAULT_DIVIDER_POSITION = 0.2;
     
     private JsonEditorNavbar navbar;
     
     private final EditorWindowManager editorWindowManager;
+    
+    private SplitPane splitPane;
+    
+    private double lastDividerPosition = DEFAULT_DIVIDER_POSITION;
+    
+    private boolean navbarCollapsed;
+    
+    private ToggleSidebarButton toggleSidebarButton;
     
     
     public EditorScene(UIHandler handler, Controller controller, ReadableModel model)
     {
         super(handler, controller, model);
         editorWindowManager = new EditorWindowManagerImpl(this, model, controller);
+        navbarCollapsed = controller.getSettingsController().isNavbarCollapsed();
     }
     
     @Override
@@ -40,10 +51,12 @@ public class EditorScene extends SceneHandlerImpl
         Scene scene = new Scene(root, stage.getWidth(), stage.getHeight());
         scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
         navbar = new JsonEditorNavbar(model, controller, editorWindowManager, stage);
-        VBox bars = new VBox(new JsonEditorMenuBar(model, controller, editorWindowManager, navbar),
-                new JsonEditorToolbar(model, controller, editorWindowManager, navbar));
+        toggleSidebarButton = new ToggleSidebarButton(this::toggleNavbar, this::isNavbarCollapsed);
+        VBox bars = new VBox(new JsonEditorMenuBar(model, controller, editorWindowManager, navbar, this::toggleNavbar),
+                new JsonEditorToolbar(model, controller, editorWindowManager, navbar, toggleSidebarButton));
         root.setTop(bars);
-        root.setLeft(makeSplitPane(scene));
+        splitPane = makeSplitPane();
+        root.setCenter(splitPane);
         scene.widthProperty().addListener((observable, oldValue, newValue) -> {
             EditorDimensions oldDimensions = controller.getSettingsController().getEditorDimensions();
             //resizing the window means its no longer maximized
@@ -57,15 +70,60 @@ public class EditorScene extends SceneHandlerImpl
         return scene;
     }
     
-    private SplitPane makeSplitPane(Scene scene)
+    private SplitPane makeSplitPane()
     {
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.HORIZONTAL);
-        splitPane.getItems().addAll(navbar, editorWindowManager.getEditorWindowContainer());
-        splitPane.prefWidthProperty().bind(scene.widthProperty());
-        splitPane.prefHeightProperty().bind(scene.heightProperty());
-        Platform.runLater(() -> splitPane.setDividerPositions(0.2));
+        if (navbarCollapsed)
+        {
+            splitPane.getItems().add(editorWindowManager.getEditorWindowContainer());
+        }
+        else
+        {
+            splitPane.getItems().addAll(navbar, editorWindowManager.getEditorWindowContainer());
+            Platform.runLater(() -> splitPane.setDividerPositions(lastDividerPosition));
+        }
         return splitPane;
+    }
+    
+    private void toggleNavbar()
+    {
+        if (navbarCollapsed)
+        {
+            expandNavbar();
+        }
+        else
+        {
+            collapseNavbar();
+        }
+        toggleSidebarButton.updateAppearance();
+    }
+    
+    private void collapseNavbar()
+    {
+        if (splitPane.getDividerPositions().length > 0)
+        {
+            lastDividerPosition = splitPane.getDividerPositions()[0];
+        }
+        splitPane.getItems().remove(navbar);
+        navbarCollapsed = true;
+        controller.getSettingsController().setNavbarCollapsed(true);
+    }
+    
+    private void expandNavbar()
+    {
+        if (!splitPane.getItems().contains(navbar))
+        {
+            splitPane.getItems().add(0, navbar);
+            Platform.runLater(() -> splitPane.setDividerPositions(lastDividerPosition));
+        }
+        navbarCollapsed = false;
+        controller.getSettingsController().setNavbarCollapsed(false);
+    }
+    
+    private boolean isNavbarCollapsed()
+    {
+        return navbarCollapsed;
     }
     
     public void updateEverything()

@@ -19,7 +19,8 @@ import javafx.scene.input.KeyCombination;
 
 public class JsonEditorMenuBar extends MenuBar
 {
-    public JsonEditorMenuBar(ReadableModel model, Controller controller, EditorWindowManager manager, JsonEditorNavbar navbar)
+    public JsonEditorMenuBar(ReadableModel model, Controller controller, EditorWindowManager manager, JsonEditorNavbar navbar,
+            Runnable toggleSidebar)
     {
         super();
         setUseSystemMenuBar(true);
@@ -52,6 +53,12 @@ public class JsonEditorMenuBar extends MenuBar
         redoItem.setAccelerator(new KeyCodeCombination(KeyCode.Y, KeyCombination.SHORTCUT_DOWN));
         editMenu.getItems().addAll(undoItem, redoItem);
         
+        Menu viewMenu = new Menu("View");
+        MenuItem toggleSidebarItem = new MenuItem("Toggle Sidebar");
+        toggleSidebarItem.setOnAction(event -> toggleSidebar.run());
+        toggleSidebarItem.setAccelerator(new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN));
+        viewMenu.getItems().add(toggleSidebarItem);
+        
         Menu inspectMenu = new Menu("Inspect");
         MenuItem findItem = makeFindAnythingItem(model, manager, navbar);
         inspectMenu.getItems().add(findItem);
@@ -60,7 +67,7 @@ public class JsonEditorMenuBar extends MenuBar
         MenuItem aboutItem = new MenuItem("About");
         aboutItem.setOnAction(event -> new AboutDialog().showAndWait());
         helpMenu.getItems().add(aboutItem);
-        getMenus().addAll(fileMenu, editMenu, inspectMenu, helpMenu);
+        getMenus().addAll(fileMenu, editMenu, viewMenu, inspectMenu, helpMenu);
     }
     
     private static MenuItem makeFindAnythingItem(ReadableModel model, EditorWindowManager manager, JsonEditorNavbar navbar)

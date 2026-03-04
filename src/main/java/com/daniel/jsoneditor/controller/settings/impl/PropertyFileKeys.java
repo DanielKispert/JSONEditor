@@ -27,4 +27,6 @@ public class PropertyFileKeys
     public final static String PROPERTY_MCP_SERVER_ENABLED = "autostart_mcp_server";
     
     public final static String PROPERTY_MCP_SERVER_PORT = "mcp_server_port";
+    
+    public final static String PROPERTY_NAVBAR_COLLAPSED = "navbar_collapsed";
 }
