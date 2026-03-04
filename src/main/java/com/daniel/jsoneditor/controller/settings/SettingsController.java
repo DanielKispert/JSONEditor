@@ -45,4 +45,8 @@ public interface SettingsController
     void setMcpServerPort(int port);
     
     int getMcpServerPort();
+    
+    void setNavbarCollapsed(boolean collapsed);
+    
+    boolean isNavbarCollapsed();
 }

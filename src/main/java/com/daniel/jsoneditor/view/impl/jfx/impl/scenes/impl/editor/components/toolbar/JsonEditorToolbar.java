@@ -1,8 +1,10 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
 
+import com.daniel.jsoneditor.view.impl.jfx.buttons.ToggleSidebarButton;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import javafx.scene.control.Button;
+import javafx.scene.control.Separator;
 import javafx.scene.control.ToolBar;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -19,19 +21,23 @@ public class JsonEditorToolbar extends ToolBar
     
     private final ReadableModel model;
     
-    private final Controller controller;
-    
     private final EditorWindowManager editorWindowManager;
     
     private final JsonEditorNavbar navbar;
     
-    public JsonEditorToolbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager, JsonEditorNavbar navbar)
+    public JsonEditorToolbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager,
+            JsonEditorNavbar navbar, ToggleSidebarButton toggleSidebarButton)
     {
-        this.controller = controller;
         this.model = model;
         this.editorWindowManager = editorWindowManager;
         this.navbar = navbar;
-        getItems().addAll(makeSearchButtons());
+        getItems().add(toggleSidebarButton);
+        List<Button> searchButtons = makeSearchButtons();
+        if (!searchButtons.isEmpty())
+        {
+            getItems().add(new Separator());
+            getItems().addAll(searchButtons);
+        }
     }
     
     private List<Button> makeSearchButtons()

@@ -212,4 +212,17 @@ public class SettingsControllerImpl implements SettingsController
             return JsonEditorMcpServer.DEFAULT_PORT;
         }
     }
+    
+    @Override
+    public void setNavbarCollapsed(boolean collapsed)
+    {
+        properties.setProperty(PropertyFileKeys.PROPERTY_NAVBAR_COLLAPSED, collapsed ? "true" : "false");
+        PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public boolean isNavbarCollapsed()
+    {
+        return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_NAVBAR_COLLAPSED));
+    }
 }
