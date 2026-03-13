@@ -101,5 +101,9 @@ public interface Controller
      */
     List<DiffEntry> calculateJsonDiff();
 
+    /**
+     * Performs a clean shutdown: stops background services (e.g. MCP server) and releases resources.
+     */
+    void shutdown();
 
 }

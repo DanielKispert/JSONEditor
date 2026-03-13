@@ -48,7 +48,7 @@ public class JsonEditorNamebar extends HBox
         nameLabel = new Label();
         nameLabel.setAlignment(Pos.CENTER);
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
-        showUsagesButton = new ShowUsagesButton(model, manager);
+        showUsagesButton = new ShowUsagesButton(model, manager, controller.getSettingsController());
         
         this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showUsagesButton);
         

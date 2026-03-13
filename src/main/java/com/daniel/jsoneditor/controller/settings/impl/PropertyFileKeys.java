@@ -29,4 +29,8 @@ public class PropertyFileKeys
     public final static String PROPERTY_MCP_SERVER_PORT = "mcp_server_port";
     
     public final static String PROPERTY_NAVBAR_COLLAPSED = "navbar_collapsed";
+    
+    public final static String PROPERTY_MAX_EDITOR_WINDOWS = "max_editor_windows";
+    
+    public final static String PROPERTY_OPEN_IN_NEW_WINDOW = "open_in_new_window";
 }

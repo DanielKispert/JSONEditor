@@ -2,24 +2,27 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs;
 
 import java.util.List;
 
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.listview.DialogWithListView;
 
 
 /**
- * this dialog shows where a ReferenceableObject is used
+ * Shows where a ReferenceableObject is used and lets the user open a usage in the current or a new window.
  */
-public class ShowUsagesDialog extends DialogWithListView<ReferenceToObjectInstance>
+public class ShowUsagesDialog extends DialogWithListView<ReferenceToObjectInstance, FindResult>
 {
     
-    public ShowUsagesDialog(List<ReferenceToObjectInstance> items, JsonNodeWithPath jsonNodeWithPath)
+    public ShowUsagesDialog(List<ReferenceToObjectInstance> items, JsonNodeWithPath jsonNodeWithPath,
+            SettingsController settingsController)
     {
         super(items);
         this.setTitle("Usages of " + jsonNodeWithPath.getDisplayName());
         
         listView.getSelectionModel().selectFirst();
         getDialogPane().setContent(listView);
+        addOpenInNewWindowCheckBox(settingsController);
     }
     
     @Override
@@ -32,5 +35,11 @@ public class ShowUsagesDialog extends DialogWithListView<ReferenceToObjectInstan
     protected void onListItemDoubleClick(ReferenceToObjectInstance item)
     {
         handleDialogOk();
+    }
+    
+    @Override
+    protected FindResult convertSelectedItem(ReferenceToObjectInstance selectedItem)
+    {
+        return new FindResult(selectedItem.getPath(), isOpenInNewWindowRequested());
     }
 }

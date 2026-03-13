@@ -75,33 +75,41 @@ public class ToastImpl implements Toast
         showTransition.play();
         
         showTransition.setOnFinished((ae) -> {
-            new Thread(() -> {
+            Thread delayThread = new Thread(() -> {
                 try
                 {
                     Thread.sleep(actualDuration);
                 }
                 catch (InterruptedException e)
                 {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                    return;
                 }
-                Timeline moveDownTimeline = new Timeline();
-                KeyFrame moveDownKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), 10));
-                moveDownTimeline.getKeyFrames().add(moveDownKey);
+                Platform.runLater(() -> {
+                    Timeline moveDownTimeline = new Timeline();
+                    KeyFrame moveDownKey = new KeyFrame(Duration.millis(SLIDE_DURATION),
+                            new KeyValue(root.translateYProperty(), 10));
+                    moveDownTimeline.getKeyFrames().add(moveDownKey);
 
-                Timeline fadeOutTimeline = new Timeline();
-                KeyFrame fadeOutKey = new KeyFrame(Duration.millis(FADE_DURATION), new KeyValue(root.opacityProperty(), 0));
-                fadeOutTimeline.getKeyFrames().add(fadeOutKey);
+                    Timeline fadeOutTimeline = new Timeline();
+                    KeyFrame fadeOutKey = new KeyFrame(Duration.millis(FADE_DURATION),
+                            new KeyValue(root.opacityProperty(), 0));
+                    fadeOutTimeline.getKeyFrames().add(fadeOutKey);
 
-                ParallelTransition hideTransition = new ParallelTransition(moveDownTimeline, fadeOutTimeline);
-                hideTransition.setOnFinished((aeb) -> {
-                    toastPopup.hide();
-                    if (onFinished != null)
-                    {
-                        onFinished.run();
-                    }
+                    ParallelTransition hideTransition = new ParallelTransition(moveDownTimeline, fadeOutTimeline);
+                    hideTransition.setOnFinished((aeb) -> {
+                        toastPopup.hide();
+                        if (onFinished != null)
+                        {
+                            onFinished.run();
+                        }
+                    });
+                    hideTransition.play();
                 });
-                hideTransition.play();
-            }).start();
+            });
+            delayThread.setDaemon(true);
+            delayThread.setDaemon(true);
+            delayThread.start();
         });
     }
     

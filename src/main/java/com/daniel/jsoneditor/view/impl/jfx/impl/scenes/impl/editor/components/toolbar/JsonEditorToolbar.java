@@ -1,7 +1,9 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
 
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.ToggleSidebarButton;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindResult;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import javafx.scene.control.Button;
 import javafx.scene.control.Separator;
@@ -25,12 +27,15 @@ public class JsonEditorToolbar extends ToolBar
     
     private final JsonEditorNavbar navbar;
     
+    private final SettingsController settingsController;
+    
     public JsonEditorToolbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager,
             JsonEditorNavbar navbar, ToggleSidebarButton toggleSidebarButton)
     {
         this.model = model;
         this.editorWindowManager = editorWindowManager;
         this.navbar = navbar;
+        this.settingsController = controller.getSettingsController();
         getItems().add(toggleSidebarButton);
         List<Button> searchButtons = makeSearchButtons();
         if (!searchButtons.isEmpty())
@@ -50,11 +55,19 @@ public class JsonEditorToolbar extends ToolBar
         Button button = new Button(buttonSetting.getTitle());
     
         button.setOnAction(actionEvent -> {
-            FindDialog dialog = new FindDialog(model.getInstancesOfReferenceableObjectAtPath(buttonSetting.getTarget()));
-            Optional<String> result = dialog.showAndWait();
-            result.ifPresent(s -> {
-                navbar.selectPath(s);
-                editorWindowManager.openPath(s);
+            FindDialog dialog = new FindDialog(model.getInstancesOfReferenceableObjectAtPath(buttonSetting.getTarget()),
+                    settingsController);
+            Optional<FindResult> result = dialog.showAndWait();
+            result.ifPresent(findResult -> {
+                navbar.selectPath(findResult.getPath());
+                if (findResult.isOpenInNewWindow())
+                {
+                    editorWindowManager.openInNewWindowIfPossible(findResult.getPath());
+                }
+                else
+                {
+                    editorWindowManager.openPath(findResult.getPath());
+                }
             });
         });
         return button;

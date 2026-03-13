@@ -8,6 +8,7 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.AboutDialog;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.SettingsDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindResult;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -60,7 +61,7 @@ public class JsonEditorMenuBar extends MenuBar
         viewMenu.getItems().add(toggleSidebarItem);
         
         Menu inspectMenu = new Menu("Inspect");
-        MenuItem findItem = makeFindAnythingItem(model, manager, navbar);
+        MenuItem findItem = makeFindAnythingItem(model, controller, manager, navbar);
         inspectMenu.getItems().add(findItem);
         
         Menu helpMenu = new Menu("Help");
@@ -70,15 +71,23 @@ public class JsonEditorMenuBar extends MenuBar
         getMenus().addAll(fileMenu, editMenu, viewMenu, inspectMenu, helpMenu);
     }
     
-    private static MenuItem makeFindAnythingItem(ReadableModel model, EditorWindowManager manager, JsonEditorNavbar navbar)
+    private static MenuItem makeFindAnythingItem(ReadableModel model, Controller controller, EditorWindowManager manager,
+            JsonEditorNavbar navbar)
     {
         MenuItem findItem = new MenuItem("Find anything");
         findItem.setOnAction(event -> {
-            FindDialog dialog = new FindDialog(model.getReferenceableObjectInstances());
-            Optional<String> result = dialog.showAndWait();
-            result.ifPresent(s -> {
-                navbar.selectPath(s);
-                manager.openPath(s);
+            FindDialog dialog = new FindDialog(model.getReferenceableObjectInstances(), controller.getSettingsController());
+            Optional<FindResult> result = dialog.showAndWait();
+            result.ifPresent(findResult -> {
+                navbar.selectPath(findResult.getPath());
+                if (findResult.isOpenInNewWindow())
+                {
+                    manager.openInNewWindowIfPossible(findResult.getPath());
+                }
+                else
+                {
+                    manager.openPath(findResult.getPath());
+                }
             });
         });
         findItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN));

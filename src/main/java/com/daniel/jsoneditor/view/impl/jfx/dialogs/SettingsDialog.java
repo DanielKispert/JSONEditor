@@ -29,6 +29,10 @@ public class SettingsDialog extends ThemedDialog<Void>
     
     private String tmpClusterShape;
     
+    private String tmpMaxEditorWindows;
+    
+    private boolean tmpOpenInNewWindow;
+    
     private boolean tmpMcpServerEnabled;
     
     private int tmpMcpServerPort;
@@ -52,6 +56,8 @@ public class SettingsDialog extends ThemedDialog<Void>
         this.tmpDebugMode = settingsController.isDebugMode();
         this.tmpLogGraphRequests = settingsController.isLogGraphRequests();
         this.tmpClusterShape = settingsController.getClusterShape();
+        this.tmpMaxEditorWindows = settingsController.getMaxEditorWindows();
+        this.tmpOpenInNewWindow = settingsController.isOpenInNewWindow();
         this.tmpMcpServerEnabled = settingsController.isMcpServerEnabled();
         this.tmpMcpServerPort = settingsController.getMcpServerPort();
         
@@ -74,6 +80,8 @@ public class SettingsDialog extends ThemedDialog<Void>
                 settingsController.setDebugMode(tmpDebugMode);
                 settingsController.setLogGraphRequests(tmpLogGraphRequests);
                 settingsController.setClusterShape(tmpClusterShape);
+                settingsController.setMaxEditorWindows(tmpMaxEditorWindows);
+                settingsController.setOpenInNewWindow(tmpOpenInNewWindow);
                 settingsController.setMcpServerEnabled(tmpMcpServerEnabled);
                 settingsController.setMcpServerPort(tmpMcpServerPort);
             }
@@ -93,7 +101,8 @@ public class SettingsDialog extends ThemedDialog<Void>
         
         // Display Tab
         Tab displayTab = new Tab("Display");
-        VBox displayBox = new VBox(createDisplaySettings(), createClusterShapeSettings());
+        VBox displayBox = new VBox(createDisplaySettings(), createOpenInNewWindowSetting(), createClusterShapeSettings(),
+                createMaxEditorWindowsSettings());
         displayTab.setContent(displayBox);
         
         // Debug Tab
@@ -129,6 +138,14 @@ public class SettingsDialog extends ThemedDialog<Void>
         return hideEmptyColumnsCheckBox;
     }
     
+    private CheckBox createOpenInNewWindowSetting()
+    {
+        CheckBox openInNewWindowCheckBox = new CheckBox("Open search results in new window by default");
+        openInNewWindowCheckBox.setSelected(tmpOpenInNewWindow);
+        openInNewWindowCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> tmpOpenInNewWindow = newValue);
+        return openInNewWindowCheckBox;
+    }
+    
     private CheckBox createDebugToastsSetting()
     {
         CheckBox debugModeCheckBox = new CheckBox("Show toast notification on model changes");
@@ -154,6 +171,22 @@ public class SettingsDialog extends ThemedDialog<Void>
         clusterShapeComboBox.valueProperty().addListener((observable, oldValue, newValue) -> tmpClusterShape = newValue);
         Label title = new Label("Cluster Shape: ");
         box.getChildren().addAll(title, clusterShapeComboBox);
+        return box;
+    }
+    
+    private HBox createMaxEditorWindowsSettings()
+    {
+        HBox box = new HBox();
+        ComboBox<String> maxWindowsComboBox = new ComboBox<>();
+        maxWindowsComboBox.getItems().add("auto");
+        for (int i = 3; i <= 10; i++)
+        {
+            maxWindowsComboBox.getItems().add(String.valueOf(i));
+        }
+        maxWindowsComboBox.setValue(tmpMaxEditorWindows);
+        maxWindowsComboBox.valueProperty().addListener((observable, oldValue, newValue) -> tmpMaxEditorWindows = newValue);
+        Label title = new Label("Max Editor Windows: ");
+        box.getChildren().addAll(title, maxWindowsComboBox);
         return box;
     }
     

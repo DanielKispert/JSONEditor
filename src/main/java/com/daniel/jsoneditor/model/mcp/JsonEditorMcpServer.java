@@ -100,6 +100,11 @@ public class JsonEditorMcpServer
         this.port = port;
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
         server.createContext("/", this::handleRequest);
+        server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool(r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
+        }));
         server.start();
         running = true;
         logger.info("MCP Server started on http://127.0.0.1:{}", port);
@@ -112,7 +117,7 @@ public class JsonEditorMcpServer
     {
         if (server != null)
         {
-            server.stop(0);
+            server.stop(1);
             server = null;
             running = false;
             logger.info("MCP Server stopped");

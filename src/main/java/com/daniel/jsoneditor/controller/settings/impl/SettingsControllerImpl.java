@@ -225,4 +225,37 @@ public class SettingsControllerImpl implements SettingsController
     {
         return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_NAVBAR_COLLAPSED));
     }
+    
+    @Override
+    public void setMaxEditorWindows(String maxWindows)
+    {
+        properties.setProperty(PropertyFileKeys.PROPERTY_MAX_EDITOR_WINDOWS, maxWindows);
+        PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public String getMaxEditorWindows()
+    {
+        String value = properties.getProperty(PropertyFileKeys.PROPERTY_MAX_EDITOR_WINDOWS);
+        return value == null ? "auto" : value;
+    }
+    
+    @Override
+    public void setOpenInNewWindow(boolean openInNewWindow)
+    {
+        properties.setProperty(PropertyFileKeys.PROPERTY_OPEN_IN_NEW_WINDOW, openInNewWindow ? "true" : "false");
+        PropertiesFileHelper.writePropertiesToFile(properties);
+    }
+    
+    @Override
+    public boolean isOpenInNewWindow()
+    {
+        // default is true
+        String property = properties.getProperty(PropertyFileKeys.PROPERTY_OPEN_IN_NEW_WINDOW);
+        if (property == null)
+        {
+            return true;
+        }
+        return "true".equalsIgnoreCase(property);
+    }
 }
