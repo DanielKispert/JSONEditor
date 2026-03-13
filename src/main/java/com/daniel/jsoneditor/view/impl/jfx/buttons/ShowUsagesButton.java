@@ -3,9 +3,11 @@ package com.daniel.jsoneditor.view.impl.jfx.buttons;
 import java.util.List;
 import java.util.Optional;
 
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
+import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindResult;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ShowUsagesDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
@@ -19,14 +21,17 @@ public class ShowUsagesButton extends Button
     
     private final EditorWindowManager manager;
     
+    private final SettingsController settingsController;
+    
     private JsonNodeWithPath selection;
     
-    public ShowUsagesButton(ReadableModel model, EditorWindowManager manager)
+    public ShowUsagesButton(ReadableModel model, EditorWindowManager manager, SettingsController settingsController)
     {
         super();
         ButtonHelper.setButtonImage(this, "/icons/material/darkmode/outline_pageview_white_24dp.png");
         this.model = model;
         this.manager = manager;
+        this.settingsController = settingsController;
         setOnAction(actionEvent -> handleClick());
         setTooltip(new Tooltip("Show usages"));
     }
@@ -48,8 +53,17 @@ public class ShowUsagesButton extends Button
             manager.showToast(Toasts.NO_REFERENCES_TOAST);
             return;
         }
-        ShowUsagesDialog dialog = new ShowUsagesDialog(references, selection);
-        Optional<String> result = dialog.showAndWait(); //the result is the path of the node to open
-        result.ifPresent(manager::openPath);
+        ShowUsagesDialog dialog = new ShowUsagesDialog(references, selection, settingsController);
+        Optional<FindResult> result = dialog.showAndWait();
+        result.ifPresent(findResult -> {
+            if (findResult.isOpenInNewWindow())
+            {
+                manager.openInNewWindowIfPossible(findResult.getPath());
+            }
+            else
+            {
+                manager.openPath(findResult.getPath());
+            }
+        });
     }
 }

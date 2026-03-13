@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
 
 import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
@@ -10,12 +11,11 @@ import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.SplitPane;
+import javafx.stage.Screen;
 
 // manages the positions of editor windows etc
 public class EditorWindowManagerImpl implements EditorWindowManager
 {
-    private static final int MAX_WINDOWS = 7;
-    
     private final EditorScene editorScene;
     
     private final SplitPane editorWindowContainer;
@@ -24,12 +24,38 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     
     private final ReadableModel model;
     
+    private final SettingsController settingsController;
+    
     public EditorWindowManagerImpl(EditorScene scene, ReadableModel model, Controller controller)
     {
         this.editorScene = scene;
         this.model = model;
         this.controller = controller;
+        this.settingsController = controller.getSettingsController();
         editorWindowContainer = new AutoAdjustingSplitPane();
+    }
+    
+    /**
+     * Returns the effective maximum number of editor windows. If the setting is "auto", the limit is derived from the primary screen
+     * width: roughly 1 window per 350px, clamped between 3 and 10.
+     */
+    private int getMaxWindows()
+    {
+        String setting = settingsController.getMaxEditorWindows();
+        if (!"auto".equals(setting))
+        {
+            try
+            {
+                return Math.max(3, Math.min(10, Integer.parseInt(setting)));
+            }
+            catch (NumberFormatException ignored)
+            {
+                // fall through to auto
+            }
+        }
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        int computed = (int) (screenWidth / 350.0);
+        return Math.max(3, Math.min(10, computed));
     }
     
     @Override
@@ -44,27 +70,56 @@ public class EditorWindowManagerImpl implements EditorWindowManager
         ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
         if (!windowsAsNodes.isEmpty())
         {
-            boolean alreadyOpenInWindow = false;
+            // 1. Check if the exact path is already open as a main selection or child table
             for (Node windowNode : windowsAsNodes)
             {
                 if (windowNode instanceof JsonEditorEditorWindow)
                 {
                     JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
-                    if (path.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(path))
+                    if (path.equals(window.getSelectedPath()))
                     {
-                        alreadyOpenInWindow = true;
                         window.requestFocus();
-                        break;
+                        return;
+                    }
+                    if (window.getOpenChildPaths().contains(path))
+                    {
+                        window.requestFocus();
+                        window.focusArrayItem(path);
+                        return;
                     }
                 }
             }
-            if (!alreadyOpenInWindow)
+            // 2. Check if the path is an array item whose parent array is already visible (as main selection or child table)
+            String parentPath = PathHelper.getParentPath(path);
+            if (parentPath != null)
             {
+                for (Node windowNode : windowsAsNodes)
+                {
+                    if (windowNode instanceof JsonEditorEditorWindow)
+                    {
+                        JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+                        if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
+                        {
+                            window.requestFocus();
+                            window.focusArrayItem(path);
+                            return;
+                        }
+                    }
+                }
+            }
+            // 3. Path is not open anywhere — prefer opening in a new window if possible
+            if (canAnotherWindowBeAdded())
+            {
+                addWindow().setSelectedPath(path, openObjectParentOfArray);
+            }
+            else
+            {
+                // Fall back to reusing the first window
                 Node windowAsNode = windowsAsNodes.get(0);
                 if (windowAsNode instanceof JsonEditorEditorWindow)
                 {
                     JsonEditorEditorWindow firstWindow = (JsonEditorEditorWindow) windowAsNode;
-                    firstWindow.setSelectedPath(path);
+                    firstWindow.setSelectedPath(path, openObjectParentOfArray);
                 }
             }
         }
@@ -157,7 +212,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     @Override
     public boolean canAnotherWindowBeAdded()
     {
-        return editorWindowContainer.getItems().size() < MAX_WINDOWS;
+        return editorWindowContainer.getItems().size() < getMaxWindows();
     }
     
     @Override

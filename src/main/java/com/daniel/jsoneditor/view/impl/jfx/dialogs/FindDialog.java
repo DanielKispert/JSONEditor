@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.listview.DialogWithListView;
 import javafx.application.Platform;
@@ -15,14 +16,14 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 
-public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
+public class FindDialog extends DialogWithListView<ReferenceableObjectInstance, FindResult>
 {
     
     protected final TextField searchField;
     
     protected final List<ReferenceableObjectInstance> suggestions;
     
-    public FindDialog(List<ReferenceableObjectInstance> suggestions)
+    public FindDialog(List<ReferenceableObjectInstance> suggestions, SettingsController settingsController)
     {
         super(suggestions);
         this.suggestions = suggestions;
@@ -30,14 +31,19 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
         
         searchField = createSearchField();
         
-        setResultConverter(this::convertResult);
-        
         VBox layout = new VBox(listView, searchField);
         layout.setSpacing(5);
         
         getDialogPane().setContent(layout);
+        addOpenInNewWindowCheckBox(settingsController);
         
         Platform.runLater(searchField::requestFocus);
+    }
+    
+    @Override
+    protected FindResult convertSelectedItem(ReferenceableObjectInstance selectedItem)
+    {
+        return new FindResult(selectedItem.getPath(), isOpenInNewWindowRequested());
     }
     
     private TextField createSearchField()
@@ -46,7 +52,6 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
         textField.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(textField, Priority.ALWAYS);
         textField.setPromptText("Search...");
-        // Filtering the suggestions as the user types
         textField.textProperty().addListener((observableValue, oldValue, newValue) -> filterSuggestionsBasedOn(newValue));
         textField.addEventHandler(KeyEvent.KEY_PRESSED, this::handleTextFieldKeyPress);
         return textField;
@@ -58,7 +63,8 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
     private void filterSuggestionsBasedOn(String currentText)
     {
         List<ReferenceableObjectInstance> filteredSuggestions = suggestions.stream().filter(
-                suggestion -> suggestion.getKey() != null && suggestion.getKey().toLowerCase().contains(currentText.toLowerCase())).collect(Collectors.toList());
+                suggestion -> suggestion.getKey() != null && suggestion.getKey().toLowerCase().contains(currentText.toLowerCase()))
+                .collect(Collectors.toList());
         
         listView.setItems(FXCollections.observableArrayList(filteredSuggestions));
         
@@ -69,7 +75,7 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
     }
     
     /**
-     * Handles KeyEvents - Autocompletes on TAB key press, and Submits the form on ENTER key press
+     * Handles KeyEvents - Autocompletes on TAB key press
      */
     private void handleTextFieldKeyPress(KeyEvent keyEvent)
     {
@@ -108,7 +114,7 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
         {
             String commonPrefix = getCommonPrefix(matchingSuggestions);
             searchField.setText(commonPrefix);
-            listView.getSelectionModel().select(0);  // select first item in the list
+            listView.getSelectionModel().select(0);
             searchField.positionCaret(searchField.getText().length());
         }
     }
@@ -116,7 +122,7 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
     @Override
     protected String getOkButtonText()
     {
-        return "Search";
+        return "Open";
     }
     
     /**
@@ -134,5 +140,4 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
         }
         return commonPrefix.toString();
     }
-    
 }

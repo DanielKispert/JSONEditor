@@ -1,9 +1,11 @@
 package com.daniel.jsoneditor.view;
 
+import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
 import com.daniel.jsoneditor.model.statemachine.EventSender;
 import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.stage.Stage;
 import com.daniel.jsoneditor.controller.impl.ControllerImpl;
 
@@ -24,7 +26,11 @@ public class JFXLauncher extends Application
         stage.setTitle("JSON Editor");
         EventSender eventSender = new EventSenderImpl();
         ModelImpl model = new ModelImpl(eventSender);
-        new ControllerImpl(model, model, stage);
+        Controller controller = new ControllerImpl(model, model, stage);
         
+        stage.setOnCloseRequest(event -> {
+            controller.shutdown();
+            Platform.exit();
+        });
     }
 }

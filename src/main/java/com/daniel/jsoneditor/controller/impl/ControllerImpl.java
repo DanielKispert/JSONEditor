@@ -572,4 +572,11 @@ public class ControllerImpl implements Controller, Observer
         
         return JsonDiffer.calculateDiff(savedJson, currentJson, readableModel);
     }
+    
+    @Override
+    public void shutdown()
+    {
+        logger.info("Shutting down application");
+        mcpController.stopMcpServer();
+    }
 }

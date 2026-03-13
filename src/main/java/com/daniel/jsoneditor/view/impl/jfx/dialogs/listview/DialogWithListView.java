@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs.listview;
 
 import java.util.List;
 
+import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferencingInstance;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ThemedDialog;
 import javafx.collections.FXCollections;
@@ -10,6 +11,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
@@ -19,16 +21,17 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 
 
-public abstract class DialogWithListView<T extends ReferencingInstance> extends ThemedDialog<String>
+public abstract class DialogWithListView<T extends ReferencingInstance, R> extends ThemedDialog<R>
 {
     protected ListView<T> listView;
     
     protected ButtonType okButtonType;
     
     protected ButtonType cancelButtonType;
+    
+    private CheckBox openInNewWindowCheckBox;
     
     public DialogWithListView(List<T> items)
     {
@@ -37,6 +40,34 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends 
         cancelButtonType = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
         getDialogPane().getButtonTypes().addAll(okButtonType, cancelButtonType);
         setResultConverter(this::convertResult);
+    }
+    
+    /**
+     * Adds a "Open in new window" CheckBox into the dialog's ButtonBar, left-aligned. The checkbox is prefilled from the given setting.
+     * Call this from the subclass constructor after super() and after setting the dialog content.
+     */
+    protected void addOpenInNewWindowCheckBox(SettingsController settingsController)
+    {
+        openInNewWindowCheckBox = new CheckBox("Open in new window");
+        openInNewWindowCheckBox.setSelected(settingsController.isOpenInNewWindow());
+        
+        // Insert the checkbox into the ButtonBar so it sits on the left, with buttons on the right
+        ButtonBar.setButtonData(openInNewWindowCheckBox, ButtonBar.ButtonData.LEFT);
+        getDialogPane().applyCss();
+        getDialogPane().layout();
+        javafx.scene.Node buttonBarNode = getDialogPane().lookup(".button-bar");
+        if (buttonBarNode instanceof ButtonBar)
+        {
+            ((ButtonBar) buttonBarNode).getButtons().add(0, openInNewWindowCheckBox);
+        }
+    }
+    
+    /**
+     * Returns true if the "Open in new window" checkbox is checked. Only valid after the dialog has been closed.
+     */
+    public boolean isOpenInNewWindowRequested()
+    {
+        return openInNewWindowCheckBox != null && openInNewWindowCheckBox.isSelected();
     }
     
     protected abstract String getOkButtonText();
@@ -76,14 +107,20 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends 
         okButton.fire();
     }
     
-    protected String convertResult(ButtonType buttonType)
+    protected R convertResult(ButtonType buttonType)
     {
         if (buttonType.getButtonData().isCancelButton())
         {
             return null;
         }
-        return listView.getSelectionModel().getSelectedItem().getPath();
+        T selectedItem = listView.getSelectionModel().getSelectedItem();
+        return selectedItem != null ? convertSelectedItem(selectedItem) : null;
     }
+    
+    /**
+     * Converts the selected list item into the dialog result. Subclasses override this to produce their specific result type.
+     */
+    protected abstract R convertSelectedItem(T selectedItem);
     
     protected void initializeListView(List<T> items)
     {
