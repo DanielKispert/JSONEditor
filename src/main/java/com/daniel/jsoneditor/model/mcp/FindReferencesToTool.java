@@ -39,7 +39,7 @@ class FindReferencesToTool extends ReadOnlyMcpTool
     public ObjectNode getInputSchema()
     {
         return McpToolRegistry.createSchemaWithProperty("path", "string",
-                "JSON path to a referenceable object instance to find references to");
+                "JSON path to a referenceable object instance to find references to (e.g., /processes/0)");
     }
 
     @Override

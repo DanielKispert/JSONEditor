@@ -36,7 +36,7 @@ class GetNodeTool extends ReadOnlyMcpTool
     @Override
     public ObjectNode getInputSchema()
     {
-        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path (e.g., /root/child)");
+        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path (e.g., /processes/0)");
     }
 
     @Override

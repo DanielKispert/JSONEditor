@@ -15,9 +15,13 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.na
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -49,6 +53,8 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     private GraphFilterButton filterButton;
     
     private Set<String> currentFilteredEdgeNames = null; // null means show all edges
+    
+    private final TreeSet<String> allKnownEdgeNames = new TreeSet<>();
     
     private GraphPanelContainer(Controller controller, ReadableModel model, SmartGraphProperties properties, URI cssFile)
     {
@@ -87,7 +93,8 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     public void updateView()
     {
         this.getChildren().clear();
-        this.graphView = new NodeGraphPanel(model, controller.getSettingsController(), selectedPath, properties, initialPlacement, cssFile, currentFilteredEdgeNames);
+        this.graphView = new NodeGraphPanel(model, controller.getSettingsController(), selectedPath, properties, initialPlacement, cssFile,
+                currentFilteredEdgeNames);
         this.graphView.setFilterUpdateCallback(this::handleNewEdgeNames);
 
         final VBox mainContainer = new VBox();
@@ -128,11 +135,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     
     private Collection<String> getAvailableEdgeNames()
     {
-        if (graphView != null)
-        {
-            return graphView.getAllEdgeNames();
-        }
-        return java.util.Collections.emptyList();
+        return new ArrayList<>(allKnownEdgeNames);
     }
     
     private void applyEdgeFilter()
@@ -143,7 +146,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
             
             if (selectedEdgeNames == null)
             {
-                currentFilteredEdgeNames = java.util.Collections.emptySet();
+                currentFilteredEdgeNames = Collections.emptySet();
             }
             else if (selectedEdgeNames.isEmpty())
             {
@@ -151,7 +154,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
             }
             else
             {
-                currentFilteredEdgeNames = new java.util.HashSet<>(selectedEdgeNames);
+                currentFilteredEdgeNames = new HashSet<>(selectedEdgeNames);
             }
             
             updateView();
@@ -160,10 +163,14 @@ public class GraphPanelContainer extends HBox implements NavbarElement
     
     private void handleNewEdgeNames()
     {
+        if (graphView != null)
+        {
+            Collection<String> currentEdgeNames = graphView.getAllEdgeNames();
+            allKnownEdgeNames.addAll(currentEdgeNames);
+        }
         if (filterButton != null)
         {
-            Collection<String> allEdgeNames = getAvailableEdgeNames();
-            filterButton.addNewItemsAsSelected(allEdgeNames);
+            filterButton.addNewItemsAsSelected(allKnownEdgeNames);
         }
     }
 
@@ -173,6 +180,12 @@ public class GraphPanelContainer extends HBox implements NavbarElement
         if (!Objects.equals(selectedPath, path))
         {
             selectedPath = path;
+            currentFilteredEdgeNames = null;
+            filterButton = null;
+            allKnownEdgeNames.clear();
+            // Collect all edge names from the unfiltered graph so the filter popup always shows the complete list
+            model.getJsonAsGraph(selectedPath, null).edges()
+                    .forEach(edge -> allKnownEdgeNames.add(edge.element().getName()));
             updateView();
         }
     }

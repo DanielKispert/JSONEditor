@@ -70,44 +70,12 @@ public class EditorWindowManagerImpl implements EditorWindowManager
         ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
         if (!windowsAsNodes.isEmpty())
         {
-            // 1. Check if the exact path is already open as a main selection or child table
-            for (Node windowNode : windowsAsNodes)
+            // 1. Check if the path is already visible in an existing window
+            if (focusExistingWindowForPath(path))
             {
-                if (windowNode instanceof JsonEditorEditorWindow)
-                {
-                    JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
-                    if (path.equals(window.getSelectedPath()))
-                    {
-                        window.requestFocus();
-                        return;
-                    }
-                    if (window.getOpenChildPaths().contains(path))
-                    {
-                        window.requestFocus();
-                        window.focusArrayItem(path);
-                        return;
-                    }
-                }
+                return;
             }
-            // 2. Check if the path is an array item whose parent array is already visible (as main selection or child table)
-            String parentPath = PathHelper.getParentPath(path);
-            if (parentPath != null)
-            {
-                for (Node windowNode : windowsAsNodes)
-                {
-                    if (windowNode instanceof JsonEditorEditorWindow)
-                    {
-                        JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
-                        if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
-                        {
-                            window.requestFocus();
-                            window.focusArrayItem(path);
-                            return;
-                        }
-                    }
-                }
-            }
-            // 3. Path is not open anywhere — prefer opening in a new window if possible
+            // 2. Path is not open anywhere — prefer opening in a new window if possible
             if (canAnotherWindowBeAdded())
             {
                 addWindow().setSelectedPath(path, openObjectParentOfArray);
@@ -128,12 +96,62 @@ public class EditorWindowManagerImpl implements EditorWindowManager
             // if no window exists, we create a new one and open it in there
             openInNewWindowIfPossible(path, openObjectParentOfArray);
         }
-
+    }
+    
+    /**
+     * Checks if the given path is already visible in any editor window (as main selection, child table, or parent array of an array item).
+     * If found, focuses the window and returns true.
+     */
+    private boolean focusExistingWindowForPath(String path)
+    {
+        ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
+        for (Node windowNode : windowsAsNodes)
+        {
+            if (windowNode instanceof JsonEditorEditorWindow)
+            {
+                JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+                if (path.equals(window.getSelectedPath()))
+                {
+                    window.requestFocus();
+                    return true;
+                }
+                if (window.getOpenChildPaths().contains(path))
+                {
+                    window.requestFocus();
+                    window.focusArrayItem(path);
+                    return true;
+                }
+            }
+        }
+        // Check if the path is an array item whose parent array is already visible
+        String parentPath = PathHelper.getParentPath(path);
+        if (parentPath != null)
+        {
+            for (Node windowNode : windowsAsNodes)
+            {
+                if (windowNode instanceof JsonEditorEditorWindow)
+                {
+                    JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+                    if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
+                    {
+                        window.requestFocus();
+                        window.focusArrayItem(path);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
     
     @Override
     public void openInNewWindowIfPossible(String path, boolean openObjectParentOfArray)
     {
+        // First check if the path is already visible in an existing window — no need to open a duplicate
+        if (focusExistingWindowForPath(path))
+        {
+            return;
+        }
         if (canAnotherWindowBeAdded())
         {
             addWindow().setSelectedPath(path, openObjectParentOfArray);
