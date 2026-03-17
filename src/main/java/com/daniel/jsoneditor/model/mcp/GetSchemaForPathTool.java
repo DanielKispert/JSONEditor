@@ -36,7 +36,7 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
     @Override
     public ObjectNode getInputSchema()
     {
-        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get schema for");
+        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get schema for (e.g., /processes/0)");
     }
 
     @Override

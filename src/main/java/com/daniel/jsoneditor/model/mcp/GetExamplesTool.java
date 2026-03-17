@@ -37,7 +37,7 @@ class GetExamplesTool extends ReadOnlyMcpTool
     @Override
     public ObjectNode getInputSchema()
     {
-        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get examples for");
+        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get examples for (e.g., /processes/0)");
     }
 
     @Override

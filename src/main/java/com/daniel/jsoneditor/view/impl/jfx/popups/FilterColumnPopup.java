@@ -33,43 +33,35 @@ public class FilterColumnPopup extends BasePopup<List<String>>
         
         // Add "Select All" checkbox
         CheckBox selectAllCheckBox = new CheckBox("Select/Unselect All");
+        selectAllCheckBox.setMnemonicParsing(false);
         selectAllCheckBox.setSelected(valueStateMap.values().stream().allMatch(Boolean::booleanValue));
         selectAllCheckBox.setOnAction(e ->
         {
             boolean selected = selectAllCheckBox.isSelected();
             vbox.getChildren().forEach(node ->
             {
-                if (node instanceof CheckBox)
+                if (node instanceof CheckBox && node != selectAllCheckBox)
                 {
                     ((CheckBox) node).setSelected(selected);
-                    valueStateMap.put(revertUnderscores(((CheckBox) node).getText()), selected);
                 }
             });
+            uniqueValues.forEach(value -> valueStateMap.put(value, selected));
             onFilterChanged.accept(null);
         });
         vbox.getChildren().add(selectAllCheckBox);
         
         for (String value : uniqueValues)
         {
-            CheckBox checkBox = new CheckBox(escapeUnderscores(value));
+            CheckBox checkBox = new CheckBox(value);
+            checkBox.setMnemonicParsing(false);
             checkBox.setSelected(valueStateMap.getOrDefault(value, true));
             checkBox.setOnAction(e ->
             {
-                valueStateMap.put(revertUnderscores(checkBox.getText()), checkBox.isSelected());
+                valueStateMap.put(value, checkBox.isSelected());
                 selectAllCheckBox.setSelected(valueStateMap.values().stream().allMatch(Boolean::booleanValue));
                 onFilterChanged.accept(null);
             });
             vbox.getChildren().add(checkBox);
         }
-    }
-
-    private String escapeUnderscores(String value)
-    {
-        return value.replaceAll("_", "__");
-    }
-
-    private String revertUnderscores(String value)
-    {
-        return value.replaceAll("__", "_");
     }
 }

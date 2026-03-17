@@ -147,10 +147,18 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     private void handleVertexDoubleClick(SmartGraphVertex<NodeIdentifier> vertex)
     {
-        NodeIdentifier nodeId = vertex.getUnderlyingVertex().element();
-        if (!nodeId.isCluster())
+        try
         {
-            expandVertex(nodeId.getPath());
+            NodeIdentifier nodeId = vertex.getUnderlyingVertex().element();
+            logger.debug("Vertex double-clicked: path={}, isCluster={}", nodeId.getPath(), nodeId.isCluster());
+            if (!nodeId.isCluster())
+            {
+                expandVertex(nodeId.getPath());
+            }
+        }
+        catch (Exception e)
+        {
+            logger.error("Error handling vertex double click", e);
         }
     }
     
@@ -175,9 +183,9 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     public Collection<String> getAllEdgeNames()
     {
-        logGraphRequest(settingsController, path, null);
-        return model.getJsonAsGraph(path, null).edges().stream()
+        return getModel().edges().stream()
                 .map(edge -> edge.element().getName())
+                .distinct()
                 .sorted()
                 .collect(Collectors.toList());
     }
