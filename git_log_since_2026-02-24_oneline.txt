@@ -1,3 +1,0 @@
-78d7f73 current graph fixing progress
-b692c16 added some new features
-0085e5f button to toggle sidebar on off
