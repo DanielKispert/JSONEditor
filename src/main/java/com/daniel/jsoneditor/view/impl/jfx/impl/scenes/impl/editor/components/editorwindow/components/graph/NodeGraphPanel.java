@@ -1,9 +1,10 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.graph;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,7 +45,7 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     
     private final Set<String> allowedEdgeNames;
     
-    private Runnable filterUpdateCallback;
+    private java.util.function.Consumer<Collection<String>> filterUpdateCallback;
     
     public NodeGraphPanel(ReadableModel model, SettingsController settingsController, String path, SmartGraphProperties properties,
             SmartPlacementStrategy placementStrategy,
@@ -151,7 +152,11 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         {
             NodeIdentifier nodeId = vertex.getUnderlyingVertex().element();
             logger.debug("Vertex double-clicked: path={}, isCluster={}", nodeId.getPath(), nodeId.isCluster());
-            if (!nodeId.isCluster())
+            if (nodeId.isCluster())
+            {
+                dissolveCluster(vertex.getUnderlyingVertex());
+            }
+            else
             {
                 expandVertex(nodeId.getPath());
             }
@@ -160,6 +165,51 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
         {
             logger.error("Error handling vertex double click", e);
         }
+    }
+    
+    /**
+     * Replaces a cluster vertex with individual vertices for each path in the cluster. Incoming edges to the cluster are replaced with
+     * individual edges to each new vertex (keeping the same edge name).
+     */
+    private void dissolveCluster(Vertex<NodeIdentifier> clusterVertex)
+    {
+        NodeGraph graph = (NodeGraph) getModel();
+        NodeIdentifier clusterId = clusterVertex.element();
+        List<String> clusterPaths = clusterId.getClusterPaths();
+        
+        // Collect incoming edges before removing the cluster (we need the source vertices and edge names)
+        Collection<Edge<EdgeIdentifier, NodeIdentifier>> incomingEdges = new ArrayList<>(graph.incidentEdges(clusterVertex));
+        // Filter to only edges pointing TO the cluster (incident includes both directions in a digraph)
+        List<EdgeIdentifier> edgesPointingToCluster = incomingEdges.stream()
+                .map(Edge::element)
+                .filter(e -> e.getTo().equals(clusterId.getPath()))
+                .collect(Collectors.toList());
+        
+        graph.removeVertex(clusterVertex);
+        
+        // Insert individual vertices for each path in the cluster
+        for (String path : clusterPaths)
+        {
+            if (graph.vertices().stream().noneMatch(v -> v.element().getPath().equals(path)))
+            {
+                graph.insertVertex(path);
+            }
+        }
+        
+        // Re-create edges from each original source to each individual vertex
+        for (EdgeIdentifier originalEdge : edgesPointingToCluster)
+        {
+            for (String path : clusterPaths)
+            {
+                EdgeIdentifier newEdge = new EdgeIdentifier(originalEdge.getFrom(), path, originalEdge.getName());
+                if (graph.edges().stream().noneMatch(e -> e.element().equals(newEdge)))
+                {
+                    graph.insertEdge(originalEdge.getFrom(), path, newEdge);
+                }
+            }
+        }
+        
+        update();
     }
     
     public Collection<SmartGraphVertex<NodeIdentifier>> getVertices()
@@ -190,7 +240,7 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
                 .collect(Collectors.toList());
     }
     
-    public void setFilterUpdateCallback(Runnable callback)
+    public void setFilterUpdateCallback(java.util.function.Consumer<Collection<String>> callback)
     {
         this.filterUpdateCallback = callback;
     }
@@ -198,19 +248,34 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
     private void expandVertex(String vertexPath)
     {
         NodeGraph currentGraph = (NodeGraph) getModel();
-        logGraphRequest(settingsController, vertexPath, allowedEdgeNames);
-        NodeGraph expandedGraph = model.getJsonAsGraph(vertexPath, allowedEdgeNames);
+        // Always fetch the unfiltered graph so we discover all edge names for the filter popup
+        logGraphRequest(settingsController, vertexPath, null);
+        NodeGraph unfilteredGraph = model.getJsonAsGraph(vertexPath, null);
         
         Set<String> currentEdgeNames = currentGraph.edges().stream()
                 .map(edge -> edge.element().getName())
                 .collect(Collectors.toSet());
         
-        Set<String> newEdgeNames = expandedGraph.edges().stream()
+        Set<String> allNewEdgeNames = unfilteredGraph.edges().stream()
                 .map(edge -> edge.element().getName())
                 .filter(name -> !currentEdgeNames.contains(name))
                 .collect(Collectors.toSet());
         
-        for (Vertex<NodeIdentifier> vertex : expandedGraph.vertices())
+        // Determine which edges to actually add to the visible graph based on the current filter
+        NodeGraph graphToMerge;
+        if (allowedEdgeNames == null)
+        {
+            // "show all" mode - merge everything
+            graphToMerge = unfilteredGraph;
+        }
+        else
+        {
+            // Filtered mode - only merge edges matching the current filter
+            logGraphRequest(settingsController, vertexPath, allowedEdgeNames);
+            graphToMerge = model.getJsonAsGraph(vertexPath, allowedEdgeNames);
+        }
+        
+        for (Vertex<NodeIdentifier> vertex : graphToMerge.vertices())
         {
             if (currentGraph.vertices().stream().noneMatch(v -> v.element().getPath().equals(vertex.element().getPath())))
             {
@@ -225,7 +290,7 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
             }
         }
         
-        for (Edge<EdgeIdentifier, NodeIdentifier> edge : expandedGraph.edges())
+        for (Edge<EdgeIdentifier, NodeIdentifier> edge : graphToMerge.edges())
         {
             if (currentGraph.edges().stream().noneMatch(e -> e.element().equals(edge.element())))
             {
@@ -233,9 +298,9 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
             }
         }
         
-        if (!newEdgeNames.isEmpty() && filterUpdateCallback != null)
+        if (!allNewEdgeNames.isEmpty() && filterUpdateCallback != null)
         {
-            filterUpdateCallback.run();
+            filterUpdateCallback.accept(allNewEdgeNames);
         }
         
         update();

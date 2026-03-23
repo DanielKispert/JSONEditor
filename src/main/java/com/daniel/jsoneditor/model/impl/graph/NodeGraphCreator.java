@@ -111,7 +111,7 @@ public class NodeGraphCreator
                 String parentPath = refEntry.getKey();
                 List<ReferenceToObjectInstance> refs = refEntry.getValue();
                 JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
-                if (parentNode.isArray() && refs.size() > 1)
+                if (parentNode.isArray() && refs.size() > 3)
                 {
                     List<String> toPaths = new ArrayList<>();
                     for (ReferenceToObjectInstance ref : refs)

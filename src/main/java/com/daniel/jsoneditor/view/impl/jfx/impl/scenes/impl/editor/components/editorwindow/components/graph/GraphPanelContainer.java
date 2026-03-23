@@ -9,6 +9,7 @@ import com.brunomnsilva.smartgraph.graphview.SmartGraphProperties;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.GraphFilterButton;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.GraphInfoButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.NavbarElement;
@@ -23,6 +24,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -110,12 +113,17 @@ public class GraphPanelContainer extends HBox implements NavbarElement
             this.filterButton = new GraphFilterButton(this::getAvailableEdgeNames, this::applyEdgeFilter);
         }
         
+        final Button resetButton = new Button();
+        ButtonHelper.setButtonImage(resetButton, "/icons/material/darkmode/outline_cluster_white_24dp.png");
+        resetButton.setTooltip(new Tooltip("Re-cluster all dissolved clusters"));
+        resetButton.setOnAction(e -> updateView());
+        
         final Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
         final GraphInfoButton infoButton = new GraphInfoButton();
         
-        buttonsContainer.getChildren().addAll(filterButton, spacer, infoButton);
+        buttonsContainer.getChildren().addAll(filterButton, resetButton, spacer, infoButton);
         
         final StackPane graphContainer = new StackPane();
         StackPane.setAlignment(graphView, Pos.CENTER);
@@ -161,16 +169,21 @@ public class GraphPanelContainer extends HBox implements NavbarElement
         }
     }
     
-    private void handleNewEdgeNames()
+    private void handleNewEdgeNames(Collection<String> newEdgeNames)
     {
-        if (graphView != null)
-        {
-            Collection<String> currentEdgeNames = graphView.getAllEdgeNames();
-            allKnownEdgeNames.addAll(currentEdgeNames);
-        }
+        allKnownEdgeNames.addAll(newEdgeNames);
         if (filterButton != null)
         {
-            filterButton.addNewItemsAsSelected(allKnownEdgeNames);
+            if (currentFilteredEdgeNames == null)
+            {
+                // "show all" mode - new edges are selected by default
+                filterButton.addNewItemsAsSelected(newEdgeNames);
+            }
+            else
+            {
+                // Filtered mode - new edges are added as deselected options
+                filterButton.addNewItemsAsDeselected(newEdgeNames);
+            }
         }
     }
 

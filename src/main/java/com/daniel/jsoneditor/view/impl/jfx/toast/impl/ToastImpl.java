@@ -108,7 +108,6 @@ public class ToastImpl implements Toast
                 });
             });
             delayThread.setDaemon(true);
-            delayThread.setDaemon(true);
             delayThread.start();
         });
     }
