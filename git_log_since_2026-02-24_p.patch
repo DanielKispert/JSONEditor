@@ -1,0 +1,1741 @@
+commit 78d7f73115cfc15ca5cb098fefa48989b524370c
+Author: Daniel Kispert <daniel.kispert@sap.com>
+Date:   Tue Mar 17 21:17:52 2026 +0100
+
+    current graph fixing progress
+
+diff --git a/src/main/java/com/daniel/jsoneditor/model/mcp/FindReferencesToTool.java b/src/main/java/com/daniel/jsoneditor/model/mcp/FindReferencesToTool.java
+index d317405..ce05c1a 100644
+--- a/src/main/java/com/daniel/jsoneditor/model/mcp/FindReferencesToTool.java
++++ b/src/main/java/com/daniel/jsoneditor/model/mcp/FindReferencesToTool.java
+@@ -39,7 +39,7 @@ class FindReferencesToTool extends ReadOnlyMcpTool
+     public ObjectNode getInputSchema()
+     {
+         return McpToolRegistry.createSchemaWithProperty("path", "string",
+-                "JSON path to a referenceable object instance to find references to");
++                "JSON path to a referenceable object instance to find references to (e.g., /processes/0)");
+     }
+ 
+     @Override
+diff --git a/src/main/java/com/daniel/jsoneditor/model/mcp/GetExamplesTool.java b/src/main/java/com/daniel/jsoneditor/model/mcp/GetExamplesTool.java
+index b0c1bbb..c15bca7 100644
+--- a/src/main/java/com/daniel/jsoneditor/model/mcp/GetExamplesTool.java
++++ b/src/main/java/com/daniel/jsoneditor/model/mcp/GetExamplesTool.java
+@@ -37,7 +37,7 @@ class GetExamplesTool extends ReadOnlyMcpTool
+     @Override
+     public ObjectNode getInputSchema()
+     {
+-        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get examples for");
++        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get examples for (e.g., /processes/0)");
+     }
+ 
+     @Override
+diff --git a/src/main/java/com/daniel/jsoneditor/model/mcp/GetNodeTool.java b/src/main/java/com/daniel/jsoneditor/model/mcp/GetNodeTool.java
+index b25ac11..23efb59 100644
+--- a/src/main/java/com/daniel/jsoneditor/model/mcp/GetNodeTool.java
++++ b/src/main/java/com/daniel/jsoneditor/model/mcp/GetNodeTool.java
+@@ -36,7 +36,7 @@ class GetNodeTool extends ReadOnlyMcpTool
+     @Override
+     public ObjectNode getInputSchema()
+     {
+-        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path (e.g., /root/child)");
++        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path (e.g., /processes/0)");
+     }
+ 
+     @Override
+diff --git a/src/main/java/com/daniel/jsoneditor/model/mcp/GetSchemaForPathTool.java b/src/main/java/com/daniel/jsoneditor/model/mcp/GetSchemaForPathTool.java
+index 56b3db9..8c4be67 100644
+--- a/src/main/java/com/daniel/jsoneditor/model/mcp/GetSchemaForPathTool.java
++++ b/src/main/java/com/daniel/jsoneditor/model/mcp/GetSchemaForPathTool.java
+@@ -36,7 +36,7 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
+     @Override
+     public ObjectNode getInputSchema()
+     {
+-        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get schema for");
++        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get schema for (e.g., /processes/0)");
+     }
+ 
+     @Override
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/FilterColumnButton.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/FilterColumnButton.java
+index fd0d388..4bfdc17 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/FilterColumnButton.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/FilterColumnButton.java
+@@ -2,7 +2,6 @@ package com.daniel.jsoneditor.view.impl.jfx.buttons;
+ 
+ import java.util.List;
+ import java.util.function.Supplier;
+-import java.util.stream.Collectors;
+ 
+ public class FilterColumnButton extends FilterButton
+ {
+@@ -26,21 +25,8 @@ public class FilterColumnButton extends FilterButton
+         return uniqueValuesSupplier.get();
+     }
+     
+-    @Override
+-    protected List<String> processSelectedItems(List<String> items)
+-    {
+-        return items.stream()
+-                   .map(this::revertUnderscores)
+-                   .collect(Collectors.toList());
+-    }
+-    
+     public List<String> getSelectedValues()
+     {
+         return getSelectedItems();
+     }
+-    
+-    private String revertUnderscores(String value)
+-    {
+-        return value.replaceAll("__", "_");
+-    }
+ }
+\ No newline at end of file
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/EditorWindowManagerImpl.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/EditorWindowManagerImpl.java
+index f409b49..7e48604 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/EditorWindowManagerImpl.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/EditorWindowManagerImpl.java
+@@ -70,44 +70,12 @@ public class EditorWindowManagerImpl implements EditorWindowManager
+         ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
+         if (!windowsAsNodes.isEmpty())
+         {
+-            // 1. Check if the exact path is already open as a main selection or child table
+-            for (Node windowNode : windowsAsNodes)
+-            {
+-                if (windowNode instanceof JsonEditorEditorWindow)
+-                {
+-                    JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+-                    if (path.equals(window.getSelectedPath()))
+-                    {
+-                        window.requestFocus();
+-                        return;
+-                    }
+-                    if (window.getOpenChildPaths().contains(path))
+-                    {
+-                        window.requestFocus();
+-                        window.focusArrayItem(path);
+-                        return;
+-                    }
+-                }
+-            }
+-            // 2. Check if the path is an array item whose parent array is already visible (as main selection or child table)
+-            String parentPath = PathHelper.getParentPath(path);
+-            if (parentPath != null)
++            // 1. Check if the path is already visible in an existing window
++            if (focusExistingWindowForPath(path))
+             {
+-                for (Node windowNode : windowsAsNodes)
+-                {
+-                    if (windowNode instanceof JsonEditorEditorWindow)
+-                    {
+-                        JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+-                        if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
+-                        {
+-                            window.requestFocus();
+-                            window.focusArrayItem(path);
+-                            return;
+-                        }
+-                    }
+-                }
++                return;
+             }
+-            // 3. Path is not open anywhere — prefer opening in a new window if possible
++            // 2. Path is not open anywhere — prefer opening in a new window if possible
+             if (canAnotherWindowBeAdded())
+             {
+                 addWindow().setSelectedPath(path, openObjectParentOfArray);
+@@ -128,12 +96,62 @@ public class EditorWindowManagerImpl implements EditorWindowManager
+             // if no window exists, we create a new one and open it in there
+             openInNewWindowIfPossible(path, openObjectParentOfArray);
+         }
+-
++    }
++    
++    /**
++     * Checks if the given path is already visible in any editor window (as main selection, child table, or parent array of an array item).
++     * If found, focuses the window and returns true.
++     */
++    private boolean focusExistingWindowForPath(String path)
++    {
++        ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
++        for (Node windowNode : windowsAsNodes)
++        {
++            if (windowNode instanceof JsonEditorEditorWindow)
++            {
++                JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
++                if (path.equals(window.getSelectedPath()))
++                {
++                    window.requestFocus();
++                    return true;
++                }
++                if (window.getOpenChildPaths().contains(path))
++                {
++                    window.requestFocus();
++                    window.focusArrayItem(path);
++                    return true;
++                }
++            }
++        }
++        // Check if the path is an array item whose parent array is already visible
++        String parentPath = PathHelper.getParentPath(path);
++        if (parentPath != null)
++        {
++            for (Node windowNode : windowsAsNodes)
++            {
++                if (windowNode instanceof JsonEditorEditorWindow)
++                {
++                    JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
++                    if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
++                    {
++                        window.requestFocus();
++                        window.focusArrayItem(path);
++                        return true;
++                    }
++                }
++            }
++        }
++        return false;
+     }
+     
+     @Override
+     public void openInNewWindowIfPossible(String path, boolean openObjectParentOfArray)
+     {
++        // First check if the path is already visible in an existing window — no need to open a duplicate
++        if (focusExistingWindowForPath(path))
++        {
++            return;
++        }
+         if (canAnotherWindowBeAdded())
+         {
+             addWindow().setSelectedPath(path, openObjectParentOfArray);
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/graph/GraphPanelContainer.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/graph/GraphPanelContainer.java
+index cd1f4d7..22b9dae 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/graph/GraphPanelContainer.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/graph/GraphPanelContainer.java
+@@ -15,9 +15,13 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.na
+ import javafx.application.Platform;
+ import javafx.geometry.Insets;
+ import javafx.geometry.Pos;
++import java.util.ArrayList;
+ import java.util.Collection;
++import java.util.Collections;
++import java.util.HashSet;
+ import java.util.List;
+ import java.util.Set;
++import java.util.TreeSet;
+ 
+ import javafx.scene.layout.HBox;
+ import javafx.scene.layout.Priority;
+@@ -50,6 +54,8 @@ public class GraphPanelContainer extends HBox implements NavbarElement
+     
+     private Set<String> currentFilteredEdgeNames = null; // null means show all edges
+     
++    private final TreeSet<String> allKnownEdgeNames = new TreeSet<>();
++    
+     private GraphPanelContainer(Controller controller, ReadableModel model, SmartGraphProperties properties, URI cssFile)
+     {
+         this.initialPlacement = new JsonPlacementStrategy();
+@@ -87,7 +93,8 @@ public class GraphPanelContainer extends HBox implements NavbarElement
+     public void updateView()
+     {
+         this.getChildren().clear();
+-        this.graphView = new NodeGraphPanel(model, controller.getSettingsController(), selectedPath, properties, initialPlacement, cssFile, currentFilteredEdgeNames);
++        this.graphView = new NodeGraphPanel(model, controller.getSettingsController(), selectedPath, properties, initialPlacement, cssFile,
++                currentFilteredEdgeNames);
+         this.graphView.setFilterUpdateCallback(this::handleNewEdgeNames);
+ 
+         final VBox mainContainer = new VBox();
+@@ -128,11 +135,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
+     
+     private Collection<String> getAvailableEdgeNames()
+     {
+-        if (graphView != null)
+-        {
+-            return graphView.getAllEdgeNames();
+-        }
+-        return java.util.Collections.emptyList();
++        return new ArrayList<>(allKnownEdgeNames);
+     }
+     
+     private void applyEdgeFilter()
+@@ -143,7 +146,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
+             
+             if (selectedEdgeNames == null)
+             {
+-                currentFilteredEdgeNames = java.util.Collections.emptySet();
++                currentFilteredEdgeNames = Collections.emptySet();
+             }
+             else if (selectedEdgeNames.isEmpty())
+             {
+@@ -151,7 +154,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
+             }
+             else
+             {
+-                currentFilteredEdgeNames = new java.util.HashSet<>(selectedEdgeNames);
++                currentFilteredEdgeNames = new HashSet<>(selectedEdgeNames);
+             }
+             
+             updateView();
+@@ -160,10 +163,14 @@ public class GraphPanelContainer extends HBox implements NavbarElement
+     
+     private void handleNewEdgeNames()
+     {
++        if (graphView != null)
++        {
++            Collection<String> currentEdgeNames = graphView.getAllEdgeNames();
++            allKnownEdgeNames.addAll(currentEdgeNames);
++        }
+         if (filterButton != null)
+         {
+-            Collection<String> allEdgeNames = getAvailableEdgeNames();
+-            filterButton.addNewItemsAsSelected(allEdgeNames);
++            filterButton.addNewItemsAsSelected(allKnownEdgeNames);
+         }
+     }
+ 
+@@ -173,6 +180,12 @@ public class GraphPanelContainer extends HBox implements NavbarElement
+         if (!Objects.equals(selectedPath, path))
+         {
+             selectedPath = path;
++            currentFilteredEdgeNames = null;
++            filterButton = null;
++            allKnownEdgeNames.clear();
++            // Collect all edge names from the unfiltered graph so the filter popup always shows the complete list
++            model.getJsonAsGraph(selectedPath, null).edges()
++                    .forEach(edge -> allKnownEdgeNames.add(edge.element().getName()));
+             updateView();
+         }
+     }
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/graph/NodeGraphPanel.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/graph/NodeGraphPanel.java
+index 7aec3f9..07729b1 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/graph/NodeGraphPanel.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/graph/NodeGraphPanel.java
+@@ -147,10 +147,18 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
+     
+     private void handleVertexDoubleClick(SmartGraphVertex<NodeIdentifier> vertex)
+     {
+-        NodeIdentifier nodeId = vertex.getUnderlyingVertex().element();
+-        if (!nodeId.isCluster())
++        try
+         {
+-            expandVertex(nodeId.getPath());
++            NodeIdentifier nodeId = vertex.getUnderlyingVertex().element();
++            logger.debug("Vertex double-clicked: path={}, isCluster={}", nodeId.getPath(), nodeId.isCluster());
++            if (!nodeId.isCluster())
++            {
++                expandVertex(nodeId.getPath());
++            }
++        }
++        catch (Exception e)
++        {
++            logger.error("Error handling vertex double click", e);
+         }
+     }
+     
+@@ -175,9 +183,9 @@ public class NodeGraphPanel extends SmartGraphPanel<NodeIdentifier, EdgeIdentifi
+     
+     public Collection<String> getAllEdgeNames()
+     {
+-        logGraphRequest(settingsController, path, null);
+-        return model.getJsonAsGraph(path, null).edges().stream()
++        return getModel().edges().stream()
+                 .map(edge -> edge.element().getName())
++                .distinct()
+                 .sorted()
+                 .collect(Collectors.toList());
+     }
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/popups/FilterColumnPopup.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/popups/FilterColumnPopup.java
+index cfe9ec9..23f54d2 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/popups/FilterColumnPopup.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/popups/FilterColumnPopup.java
+@@ -33,43 +33,35 @@ public class FilterColumnPopup extends BasePopup<List<String>>
+         
+         // Add "Select All" checkbox
+         CheckBox selectAllCheckBox = new CheckBox("Select/Unselect All");
++        selectAllCheckBox.setMnemonicParsing(false);
+         selectAllCheckBox.setSelected(valueStateMap.values().stream().allMatch(Boolean::booleanValue));
+         selectAllCheckBox.setOnAction(e ->
+         {
+             boolean selected = selectAllCheckBox.isSelected();
+             vbox.getChildren().forEach(node ->
+             {
+-                if (node instanceof CheckBox)
++                if (node instanceof CheckBox && node != selectAllCheckBox)
+                 {
+                     ((CheckBox) node).setSelected(selected);
+-                    valueStateMap.put(revertUnderscores(((CheckBox) node).getText()), selected);
+                 }
+             });
++            uniqueValues.forEach(value -> valueStateMap.put(value, selected));
+             onFilterChanged.accept(null);
+         });
+         vbox.getChildren().add(selectAllCheckBox);
+         
+         for (String value : uniqueValues)
+         {
+-            CheckBox checkBox = new CheckBox(escapeUnderscores(value));
++            CheckBox checkBox = new CheckBox(value);
++            checkBox.setMnemonicParsing(false);
+             checkBox.setSelected(valueStateMap.getOrDefault(value, true));
+             checkBox.setOnAction(e ->
+             {
+-                valueStateMap.put(revertUnderscores(checkBox.getText()), checkBox.isSelected());
++                valueStateMap.put(value, checkBox.isSelected());
+                 selectAllCheckBox.setSelected(valueStateMap.values().stream().allMatch(Boolean::booleanValue));
+                 onFilterChanged.accept(null);
+             });
+             vbox.getChildren().add(checkBox);
+         }
+     }
+-
+-    private String escapeUnderscores(String value)
+-    {
+-        return value.replaceAll("_", "__");
+-    }
+-
+-    private String revertUnderscores(String value)
+-    {
+-        return value.replaceAll("__", "_");
+-    }
+ }
+
+commit b692c16e2e4c45657a58167141e039d51f9f5840
+Author: Daniel Kispert <daniel.kispert@sap.com>
+Date:   Fri Mar 13 15:26:06 2026 +0100
+
+    added some new features
+
+diff --git a/src/main/java/com/daniel/jsoneditor/controller/Controller.java b/src/main/java/com/daniel/jsoneditor/controller/Controller.java
+index 15468d2..8c74940 100644
+--- a/src/main/java/com/daniel/jsoneditor/controller/Controller.java
++++ b/src/main/java/com/daniel/jsoneditor/controller/Controller.java
+@@ -101,5 +101,9 @@ public interface Controller
+      */
+     List<DiffEntry> calculateJsonDiff();
+ 
++    /**
++     * Performs a clean shutdown: stops background services (e.g. MCP server) and releases resources.
++     */
++    void shutdown();
+ 
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/controller/impl/ControllerImpl.java b/src/main/java/com/daniel/jsoneditor/controller/impl/ControllerImpl.java
+index fb9cd14..a495c25 100644
+--- a/src/main/java/com/daniel/jsoneditor/controller/impl/ControllerImpl.java
++++ b/src/main/java/com/daniel/jsoneditor/controller/impl/ControllerImpl.java
+@@ -572,4 +572,11 @@ public class ControllerImpl implements Controller, Observer
+         
+         return JsonDiffer.calculateDiff(savedJson, currentJson, readableModel);
+     }
++    
++    @Override
++    public void shutdown()
++    {
++        logger.info("Shutting down application");
++        mcpController.stopMcpServer();
++    }
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/controller/settings/SettingsController.java b/src/main/java/com/daniel/jsoneditor/controller/settings/SettingsController.java
+index 01fb7f8..e0af91d 100644
+--- a/src/main/java/com/daniel/jsoneditor/controller/settings/SettingsController.java
++++ b/src/main/java/com/daniel/jsoneditor/controller/settings/SettingsController.java
+@@ -49,4 +49,24 @@ public interface SettingsController
+     void setNavbarCollapsed(boolean collapsed);
+     
+     boolean isNavbarCollapsed();
++    
++    /**
++     * Sets the maximum number of editor windows. Use "auto" to base it on window width, or a number string between 3 and 10.
++     */
++    void setMaxEditorWindows(String maxWindows);
++    
++    /**
++     * Returns the configured max editor windows value. "auto" means based on window width, otherwise a number string.
++     */
++    String getMaxEditorWindows();
++    
++    /**
++     * Sets the default behavior for whether dialogs should open results in a new window.
++     */
++    void setOpenInNewWindow(boolean openInNewWindow);
++    
++    /**
++     * Returns whether dialogs should default to opening results in a new window.
++     */
++    boolean isOpenInNewWindow();
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/controller/settings/impl/PropertyFileKeys.java b/src/main/java/com/daniel/jsoneditor/controller/settings/impl/PropertyFileKeys.java
+index d37ddf9..0d76b64 100644
+--- a/src/main/java/com/daniel/jsoneditor/controller/settings/impl/PropertyFileKeys.java
++++ b/src/main/java/com/daniel/jsoneditor/controller/settings/impl/PropertyFileKeys.java
+@@ -29,4 +29,8 @@ public class PropertyFileKeys
+     public final static String PROPERTY_MCP_SERVER_PORT = "mcp_server_port";
+     
+     public final static String PROPERTY_NAVBAR_COLLAPSED = "navbar_collapsed";
++    
++    public final static String PROPERTY_MAX_EDITOR_WINDOWS = "max_editor_windows";
++    
++    public final static String PROPERTY_OPEN_IN_NEW_WINDOW = "open_in_new_window";
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/controller/settings/impl/SettingsControllerImpl.java b/src/main/java/com/daniel/jsoneditor/controller/settings/impl/SettingsControllerImpl.java
+index fc72f8e..b32cd50 100644
+--- a/src/main/java/com/daniel/jsoneditor/controller/settings/impl/SettingsControllerImpl.java
++++ b/src/main/java/com/daniel/jsoneditor/controller/settings/impl/SettingsControllerImpl.java
+@@ -225,4 +225,37 @@ public class SettingsControllerImpl implements SettingsController
+     {
+         return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_NAVBAR_COLLAPSED));
+     }
++    
++    @Override
++    public void setMaxEditorWindows(String maxWindows)
++    {
++        properties.setProperty(PropertyFileKeys.PROPERTY_MAX_EDITOR_WINDOWS, maxWindows);
++        PropertiesFileHelper.writePropertiesToFile(properties);
++    }
++    
++    @Override
++    public String getMaxEditorWindows()
++    {
++        String value = properties.getProperty(PropertyFileKeys.PROPERTY_MAX_EDITOR_WINDOWS);
++        return value == null ? "auto" : value;
++    }
++    
++    @Override
++    public void setOpenInNewWindow(boolean openInNewWindow)
++    {
++        properties.setProperty(PropertyFileKeys.PROPERTY_OPEN_IN_NEW_WINDOW, openInNewWindow ? "true" : "false");
++        PropertiesFileHelper.writePropertiesToFile(properties);
++    }
++    
++    @Override
++    public boolean isOpenInNewWindow()
++    {
++        // default is true
++        String property = properties.getProperty(PropertyFileKeys.PROPERTY_OPEN_IN_NEW_WINDOW);
++        if (property == null)
++        {
++            return true;
++        }
++        return "true".equalsIgnoreCase(property);
++    }
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/model/mcp/JsonEditorMcpServer.java b/src/main/java/com/daniel/jsoneditor/model/mcp/JsonEditorMcpServer.java
+index 5718603..1343e31 100644
+--- a/src/main/java/com/daniel/jsoneditor/model/mcp/JsonEditorMcpServer.java
++++ b/src/main/java/com/daniel/jsoneditor/model/mcp/JsonEditorMcpServer.java
+@@ -100,6 +100,11 @@ public class JsonEditorMcpServer
+         this.port = port;
+         server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
+         server.createContext("/", this::handleRequest);
++        server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool(r -> {
++            Thread t = new Thread(r);
++            t.setDaemon(true);
++            return t;
++        }));
+         server.start();
+         running = true;
+         logger.info("MCP Server started on http://127.0.0.1:{}", port);
+@@ -112,7 +117,7 @@ public class JsonEditorMcpServer
+     {
+         if (server != null)
+         {
+-            server.stop(0);
++            server.stop(1);
+             server = null;
+             running = false;
+             logger.info("MCP Server stopped");
+diff --git a/src/main/java/com/daniel/jsoneditor/view/JFXLauncher.java b/src/main/java/com/daniel/jsoneditor/view/JFXLauncher.java
+index 8a97007..43ec7f8 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/JFXLauncher.java
++++ b/src/main/java/com/daniel/jsoneditor/view/JFXLauncher.java
+@@ -1,9 +1,11 @@
+ package com.daniel.jsoneditor.view;
+ 
++import com.daniel.jsoneditor.controller.Controller;
+ import com.daniel.jsoneditor.model.impl.ModelImpl;
+ import com.daniel.jsoneditor.model.statemachine.EventSender;
+ import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
+ import javafx.application.Application;
++import javafx.application.Platform;
+ import javafx.stage.Stage;
+ import com.daniel.jsoneditor.controller.impl.ControllerImpl;
+ 
+@@ -24,7 +26,11 @@ public class JFXLauncher extends Application
+         stage.setTitle("JSON Editor");
+         EventSender eventSender = new EventSenderImpl();
+         ModelImpl model = new ModelImpl(eventSender);
+-        new ControllerImpl(model, model, stage);
++        Controller controller = new ControllerImpl(model, model, stage);
+         
++        stage.setOnCloseRequest(event -> {
++            controller.shutdown();
++            Platform.exit();
++        });
+     }
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/ShowUsagesButton.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/ShowUsagesButton.java
+index 1c89adf..1475d46 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/ShowUsagesButton.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/ShowUsagesButton.java
+@@ -3,9 +3,11 @@ package com.daniel.jsoneditor.view.impl.jfx.buttons;
+ import java.util.List;
+ import java.util.Optional;
+ 
++import com.daniel.jsoneditor.controller.settings.SettingsController;
+ import com.daniel.jsoneditor.model.ReadableModel;
+ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
++import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindResult;
+ import com.daniel.jsoneditor.view.impl.jfx.dialogs.ShowUsagesDialog;
+ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+ import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
+@@ -19,14 +21,17 @@ public class ShowUsagesButton extends Button
+     
+     private final EditorWindowManager manager;
+     
++    private final SettingsController settingsController;
++    
+     private JsonNodeWithPath selection;
+     
+-    public ShowUsagesButton(ReadableModel model, EditorWindowManager manager)
++    public ShowUsagesButton(ReadableModel model, EditorWindowManager manager, SettingsController settingsController)
+     {
+         super();
+         ButtonHelper.setButtonImage(this, "/icons/material/darkmode/outline_pageview_white_24dp.png");
+         this.model = model;
+         this.manager = manager;
++        this.settingsController = settingsController;
+         setOnAction(actionEvent -> handleClick());
+         setTooltip(new Tooltip("Show usages"));
+     }
+@@ -48,8 +53,17 @@ public class ShowUsagesButton extends Button
+             manager.showToast(Toasts.NO_REFERENCES_TOAST);
+             return;
+         }
+-        ShowUsagesDialog dialog = new ShowUsagesDialog(references, selection);
+-        Optional<String> result = dialog.showAndWait(); //the result is the path of the node to open
+-        result.ifPresent(manager::openPath);
++        ShowUsagesDialog dialog = new ShowUsagesDialog(references, selection, settingsController);
++        Optional<FindResult> result = dialog.showAndWait();
++        result.ifPresent(findResult -> {
++            if (findResult.isOpenInNewWindow())
++            {
++                manager.openInNewWindowIfPossible(findResult.getPath());
++            }
++            else
++            {
++                manager.openPath(findResult.getPath());
++            }
++        });
+     }
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/FindDialog.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/FindDialog.java
+index 5706f54..cc1dd03 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/FindDialog.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/FindDialog.java
+@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs;
+ import java.util.List;
+ import java.util.stream.Collectors;
+ 
++import com.daniel.jsoneditor.controller.settings.SettingsController;
+ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
+ import com.daniel.jsoneditor.view.impl.jfx.dialogs.listview.DialogWithListView;
+ import javafx.application.Platform;
+@@ -15,14 +16,14 @@ import javafx.scene.layout.Priority;
+ import javafx.scene.layout.VBox;
+ 
+ 
+-public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
++public class FindDialog extends DialogWithListView<ReferenceableObjectInstance, FindResult>
+ {
+     
+     protected final TextField searchField;
+     
+     protected final List<ReferenceableObjectInstance> suggestions;
+     
+-    public FindDialog(List<ReferenceableObjectInstance> suggestions)
++    public FindDialog(List<ReferenceableObjectInstance> suggestions, SettingsController settingsController)
+     {
+         super(suggestions);
+         this.suggestions = suggestions;
+@@ -30,23 +31,27 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
+         
+         searchField = createSearchField();
+         
+-        setResultConverter(this::convertResult);
+-        
+         VBox layout = new VBox(listView, searchField);
+         layout.setSpacing(5);
+         
+         getDialogPane().setContent(layout);
++        addOpenInNewWindowCheckBox(settingsController);
+         
+         Platform.runLater(searchField::requestFocus);
+     }
+     
++    @Override
++    protected FindResult convertSelectedItem(ReferenceableObjectInstance selectedItem)
++    {
++        return new FindResult(selectedItem.getPath(), isOpenInNewWindowRequested());
++    }
++    
+     private TextField createSearchField()
+     {
+         TextField textField = new TextField();
+         textField.setMaxWidth(Double.MAX_VALUE);
+         HBox.setHgrow(textField, Priority.ALWAYS);
+         textField.setPromptText("Search...");
+-        // Filtering the suggestions as the user types
+         textField.textProperty().addListener((observableValue, oldValue, newValue) -> filterSuggestionsBasedOn(newValue));
+         textField.addEventHandler(KeyEvent.KEY_PRESSED, this::handleTextFieldKeyPress);
+         return textField;
+@@ -58,7 +63,8 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
+     private void filterSuggestionsBasedOn(String currentText)
+     {
+         List<ReferenceableObjectInstance> filteredSuggestions = suggestions.stream().filter(
+-                suggestion -> suggestion.getKey() != null && suggestion.getKey().toLowerCase().contains(currentText.toLowerCase())).collect(Collectors.toList());
++                suggestion -> suggestion.getKey() != null && suggestion.getKey().toLowerCase().contains(currentText.toLowerCase()))
++                .collect(Collectors.toList());
+         
+         listView.setItems(FXCollections.observableArrayList(filteredSuggestions));
+         
+@@ -69,7 +75,7 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
+     }
+     
+     /**
+-     * Handles KeyEvents - Autocompletes on TAB key press, and Submits the form on ENTER key press
++     * Handles KeyEvents - Autocompletes on TAB key press
+      */
+     private void handleTextFieldKeyPress(KeyEvent keyEvent)
+     {
+@@ -108,7 +114,7 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
+         {
+             String commonPrefix = getCommonPrefix(matchingSuggestions);
+             searchField.setText(commonPrefix);
+-            listView.getSelectionModel().select(0);  // select first item in the list
++            listView.getSelectionModel().select(0);
+             searchField.positionCaret(searchField.getText().length());
+         }
+     }
+@@ -116,7 +122,7 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
+     @Override
+     protected String getOkButtonText()
+     {
+-        return "Search";
++        return "Open";
+     }
+     
+     /**
+@@ -134,5 +140,4 @@ public class FindDialog extends DialogWithListView<ReferenceableObjectInstance>
+         }
+         return commonPrefix.toString();
+     }
+-    
+ }
+\ No newline at end of file
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/FindResult.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/FindResult.java
+new file mode 100644
+index 0000000..4fd7c94
+--- /dev/null
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/FindResult.java
+@@ -0,0 +1,27 @@
++package com.daniel.jsoneditor.view.impl.jfx.dialogs;
++
++/**
++ * Wraps the result of a FindDialog, carrying both the selected path and the requested open mode.
++ */
++public class FindResult
++{
++    private final String path;
++    private final boolean openInNewWindow;
++    
++    public FindResult(String path, boolean openInNewWindow)
++    {
++        this.path = path;
++        this.openInNewWindow = openInNewWindow;
++    }
++    
++    public String getPath()
++    {
++        return path;
++    }
++    
++    public boolean isOpenInNewWindow()
++    {
++        return openInNewWindow;
++    }
++}
++
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/SettingsDialog.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/SettingsDialog.java
+index f2a719a..c378c9f 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/SettingsDialog.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/SettingsDialog.java
+@@ -29,6 +29,10 @@ public class SettingsDialog extends ThemedDialog<Void>
+     
+     private String tmpClusterShape;
+     
++    private String tmpMaxEditorWindows;
++    
++    private boolean tmpOpenInNewWindow;
++    
+     private boolean tmpMcpServerEnabled;
+     
+     private int tmpMcpServerPort;
+@@ -52,6 +56,8 @@ public class SettingsDialog extends ThemedDialog<Void>
+         this.tmpDebugMode = settingsController.isDebugMode();
+         this.tmpLogGraphRequests = settingsController.isLogGraphRequests();
+         this.tmpClusterShape = settingsController.getClusterShape();
++        this.tmpMaxEditorWindows = settingsController.getMaxEditorWindows();
++        this.tmpOpenInNewWindow = settingsController.isOpenInNewWindow();
+         this.tmpMcpServerEnabled = settingsController.isMcpServerEnabled();
+         this.tmpMcpServerPort = settingsController.getMcpServerPort();
+         
+@@ -74,6 +80,8 @@ public class SettingsDialog extends ThemedDialog<Void>
+                 settingsController.setDebugMode(tmpDebugMode);
+                 settingsController.setLogGraphRequests(tmpLogGraphRequests);
+                 settingsController.setClusterShape(tmpClusterShape);
++                settingsController.setMaxEditorWindows(tmpMaxEditorWindows);
++                settingsController.setOpenInNewWindow(tmpOpenInNewWindow);
+                 settingsController.setMcpServerEnabled(tmpMcpServerEnabled);
+                 settingsController.setMcpServerPort(tmpMcpServerPort);
+             }
+@@ -93,7 +101,8 @@ public class SettingsDialog extends ThemedDialog<Void>
+         
+         // Display Tab
+         Tab displayTab = new Tab("Display");
+-        VBox displayBox = new VBox(createDisplaySettings(), createClusterShapeSettings());
++        VBox displayBox = new VBox(createDisplaySettings(), createOpenInNewWindowSetting(), createClusterShapeSettings(),
++                createMaxEditorWindowsSettings());
+         displayTab.setContent(displayBox);
+         
+         // Debug Tab
+@@ -129,6 +138,14 @@ public class SettingsDialog extends ThemedDialog<Void>
+         return hideEmptyColumnsCheckBox;
+     }
+     
++    private CheckBox createOpenInNewWindowSetting()
++    {
++        CheckBox openInNewWindowCheckBox = new CheckBox("Open search results in new window by default");
++        openInNewWindowCheckBox.setSelected(tmpOpenInNewWindow);
++        openInNewWindowCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> tmpOpenInNewWindow = newValue);
++        return openInNewWindowCheckBox;
++    }
++    
+     private CheckBox createDebugToastsSetting()
+     {
+         CheckBox debugModeCheckBox = new CheckBox("Show toast notification on model changes");
+@@ -157,6 +174,22 @@ public class SettingsDialog extends ThemedDialog<Void>
+         return box;
+     }
+     
++    private HBox createMaxEditorWindowsSettings()
++    {
++        HBox box = new HBox();
++        ComboBox<String> maxWindowsComboBox = new ComboBox<>();
++        maxWindowsComboBox.getItems().add("auto");
++        for (int i = 3; i <= 10; i++)
++        {
++            maxWindowsComboBox.getItems().add(String.valueOf(i));
++        }
++        maxWindowsComboBox.setValue(tmpMaxEditorWindows);
++        maxWindowsComboBox.valueProperty().addListener((observable, oldValue, newValue) -> tmpMaxEditorWindows = newValue);
++        Label title = new Label("Max Editor Windows: ");
++        box.getChildren().addAll(title, maxWindowsComboBox);
++        return box;
++    }
++    
+     private CheckBox createMcpEnabledSetting()
+     {
+         CheckBox mcpEnabledCheckBox = new CheckBox("Enable MCP Server on startup");
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/ShowUsagesDialog.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/ShowUsagesDialog.java
+index b03d733..4555aa2 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/ShowUsagesDialog.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/ShowUsagesDialog.java
+@@ -2,24 +2,27 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs;
+ 
+ import java.util.List;
+ 
++import com.daniel.jsoneditor.controller.settings.SettingsController;
+ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstance;
+ import com.daniel.jsoneditor.view.impl.jfx.dialogs.listview.DialogWithListView;
+ 
+ 
+ /**
+- * this dialog shows where a ReferenceableObject is used
++ * Shows where a ReferenceableObject is used and lets the user open a usage in the current or a new window.
+  */
+-public class ShowUsagesDialog extends DialogWithListView<ReferenceToObjectInstance>
++public class ShowUsagesDialog extends DialogWithListView<ReferenceToObjectInstance, FindResult>
+ {
+     
+-    public ShowUsagesDialog(List<ReferenceToObjectInstance> items, JsonNodeWithPath jsonNodeWithPath)
++    public ShowUsagesDialog(List<ReferenceToObjectInstance> items, JsonNodeWithPath jsonNodeWithPath,
++            SettingsController settingsController)
+     {
+         super(items);
+         this.setTitle("Usages of " + jsonNodeWithPath.getDisplayName());
+         
+         listView.getSelectionModel().selectFirst();
+         getDialogPane().setContent(listView);
++        addOpenInNewWindowCheckBox(settingsController);
+     }
+     
+     @Override
+@@ -33,4 +36,10 @@ public class ShowUsagesDialog extends DialogWithListView<ReferenceToObjectInstan
+     {
+         handleDialogOk();
+     }
++    
++    @Override
++    protected FindResult convertSelectedItem(ReferenceToObjectInstance selectedItem)
++    {
++        return new FindResult(selectedItem.getPath(), isOpenInNewWindowRequested());
++    }
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/listview/DialogWithListView.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/listview/DialogWithListView.java
+index 1649321..3c24298 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/listview/DialogWithListView.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/listview/DialogWithListView.java
+@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs.listview;
+ 
+ import java.util.List;
+ 
++import com.daniel.jsoneditor.controller.settings.SettingsController;
+ import com.daniel.jsoneditor.model.json.schema.reference.ReferencingInstance;
+ import com.daniel.jsoneditor.view.impl.jfx.dialogs.ThemedDialog;
+ import javafx.collections.FXCollections;
+@@ -10,6 +11,7 @@ import javafx.geometry.Pos;
+ import javafx.scene.control.Button;
+ import javafx.scene.control.ButtonBar;
+ import javafx.scene.control.ButtonType;
++import javafx.scene.control.CheckBox;
+ import javafx.scene.control.ListCell;
+ import javafx.scene.control.ListView;
+ import javafx.scene.input.KeyCode;
+@@ -19,10 +21,9 @@ import javafx.scene.layout.HBox;
+ import javafx.scene.layout.Priority;
+ import javafx.scene.layout.Region;
+ import javafx.scene.text.Text;
+-import javafx.scene.text.TextFlow;
+ 
+ 
+-public abstract class DialogWithListView<T extends ReferencingInstance> extends ThemedDialog<String>
++public abstract class DialogWithListView<T extends ReferencingInstance, R> extends ThemedDialog<R>
+ {
+     protected ListView<T> listView;
+     
+@@ -30,6 +31,8 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends
+     
+     protected ButtonType cancelButtonType;
+     
++    private CheckBox openInNewWindowCheckBox;
++    
+     public DialogWithListView(List<T> items)
+     {
+         initializeListView(items);
+@@ -39,6 +42,34 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends
+         setResultConverter(this::convertResult);
+     }
+     
++    /**
++     * Adds a "Open in new window" CheckBox into the dialog's ButtonBar, left-aligned. The checkbox is prefilled from the given setting.
++     * Call this from the subclass constructor after super() and after setting the dialog content.
++     */
++    protected void addOpenInNewWindowCheckBox(SettingsController settingsController)
++    {
++        openInNewWindowCheckBox = new CheckBox("Open in new window");
++        openInNewWindowCheckBox.setSelected(settingsController.isOpenInNewWindow());
++        
++        // Insert the checkbox into the ButtonBar so it sits on the left, with buttons on the right
++        ButtonBar.setButtonData(openInNewWindowCheckBox, ButtonBar.ButtonData.LEFT);
++        getDialogPane().applyCss();
++        getDialogPane().layout();
++        javafx.scene.Node buttonBarNode = getDialogPane().lookup(".button-bar");
++        if (buttonBarNode instanceof ButtonBar)
++        {
++            ((ButtonBar) buttonBarNode).getButtons().add(0, openInNewWindowCheckBox);
++        }
++    }
++    
++    /**
++     * Returns true if the "Open in new window" checkbox is checked. Only valid after the dialog has been closed.
++     */
++    public boolean isOpenInNewWindowRequested()
++    {
++        return openInNewWindowCheckBox != null && openInNewWindowCheckBox.isSelected();
++    }
++    
+     protected abstract String getOkButtonText();
+     
+     protected HBox createListItemBox(T item)
+@@ -76,15 +107,21 @@ public abstract class DialogWithListView<T extends ReferencingInstance> extends
+         okButton.fire();
+     }
+     
+-    protected String convertResult(ButtonType buttonType)
++    protected R convertResult(ButtonType buttonType)
+     {
+         if (buttonType.getButtonData().isCancelButton())
+         {
+             return null;
+         }
+-        return listView.getSelectionModel().getSelectedItem().getPath();
++        T selectedItem = listView.getSelectionModel().getSelectedItem();
++        return selectedItem != null ? convertSelectedItem(selectedItem) : null;
+     }
+     
++    /**
++     * Converts the selected list item into the dialog result. Subclasses override this to produce their specific result type.
++     */
++    protected abstract R convertSelectedItem(T selectedItem);
++    
+     protected void initializeListView(List<T> items)
+     {
+         listView = new ListView<>();
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/referencing/ReferenceType.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/referencing/ReferenceType.java
+deleted file mode 100644
+index 21065ef..0000000
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/referencing/ReferenceType.java
++++ /dev/null
+@@ -1,10 +0,0 @@
+-package com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing;
+-
+-public enum ReferenceType
+-{
+-    REFERENCE_TO_OBJECT,
+-    
+-    MANUAL_REFERENCE,
+-    
+-    CREATE_NEW_REFERENCE;
+-}
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/referencing/ReferenceTypeDialog.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/referencing/ReferenceTypeDialog.java
+deleted file mode 100644
+index 1cd8cb0..0000000
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/referencing/ReferenceTypeDialog.java
++++ /dev/null
+@@ -1,35 +0,0 @@
+-package com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing;
+-
+-import com.daniel.jsoneditor.view.impl.jfx.dialogs.ThemedDialog;
+-import javafx.scene.control.ButtonBar.ButtonData;
+-import javafx.scene.control.ButtonType;
+-import javafx.scene.control.Dialog;
+-
+-
+-public class ReferenceTypeDialog extends ThemedDialog<ReferenceType>
+-{
+-    public ReferenceTypeDialog()
+-    {
+-        setTitle("Create Reference");
+-        setContentText("Choose reference type");
+-        setResizable(false);
+-        
+-        ButtonType objectReferenceButton = new ButtonType("Reference to Object");
+-        ButtonType manualReferenceButton = new ButtonType("Manual Reference");
+-        ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
+-        
+-        getDialogPane().getButtonTypes().addAll(objectReferenceButton, manualReferenceButton, buttonTypeCancel);
+-        
+-        setResultConverter(buttonType -> {
+-            if (buttonType == objectReferenceButton)
+-            {
+-                return ReferenceType.REFERENCE_TO_OBJECT;
+-            }
+-            else if (buttonType == manualReferenceButton)
+-            {
+-                return ReferenceType.MANUAL_REFERENCE;
+-            }
+-            return null;
+-        });
+-    }
+-}
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/referencing/SelectReferenceDialog.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/referencing/SelectReferenceDialog.java
+deleted file mode 100644
+index 50715ac..0000000
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/dialogs/referencing/SelectReferenceDialog.java
++++ /dev/null
+@@ -1,49 +0,0 @@
+-package com.daniel.jsoneditor.view.impl.jfx.dialogs.referencing;
+-
+-import java.util.List;
+-
+-import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
+-import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
+-import javafx.scene.control.ButtonBar.ButtonData;
+-import javafx.scene.control.ButtonType;
+-import javafx.scene.control.DialogPane;
+-
+-
+-public class SelectReferenceDialog extends FindDialog
+-{
+-    private ButtonType createButtonType;
+-    
+-    public SelectReferenceDialog(List<ReferenceableObjectInstance> suggestions)
+-    {
+-        super(suggestions);
+-        this.setTitle("Select Object to reference");
+-    }
+-    
+-    @Override
+-    protected void initializeListView(List<ReferenceableObjectInstance> items)
+-    {
+-        super.initializeListView(items);
+-        
+-        createButtonType = new ButtonType("Create new reference", ButtonData.OTHER);
+-        DialogPane dialogPane = getDialogPane();
+-        dialogPane.getButtonTypes().add(createButtonType);
+-    }
+-    
+-    @Override
+-    protected String convertResult(ButtonType buttonType)
+-    {
+-        if (buttonType == createButtonType)
+-        {
+-            return ReferenceType.CREATE_NEW_REFERENCE.name();
+-        }
+-        else
+-        {
+-            return super.convertResult(buttonType);
+-        }
+-    }
+-    
+-    @Override
+-    protected void onListItemDoubleClick(ReferenceableObjectInstance item)
+-    {
+-    }
+-}
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/EditorWindowManagerImpl.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/EditorWindowManagerImpl.java
+index 81a509c..f409b49 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/EditorWindowManagerImpl.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/EditorWindowManagerImpl.java
+@@ -1,6 +1,7 @@
+ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow;
+ 
+ import com.daniel.jsoneditor.controller.Controller;
++import com.daniel.jsoneditor.controller.settings.SettingsController;
+ import com.daniel.jsoneditor.model.ReadableModel;
+ import com.daniel.jsoneditor.model.changes.ModelChange;
+ import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
+@@ -10,12 +11,11 @@ import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
+ import javafx.collections.ObservableList;
+ import javafx.scene.Node;
+ import javafx.scene.control.SplitPane;
++import javafx.stage.Screen;
+ 
+ // manages the positions of editor windows etc
+ public class EditorWindowManagerImpl implements EditorWindowManager
+ {
+-    private static final int MAX_WINDOWS = 7;
+-    
+     private final EditorScene editorScene;
+     
+     private final SplitPane editorWindowContainer;
+@@ -24,14 +24,40 @@ public class EditorWindowManagerImpl implements EditorWindowManager
+     
+     private final ReadableModel model;
+     
++    private final SettingsController settingsController;
++    
+     public EditorWindowManagerImpl(EditorScene scene, ReadableModel model, Controller controller)
+     {
+         this.editorScene = scene;
+         this.model = model;
+         this.controller = controller;
++        this.settingsController = controller.getSettingsController();
+         editorWindowContainer = new AutoAdjustingSplitPane();
+     }
+     
++    /**
++     * Returns the effective maximum number of editor windows. If the setting is "auto", the limit is derived from the primary screen
++     * width: roughly 1 window per 350px, clamped between 3 and 10.
++     */
++    private int getMaxWindows()
++    {
++        String setting = settingsController.getMaxEditorWindows();
++        if (!"auto".equals(setting))
++        {
++            try
++            {
++                return Math.max(3, Math.min(10, Integer.parseInt(setting)));
++            }
++            catch (NumberFormatException ignored)
++            {
++                // fall through to auto
++            }
++        }
++        double screenWidth = Screen.getPrimary().getBounds().getWidth();
++        int computed = (int) (screenWidth / 350.0);
++        return Math.max(3, Math.min(10, computed));
++    }
++    
+     @Override
+     public void openPath(String path)
+     {
+@@ -44,27 +70,56 @@ public class EditorWindowManagerImpl implements EditorWindowManager
+         ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
+         if (!windowsAsNodes.isEmpty())
+         {
+-            boolean alreadyOpenInWindow = false;
++            // 1. Check if the exact path is already open as a main selection or child table
+             for (Node windowNode : windowsAsNodes)
+             {
+                 if (windowNode instanceof JsonEditorEditorWindow)
+                 {
+                     JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+-                    if (path.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(path))
++                    if (path.equals(window.getSelectedPath()))
+                     {
+-                        alreadyOpenInWindow = true;
+                         window.requestFocus();
+-                        break;
++                        return;
++                    }
++                    if (window.getOpenChildPaths().contains(path))
++                    {
++                        window.requestFocus();
++                        window.focusArrayItem(path);
++                        return;
+                     }
+                 }
+             }
+-            if (!alreadyOpenInWindow)
++            // 2. Check if the path is an array item whose parent array is already visible (as main selection or child table)
++            String parentPath = PathHelper.getParentPath(path);
++            if (parentPath != null)
++            {
++                for (Node windowNode : windowsAsNodes)
++                {
++                    if (windowNode instanceof JsonEditorEditorWindow)
++                    {
++                        JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
++                        if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
++                        {
++                            window.requestFocus();
++                            window.focusArrayItem(path);
++                            return;
++                        }
++                    }
++                }
++            }
++            // 3. Path is not open anywhere — prefer opening in a new window if possible
++            if (canAnotherWindowBeAdded())
++            {
++                addWindow().setSelectedPath(path, openObjectParentOfArray);
++            }
++            else
+             {
++                // Fall back to reusing the first window
+                 Node windowAsNode = windowsAsNodes.get(0);
+                 if (windowAsNode instanceof JsonEditorEditorWindow)
+                 {
+                     JsonEditorEditorWindow firstWindow = (JsonEditorEditorWindow) windowAsNode;
+-                    firstWindow.setSelectedPath(path);
++                    firstWindow.setSelectedPath(path, openObjectParentOfArray);
+                 }
+             }
+         }
+@@ -157,7 +212,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
+     @Override
+     public boolean canAnotherWindowBeAdded()
+     {
+-        return editorWindowContainer.getItems().size() < MAX_WINDOWS;
++        return editorWindowContainer.getItems().size() < getMaxWindows();
+     }
+     
+     @Override
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/JsonEditorNamebar.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/JsonEditorNamebar.java
+index 7513665..f76adc8 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/JsonEditorNamebar.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/editorwindow/components/JsonEditorNamebar.java
+@@ -48,7 +48,7 @@ public class JsonEditorNamebar extends HBox
+         nameLabel = new Label();
+         nameLabel.setAlignment(Pos.CENTER);
+         HBox.setHgrow(nameLabel, Priority.ALWAYS);
+-        showUsagesButton = new ShowUsagesButton(model, manager);
++        showUsagesButton = new ShowUsagesButton(model, manager, controller.getSettingsController());
+         
+         this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showUsagesButton);
+         
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/menubar/JsonEditorMenuBar.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/menubar/JsonEditorMenuBar.java
+index cac860f..fe88017 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/menubar/JsonEditorMenuBar.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/menubar/JsonEditorMenuBar.java
+@@ -8,6 +8,7 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.AboutDialog;
+ import com.daniel.jsoneditor.view.impl.jfx.dialogs.SettingsDialog;
+ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
+ import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
++import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindResult;
+ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
+ import javafx.scene.control.Menu;
+ import javafx.scene.control.MenuBar;
+@@ -60,7 +61,7 @@ public class JsonEditorMenuBar extends MenuBar
+         viewMenu.getItems().add(toggleSidebarItem);
+         
+         Menu inspectMenu = new Menu("Inspect");
+-        MenuItem findItem = makeFindAnythingItem(model, manager, navbar);
++        MenuItem findItem = makeFindAnythingItem(model, controller, manager, navbar);
+         inspectMenu.getItems().add(findItem);
+         
+         Menu helpMenu = new Menu("Help");
+@@ -70,15 +71,23 @@ public class JsonEditorMenuBar extends MenuBar
+         getMenus().addAll(fileMenu, editMenu, viewMenu, inspectMenu, helpMenu);
+     }
+     
+-    private static MenuItem makeFindAnythingItem(ReadableModel model, EditorWindowManager manager, JsonEditorNavbar navbar)
++    private static MenuItem makeFindAnythingItem(ReadableModel model, Controller controller, EditorWindowManager manager,
++            JsonEditorNavbar navbar)
+     {
+         MenuItem findItem = new MenuItem("Find anything");
+         findItem.setOnAction(event -> {
+-            FindDialog dialog = new FindDialog(model.getReferenceableObjectInstances());
+-            Optional<String> result = dialog.showAndWait();
+-            result.ifPresent(s -> {
+-                navbar.selectPath(s);
+-                manager.openPath(s);
++            FindDialog dialog = new FindDialog(model.getReferenceableObjectInstances(), controller.getSettingsController());
++            Optional<FindResult> result = dialog.showAndWait();
++            result.ifPresent(findResult -> {
++                navbar.selectPath(findResult.getPath());
++                if (findResult.isOpenInNewWindow())
++                {
++                    manager.openInNewWindowIfPossible(findResult.getPath());
++                }
++                else
++                {
++                    manager.openPath(findResult.getPath());
++                }
+             });
+         });
+         findItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN));
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/toolbar/JsonEditorToolbar.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/toolbar/JsonEditorToolbar.java
+index 6d46b72..cc568d1 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/toolbar/JsonEditorToolbar.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/toolbar/JsonEditorToolbar.java
+@@ -1,7 +1,9 @@
+ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
+ 
++import com.daniel.jsoneditor.controller.settings.SettingsController;
+ import com.daniel.jsoneditor.view.impl.jfx.buttons.ToggleSidebarButton;
+ import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
++import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindResult;
+ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
+ import javafx.scene.control.Button;
+ import javafx.scene.control.Separator;
+@@ -25,12 +27,15 @@ public class JsonEditorToolbar extends ToolBar
+     
+     private final JsonEditorNavbar navbar;
+     
++    private final SettingsController settingsController;
++    
+     public JsonEditorToolbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager,
+             JsonEditorNavbar navbar, ToggleSidebarButton toggleSidebarButton)
+     {
+         this.model = model;
+         this.editorWindowManager = editorWindowManager;
+         this.navbar = navbar;
++        this.settingsController = controller.getSettingsController();
+         getItems().add(toggleSidebarButton);
+         List<Button> searchButtons = makeSearchButtons();
+         if (!searchButtons.isEmpty())
+@@ -50,11 +55,19 @@ public class JsonEditorToolbar extends ToolBar
+         Button button = new Button(buttonSetting.getTitle());
+     
+         button.setOnAction(actionEvent -> {
+-            FindDialog dialog = new FindDialog(model.getInstancesOfReferenceableObjectAtPath(buttonSetting.getTarget()));
+-            Optional<String> result = dialog.showAndWait();
+-            result.ifPresent(s -> {
+-                navbar.selectPath(s);
+-                editorWindowManager.openPath(s);
++            FindDialog dialog = new FindDialog(model.getInstancesOfReferenceableObjectAtPath(buttonSetting.getTarget()),
++                    settingsController);
++            Optional<FindResult> result = dialog.showAndWait();
++            result.ifPresent(findResult -> {
++                navbar.selectPath(findResult.getPath());
++                if (findResult.isOpenInNewWindow())
++                {
++                    editorWindowManager.openInNewWindowIfPossible(findResult.getPath());
++                }
++                else
++                {
++                    editorWindowManager.openPath(findResult.getPath());
++                }
+             });
+         });
+         return button;
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/toast/impl/ToastImpl.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/toast/impl/ToastImpl.java
+index af5bd16..69ecb15 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/toast/impl/ToastImpl.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/toast/impl/ToastImpl.java
+@@ -75,33 +75,41 @@ public class ToastImpl implements Toast
+         showTransition.play();
+         
+         showTransition.setOnFinished((ae) -> {
+-            new Thread(() -> {
++            Thread delayThread = new Thread(() -> {
+                 try
+                 {
+                     Thread.sleep(actualDuration);
+                 }
+                 catch (InterruptedException e)
+                 {
+-                    e.printStackTrace();
++                    Thread.currentThread().interrupt();
++                    return;
+                 }
+-                Timeline moveDownTimeline = new Timeline();
+-                KeyFrame moveDownKey = new KeyFrame(Duration.millis(SLIDE_DURATION), new KeyValue(root.translateYProperty(), 10));
+-                moveDownTimeline.getKeyFrames().add(moveDownKey);
++                Platform.runLater(() -> {
++                    Timeline moveDownTimeline = new Timeline();
++                    KeyFrame moveDownKey = new KeyFrame(Duration.millis(SLIDE_DURATION),
++                            new KeyValue(root.translateYProperty(), 10));
++                    moveDownTimeline.getKeyFrames().add(moveDownKey);
+ 
+-                Timeline fadeOutTimeline = new Timeline();
+-                KeyFrame fadeOutKey = new KeyFrame(Duration.millis(FADE_DURATION), new KeyValue(root.opacityProperty(), 0));
+-                fadeOutTimeline.getKeyFrames().add(fadeOutKey);
++                    Timeline fadeOutTimeline = new Timeline();
++                    KeyFrame fadeOutKey = new KeyFrame(Duration.millis(FADE_DURATION),
++                            new KeyValue(root.opacityProperty(), 0));
++                    fadeOutTimeline.getKeyFrames().add(fadeOutKey);
+ 
+-                ParallelTransition hideTransition = new ParallelTransition(moveDownTimeline, fadeOutTimeline);
+-                hideTransition.setOnFinished((aeb) -> {
+-                    toastPopup.hide();
+-                    if (onFinished != null)
+-                    {
+-                        onFinished.run();
+-                    }
++                    ParallelTransition hideTransition = new ParallelTransition(moveDownTimeline, fadeOutTimeline);
++                    hideTransition.setOnFinished((aeb) -> {
++                        toastPopup.hide();
++                        if (onFinished != null)
++                        {
++                            onFinished.run();
++                        }
++                    });
++                    hideTransition.play();
+                 });
+-                hideTransition.play();
+-            }).start();
++            });
++            delayThread.setDaemon(true);
++            delayThread.setDaemon(true);
++            delayThread.start();
+         });
+     }
+     
+
+commit 0085e5f8cf92384004491dea76753196a1aaaec7
+Author: Daniel Kispert <daniel.kispert@sap.com>
+Date:   Wed Mar 4 15:26:05 2026 +0100
+
+    button to toggle sidebar on off
+
+diff --git a/src/main/java/com/daniel/jsoneditor/controller/settings/SettingsController.java b/src/main/java/com/daniel/jsoneditor/controller/settings/SettingsController.java
+index 9ca3231..01fb7f8 100644
+--- a/src/main/java/com/daniel/jsoneditor/controller/settings/SettingsController.java
++++ b/src/main/java/com/daniel/jsoneditor/controller/settings/SettingsController.java
+@@ -45,4 +45,8 @@ public interface SettingsController
+     void setMcpServerPort(int port);
+     
+     int getMcpServerPort();
++    
++    void setNavbarCollapsed(boolean collapsed);
++    
++    boolean isNavbarCollapsed();
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/controller/settings/impl/PropertyFileKeys.java b/src/main/java/com/daniel/jsoneditor/controller/settings/impl/PropertyFileKeys.java
+index fb8671b..d37ddf9 100644
+--- a/src/main/java/com/daniel/jsoneditor/controller/settings/impl/PropertyFileKeys.java
++++ b/src/main/java/com/daniel/jsoneditor/controller/settings/impl/PropertyFileKeys.java
+@@ -27,4 +27,6 @@ public class PropertyFileKeys
+     public final static String PROPERTY_MCP_SERVER_ENABLED = "autostart_mcp_server";
+     
+     public final static String PROPERTY_MCP_SERVER_PORT = "mcp_server_port";
++    
++    public final static String PROPERTY_NAVBAR_COLLAPSED = "navbar_collapsed";
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/controller/settings/impl/SettingsControllerImpl.java b/src/main/java/com/daniel/jsoneditor/controller/settings/impl/SettingsControllerImpl.java
+index 6946d8a..fc72f8e 100644
+--- a/src/main/java/com/daniel/jsoneditor/controller/settings/impl/SettingsControllerImpl.java
++++ b/src/main/java/com/daniel/jsoneditor/controller/settings/impl/SettingsControllerImpl.java
+@@ -212,4 +212,17 @@ public class SettingsControllerImpl implements SettingsController
+             return JsonEditorMcpServer.DEFAULT_PORT;
+         }
+     }
++    
++    @Override
++    public void setNavbarCollapsed(boolean collapsed)
++    {
++        properties.setProperty(PropertyFileKeys.PROPERTY_NAVBAR_COLLAPSED, collapsed ? "true" : "false");
++        PropertiesFileHelper.writePropertiesToFile(properties);
++    }
++    
++    @Override
++    public boolean isNavbarCollapsed()
++    {
++        return "true".equalsIgnoreCase(properties.getProperty(PropertyFileKeys.PROPERTY_NAVBAR_COLLAPSED));
++    }
+ }
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/ToggleSidebarButton.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/ToggleSidebarButton.java
+new file mode 100644
+index 0000000..b4b7814
+--- /dev/null
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/buttons/ToggleSidebarButton.java
+@@ -0,0 +1,43 @@
++package com.daniel.jsoneditor.view.impl.jfx.buttons;
++
++import java.util.function.BooleanSupplier;
++
++import javafx.scene.control.Button;
++import javafx.scene.control.Tooltip;
++
++/**
++ * Button that toggles the sidebar (navbar) visibility in the editor.
++ */
++public class ToggleSidebarButton extends Button
++{
++    private static final String ICON_COLLAPSE = "/icons/material/darkmode/outline_menu_close_white_24dp.png";
++    private static final String ICON_EXPAND = "/icons/material/darkmode/outline_menu_open_white_24dp.png";
++    
++    private final BooleanSupplier collapsedSupplier;
++    
++    public ToggleSidebarButton(Runnable toggleAction, BooleanSupplier collapsedSupplier)
++    {
++        super();
++        this.collapsedSupplier = collapsedSupplier;
++        updateAppearance();
++        setOnAction(event -> toggleAction.run());
++    }
++    
++    public void updateAppearance()
++    {
++        if (collapsedSupplier.getAsBoolean())
++        {
++            ButtonHelper.setButtonImage(this, ICON_EXPAND);
++            setTooltip(new Tooltip("Show Sidebar"));
++        }
++        else
++        {
++            ButtonHelper.setButtonImage(this, ICON_COLLAPSE);
++            setTooltip(new Tooltip("Hide Sidebar"));
++        }
++    }
++}
++
++
++
++
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/EditorScene.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/EditorScene.java
+index 5be4572..6ad26a4 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/EditorScene.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/EditorScene.java
+@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor;
+ 
+ import com.daniel.jsoneditor.controller.settings.impl.EditorDimensions;
+ import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
++import com.daniel.jsoneditor.view.impl.jfx.buttons.ToggleSidebarButton;
+ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.menubar.JsonEditorMenuBar;
+ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
+ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar.JsonEditorToolbar;
+@@ -20,16 +21,26 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
+ 
+ public class EditorScene extends SceneHandlerImpl
+ {
++    private static final double DEFAULT_DIVIDER_POSITION = 0.2;
+     
+     private JsonEditorNavbar navbar;
+     
+     private final EditorWindowManager editorWindowManager;
+     
++    private SplitPane splitPane;
++    
++    private double lastDividerPosition = DEFAULT_DIVIDER_POSITION;
++    
++    private boolean navbarCollapsed;
++    
++    private ToggleSidebarButton toggleSidebarButton;
++    
+     
+     public EditorScene(UIHandler handler, Controller controller, ReadableModel model)
+     {
+         super(handler, controller, model);
+         editorWindowManager = new EditorWindowManagerImpl(this, model, controller);
++        navbarCollapsed = controller.getSettingsController().isNavbarCollapsed();
+     }
+     
+     @Override
+@@ -40,10 +51,12 @@ public class EditorScene extends SceneHandlerImpl
+         Scene scene = new Scene(root, stage.getWidth(), stage.getHeight());
+         scene.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
+         navbar = new JsonEditorNavbar(model, controller, editorWindowManager, stage);
+-        VBox bars = new VBox(new JsonEditorMenuBar(model, controller, editorWindowManager, navbar),
+-                new JsonEditorToolbar(model, controller, editorWindowManager, navbar));
++        toggleSidebarButton = new ToggleSidebarButton(this::toggleNavbar, this::isNavbarCollapsed);
++        VBox bars = new VBox(new JsonEditorMenuBar(model, controller, editorWindowManager, navbar, this::toggleNavbar),
++                new JsonEditorToolbar(model, controller, editorWindowManager, navbar, toggleSidebarButton));
+         root.setTop(bars);
+-        root.setLeft(makeSplitPane(scene));
++        splitPane = makeSplitPane();
++        root.setCenter(splitPane);
+         scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+             EditorDimensions oldDimensions = controller.getSettingsController().getEditorDimensions();
+             //resizing the window means its no longer maximized
+@@ -57,17 +70,62 @@ public class EditorScene extends SceneHandlerImpl
+         return scene;
+     }
+     
+-    private SplitPane makeSplitPane(Scene scene)
++    private SplitPane makeSplitPane()
+     {
+         SplitPane splitPane = new SplitPane();
+         splitPane.setOrientation(Orientation.HORIZONTAL);
+-        splitPane.getItems().addAll(navbar, editorWindowManager.getEditorWindowContainer());
+-        splitPane.prefWidthProperty().bind(scene.widthProperty());
+-        splitPane.prefHeightProperty().bind(scene.heightProperty());
+-        Platform.runLater(() -> splitPane.setDividerPositions(0.2));
++        if (navbarCollapsed)
++        {
++            splitPane.getItems().add(editorWindowManager.getEditorWindowContainer());
++        }
++        else
++        {
++            splitPane.getItems().addAll(navbar, editorWindowManager.getEditorWindowContainer());
++            Platform.runLater(() -> splitPane.setDividerPositions(lastDividerPosition));
++        }
+         return splitPane;
+     }
+     
++    private void toggleNavbar()
++    {
++        if (navbarCollapsed)
++        {
++            expandNavbar();
++        }
++        else
++        {
++            collapseNavbar();
++        }
++        toggleSidebarButton.updateAppearance();
++    }
++    
++    private void collapseNavbar()
++    {
++        if (splitPane.getDividerPositions().length > 0)
++        {
++            lastDividerPosition = splitPane.getDividerPositions()[0];
++        }
++        splitPane.getItems().remove(navbar);
++        navbarCollapsed = true;
++        controller.getSettingsController().setNavbarCollapsed(true);
++    }
++    
++    private void expandNavbar()
++    {
++        if (!splitPane.getItems().contains(navbar))
++        {
++            splitPane.getItems().add(0, navbar);
++            Platform.runLater(() -> splitPane.setDividerPositions(lastDividerPosition));
++        }
++        navbarCollapsed = false;
++        controller.getSettingsController().setNavbarCollapsed(false);
++    }
++    
++    private boolean isNavbarCollapsed()
++    {
++        return navbarCollapsed;
++    }
++    
+     public void updateEverything()
+     {
+         // we also update the windows because they could show the parent array, which just had something added/removed/changed
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/menubar/JsonEditorMenuBar.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/menubar/JsonEditorMenuBar.java
+index 3a2415a..cac860f 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/menubar/JsonEditorMenuBar.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/menubar/JsonEditorMenuBar.java
+@@ -19,7 +19,8 @@ import javafx.scene.input.KeyCombination;
+ 
+ public class JsonEditorMenuBar extends MenuBar
+ {
+-    public JsonEditorMenuBar(ReadableModel model, Controller controller, EditorWindowManager manager, JsonEditorNavbar navbar)
++    public JsonEditorMenuBar(ReadableModel model, Controller controller, EditorWindowManager manager, JsonEditorNavbar navbar,
++            Runnable toggleSidebar)
+     {
+         super();
+         setUseSystemMenuBar(true);
+@@ -52,6 +53,12 @@ public class JsonEditorMenuBar extends MenuBar
+         redoItem.setAccelerator(new KeyCodeCombination(KeyCode.Y, KeyCombination.SHORTCUT_DOWN));
+         editMenu.getItems().addAll(undoItem, redoItem);
+         
++        Menu viewMenu = new Menu("View");
++        MenuItem toggleSidebarItem = new MenuItem("Toggle Sidebar");
++        toggleSidebarItem.setOnAction(event -> toggleSidebar.run());
++        toggleSidebarItem.setAccelerator(new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN));
++        viewMenu.getItems().add(toggleSidebarItem);
++        
+         Menu inspectMenu = new Menu("Inspect");
+         MenuItem findItem = makeFindAnythingItem(model, manager, navbar);
+         inspectMenu.getItems().add(findItem);
+@@ -60,7 +67,7 @@ public class JsonEditorMenuBar extends MenuBar
+         MenuItem aboutItem = new MenuItem("About");
+         aboutItem.setOnAction(event -> new AboutDialog().showAndWait());
+         helpMenu.getItems().add(aboutItem);
+-        getMenus().addAll(fileMenu, editMenu, inspectMenu, helpMenu);
++        getMenus().addAll(fileMenu, editMenu, viewMenu, inspectMenu, helpMenu);
+     }
+     
+     private static MenuItem makeFindAnythingItem(ReadableModel model, EditorWindowManager manager, JsonEditorNavbar navbar)
+diff --git a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/toolbar/JsonEditorToolbar.java b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/toolbar/JsonEditorToolbar.java
+index 7163321..6d46b72 100644
+--- a/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/toolbar/JsonEditorToolbar.java
++++ b/src/main/java/com/daniel/jsoneditor/view/impl/jfx/impl/scenes/impl/editor/components/toolbar/JsonEditorToolbar.java
+@@ -1,8 +1,10 @@
+ package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.toolbar;
+ 
++import com.daniel.jsoneditor.view.impl.jfx.buttons.ToggleSidebarButton;
+ import com.daniel.jsoneditor.view.impl.jfx.dialogs.FindDialog;
+ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.JsonEditorNavbar;
+ import javafx.scene.control.Button;
++import javafx.scene.control.Separator;
+ import javafx.scene.control.ToolBar;
+ import com.daniel.jsoneditor.controller.Controller;
+ import com.daniel.jsoneditor.model.ReadableModel;
+@@ -19,19 +21,23 @@ public class JsonEditorToolbar extends ToolBar
+     
+     private final ReadableModel model;
+     
+-    private final Controller controller;
+-    
+     private final EditorWindowManager editorWindowManager;
+     
+     private final JsonEditorNavbar navbar;
+     
+-    public JsonEditorToolbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager, JsonEditorNavbar navbar)
++    public JsonEditorToolbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager,
++            JsonEditorNavbar navbar, ToggleSidebarButton toggleSidebarButton)
+     {
+-        this.controller = controller;
+         this.model = model;
+         this.editorWindowManager = editorWindowManager;
+         this.navbar = navbar;
+-        getItems().addAll(makeSearchButtons());
++        getItems().add(toggleSidebarButton);
++        List<Button> searchButtons = makeSearchButtons();
++        if (!searchButtons.isEmpty())
++        {
++            getItems().add(new Separator());
++            getItems().addAll(searchButtons);
++        }
+     }
+     
+     private List<Button> makeSearchButtons()
+diff --git a/src/main/resources/icons/material/darkmode/outline_menu_close_white_24dp.png b/src/main/resources/icons/material/darkmode/outline_menu_close_white_24dp.png
+new file mode 100644
+index 0000000..4e8a094
+Binary files /dev/null and b/src/main/resources/icons/material/darkmode/outline_menu_close_white_24dp.png differ
+diff --git a/src/main/resources/icons/material/darkmode/outline_menu_open_white_24dp.png b/src/main/resources/icons/material/darkmode/outline_menu_open_white_24dp.png
+new file mode 100644
+index 0000000..2c91bb0
+Binary files /dev/null and b/src/main/resources/icons/material/darkmode/outline_menu_open_white_24dp.png differ

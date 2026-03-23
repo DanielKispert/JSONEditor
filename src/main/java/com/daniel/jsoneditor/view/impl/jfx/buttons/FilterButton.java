@@ -95,4 +95,19 @@ public abstract class FilterButton extends Button
             }
         }
     }
+    
+    /**
+     * Adds new items to the filter without selecting them. Existing items are not changed.
+     * @param newItems items to add as deselected
+     */
+    public void addNewItemsAsDeselected(Collection<String> newItems)
+    {
+        for (String item : newItems)
+        {
+            if (!valueStateMap.containsKey(item))
+            {
+                valueStateMap.put(item, false);
+            }
+        }
+    }
 }

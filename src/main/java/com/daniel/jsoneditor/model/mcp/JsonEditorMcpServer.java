@@ -35,7 +35,7 @@ public class JsonEditorMcpServer
     
     private static final String SERVER_VERSION = VersionUtil.getVersion();
     
-    public static final int DEFAULT_PORT = 3000;
+    public static final int DEFAULT_PORT = 4500;
     
     private static final int HTTP_OK = 200;
     private static final int HTTP_BAD_REQUEST = 400;
