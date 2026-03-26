@@ -1,2 +1,1 @@
-this is an AGPL-3.0 licensed project. It is a desktop editor for JSON files according to a JSON schema. It is written in Java and uses JavaFX for the UI.
-Use english for documentation and comments. Use 140 characters per line. Use curly brackets on the next line.
+See [AGENTS.md](/AGENTS.md) for full coding conventions and architecture.

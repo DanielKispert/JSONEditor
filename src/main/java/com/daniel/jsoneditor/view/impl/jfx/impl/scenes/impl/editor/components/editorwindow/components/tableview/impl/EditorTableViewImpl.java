@@ -172,10 +172,20 @@ public class EditorTableViewImpl extends EditorTableView
         return parentPath;
     }
     
+    /** JavaFX default row height used as estimate before the skin is available after the first layout pass */
+    private static final double DEFAULT_ROW_HEIGHT = 24.0;
+
     @Override
     protected double computePrefHeight(double v)
     {
-        return (getItems().size() + 1) * 24;
+        // super relies on TableViewSkin which is only available after the first layout pass.
+        // Before that it returns -1/0, which breaks AutoAdjustingSplitPane divider calculation.
+        final double superHeight = super.computePrefHeight(v);
+        if (superHeight > 0)
+        {
+            return superHeight;
+        }
+        return (getItems().size() + 1) * DEFAULT_ROW_HEIGHT;
     }
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
@@ -205,7 +215,7 @@ public class EditorTableViewImpl extends EditorTableView
             }
             catch (NumberFormatException e)
             {
-                System.err.println("Couldn't parse index from path: " + itemPath);
+                logger.warn("Couldn't parse index from path: {}", itemPath);
                 return;
             }
             // Check if the index is within the bounds of TableView's items

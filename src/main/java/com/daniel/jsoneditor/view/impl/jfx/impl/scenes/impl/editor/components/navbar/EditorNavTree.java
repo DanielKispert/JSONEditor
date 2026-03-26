@@ -199,26 +199,35 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
             }
         });
         importItem.setOnAction(event -> {
+            final TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            if (selectedItem == null)
+            {
+                return;
+            }
             ImportDialog importDialog = new ImportDialog(stage);
             Optional<String> importResult = importDialog.showAndWait();
             if (importResult.isPresent())
             {
                 String jsonToImport = importResult.get();
                 jsonToImport = controller.resolveVariablesInJson(jsonToImport);
-                TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-                JsonNodeWithPath selectedNode = selectedItem.getValue();
-                controller.importAtNode(selectedNode.getPath(), jsonToImport);
+                controller.importAtNode(selectedItem.getValue().getPath(), jsonToImport);
             }
         });
         exportItem.setOnAction(event -> {
-            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            JsonNodeWithPath selectedNode = selectedItem.getValue();
-            controller.exportNode(selectedNode.getPath());
+            final TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            if (selectedItem == null)
+            {
+                return;
+            }
+            controller.exportNode(selectedItem.getValue().getPath());
         });
         exportWithDependenciesItem.setOnAction(event -> {
-            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            JsonNodeWithPath selectedNode = selectedItem.getValue();
-            controller.exportNodeWithDependencies(selectedNode.getPath());
+            final TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+            if (selectedItem == null)
+            {
+                return;
+            }
+            controller.exportNodeWithDependencies(selectedItem.getValue().getPath());
         });
         
         contextMenu.getItems().addAll(newWindowItem, addItemItem, copyItem, pasteItem, duplicateItem, sortArray, importItem, exportItem,
@@ -352,7 +361,11 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         {
             return currentItem;
         }
-        
+        final String currentPath = currentItem.getValue().getPath();
+        if (!path.startsWith(currentPath.isEmpty() ? "" : currentPath + "/"))
+        {
+            return null;
+        }
         for (TreeItem<JsonNodeWithPath> childItem : currentItem.getChildren())
         {
             TreeItem<JsonNodeWithPath> foundItem = findNavbarItem(childItem, path);
@@ -361,7 +374,6 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
                 return foundItem;
             }
         }
-        
         return null;
     }
     
@@ -381,10 +393,16 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         {
             return;
         }
-        if (node.getValue().getPath().equals(path))
+        final String nodePath = node.getValue().getPath();
+        if (nodePath.equals(path))
         {
             getSelectionModel().select(node);
             scrollTo(getRow(node));
+            return;
+        }
+        // prune subtrees that cannot contain the target path
+        if (!path.startsWith(nodePath.isEmpty() ? "" : nodePath + "/"))
+        {
             return;
         }
         for (TreeItem<JsonNodeWithPath> child : node.getChildren())
