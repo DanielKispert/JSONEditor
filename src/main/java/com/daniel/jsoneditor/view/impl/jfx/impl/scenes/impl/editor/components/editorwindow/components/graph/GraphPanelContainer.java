@@ -13,7 +13,8 @@ import com.daniel.jsoneditor.view.impl.jfx.buttons.ButtonHelper;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.GraphFilterButton;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.GraphInfoButton;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar.NavbarElement;
-import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import java.util.ArrayList;
@@ -135,9 +136,19 @@ public class GraphPanelContainer extends HBox implements NavbarElement
         HBox.setHgrow(mainContainer, Priority.ALWAYS);
         this.getChildren().add(mainContainer);
         
-        Platform.runLater(() -> {
-            graphView.init();
-            graphView.update();
+        // init() requires non-zero dimensions; defer until layout pass completes
+        graphView.widthProperty().addListener(new ChangeListener<>()
+        {
+            @Override
+            public void changed(ObservableValue<? extends Number> obs, Number oldVal, Number newVal)
+            {
+                if (newVal.doubleValue() > 0 && graphView.getHeight() > 0)
+                {
+                    graphView.widthProperty().removeListener(this);
+                    graphView.init();
+                    graphView.update();
+                }
+            }
         });
     }
     

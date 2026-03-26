@@ -214,30 +214,28 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     
     public void updatePrefWidth()
     {
-        double startingWidth = columnName.length() * 7 + 40; //estimation for the title length in pixels.
-        TableView<JsonNodeWithPath> tableView = this.getTableView();
+        // char * 7 is consistent with the header title estimation below
+        double maxWidth = columnName.length() * 7 + 40;
+        final TableView<JsonNodeWithPath> tableView = this.getTableView();
         if (tableView == null)
         {
-            this.setPrefWidth(startingWidth);
+            this.setPrefWidth(maxWidth);
             return;
         }
-        for (JsonNodeWithPath item : tableView.getItems())
+        final int extraWidth = holdsObjectKeysOfReferences ? 80 : 50;
+        for (final JsonNodeWithPath item : tableView.getItems())
         {
-            String cellValue = this.getCellData(item);
+            final String cellValue = this.getCellData(item);
             if (cellValue != null)
             {
-                Text text = new Text(cellValue);
-                int extraWidth = holdsObjectKeysOfReferences ?
-                        80 :
-                        50; //if we hold object keys of references we add extra padding for the "create" button
-                double largestCellWidth = text.getLayoutBounds().getWidth() + extraWidth; //padding for typing and checkbox buttons
-                if (largestCellWidth > startingWidth)
+                final double cellWidth = cellValue.length() * 7 + extraWidth;
+                if (cellWidth > maxWidth)
                 {
-                    startingWidth = largestCellWidth;
+                    maxWidth = cellWidth;
                 }
             }
         }
-        this.setPrefWidth(startingWidth);
+        this.setPrefWidth(maxWidth);
     }
     
     private List<String> getRowValues()
@@ -266,43 +264,36 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     {
         return new NumberTableCell(manager, controller, model, holdsKeyOfReferenceableObject)
         {
-            private final TextField textField = new TextField();
-            
-            {
-                // Restrict input to numeric values only
-                textField.textProperty().addListener((observable, oldValue, newValue) -> {
-                    if (!newValue.matches("\\d*"))
-                    {
-                        textField.setText(newValue.replaceAll("[^\\d]", ""));
-                    }
-                });
-                
-                textField.setOnAction(event -> {
-                    commitEdit(textField.getText());
-                });
-                
-                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-                    if (wasFocused && !isNowFocused)
-                    {
-                        commitEdit(textField.getText());
-                    }
-                });
-            }
-            
             @Override
             protected void updateItem(String item, boolean empty)
             {
                 super.updateItem(item, empty);
-                
+
                 if (empty || item == null)
                 {
                     setText(null);
                     setGraphic(null);
+                    currentTextInputControl = null;
                 }
                 else
                 {
+                    // fresh instance per cell render to avoid shared state across recycled rows
+                    final TextField textField = new TextField(item);
+                    textField.textProperty().addListener((observable, oldValue, newValue) -> {
+                        if (!newValue.matches("-?\\d*\\.?\\d*"))
+                        {
+                            textField.setText(oldValue);
+                        }
+                    });
+                    textField.setOnAction(event -> commitEditFromCurrentControl(textField.getText(), textField));
+                    textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+                        if (wasFocused && !isNowFocused)
+                        {
+                            commitEditFromCurrentControl(textField.getText(), textField);
+                        }
+                    });
+                    currentTextInputControl = textField;
                     setText(null);
-                    textField.setText(item);
                     setGraphic(textField);
                 }
             }
