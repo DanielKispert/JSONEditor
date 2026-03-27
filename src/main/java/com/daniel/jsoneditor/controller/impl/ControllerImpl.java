@@ -28,6 +28,7 @@ import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.validation.ReferenceValidator;
@@ -407,9 +408,42 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void setValueAtPath(String path, Object value)
     {
+        final JsonNode candidateNode = buildCandidateNode(value);
+        final JsonSchema subschema = readableModel.getSubschemaForPath(path);
+        if (!SchemaHelper.validateJsonWithSchema(candidateNode, subschema))
+        {
+            view.showToast(Toasts.VALUE_VALIDATION_FAILED_TOAST);
+            return;
+        }
         final String parentPath = PathHelper.getParentPath(path);
         final String propertyName = PathHelper.getLastPathSegment(path);
         commandManager.executeCommand(commandFactory.setValueAtNodeCommand(parentPath, propertyName, value));
+    }
+
+    /** Wraps a raw Java value into a JsonNode for pre-write schema validation. */
+    private JsonNode buildCandidateNode(Object value)
+    {
+        if (value == null)
+        {
+            return JsonNodeFactory.instance.nullNode();
+        }
+        if (value instanceof Boolean)
+        {
+            return JsonNodeFactory.instance.booleanNode((Boolean) value);
+        }
+        if (value instanceof Integer)
+        {
+            return JsonNodeFactory.instance.numberNode((Integer) value);
+        }
+        if (value instanceof Long)
+        {
+            return JsonNodeFactory.instance.numberNode((Long) value);
+        }
+        if (value instanceof Double)
+        {
+            return JsonNodeFactory.instance.numberNode((Double) value);
+        }
+        return JsonNodeFactory.instance.textNode(value.toString());
     }
     
     @Override
