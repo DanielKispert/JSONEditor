@@ -734,6 +734,16 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
                         subNode = subNode.get("items");
                     }
                 }
+                else
+                {
+                    // no explicit "type" — try anyOf/oneOf/allOf by picking first branch containing the path segment
+                    JsonNode resolved = resolveCompositeSchema(subNode, part);
+                    if (resolved != null)
+                    {
+                        subNode = resolved;
+                    }
+                    // else: leave subNode as-is and let the loop continue (e.g. numeric index into array)
+                }
             }
         }
         if (subNode == null)
@@ -745,7 +755,58 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(subNode);
     }
-    
+
+    /**
+     * Tries to resolve a path segment through composite schema keywords (anyOf, oneOf, allOf).
+     * Returns the sub-schema for the segment from the first matching branch, or null if none matches.
+     *
+     * @param schemaNode the schema node that may contain anyOf/oneOf/allOf
+     * @param pathSegment the path segment to look up
+     * @return the resolved sub-schema or null
+     */
+    private JsonNode resolveCompositeSchema(JsonNode schemaNode, String pathSegment)
+    {
+        for (final String keyword : new String[]{"anyOf", "oneOf", "allOf"})
+        {
+            final JsonNode branches = schemaNode.get(keyword);
+            if (branches == null || !branches.isArray())
+            {
+                continue;
+            }
+            for (final JsonNode branch : branches)
+            {
+                final JsonNode resolved = resolveRef(branch);
+                if (resolved == null)
+                {
+                    continue;
+                }
+                final JsonNode typeNode = resolved.get("type");
+                if (typeNode != null && "object".equalsIgnoreCase(typeNode.asText()))
+                {
+                    final JsonNode props = resolved.get("properties");
+                    if (props != null && props.has(pathSegment))
+                    {
+                        return props.get(pathSegment);
+                    }
+                }
+                else if (typeNode != null && "array".equalsIgnoreCase(typeNode.asText()))
+                {
+                    return resolved.get("items");
+                }
+            }
+            // no exact property match — return first resolvable branch as best-effort
+            for (final JsonNode branch : branches)
+            {
+                final JsonNode resolved = resolveRef(branch);
+                if (resolved != null)
+                {
+                    return resolved;
+                }
+            }
+        }
+        return null;
+    }
+
     private JsonNode resolveRef(JsonNode nodeWithRef)
     {
         if (nodeWithRef == null)

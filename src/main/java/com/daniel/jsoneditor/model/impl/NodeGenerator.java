@@ -13,6 +13,10 @@ public class NodeGenerator
     public static JsonNode generateNodeFromSchema(JsonNode schema)
     {
         List<String> types = SchemaHelper.getTypes(schema);
+        if (types == null || types.isEmpty())
+        {
+            return JsonNodeFactory.instance.nullNode();
+        }
         if (types.contains("array"))
         {
             return generateArrayNode(schema);
