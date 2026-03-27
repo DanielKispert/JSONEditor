@@ -214,28 +214,30 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     
     public void updatePrefWidth()
     {
-        // char * 7 is consistent with the header title estimation below
-        double maxWidth = columnName.length() * 7 + 40;
+        double startingWidth = columnName.length() * 7 + 40; // estimation for the title length in pixels
         final TableView<JsonNodeWithPath> tableView = this.getTableView();
         if (tableView == null)
         {
-            this.setPrefWidth(maxWidth);
+            this.setPrefWidth(startingWidth);
             return;
         }
-        final int extraWidth = holdsObjectKeysOfReferences ? 80 : 50;
         for (final JsonNodeWithPath item : tableView.getItems())
         {
             final String cellValue = this.getCellData(item);
             if (cellValue != null)
             {
-                final double cellWidth = cellValue.length() * 7 + extraWidth;
-                if (cellWidth > maxWidth)
+                final Text text = new Text(cellValue);
+                final int extraWidth = holdsObjectKeysOfReferences ?
+                        80 :
+                        50; // if we hold object keys of references we add extra padding for the "create" button
+                final double largestCellWidth = text.getLayoutBounds().getWidth() + extraWidth; // padding for typing and checkbox buttons
+                if (largestCellWidth > startingWidth)
                 {
-                    maxWidth = cellWidth;
+                    startingWidth = largestCellWidth;
                 }
             }
         }
-        this.setPrefWidth(maxWidth);
+        this.setPrefWidth(startingWidth);
     }
     
     private List<String> getRowValues()
