@@ -112,12 +112,12 @@ public class EditorWindowManagerImpl implements EditorWindowManager
                 JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
                 if (path.equals(window.getSelectedPath()))
                 {
-                    window.requestFocus();
+                    window.flash();
                     return true;
                 }
                 if (window.getOpenChildPaths().contains(path))
                 {
-                    window.requestFocus();
+                    window.flash();
                     window.focusArrayItem(path);
                     return true;
                 }
@@ -134,7 +134,7 @@ public class EditorWindowManagerImpl implements EditorWindowManager
                     JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
                     if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
                     {
-                        window.requestFocus();
+                        window.flash();
                         window.focusArrayItem(path);
                         return true;
                     }

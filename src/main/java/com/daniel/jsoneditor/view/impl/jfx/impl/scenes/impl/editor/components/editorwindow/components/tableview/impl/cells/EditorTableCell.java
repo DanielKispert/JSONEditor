@@ -15,7 +15,6 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
 import com.daniel.jsoneditor.view.impl.jfx.popups.FittingObjectsPopup;
 import com.fasterxml.jackson.databind.JsonNode;
-import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.Control;
@@ -67,13 +66,6 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
         this.createNewReferenceableObjectButton = new CreateNewReferenceableObjectButton(event -> handleCreateNewReferenceableObject());
         this.fittingObjectsPopup = new FittingObjectsPopup(model, this::onFittingObjectSelected, this::onDuplicateItemButtonClicked);
         setMaxWidth(Double.MAX_VALUE);
-        Platform.runLater(() -> {
-            TableColumn<JsonNodeWithPath, String> column = getTableColumn();
-            if (column != null)
-            {
-                ((EditorTableColumn) column).updatePrefWidth();
-            }
-        });
     }
     
     private void onDuplicateItemButtonClicked(ReferenceableObjectInstance selectedItem)

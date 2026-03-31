@@ -135,6 +135,14 @@ public class EditorTableViewImpl extends EditorTableView
         
         editorColumns.forEach(EditorTableColumn::updatePrefWidth);
     }
+    
+    private void updateAllColumnWidths()
+    {
+        getColumns().stream()
+                .filter(column -> column instanceof EditorTableColumn)
+                .map(column -> (EditorTableColumn) column)
+                .forEach(EditorTableColumn::updatePrefWidth);
+    }
     /**
      * @param item the item to filter
      * @param editorColumns pre-filtered list of EditorTableColumn instances
@@ -252,6 +260,7 @@ public class EditorTableViewImpl extends EditorTableView
         setItems(filteredItems);
         getColumns().clear();
         getColumns().addAll(columns);
+        updateAllColumnWidths();
         
         if (tableData.isArray() && controller.getSettingsController().hideEmptyColumns() && !temporaryShowAllColumns)
         {
@@ -300,6 +309,7 @@ public class EditorTableViewImpl extends EditorTableView
                     updatePathsAfterIndex(addedIndex + 1, addedIndex + 1);
                     getSelectionModel().select(addedIndex);
                     scrollTo(addedIndex);
+                    updateAllColumnWidths();
                     return;
                 }
             }
@@ -344,6 +354,7 @@ public class EditorTableViewImpl extends EditorTableView
                     
                     getSelectionModel().select(changedIndex);
                     scrollTo(changedIndex);
+                    updateAllColumnWidths();
                     return;
                 }
             }
