@@ -9,6 +9,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
 
 import java.util.List;
@@ -117,10 +118,12 @@ public class FittingObjectsPopup extends BasePopup<List<ReferenceableObjectInsta
     
     private int maxListItemWidth(List<ReferenceableObjectInstance> items)
     {
+        // 2 icon buttons (~34px each) + HBox spacing (10) + cell padding (16) + scrollbar (18) = 112, rounded to 120
+        final int extraWidth = 120;
         int maxWidth = 0;
         for (ReferenceableObjectInstance item : items)
         {
-            int width = item.getKey().length() * 7 + 96; // 96 = 2 buttons (hopefully)
+            final int width = (int) new Text(item.getKey()).getLayoutBounds().getWidth() + extraWidth;
             if (width > maxWidth)
             {
                 maxWidth = width;

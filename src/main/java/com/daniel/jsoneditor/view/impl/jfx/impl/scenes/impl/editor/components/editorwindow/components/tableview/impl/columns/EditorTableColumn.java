@@ -19,7 +19,6 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
@@ -53,8 +52,6 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
     private final String columnName;
     
     private final FilterColumnButton filterButton;
-    
-    private FilteredList<JsonNodeWithPath> filteredItems;
     
     /**
      * true if this column holds the key property of a referenceable object, false otherwise
@@ -95,12 +92,8 @@ public class EditorTableColumn extends TableColumn<JsonNodeWithPath, String>
         this.filterButton = new FilterColumnButton(this::getRowValues, this::applyFilter);
         setGraphic(makeHeader());
         
-        this.filteredItems = new FilteredList<>(tableView.getItems(), p -> true);
-        tableView.setItems(filteredItems);
-        
         this.propertyName = propertyName;
         this.isRequired = isRequired;
-        updatePrefWidth();
         
         // every column holds one property of the array's items
         setCellValueFactory(data -> {

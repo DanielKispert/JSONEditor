@@ -18,9 +18,12 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.EditorTableViewImpl;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.TableViewButtonBar;
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 /**
  * Editor consists of a vbox holding:
@@ -372,6 +375,32 @@ public class JsonEditorEditorWindow extends VBox
                 childTable.refresh();
             }
         }
+    }
+    
+    /**
+     * Briefly flashes the window border to indicate it is already open and has been focused.
+     */
+    public void flash()
+    {
+        requestFocus();
+        final String flashClass = "editor-window-flash";
+        final Timeline timeline = new Timeline();
+        for (int i = 0; i < 3; i++)
+        {
+            final boolean on = (i % 2 == 0);
+            timeline.getKeyFrames().add(new KeyFrame(Duration.millis(i * 200), e -> {
+                if (on)
+                {
+                    getStyleClass().add(flashClass);
+                }
+                else
+                {
+                    getStyleClass().remove(flashClass);
+                }
+            }));
+        }
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(3 * 200), e -> getStyleClass().remove(flashClass)));
+        timeline.play();
     }
     
     @Override

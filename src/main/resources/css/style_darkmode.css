@@ -287,6 +287,12 @@
     -fx-alignment: center-left;
 }
 
+.editor-window-flash {
+    -fx-border-color: rgb(100, 160, 255);
+    -fx-border-width: 2;
+    -fx-border-radius: 3;
+}
+
 .reorder-list .badge-label {
     -fx-background-color: -accent-color;
     -fx-text-fill: -text-color;
