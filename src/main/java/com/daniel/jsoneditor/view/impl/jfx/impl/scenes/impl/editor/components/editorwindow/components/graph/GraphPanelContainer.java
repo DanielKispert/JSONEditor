@@ -137,19 +137,23 @@ public class GraphPanelContainer extends HBox implements NavbarElement
         this.getChildren().add(mainContainer);
         
         // init() requires non-zero dimensions; defer until layout pass completes
-        graphView.widthProperty().addListener(new ChangeListener<>()
+        // Must listen on BOTH dimensions — whichever fires first may find the other still 0
+        final ChangeListener<Number> initListener = new ChangeListener<>()
         {
             @Override
             public void changed(ObservableValue<? extends Number> obs, Number oldVal, Number newVal)
             {
-                if (newVal.doubleValue() > 0 && graphView.getHeight() > 0)
+                if (graphView.getWidth() > 0 && graphView.getHeight() > 0)
                 {
                     graphView.widthProperty().removeListener(this);
+                    graphView.heightProperty().removeListener(this);
                     graphView.init();
                     graphView.update();
                 }
             }
-        });
+        };
+        graphView.widthProperty().addListener(initListener);
+        graphView.heightProperty().addListener(initListener);
     }
     
     private Collection<String> getAvailableEdgeNames()
