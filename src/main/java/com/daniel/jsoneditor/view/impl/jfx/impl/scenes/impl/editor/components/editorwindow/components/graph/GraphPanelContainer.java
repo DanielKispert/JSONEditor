@@ -136,20 +136,25 @@ public class GraphPanelContainer extends HBox implements NavbarElement
         HBox.setHgrow(mainContainer, Priority.ALWAYS);
         this.getChildren().add(mainContainer);
         
-        // init() requires non-zero dimensions; defer until layout pass completes
-        graphView.widthProperty().addListener(new ChangeListener<>()
+        // init() requires non-zero dimensions; defer until BOTH width and height are set.
+        // JavaFX calls resize(w, h) which sets width before height in the same layout pass,
+        // so listening on widthProperty alone would see height==0. Listen on both.
+        ChangeListener<Number> initListener = new ChangeListener<>()
         {
             @Override
             public void changed(ObservableValue<? extends Number> obs, Number oldVal, Number newVal)
             {
-                if (newVal.doubleValue() > 0 && graphView.getHeight() > 0)
+                if (graphView.getWidth() > 0 && graphView.getHeight() > 0)
                 {
                     graphView.widthProperty().removeListener(this);
+                    graphView.heightProperty().removeListener(this);
                     graphView.init();
                     graphView.update();
                 }
             }
-        });
+        };
+        graphView.widthProperty().addListener(initListener);
+        graphView.heightProperty().addListener(initListener);
     }
     
     private Collection<String> getAvailableEdgeNames()
