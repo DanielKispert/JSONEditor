@@ -136,10 +136,9 @@ public class GraphPanelContainer extends HBox implements NavbarElement
         HBox.setHgrow(mainContainer, Priority.ALWAYS);
         this.getChildren().add(mainContainer);
         
-        // init() requires non-zero dimensions; defer until BOTH width and height are set.
-        // JavaFX calls resize(w, h) which sets width before height in the same layout pass,
-        // so listening on widthProperty alone would see height==0. Listen on both.
-        ChangeListener<Number> initListener = new ChangeListener<>()
+        // init() requires non-zero dimensions; defer until layout pass completes
+        // Must listen on BOTH dimensions — whichever fires first may find the other still 0
+        final ChangeListener<Number> initListener = new ChangeListener<>()
         {
             @Override
             public void changed(ObservableValue<? extends Number> obs, Number oldVal, Number newVal)
