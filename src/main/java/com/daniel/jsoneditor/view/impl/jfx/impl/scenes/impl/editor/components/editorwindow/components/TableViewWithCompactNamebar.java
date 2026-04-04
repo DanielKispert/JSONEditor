@@ -94,19 +94,21 @@ public class TableViewWithCompactNamebar extends VBox implements Collapsible
     @Override
     protected double computeMinHeight(double v)
     {
-        return nameBar.getHeight();
+        // Include the table's minimum height so the SplitPane calculator can reserve
+        // enough space for each panel to show at least a few rows.
+        return nameBar.prefHeight(v) + tableView.minHeight(v) + buttonBar.prefHeight(v);
     }
-    
+
     @Override
     protected double computePrefHeight(double v)
     {
         if (collapsed)
         {
-            return nameBar.getHeight();
+            return nameBar.prefHeight(v);
         }
         else
         {
-            return nameBar.getHeight() + tableView.prefHeight(v) + buttonBar.prefHeight(v);
+            return nameBar.prefHeight(v) + tableView.prefHeight(v) + buttonBar.prefHeight(v);
         }
     }
     

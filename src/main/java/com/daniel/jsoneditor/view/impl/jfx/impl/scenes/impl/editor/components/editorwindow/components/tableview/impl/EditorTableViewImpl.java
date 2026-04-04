@@ -180,20 +180,32 @@ public class EditorTableViewImpl extends EditorTableView
         return parentPath;
     }
     
-    /** JavaFX default row height used as estimate before the skin is available after the first layout pass */
-    private static final double DEFAULT_ROW_HEIGHT = 24.0;
+    /** Minimum number of data rows a panel should display before scrolling kicks in. */
+    static final int MIN_ROWS_FOR_SIZING = 3;
+
+    /**
+     * Estimated row height used for preferred-height calculations.
+     * JavaFX default cells are 24 px, but the dark-theme stylesheet adds padding that brings
+     * the actual rendered row height to approximately 40 px. Using the real height here ensures
+     * that panels with few rows are allocated exactly enough space to show all their rows.
+     */
+    static final double DEFAULT_ROW_HEIGHT = 40.0;
 
     @Override
     protected double computePrefHeight(double v)
     {
-        // super relies on TableViewSkin which is only available after the first layout pass.
-        // Before that it returns -1/0, which breaks AutoAdjustingSplitPane divider calculation.
-        final double superHeight = super.computePrefHeight(v);
-        if (superHeight > 0)
-        {
-            return superHeight;
-        }
+        // Row-count-based estimate. The +1 accounts for the header row.
         return (getItems().size() + 1) * DEFAULT_ROW_HEIGHT;
+    }
+
+    @Override
+    protected double computeMinHeight(double v)
+    {
+        // Cap the minimum at the actual row count so panels with fewer rows than MIN_ROWS_FOR_SIZING
+        // don't claim more space than they actually need. This prevents the SplitPane from
+        // allocating dead whitespace to small panels.
+        final int effectiveMinRows = Math.min(MIN_ROWS_FOR_SIZING, getItems().size());
+        return (effectiveMinRows + 1) * DEFAULT_ROW_HEIGHT;
     }
     
     public void setSelection(JsonNodeWithPath nodeWithPath)
