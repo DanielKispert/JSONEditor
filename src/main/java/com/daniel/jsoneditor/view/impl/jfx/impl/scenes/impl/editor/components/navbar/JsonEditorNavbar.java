@@ -1,5 +1,8 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar;
 
+import java.util.List;
+import java.util.function.Consumer;
+
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.buttons.DiffButton;
@@ -14,82 +17,52 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 /**
- * object with a button bar at the top and a window at the bottom for either seeing a graph or a navtree
+ * Container with a button bar at the top and a switchable view (tree or graph) below.
  */
 public class JsonEditorNavbar extends VBox
 {
-    private final ReadableModel model;
-    
-    private final Controller controller;
-    
-    private final Stage stage;
-    
-    private final EditorWindowManager editorWindowManager;
-    
-    private final HBox buttonBar;
-    
-    private final StackPane windowContainer;
-    
     private final EditorNavTree navTreeView;
     
     private final GraphPanelContainer graphView;
     
+    private final List<NavbarElement> elements;
     
     public JsonEditorNavbar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager, Stage stage)
     {
-        this.model = model;
-        this.controller = controller;
-        this.stage = stage;
-        this.editorWindowManager = editorWindowManager;
-        buttonBar = makeButtonBar();
         navTreeView = new EditorNavTree(this, model, controller, editorWindowManager, stage);
         graphView = GraphPanelContainer.create(controller, model);
-        windowContainer = makeWindowContainer();
+        elements = List.of(navTreeView, graphView);
+        
+        final HBox buttonBar = makeButtonBar(model, controller, editorWindowManager, stage);
+        final StackPane windowContainer = new StackPane(graphView, navTreeView);
+        VBox.setVgrow(windowContainer, Priority.ALWAYS);
+        
         getChildren().addAll(buttonBar, windowContainer);
         VBox.setVgrow(this, Priority.ALWAYS);
         HBox.setHgrow(this, Priority.ALWAYS);
     }
     
-    private HBox makeButtonBar()
+    private HBox makeButtonBar(ReadableModel model, Controller controller, EditorWindowManager editorWindowManager, Stage stage)
     {
-        HBox buttonBar = new HBox();
-        HistoryButton historyButton = new HistoryButton(controller, stage);
-        DiffButton diffButton = new DiffButton(controller, editorWindowManager, stage);
-        NavBarSwitchButton navBarSwitchButton = new NavBarSwitchButton(model, this);
+        final HBox buttonBar = new HBox();
+        final DiffButton diffButton = new DiffButton(controller, editorWindowManager, stage);
+        final HistoryButton historyButton = new HistoryButton(controller, stage);
+        final NavBarSwitchButton navBarSwitchButton = new NavBarSwitchButton(model, this);
         buttonBar.getChildren().addAll(diffButton, historyButton, navBarSwitchButton);
         HBox.setHgrow(buttonBar, Priority.NEVER);
         return buttonBar;
     }
     
-    private StackPane makeWindowContainer()
-    {
-        StackPane windowContainer = new StackPane();
-        windowContainer.getChildren().addAll(graphView, navTreeView);
-        VBox.setVgrow(windowContainer, Priority.ALWAYS);
-        return windowContainer;
-    }
-    
-    /**
-     * a new element is selected
-     */
     public void selectPath(String path)
     {
-        navTreeView.selectPath(path);
-        graphView.selectPath(path);
+        forEachElement(e -> e.selectPath(path));
     }
     
-    /**
-     * all elements in the navbar should update themselves with new information
-     */
     public void handleUpdate()
     {
-        navTreeView.updateView();
-        graphView.updateView();
+        forEachElement(NavbarElement::updateView);
     }
     
-    /**
-     * a single item at that path had its details changed
-     */
     public void updateNavbarItem(String path)
     {
         navTreeView.updateSingleElement(path);
@@ -109,46 +82,43 @@ public class JsonEditorNavbar extends VBox
         navTreeView.setVisible(false);
     }
     
-    // Granular update methods for specific model changes
     public void handlePathAdded(String path)
     {
-        navTreeView.handlePathAdded(path);
-        graphView.handlePathAdded(path);
+        forEachElement(e -> e.handlePathAdded(path));
     }
     
     public void handlePathRemoved(String path)
     {
-        navTreeView.handlePathRemoved(path);
-        graphView.handlePathRemoved(path);
+        forEachElement(e -> e.handlePathRemoved(path));
     }
     
     public void handlePathChanged(String path)
     {
-        navTreeView.handlePathChanged(path);
-        graphView.handlePathChanged(path);
+        forEachElement(e -> e.handlePathChanged(path));
     }
     
     public void handlePathMoved(String path)
     {
-        navTreeView.handlePathMoved(path);
-        graphView.handlePathMoved(path);
+        forEachElement(e -> e.handlePathMoved(path));
     }
     
     public void handlePathSorted(String path)
     {
-        navTreeView.handlePathSorted(path);
-        graphView.handlePathSorted(path);
+        forEachElement(e -> e.handlePathSorted(path));
     }
     
     public void handleRemovedSelection(String path)
     {
-        navTreeView.handleRemovedSelection(path);
-        graphView.handleRemovedSelection(path);
+        forEachElement(e -> e.handleRemovedSelection(path));
     }
     
     public void handleSettingsChanged()
     {
-        navTreeView.handleSettingsChanged();
-        graphView.handleSettingsChanged();
+        forEachElement(NavbarElement::handleSettingsChanged);
+    }
+    
+    private void forEachElement(Consumer<NavbarElement> action)
+    {
+        elements.forEach(action);
     }
 }

@@ -1,10 +1,12 @@
 package com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.navbar;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
@@ -14,7 +16,6 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.ImportDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.tooltips.TooltipHelper;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
@@ -32,17 +33,18 @@ import javafx.stage.Stage;
 
 public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarElement
 {
+    private static final int LARGE_ARRAY_THRESHOLD = 20;
+    private static final String PLACEHOLDER_STYLE_CLASS = "navbar-placeholder-cell";
+    
     private final ReadableModel model;
-    
     private final EditorWindowManager editorWindowManager;
-    
     private final Controller controller;
-    
     private final Stage stage;
-    
     private final JsonEditorNavbar navbar;
-    
     private String selectedPath;
+    
+    private final Set<String> fullyExpandedArrays = new HashSet<>();
+    private final Set<String> visitedItemPaths = new HashSet<>();
     
     public EditorNavTree(JsonEditorNavbar navbar, ReadableModel model, Controller controller, EditorWindowManager editorWindowManager,
             Stage stage)
@@ -55,211 +57,158 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         SplitPane.setResizableWithParent(this, false);
         setRoot(makeTree());
         setContextMenu(makeContextMenu());
-        setOnMouseClicked(mouseEvent -> {
-            if (mouseEvent.getButton().equals(MouseButton.PRIMARY) && mouseEvent.getClickCount() == 2)
+        setOnMouseClicked(e -> {
+            if (e.getButton().equals(MouseButton.PRIMARY) && e.getClickCount() == 2)
             {
-                TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
-                if (selectedItem != null)
-                {
-                    EditorNavTree.this.handleNavbarClick(selectedItem);
-                }
+                handleSelectedItemClick();
             }
         });
-        setOnKeyReleased(keyEvent -> {
-            if (keyEvent.getCode() == KeyCode.ENTER)
+        setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.ENTER)
             {
-                TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
-                if (selectedItem != null)
-                {
-                    EditorNavTree.this.handleNavbarClick(selectedItem);
-                }
+                handleSelectedItemClick();
             }
         });
-        setCellFactory(tv -> new TreeCell<>()
-        {
-            private Tooltip tooltip = null;
-            
-            @Override
-            public void updateItem(JsonNodeWithPath item, boolean empty)
-            {
-                super.updateItem(item, empty);
-                if (empty)
-                {
-                    setText(null);
-                    setTooltip(null);
-                }
-                else
-                {
-                    setText(item.toString());
-                    hoverProperty().addListener((observable, wasHovered, isNowHovered) -> {
-                        if (isNowHovered && (tooltip == null || !tooltip.getText().equals(item.getDisplayName())))
-                        {
-                            tooltip = TooltipHelper.makeTooltipFromJsonNode(item.getNode());
-                            setTooltip(tooltip);
-                        }
-                    });
-                }
-            }
-        });
-        
+        setCellFactory(tv -> new NavbarTreeCell());
         addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+    }
+    
+    private void handleSelectedItemClick()
+    {
+        final TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
+        if (selectedItem != null)
+        {
+            handleNavbarClick(selectedItem);
+        }
+    }
+    
+    private static class NavbarTreeCell extends TreeCell<JsonNodeWithPath>
+    {
+        private Tooltip tooltip;
+        
+        NavbarTreeCell()
+        {
+            hoverProperty().addListener((obs, wasHovered, isNowHovered) -> {
+                final JsonNodeWithPath item = getItem();
+                if (isNowHovered && item != null && !(getTreeItem() instanceof NavbarPlaceholderItem))
+                {
+                    if (tooltip == null || !tooltip.getText().equals(item.getDisplayName()))
+                    {
+                        tooltip = TooltipHelper.makeTooltipFromJsonNode(item.getNode());
+                        setTooltip(tooltip);
+                    }
+                }
+            });
+        }
+        
+        @Override
+        protected void updateItem(JsonNodeWithPath item, boolean empty)
+        {
+            super.updateItem(item, empty);
+            if (empty || item == null)
+            {
+                setText(null);
+                setTooltip(null);
+                setTranslateX(0);
+                getStyleClass().remove(PLACEHOLDER_STYLE_CLASS);
+            }
+            else if (getTreeItem() instanceof NavbarPlaceholderItem)
+            {
+                setText(((NavbarPlaceholderItem) getTreeItem()).getDisplayText());
+                setTooltip(null);
+                // shift one indent level to the left so it aligns with its siblings' parent
+                setTranslateX(-10);
+                if (!getStyleClass().contains(PLACEHOLDER_STYLE_CLASS))
+                {
+                    getStyleClass().add(PLACEHOLDER_STYLE_CLASS);
+                }
+            }
+            else
+            {
+                setText(item.toString());
+                setTranslateX(0);
+                getStyleClass().remove(PLACEHOLDER_STYLE_CLASS);
+            }
+        }
+    }
+    
+    private void withSelectedPath(Consumer<String> action)
+    {
+        final TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
+        if (selectedItem != null)
+        {
+            action.accept(selectedItem.getValue().getPath());
+        }
     }
     
     private void handleKeyPressed(KeyEvent event)
     {
         if (new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).match(event))
         {
-            copy();
+            withSelectedPath(controller::copyToClipboard);
         }
         else if (new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN).match(event))
         {
-            paste();
-        }
-    }
-    
-    private void copy()
-    {
-        TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
-        if (selectedItem != null)
-        {
-            controller.copyToClipboard(selectedItem.getValue().getPath());
-        }
-    }
-    
-    private void paste()
-    {
-        TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
-        if (selectedItem != null)
-        {
-            controller.pasteFromClipboardReplacingChild(selectedItem.getValue().getPath());
+            withSelectedPath(controller::pasteFromClipboardReplacingChild);
         }
     }
     
     private ContextMenu makeContextMenu()
     {
-        ContextMenu contextMenu = new ContextMenu();
+        final ContextMenu contextMenu = new ContextMenu();
         
-        MenuItem addItemItem = new MenuItem("Add Item");
-        MenuItem duplicateItem = new MenuItem("Duplicate Item");
-        MenuItem newWindowItem = new MenuItem("Open in new Window");
-        MenuItem copyItem = new MenuItem("Copy");
-        MenuItem pasteItem = new MenuItem("Paste");
-        MenuItem deleteItem = new MenuItem("Delete");
-        MenuItem sortArray = new MenuItem("Sort");
-        MenuItem importItem = new MenuItem("Import");
-        MenuItem exportItem = new MenuItem("Export");
-        MenuItem exportWithDependenciesItem = new MenuItem("Export with Dependencies");
+        final MenuItem addItemItem = new MenuItem("Add Item");
+        final MenuItem duplicateItem = new MenuItem("Duplicate Item");
+        final MenuItem newWindowItem = new MenuItem("Open in new Window");
+        final MenuItem copyItem = new MenuItem("Copy");
+        final MenuItem pasteItem = new MenuItem("Paste");
+        final MenuItem deleteItem = new MenuItem("Delete");
+        final MenuItem sortArray = new MenuItem("Sort");
+        final MenuItem importItem = new MenuItem("Import");
+        final MenuItem exportItem = new MenuItem("Export");
+        final MenuItem exportWithDependenciesItem = new MenuItem("Export with Dependencies");
         
-        copyItem.setOnAction(event -> copy());
-        pasteItem.setOnAction(event -> paste());
-        addItemItem.setOnAction(event -> {
-            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem != null)
+        copyItem.setOnAction(e -> withSelectedPath(controller::copyToClipboard));
+        pasteItem.setOnAction(e -> withSelectedPath(controller::pasteFromClipboardReplacingChild));
+        addItemItem.setOnAction(e -> withSelectedPath(controller::addNewNodeToArray));
+        sortArray.setOnAction(e -> withSelectedPath(controller::sortArray));
+        deleteItem.setOnAction(e -> withSelectedPath(p -> controller.removeNodes(List.of(p))));
+        exportItem.setOnAction(e -> withSelectedPath(controller::exportNode));
+        exportWithDependenciesItem.setOnAction(e -> withSelectedPath(controller::exportNodeWithDependencies));
+        newWindowItem.setOnAction(e -> withSelectedPath(p -> editorWindowManager.openInNewWindowIfPossible(p, false)));
+        duplicateItem.setOnAction(e -> {
+            final TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
+            if (selectedItem != null && selectedItem.getParent() != null && selectedItem.getParent().getValue().isArray())
             {
-                JsonNodeWithPath selectedNode = selectedItem.getValue();
-                controller.addNewNodeToArray(selectedNode.getPath());
+                controller.duplicateArrayNode(selectedItem.getValue().getPath());
             }
         });
-        duplicateItem.setOnAction(event -> {
-            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem != null && selectedItem.getParent() != null)
-            {
-                TreeItem<JsonNodeWithPath> parentItem = selectedItem.getParent();
-                JsonNodeWithPath selectedNode = selectedItem.getValue();
-                
-                if (parentItem.getValue().isArray())
-                {
-                    controller.duplicateArrayNode(selectedNode.getPath());
-                }
-            }
-        });
-        newWindowItem.setOnAction(actionEvent -> {
-            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem != null)
-            {
-                JsonNodeWithPath selectedNode = selectedItem.getValue();
-                //directly opening from the navbar should not open the parent
-                editorWindowManager.openInNewWindowIfPossible(selectedNode.getPath(), false);
-            }
-        });
-        sortArray.setOnAction(actionEvent -> {
-            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem != null)
-            {
-                JsonNodeWithPath selectedNode = selectedItem.getValue();
-                controller.sortArray(selectedNode.getPath());
-            }
-        });
-        deleteItem.setOnAction(actionEvent -> {
-            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem != null)
-            {
-                JsonNodeWithPath selectedNode = selectedItem.getValue();
-                controller.removeNodes(List.of(selectedNode.getPath()));
-            }
-        });
-        importItem.setOnAction(event -> {
-            final TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem == null)
-            {
-                return;
-            }
-            ImportDialog importDialog = new ImportDialog(stage);
-            Optional<String> importResult = importDialog.showAndWait();
-            if (importResult.isPresent())
-            {
-                String jsonToImport = importResult.get();
-                jsonToImport = controller.resolveVariablesInJson(jsonToImport);
-                controller.importAtNode(selectedItem.getValue().getPath(), jsonToImport);
-            }
-        });
-        exportItem.setOnAction(event -> {
-            final TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem == null)
-            {
-                return;
-            }
-            controller.exportNode(selectedItem.getValue().getPath());
-        });
-        exportWithDependenciesItem.setOnAction(event -> {
-            final TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
-            if (selectedItem == null)
-            {
-                return;
-            }
-            controller.exportNodeWithDependencies(selectedItem.getValue().getPath());
-        });
+        importItem.setOnAction(e -> withSelectedPath(path -> {
+            new ImportDialog(stage).showAndWait().ifPresent(json -> {
+                controller.importAtNode(path, controller.resolveVariablesInJson(json));
+            });
+        }));
         
         contextMenu.getItems().addAll(newWindowItem, addItemItem, copyItem, pasteItem, duplicateItem, sortArray, importItem, exportItem,
                 exportWithDependenciesItem, deleteItem);
         
-        this.setOnContextMenuRequested(event -> {
-            TreeItem<JsonNodeWithPath> selectedItem = this.getSelectionModel().getSelectedItem();
+        setOnContextMenuRequested(event -> {
+            final TreeItem<JsonNodeWithPath> selectedItem = getSelectionModel().getSelectedItem();
             if (selectedItem != null)
             {
                 if (selectedItem.getParent() != null)
                 {
-                    boolean isArrayItem = selectedItem.getParent().getValue().isArray();
-                    duplicateItem.setVisible(isArrayItem);
+                    duplicateItem.setVisible(selectedItem.getParent().getValue().isArray());
                 }
-                if (selectedItem.getValue().isArray())
-                {
-                    addItemItem.setVisible(true);
-                    sortArray.setVisible(true);
-                }
-                else
-                {
-                    addItemItem.setVisible(false);
-                    sortArray.setVisible(false);
-                }
+                final boolean isArray = selectedItem.getValue().isArray();
+                addItemItem.setVisible(isArray);
+                sortArray.setVisible(isArray);
             }
             else
             {
                 duplicateItem.setVisible(false);
             }
-            // only show the prompt to display in a new window if the maximum window amount is not reached
             newWindowItem.setVisible(editorWindowManager.canAnotherWindowBeAdded());
-            
         });
         
         return contextMenu;
@@ -268,7 +217,7 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     private NavbarItem makeTree()
     {
         model.getRootJson();
-        NavbarItem root = new NavbarItem(model, "");
+        final NavbarItem root = new NavbarItem(model, "");
         root.setExpanded(true);
         populateItem(root);
         return root;
@@ -276,12 +225,12 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     
     private void populateItem(NavbarItem item)
     {
-        JsonNode node = item.getValue().getNode();
-        if (node.getNodeType().equals(JsonNodeType.OBJECT))
+        final JsonNode node = item.getValue().getNode();
+        if (node.isObject())
         {
             populateForObject(item);
         }
-        else if (JsonNodeType.ARRAY.equals(node.getNodeType()))
+        else if (node.isArray())
         {
             populateForArray(item);
         }
@@ -289,16 +238,14 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     
     private void populateForObject(NavbarItem parent)
     {
-        Iterator<Map.Entry<String, JsonNode>> fields = parent.getValue().getNode().fields();
-        String pathForFields = parent.getValue().getPath() + "/";
+        final Iterator<Map.Entry<String, JsonNode>> fields = parent.getValue().getNode().fields();
+        final String pathPrefix = parent.getValue().getPath() + "/";
         while (fields.hasNext())
         {
-            Map.Entry<String, JsonNode> field = fields.next();
-            JsonNode value = field.getValue();
-            if (value.getNodeType() == JsonNodeType.OBJECT || value.getNodeType() == JsonNodeType.ARRAY)
+            final Map.Entry<String, JsonNode> field = fields.next();
+            if (field.getValue().isContainerNode())
             {
-                String pathForNode = pathForFields + field.getKey();
-                NavbarItem child = new NavbarItem(model, pathForNode);
+                final NavbarItem child = new NavbarItem(model, pathPrefix + field.getKey());
                 populateItem(child);
                 parent.getChildren().add(child);
             }
@@ -307,48 +254,78 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
     
     private void populateForArray(NavbarItem parent)
     {
-        String pathForItems = parent.getValue().getPath() + "/";
+        final String arrayPath = parent.getValue().getPath();
+        final JsonNode arrayNode = parent.getValue().getNode();
+        final boolean showAll = arrayNode.size() <= LARGE_ARRAY_THRESHOLD || fullyExpandedArrays.contains(arrayPath);
+        final String pathPrefix = arrayPath + "/";
         int index = 0;
-        for (JsonNode item : parent.getValue().getNode())
+        int hiddenCount = 0;
+        for (final JsonNode item : arrayNode)
         {
-            if (item.getNodeType() == JsonNodeType.OBJECT || item.getNodeType() == JsonNodeType.ARRAY)
+            if (item.isContainerNode())
             {
-                String pathForNode = pathForItems + index++;
-                NavbarItem child = new NavbarItem(model, pathForNode);
-                populateItem(child);
-                parent.getChildren().add(child);
+                final String pathForNode = pathPrefix + index;
+                if (showAll || visitedItemPaths.contains(pathForNode) || pathForNode.equals(selectedPath))
+                {
+                    final NavbarItem child = new NavbarItem(model, pathForNode);
+                    populateItem(child);
+                    parent.getChildren().add(child);
+                }
+                else
+                {
+                    hiddenCount++;
+                }
             }
+            index++;
+        }
+        if (hiddenCount > 0)
+        {
+            parent.getChildren().add(new NavbarPlaceholderItem(hiddenCount, arrayPath));
         }
     }
     
     private void handleNavbarClick(TreeItem<JsonNodeWithPath> item)
     {
-        if (item != null)
+        if (item instanceof NavbarPlaceholderItem)
         {
-            String path = item.getValue().getPath();
-            this.selectedPath = path;
-            // the navbar just tells the editor view to open this node, nothing is sent to the model or controller yet
-            editorWindowManager.openPath(path, false); //directly opening an item should not open its parent
-            navbar.selectPath(path);
+            final NavbarPlaceholderItem placeholder = (NavbarPlaceholderItem) item;
+            fullyExpandedArrays.add(placeholder.getParentArrayPath());
+            repopulateChildren(placeholder.getParentArrayPath());
+            return;
+        }
+        final String path = item.getValue().getPath();
+        this.selectedPath = path;
+        visitedItemPaths.add(path);
+        editorWindowManager.openPath(path, false);
+        navbar.selectPath(path);
+    }
+    
+    private void repopulateChildren(String path)
+    {
+        final TreeItem<JsonNodeWithPath> treeItem = findNavbarItem(getRoot(), path);
+        if (treeItem != null)
+        {
+            final boolean wasExpanded = treeItem.isExpanded();
+            treeItem.getChildren().clear();
+            populateItem((NavbarItem) treeItem);
+            treeItem.setExpanded(wasExpanded);
         }
     }
     
     @Override
     public void updateSingleElement(String path)
     {
-        TreeItem<JsonNodeWithPath> rootItem = getRoot();
-        TreeItem<JsonNodeWithPath> itemToUpdate = findNavbarItem(rootItem, path);
+        final TreeItem<JsonNodeWithPath> itemToUpdate = findNavbarItem(getRoot(), path);
         if (itemToUpdate != null)
         {
             itemToUpdate.setValue(model.getNodeForPath(path));
         }
         else
         {
-            TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(rootItem, PathHelper.getParentPath(path));
+            final TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(getRoot(), PathHelper.getParentPath(path));
             if (parentItem != null)
             {
-                JsonNodeWithPath newNode = model.getNodeForPath(path);
-                NavbarItem newItem = new NavbarItem(model, newNode.getPath());
+                final NavbarItem newItem = new NavbarItem(model, path);
                 populateItem(newItem);
                 parentItem.getChildren().add(newItem);
             }
@@ -366,24 +343,43 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         {
             return null;
         }
-        for (TreeItem<JsonNodeWithPath> childItem : currentItem.getChildren())
+        for (final TreeItem<JsonNodeWithPath> childItem : currentItem.getChildren())
         {
-            TreeItem<JsonNodeWithPath> foundItem = findNavbarItem(childItem, path);
-            if (foundItem != null)
+            final TreeItem<JsonNodeWithPath> found = findNavbarItem(childItem, path);
+            if (found != null)
             {
-                return foundItem;
+                return found;
             }
         }
         return null;
     }
     
+    @Override
     public void selectPath(String path)
     {
         if (!Objects.equals(selectedPath, path))
         {
             selectedPath = path;
-            TreeItem<JsonNodeWithPath> root = getRoot();
-            selectNodeByPath(root, path);
+            if (path != null && visitedItemPaths.add(path))
+            {
+                ensureVisibleInLargeArray(path);
+            }
+            selectNodeByPath(getRoot(), path);
+        }
+    }
+    
+    private void ensureVisibleInLargeArray(String path)
+    {
+        final String parentPath = PathHelper.getParentPath(path);
+        if (parentPath == null)
+        {
+            return;
+        }
+        final JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
+        if (parentNode != null && parentNode.isArray() && parentNode.getNode().size() > LARGE_ARRAY_THRESHOLD
+                && !fullyExpandedArrays.contains(parentPath))
+        {
+            repopulateChildren(parentPath);
         }
     }
     
@@ -400,12 +396,11 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
             scrollTo(getRow(node));
             return;
         }
-        // prune subtrees that cannot contain the target path
         if (!path.startsWith(nodePath.isEmpty() ? "" : nodePath + "/"))
         {
             return;
         }
-        for (TreeItem<JsonNodeWithPath> child : node.getChildren())
+        for (final TreeItem<JsonNodeWithPath> child : node.getChildren())
         {
             selectNodeByPath(child, path);
         }
@@ -417,90 +412,93 @@ public class EditorNavTree extends TreeView<JsonNodeWithPath> implements NavbarE
         setRoot(makeTree());
     }
     
+    @Override
     public void handlePathAdded(String path)
     {
-        final TreeItem<JsonNodeWithPath> rootItem = getRoot();
-        final String parentPath = PathHelper.getParentPath(path);
-        final TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(rootItem, parentPath);
-        
+        visitedItemPaths.add(path);
+        final TreeItem<JsonNodeWithPath> parentItem = findNavbarItem(getRoot(), PathHelper.getParentPath(path));
         if (parentItem != null)
         {
             final JsonNodeWithPath newNode = model.getNodeForPath(path);
-            if (newNode != null && (newNode.isObject() || newNode.isArray()))
+            if (newNode != null && newNode.getNode().isContainerNode())
             {
                 final NavbarItem newItem = new NavbarItem(model, path);
                 populateItem(newItem);
-                parentItem.getChildren().add(newItem);
+                final int insertIndex = findPlaceholderIndex(parentItem);
+                parentItem.getChildren().add(insertIndex, newItem);
                 parentItem.setExpanded(true);
             }
         }
     }
     
+    private int findPlaceholderIndex(TreeItem<JsonNodeWithPath> parent)
+    {
+        final List<TreeItem<JsonNodeWithPath>> children = parent.getChildren();
+        for (int i = 0; i < children.size(); i++)
+        {
+            if (children.get(i) instanceof NavbarPlaceholderItem)
+            {
+                return i;
+            }
+        }
+        return children.size();
+    }
+    
+    @Override
     public void handlePathRemoved(String path)
     {
-        final TreeItem<JsonNodeWithPath> rootItem = getRoot();
-        final TreeItem<JsonNodeWithPath> itemToRemove = findNavbarItem(rootItem, path);
-        
+        visitedItemPaths.remove(path);
+        final TreeItem<JsonNodeWithPath> itemToRemove = findNavbarItem(getRoot(), path);
         if (itemToRemove != null && itemToRemove.getParent() != null)
         {
             final TreeItem<JsonNodeWithPath> parent = itemToRemove.getParent();
             parent.getChildren().remove(itemToRemove);
-            
             if (parent.getValue() != null && parent.getValue().isArray())
             {
                 parent.setValue(model.getNodeForPath(parent.getValue().getPath()));
                 parent.getChildren().clear();
                 populateItem((NavbarItem) parent);
             }
-            
-            if (path.equals(selectedPath))
-            {
-                getSelectionModel().clearSelection();
-                selectedPath = null;
-            }
+            clearSelectionIfMatch(path);
         }
     }
     
+    @Override
     public void handlePathChanged(String path)
     {
         updateSingleElement(path);
     }
     
+    @Override
     public void handlePathMoved(String path)
     {
-        final TreeItem<JsonNodeWithPath> rootItem = getRoot();
-        final TreeItem<JsonNodeWithPath> arrayItem = findNavbarItem(rootItem, path);
-        
-        if (arrayItem != null)
-        {
-            arrayItem.getChildren().clear();
-            populateItem((NavbarItem) arrayItem);
-        }
+        repopulateChildren(path);
     }
     
+    @Override
     public void handlePathSorted(String path)
     {
-        final TreeItem<JsonNodeWithPath> rootItem = getRoot();
-        final TreeItem<JsonNodeWithPath> sortedItem = findNavbarItem(rootItem, path);
-        
-        if (sortedItem != null)
-        {
-            sortedItem.getChildren().clear();
-            populateItem((NavbarItem) sortedItem);
-        }
+        repopulateChildren(path);
     }
     
+    @Override
     public void handleRemovedSelection(String path)
+    {
+        clearSelectionIfMatch(path);
+    }
+    
+    @Override
+    public void handleSettingsChanged()
+    {
+        updateView();
+    }
+    
+    private void clearSelectionIfMatch(String path)
     {
         if (path.equals(selectedPath))
         {
             getSelectionModel().clearSelection();
             selectedPath = null;
         }
-    }
-    
-    public void handleSettingsChanged()
-    {
-        updateView();
     }
 }

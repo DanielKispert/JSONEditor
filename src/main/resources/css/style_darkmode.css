@@ -287,6 +287,11 @@
     -fx-alignment: center-left;
 }
 
+.navbar-placeholder-cell {
+    -fx-font-style: italic;
+    -fx-text-fill: #888888;
+}
+
 .editor-window-flash {
     -fx-border-color: rgb(100, 160, 255);
     -fx-border-width: 2;

@@ -135,9 +135,7 @@ public class GraphPanelContainer extends HBox implements NavbarElement
         
         HBox.setHgrow(mainContainer, Priority.ALWAYS);
         this.getChildren().add(mainContainer);
-        
         // init() requires non-zero dimensions; defer until layout pass completes
-        // Must listen on BOTH dimensions — whichever fires first may find the other still 0
         final ChangeListener<Number> initListener = new ChangeListener<>()
         {
             @Override
