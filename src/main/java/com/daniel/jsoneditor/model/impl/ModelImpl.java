@@ -758,15 +758,18 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
 
     /**
      * Tries to resolve a path segment through composite schema keywords (anyOf, oneOf, allOf).
-     * Returns the sub-schema for the segment from the first matching branch, or null if none matches.
+     * Searches all keywords for an exact property match first, then falls back to the first
+     * resolvable branch if no exact match is found.
      *
-     * @param schemaNode the schema node that may contain anyOf/oneOf/allOf
+     * @param schemaNode  the schema node that may contain anyOf/oneOf/allOf
      * @param pathSegment the path segment to look up
      * @return the resolved sub-schema or null
      */
     private JsonNode resolveCompositeSchema(JsonNode schemaNode, String pathSegment)
     {
-        for (final String keyword : new String[]{"anyOf", "oneOf", "allOf"})
+        final String[] keywords = {"anyOf", "oneOf", "allOf"};
+        // First pass: look for an exact property match across all composite keywords
+        for (final String keyword : keywords)
         {
             final JsonNode branches = schemaNode.get(keyword);
             if (branches == null || !branches.isArray())
@@ -794,7 +797,15 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
                     return resolved.get("items");
                 }
             }
-            // no exact property match — return first resolvable branch as best-effort
+        }
+        // No exact match — fall back to first resolvable branch across all keywords
+        for (final String keyword : keywords)
+        {
+            final JsonNode branches = schemaNode.get(keyword);
+            if (branches == null || !branches.isArray())
+            {
+                continue;
+            }
             for (final JsonNode branch : branches)
             {
                 final JsonNode resolved = resolveRef(branch);

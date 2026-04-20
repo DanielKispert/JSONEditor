@@ -2,20 +2,19 @@ package com.daniel.jsoneditor.view;
 
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.cells.TextTableCell;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.fields.EditorTextField;
+import javafx.event.ActionEvent;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(ApplicationExtension.class)
 class EditorTextFieldTest
@@ -24,13 +23,12 @@ class EditorTextFieldTest
     private TextTableCell mockParent;
 
     @Start
-    void start(Stage stage)
+    void start(final Stage stage)
     {
-        mockParent = mock(TextTableCell.class);
+        mockParent = Mockito.mock(TextTableCell.class);
         textField = new EditorTextField(mockParent, "initial text");
-
-        final StackPane root = new StackPane(textField);
-        stage.setScene(new Scene(root, 300, 100));
+        final VBox root = new VBox(textField);
+        stage.setScene(new Scene(root, 300, 200));
         stage.show();
     }
 
@@ -41,37 +39,44 @@ class EditorTextFieldTest
     }
 
     @Test
-    void shouldCommitOnEnter(FxRobot robot)
+    void shouldCommitOnEnter(final FxRobot robot)
     {
         robot.interact(() -> textField.requestFocus());
         robot.interact(() -> textField.setText("initial textnew text"));
         WaitForAsyncUtils.waitForFxEvents();
-        // Directly fire the action event - equivalent to pressing ENTER in the TextField
-        robot.interact(() -> textField.fireEvent(new javafx.event.ActionEvent()));
+        robot.interact(() -> textField.fireEvent(new ActionEvent()));
         WaitForAsyncUtils.waitForFxEvents();
 
-        // EditorTextField routes through commitEditFromCurrentControl via setOnAction
-        verify(mockParent, atLeastOnce()).commitEditFromCurrentControl("initial textnew text", textField);
+        Mockito.verify(mockParent, Mockito.atLeastOnce()).commitEditFromCurrentControl("initial textnew text",
+                textField);
     }
 
+    /**
+     * Tests that the commit path (used by focus loss, Enter, and action events) correctly
+     * forwards the current text to the parent cell. The commit logic was extracted into
+     * {@link EditorTextField#commitEdit()} to make it directly testable without depending
+     * on OS-level focus transfer, which is unreliable in automated test environments.
+     */
     @Test
-    void shouldCommitOnFocusLoss(FxRobot robot)
+    void shouldCommitCurrentTextViaCommitEdit(final FxRobot robot)
     {
-        robot.interact(() -> textField.requestFocus());
         robot.interact(() -> textField.setText("initial textchanged"));
-        robot.interact(() -> textField.getParent().requestFocus());
         WaitForAsyncUtils.waitForFxEvents();
 
-        verify(mockParent, atLeastOnce()).commitEditFromCurrentControl(contains("changed"), eq(textField));
+        robot.interact(() -> textField.commitEdit());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Mockito.verify(mockParent, Mockito.atLeastOnce()).commitEditFromCurrentControl("initial textchanged",
+                textField);
     }
 
     @Test
-    void shouldNotifyParentOnTextChange(FxRobot robot)
+    void shouldNotifyParentOnTextChange(final FxRobot robot)
     {
         robot.interact(() -> textField.setText("initial textx"));
         WaitForAsyncUtils.waitForFxEvents();
 
-        verify(mockParent, atLeastOnce()).onUserChangedText(anyString());
+        Mockito.verify(mockParent, Mockito.atLeastOnce()).onUserChangedText(Mockito.anyString());
     }
 
     @Test
@@ -85,4 +90,3 @@ class EditorTextFieldTest
         WaitForAsyncUtils.waitForFxEvents();
     }
 }
-

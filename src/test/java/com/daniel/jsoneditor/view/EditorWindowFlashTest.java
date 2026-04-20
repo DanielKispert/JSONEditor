@@ -1,12 +1,11 @@
 package com.daniel.jsoneditor.view;
 
-import javafx.animation.KeyFrame;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.FlashHelper;
 import javafx.animation.Timeline;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -100,28 +99,11 @@ class EditorWindowFlashTest
      */
     static class FlashableVBox extends VBox
     {
+        private Timeline flashTimeline;
+
         void flash()
         {
-            requestFocus();
-            final String flashClass = FLASH_CLASS;
-            final Timeline timeline = new Timeline();
-            for (int i = 0; i < 3; i++)
-            {
-                final boolean on = (i % 2 == 0);
-                timeline.getKeyFrames().add(new KeyFrame(Duration.millis(i * 200), e -> {
-                    if (on)
-                    {
-                        getStyleClass().add(flashClass);
-                    }
-                    else
-                    {
-                        getStyleClass().remove(flashClass);
-                    }
-                }));
-            }
-            timeline.getKeyFrames().add(new KeyFrame(Duration.millis(3 * 200), e -> getStyleClass().remove(flashClass)));
-            timeline.play();
+            flashTimeline = FlashHelper.flash(this, flashTimeline, FLASH_CLASS);
         }
     }
 }
-
