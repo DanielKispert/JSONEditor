@@ -9,7 +9,7 @@ public enum Toasts implements ToastLike
     IMPORT_SUCCESSFUL_TOAST("Import successful", Color.GREEN),
     IMPORT_VALIDATION_FAILED_TOAST("Import failed: Schema validation error", Color.RED),
     IMPORT_PARSING_FAILED_TOAST("Import failed: Invalid JSON format", Color.RED),
-    EXPORT_SUCCESSFUL_TOAST("Export succeessful", Color.GREEN),
+    EXPORT_SUCCESSFUL_TOAST("Export successful", Color.GREEN),
     REFRESH_SUCCESSFUL_TOAST("Reloaded", Color.GREEN),
     COPIED_TO_CLIPBOARD_TOAST("Copied to clipboard", Color.GREEN),
     ERROR_TOAST("Error", Color.RED),

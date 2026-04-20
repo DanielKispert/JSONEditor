@@ -194,8 +194,10 @@ public class EditorTableViewImpl extends EditorTableView
     @Override
     protected double computePrefHeight(double v)
     {
-        // Row-count-based estimate. The +1 accounts for the header row.
-        return (getItems().size() + 1) * DEFAULT_ROW_HEIGHT;
+        // Row-count-based estimate: header + data rows + one empty buffer row.
+        // The buffer row gives the table a small visual margin so the SplitPane
+        // does not allocate excessive extra space beyond the actual content.
+        return (getItems().size() + 2) * DEFAULT_ROW_HEIGHT;
     }
 
     @Override

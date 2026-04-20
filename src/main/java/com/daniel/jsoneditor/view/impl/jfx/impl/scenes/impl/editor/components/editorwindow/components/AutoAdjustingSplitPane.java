@@ -60,12 +60,8 @@ public class AutoAdjustingSplitPane extends SplitPane
     }
 
     /**
-     * Recomputes all divider positions using sqrt-weighted proportional allocation.
-     *
-     * <p>Each panel's preferred height is converted to a sqrt-based weight so that panels
-     * with many rows receive more space, but not linearly more — preventing a single large
-     * table from dominating the layout.  The actual math is delegated to
-     * {@link DividerPositionCalculator} which is pure logic and unit-tested independently.</p>
+     * Recomputes all divider positions by delegating to
+     * {@link DividerPositionCalculator#calculateFromPreferredAndMinimumSizes}.
      */
     private void recalculateDividerPositions()
     {
@@ -75,20 +71,18 @@ public class AutoAdjustingSplitPane extends SplitPane
             return;
         }
         final boolean vertical = getOrientation() == Orientation.VERTICAL;
-        final double[] weights = new double[n];
+        final double[] prefSizes = new double[n];
         final double[] minSizes = new double[n];
         for (int i = 0; i < n; i++)
         {
             final Node item = getItems().get(i);
-            final double pref = vertical ? item.prefHeight(-1) : item.prefWidth(-1);
-            final double min = vertical ? item.minHeight(-1) : item.minWidth(-1);
-            // Weight = sqrt(pref - min): panels that are already "full" (pref ≈ min) get weight 0
-            // and receive no extra space. Only panels that could show more rows get a share.
-            weights[i] = Math.sqrt(Math.max(pref - min, 0));
-            minSizes[i] = Math.max(min, 0);
+            prefSizes[i] = Math.max(vertical ? item.prefHeight(-1) : item.prefWidth(-1), 0);
+            minSizes[i] = Math.max(vertical ? item.minHeight(-1) : item.minWidth(-1), 0);
         }
         final double available = vertical ? getHeight() : getWidth();
-        final double[] positions = DividerPositionCalculator.calculate(weights, minSizes, available);
+        final double[] positions =
+                DividerPositionCalculator.calculateFromPreferredAndMinimumSizes(prefSizes, minSizes,
+                        available);
         setDividerPositions(positions);
     }
 
