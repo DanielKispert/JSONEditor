@@ -54,6 +54,17 @@ public class JsonEditorEditorWindow extends VBox
     private boolean gitBlameVisible = false;
     
     private Timeline flashTimeline;
+
+    /**
+     * Minimum width an editor window should occupy so the namebar and at least a few table columns remain usable.
+     */
+    private static final double MIN_EDITOR_WIDTH = 250;
+    
+    /**
+     * Upper bound for the preferred width reported to the parent split pane.  Capping prevents a single window
+     * with many table columns from claiming a disproportionate share of horizontal space.
+     */
+    private static final double MAX_EDITOR_PREF_WIDTH = 500;
     
     public JsonEditorEditorWindow(EditorWindowManager manager, ReadableModel model, Controller controller)
     {
@@ -64,7 +75,7 @@ public class JsonEditorEditorWindow extends VBox
         editorTables = new AutoAdjustingSplitPane();
         editorTables.setOrientation(javafx.geometry.Orientation.VERTICAL);
         mainTableView = new EditorTableViewImpl(manager, this, model, controller);
-        nameBar = new JsonEditorNamebar(manager, this, model, controller);
+        nameBar = new JsonEditorNamebar(manager, this, model, controller, mainTableView);
         buttonBar = new TableViewButtonBar(model, controller, mainTableView::getCurrentlyDisplayedPaths, () -> selectedPath);
         
         VBox.setVgrow(buttonBar, Priority.NEVER);
@@ -326,6 +337,7 @@ public class JsonEditorEditorWindow extends VBox
      */
     public void refreshVisibilityToggleButtons()
     {
+        nameBar.refreshButtonVisibility();
         for (TableViewWithCompactNamebar childTable : childTableViews)
         {
             childTable.refreshButtonVisibility();
@@ -387,10 +399,16 @@ public class JsonEditorEditorWindow extends VBox
     }
     
     @Override
+    protected double computeMinWidth(double v)
+    {
+        return MIN_EDITOR_WIDTH;
+    }
+    
+    @Override
     protected double computePrefWidth(double v)
     {
-        // the preferred width of the editor window is the highest width of all its children, so nameBar, editorTables and buttonBar
-        double prefWidth = Math.max(nameBar.prefWidth(v), editorTables.prefWidth(v));
-        return Math.max(prefWidth, buttonBar.prefWidth(v));
+        double contentBased = Math.max(nameBar.prefWidth(v), editorTables.prefWidth(v));
+        contentBased = Math.max(contentBased, buttonBar.prefWidth(v));
+        return Math.min(Math.max(contentBased, MIN_EDITOR_WIDTH), MAX_EDITOR_PREF_WIDTH);
     }
 }

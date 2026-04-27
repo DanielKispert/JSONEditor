@@ -10,6 +10,7 @@ import com.daniel.jsoneditor.view.impl.jfx.buttons.WindowGitBlameToggleButton;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.AreYouSureDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
+import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.EditorTableView;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -17,6 +18,8 @@ import javafx.scene.control.Label;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.ReorderButton;
+import com.daniel.jsoneditor.view.impl.jfx.buttons.VisibilityToggleButton;
 
 
 public class JsonEditorNamebar extends HBox
@@ -37,7 +40,12 @@ public class JsonEditorNamebar extends HBox
     
     private final ShowUsagesButton showUsagesButton;
     
-    public JsonEditorNamebar(EditorWindowManager manager, JsonEditorEditorWindow editorWindow, ReadableModel model, Controller controller)
+    private final ReorderButton reorderButton;
+    
+    private final VisibilityToggleButton visibilityToggleButton;
+    
+    public JsonEditorNamebar(EditorWindowManager manager, JsonEditorEditorWindow editorWindow, ReadableModel model, Controller controller,
+            EditorTableView mainTableView)
     {
         super();
         this.manager = manager;
@@ -50,7 +58,15 @@ public class JsonEditorNamebar extends HBox
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
         showUsagesButton = new ShowUsagesButton(model, manager, controller.getSettingsController());
         
-        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, showUsagesButton);
+        reorderButton = new ReorderButton(model, controller, () -> selectedPath);
+        reorderButton.setVisible(false);
+        reorderButton.setManaged(false);
+        visibilityToggleButton = new VisibilityToggleButton(mainTableView);
+        visibilityToggleButton.setVisible(false);
+        visibilityToggleButton.setManaged(false);
+        
+        this.getChildren().addAll(makeSelectInNavbarButton(), makeGoToParentButton(), nameLabel, reorderButton,
+                visibilityToggleButton, showUsagesButton);
         
         if (model.isGitBlameAvailable())
         {
@@ -74,6 +90,27 @@ public class JsonEditorNamebar extends HBox
         }
         nameLabel.setText(selection.makeNameIncludingPath(model));
         showUsagesButton.setSelection(selection);
+        final boolean isArray = selection.isArray();
+        reorderButton.setVisible(isArray);
+        reorderButton.setManaged(isArray);
+        final boolean showVisibilityToggle = isArray && controller.getSettingsController().hideEmptyColumns();
+        visibilityToggleButton.setVisible(showVisibilityToggle);
+        visibilityToggleButton.setManaged(showVisibilityToggle);
+    }
+
+    /**
+     * Refreshes visibility of array-specific buttons when settings change.
+     */
+    public void refreshButtonVisibility()
+    {
+        if (selectedPath != null)
+        {
+            final JsonNodeWithPath currentNode = model.getNodeForPath(selectedPath);
+            if (currentNode != null)
+            {
+                setSelection(currentNode);
+            }
+        }
     }
     
     private Button makeSelectInNavbarButton()

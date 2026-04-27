@@ -159,9 +159,17 @@ public final class DividerPositionCalculator
     /**
      * Returns equal divider positions (1/n, 2/n, …) used as fallback when the available
      * size is not yet known.
+     *
+     * @param panelCount number of panels; must be &ge; 2 for meaningful results
+     * @return array of {@code panelCount - 1} divider positions, or an empty array for fewer
+     *         than 2 panels
      */
     private static double[] equalPositions(int panelCount)
     {
+        if (panelCount < 2)
+        {
+            return new double[0];
+        }
         final double[] positions = new double[panelCount - 1];
         for (int i = 0; i < positions.length; i++)
         {
