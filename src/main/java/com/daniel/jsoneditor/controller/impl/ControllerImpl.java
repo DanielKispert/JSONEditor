@@ -29,6 +29,7 @@ import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.validation.ReferenceValidator;
@@ -408,15 +409,31 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void setValueAtPath(String path, Object value)
     {
-        final JsonNode candidateNode = buildCandidateNode(value);
-        final JsonSchema subschema = readableModel.getSubschemaForPath(path);
-        if (!SchemaHelper.validateJsonWithSchema(candidateNode, subschema))
+        final String parentPath = PathHelper.getParentPath(path);
+        final String propertyName = PathHelper.getLastPathSegment(path);
+        
+        // Validate by building a candidate parent object with the change applied, then checking it against the parent schema.
+        // This way we check for both correct format and correct structure (required properties etc)
+        final JsonNodeWithPath parentNodeWithPath = readableModel.getNodeForPath(parentPath);
+        if (parentNodeWithPath == null || !parentNodeWithPath.getNode().isObject())
+        {
+            return;
+        }
+        final ObjectNode candidateParent = parentNodeWithPath.getNode().deepCopy();
+        if (value == null)
+        {
+            candidateParent.remove(propertyName);
+        }
+        else
+        {
+            candidateParent.set(propertyName, buildCandidateNode(value));
+        }
+        final JsonSchema parentSchema = readableModel.getSubschemaForPath(parentPath);
+        if (parentSchema != null && !SchemaHelper.validateJsonWithSchema(candidateParent, parentSchema))
         {
             view.showToast(Toasts.VALUE_VALIDATION_FAILED_TOAST);
             return;
         }
-        final String parentPath = PathHelper.getParentPath(path);
-        final String propertyName = PathHelper.getLastPathSegment(path);
         commandManager.executeCommand(commandFactory.setValueAtNodeCommand(parentPath, propertyName, value));
     }
 

@@ -1,5 +1,7 @@
 package com.daniel.jsoneditor.model;
 
+import java.io.File;
+
 import com.daniel.jsoneditor.model.impl.ModelImpl;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
@@ -14,9 +16,9 @@ import com.networknt.schema.SpecVersion;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class SchemaAndValidationTest
@@ -152,6 +154,54 @@ public class SchemaAndValidationTest
             final JsonNode textNode = JsonNodeFactory.instance.textNode("hello");
             assertFalse(SchemaHelper.validateJsonWithSchema(textNode, schema));
         }
+
+        /**
+         * Documents and verifies the parent-object validation approach for property changes.
+         * Instead of validating individual values against property schemas (which wrongly rejects
+         * NullNode for optional enum properties), the controller builds a candidate parent object
+         * with the change applied and validates that against the parent schema.
+         */
+        @Test
+        void parentObjectValidationHandlesOptionalEnumRemoval()
+        {
+            final ObjectNode enumSchema = MAPPER.createObjectNode();
+            enumSchema.put("type", "string");
+            enumSchema.set("enum", MAPPER.createArrayNode().add("active").add("inactive"));
+
+            // NullNode fails property-level enum validation — the old approach's root cause
+            assertFalse(SchemaHelper.validateJsonWithSchema(
+                    JsonNodeFactory.instance.nullNode(), SCHEMA_FACTORY.getSchema(enumSchema)),
+                    "NullNode must fail property-level enum validation (root cause of the old bug)");
+
+            // Parent schema: required "status" + optional "operationstatus"
+            final ObjectNode parentSchema = MAPPER.createObjectNode();
+            parentSchema.put("type", "object");
+            final ObjectNode properties = MAPPER.createObjectNode();
+            properties.set("status", enumSchema.deepCopy());
+            properties.set("operationstatus", enumSchema.deepCopy());
+            parentSchema.set("properties", properties);
+            parentSchema.set("required", MAPPER.createArrayNode().add("status"));
+            final JsonSchema parentJsonSchema = SCHEMA_FACTORY.getSchema(parentSchema);
+
+            // Candidate parent with optional property removed → must pass
+            final ObjectNode candidateWithoutOptional = MAPPER.createObjectNode();
+            candidateWithoutOptional.put("status", "active");
+            assertTrue(SchemaHelper.validateJsonWithSchema(candidateWithoutOptional, parentJsonSchema),
+                    "Parent object without optional property must pass validation");
+
+            // Candidate parent with required property removed → must fail
+            final ObjectNode candidateWithoutRequired = MAPPER.createObjectNode();
+            candidateWithoutRequired.put("operationstatus", "active");
+            assertFalse(SchemaHelper.validateJsonWithSchema(candidateWithoutRequired, parentJsonSchema),
+                    "Parent object without required property must fail validation");
+
+            // Candidate parent with invalid enum value → must fail
+            final ObjectNode candidateWithInvalidValue = MAPPER.createObjectNode();
+            candidateWithInvalidValue.put("status", "active");
+            candidateWithInvalidValue.put("operationstatus", "bogus");
+            assertFalse(SchemaHelper.validateJsonWithSchema(candidateWithInvalidValue, parentJsonSchema),
+                    "Parent object with invalid enum value must fail validation");
+        }
     }
 
     @Nested
@@ -175,4 +225,3 @@ public class SchemaAndValidationTest
         }
     }
 }
-
