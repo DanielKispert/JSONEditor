@@ -1,22 +1,15 @@
 package com.daniel.jsoneditor.model.mcp;
 
-import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 
 
 /**
  * Base class for write MCP tools that can modify the model state.
- * These tools can change the JSON document via WritableModel operations.
  */
-public abstract class WriteMcpTool extends McpTool
+public abstract class WriteMcpTool extends ReadOnlyMcpTool
 {
-    protected final WritableModel model;
-
-    protected WriteMcpTool(final WritableModel model)
+    protected WriteMcpTool(final FileSessionManager sessionManager)
     {
-        if (model == null)
-        {
-            throw new IllegalArgumentException("model cannot be null");
-        }
-        this.model = model;
+        super(sessionManager);
     }
 }

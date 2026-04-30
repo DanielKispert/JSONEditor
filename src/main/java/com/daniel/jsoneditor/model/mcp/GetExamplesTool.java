@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,9 +18,9 @@ class GetExamplesTool extends ReadOnlyMcpTool
     private static final Logger logger = LoggerFactory.getLogger(GetExamplesTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
-    public GetExamplesTool(final ReadableModel model)
+    public GetExamplesTool(final FileSessionManager sessionManager)
     {
-        super(model);
+        super(sessionManager);
     }
     
     @Override
@@ -37,13 +38,17 @@ class GetExamplesTool extends ReadOnlyMcpTool
     @Override
     public ObjectNode getInputSchema()
     {
-        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get examples for (e.g., /processes/0)");
+        final ObjectNode props = McpToolRegistry.createSchemaWithProperty("path", "string",
+                "JSON path to get examples for (e.g., /processes/0)");
+        addFileIdProperty(props);
+        return props;
     }
 
     @Override
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        addFileIdRequired(arr);
         arr.add("path");
         return arr;
     }
@@ -51,6 +56,12 @@ class GetExamplesTool extends ReadOnlyMcpTool
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
+        final ReadableModel model = resolveModel(arguments);
+        if (model == null)
+        {
+            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "Unknown file_id");
+        }
+        
         final String path = arguments.path("path").asText("");
         
         final List<String> examples = model.getStringExamplesForPath(path);

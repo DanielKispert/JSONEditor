@@ -3,8 +3,8 @@ package com.daniel.jsoneditor.controller.mcp;
 import java.io.IOException;
 
 import com.daniel.jsoneditor.controller.settings.SettingsController;
-import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.mcp.JsonEditorMcpServer;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +16,9 @@ public class McpController
     
     private final SettingsController settingsController;
     
-    public McpController(final WritableModel writableModel, final SettingsController settingsController)
+    public McpController(final FileSessionManager sessionManager, final SettingsController settingsController)
     {
-        this.mcpServer = new JsonEditorMcpServer(writableModel);
+        this.mcpServer = new JsonEditorMcpServer(sessionManager);
         this.settingsController = settingsController;
     }
     

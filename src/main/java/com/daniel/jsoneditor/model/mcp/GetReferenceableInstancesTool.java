@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.model.mcp;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInstance;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,9 +20,9 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
     private static final Logger logger = LoggerFactory.getLogger(GetReferenceableInstancesTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
-    public GetReferenceableInstancesTool(final ReadableModel model)
+    public GetReferenceableInstancesTool(final FileSessionManager sessionManager)
     {
-        super(model);
+        super(sessionManager);
     }
     
     @Override
@@ -39,14 +40,17 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
     @Override
     public ObjectNode getInputSchema()
     {
-        return McpToolRegistry.createSchemaWithProperty("referencing_key", "string",
+        final ObjectNode props = McpToolRegistry.createSchemaWithProperty("referencing_key", "string",
                 "The referencing key of the referenceable object type");
+        addFileIdProperty(props);
+        return props;
     }
 
     @Override
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        addFileIdRequired(arr);
         arr.add("referencing_key");
         return arr;
     }
@@ -54,6 +58,12 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
+        final ReadableModel model = resolveModel(arguments);
+        if (model == null)
+        {
+            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "Unknown file_id");
+        }
+        
         final String referencingKey = arguments.path("referencing_key").asText("");
         
         final ReferenceableObject refObject = model.getReferenceableObjectByReferencingKey(referencingKey);

@@ -1,6 +1,6 @@
 package com.daniel.jsoneditor.model.mcp;
 
-import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,20 +24,23 @@ public class McpToolRegistry
     private final List<McpTool> tools;
     
     /**
-     * Create registry with both read-only and write tools.
-     * Write tools use WritableModel to modify the JSON document.
-     * WritableModel extends ReadableModel, so read-only tools work with it too.
+     * Create registry with all available tools backed by a FileSessionManager.
+     *
+     * @param sessionManager manages all open file sessions
      */
-    public McpToolRegistry(final WritableModel model)
+    public McpToolRegistry(final FileSessionManager sessionManager)
     {
         this.tools = List.of(
-                new GetFileInfoTool(model),
-                new GetNodeTool(model),
-                new GetSchemaForPathTool(model),
-                new GetExamplesTool(model),
-                new GetReferenceableObjectsTool(model),
-                new GetReferenceableInstancesTool(model),
-                new FindReferencesToTool(model)
+                new ListFilesTool(sessionManager),
+                new OpenFileTool(sessionManager),
+                new CloseFileTool(sessionManager),
+                new GetFileInfoTool(sessionManager),
+                new GetNodeTool(sessionManager),
+                new GetSchemaForPathTool(sessionManager),
+                new GetExamplesTool(sessionManager),
+                new GetReferenceableObjectsTool(sessionManager),
+                new GetReferenceableInstancesTool(sessionManager),
+                new FindReferencesToTool(sessionManager)
         );
     }
     

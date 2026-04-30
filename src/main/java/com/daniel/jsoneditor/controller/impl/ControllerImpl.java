@@ -28,6 +28,7 @@ import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.daniel.jsoneditor.model.settings.Settings;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -72,6 +73,10 @@ public class ControllerImpl implements Controller, Observer
     
     private final McpController mcpController;
     
+    private final FileSessionManager fileSessionManager;
+    
+    private String guiSessionId;
+    
     private boolean updateCheckDone;
     
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
@@ -84,7 +89,8 @@ public class ControllerImpl implements Controller, Observer
         this.subjects = new ArrayList<>();
         this.view = new ViewImpl(readableModel, this, stage);
         this.view.observe(this.readableModel.getForObservation());
-        this.mcpController = new McpController(model, settingsController);
+        this.fileSessionManager = new FileSessionManager();
+        this.mcpController = new McpController(fileSessionManager, settingsController);
         
         // Set up callback for unsaved changes notifications from CommandManager
         this.commandManager.setUnsavedChangesCallback(this::updateWindowTitle);
@@ -198,6 +204,11 @@ public class ControllerImpl implements Controller, Observer
                     }
                 }
                 model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
+                if (guiSessionId != null)
+                {
+                    fileSessionManager.unregisterGuiSession(guiSessionId);
+                }
+                guiSessionId = fileSessionManager.registerGuiSession(readableModel, jsonFile, schemaFile);
             });
             
         }
@@ -673,6 +684,10 @@ public class ControllerImpl implements Controller, Observer
     public void shutdown()
     {
         logger.info("Shutting down application");
+        if (guiSessionId != null)
+        {
+            fileSessionManager.unregisterGuiSession(guiSessionId);
+        }
         mcpController.stopMcpServer();
     }
 }

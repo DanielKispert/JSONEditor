@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,9 +19,9 @@ class GetReferenceableObjectsTool extends ReadOnlyMcpTool
     private static final Logger logger = LoggerFactory.getLogger(GetReferenceableObjectsTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
-    public GetReferenceableObjectsTool(final ReadableModel model)
+    public GetReferenceableObjectsTool(final FileSessionManager sessionManager)
     {
-        super(model);
+        super(sessionManager);
     }
     
     @Override
@@ -38,12 +39,28 @@ class GetReferenceableObjectsTool extends ReadOnlyMcpTool
     @Override
     public ObjectNode getInputSchema()
     {
-        return OBJECT_MAPPER.createObjectNode();
+        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
+        addFileIdProperty(props);
+        return props;
+    }
+    
+    @Override
+    public ArrayNode getRequiredInputProperties()
+    {
+        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        addFileIdRequired(arr);
+        return arr;
     }
     
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
+        final ReadableModel model = resolveModel(arguments);
+        if (model == null)
+        {
+            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "Unknown file_id");
+        }
+        
         final List<ReferenceableObject> objects = model.getReferenceableObjects();
         final ArrayNode result = OBJECT_MAPPER.createArrayNode();
         

@@ -1,6 +1,8 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,8 +13,8 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Example write tool that sets a value at a specific path.
- * Uncomment in McpToolRegistry to enable.
+ * Write tool that sets a value at a specific path.
+ * Not registered in McpToolRegistry by default (read-only mode).
  */
 class SetNodeTool extends WriteMcpTool
 {
@@ -20,9 +22,9 @@ class SetNodeTool extends WriteMcpTool
     
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
-    public SetNodeTool(final WritableModel model)
+    public SetNodeTool(final FileSessionManager sessionManager)
     {
-        super(model);
+        super(sessionManager);
     }
     
     @Override
@@ -41,6 +43,7 @@ class SetNodeTool extends WriteMcpTool
     public ObjectNode getInputSchema()
     {
         final ObjectNode props = OBJECT_MAPPER.createObjectNode();
+        addFileIdProperty(props);
         
         final ObjectNode pathProp = OBJECT_MAPPER.createObjectNode();
         pathProp.put("type", "string");
@@ -63,6 +66,7 @@ class SetNodeTool extends WriteMcpTool
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        addFileIdRequired(arr);
         arr.add("path");
         arr.add("property");
         arr.add("value");
@@ -72,6 +76,12 @@ class SetNodeTool extends WriteMcpTool
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
+        final ReadableModel readableModel = resolveModel(arguments);
+        if (!(readableModel instanceof WritableModel model))
+        {
+            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "Unknown file_id or session is read-only");
+        }
+        
         final String path = arguments.path("path").asText("");
         final String property = arguments.path("property").asText("");
         final JsonNode valueNode = arguments.path("value");

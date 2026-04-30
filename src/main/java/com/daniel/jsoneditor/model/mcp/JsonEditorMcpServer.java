@@ -1,6 +1,6 @@
 package com.daniel.jsoneditor.model.mcp;
 
-import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.daniel.jsoneditor.util.VersionUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -57,19 +57,17 @@ public class JsonEditorMcpServer
     private volatile boolean running;
     
     /**
-     * Creates MCP server with both readable and writable model.
-     * WritableModel is passed to registry for future write-tool support.
-     * Currently only read-only tools are enabled in registry.
+     * Creates MCP server backed by a FileSessionManager for multi-file support.
      *
-     * @param writableModel for read and write operations (passed to tools when enabled)
+     * @param sessionManager manages all open file sessions
      */
-    public JsonEditorMcpServer(final WritableModel writableModel)
+    public JsonEditorMcpServer(final FileSessionManager sessionManager)
     {
-        if (writableModel == null)
+        if (sessionManager == null)
         {
-            throw new IllegalArgumentException("writableModel cannot be null");
+            throw new IllegalArgumentException("sessionManager cannot be null");
         }
-        this.toolRegistry = new McpToolRegistry(writableModel);
+        this.toolRegistry = new McpToolRegistry(sessionManager);
         this.running = false;
     }
     

@@ -86,7 +86,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     @Override
     public File getCurrentSchemaFile()
     {
-        return null;
+        return schemaFile;
     }
     
     @Override
