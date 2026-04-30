@@ -10,7 +10,7 @@ import com.daniel.jsoneditor.model.WritableModel;
 public abstract class WriteMcpTool extends McpTool
 {
     protected final WritableModel model;
-    
+
     protected WriteMcpTool(final WritableModel model)
     {
         if (model == null)

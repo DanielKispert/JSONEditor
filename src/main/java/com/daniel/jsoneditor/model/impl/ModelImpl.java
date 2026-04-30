@@ -145,7 +145,15 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         {
             gitBlameIntegration.initialize(json.toPath()).thenRun(() -> {
                 logger.info("Git blame loading completed");
-                Platform.runLater(() -> sendEvent(new Event(EventEnum.GIT_BLAME_LOADED)));
+                try
+                {
+                    Platform.runLater(() -> sendEvent(new Event(EventEnum.GIT_BLAME_LOADED)));
+                }
+                catch (IllegalStateException e)
+                {
+                    // JavaFX not initialized (headless mode)
+                    sendEvent(new Event(EventEnum.GIT_BLAME_LOADED));
+                }
             });
         }
     }
