@@ -106,4 +106,13 @@ public interface Controller
      */
     void shutdown();
 
+    /**
+     * Manually triggers an update check against GitHub releases. Always shows a result toast.
+     */
+    void checkForUpdate();
+
+    /**
+     * Silently checks for updates (no toast if already on latest). Only runs once per session.
+     */
+    void checkForUpdateSilently();
 }

@@ -16,6 +16,7 @@ import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterIm
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
 import com.daniel.jsoneditor.controller.mcp.McpController;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
+import com.daniel.jsoneditor.controller.settings.UpdateService;
 import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
@@ -42,6 +43,7 @@ import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
+import javafx.application.Platform;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.paint.Color;
@@ -69,6 +71,8 @@ public class ControllerImpl implements Controller, Observer
     private final CommandFactory commandFactory;
     
     private final McpController mcpController;
+    
+    private boolean updateCheckDone;
     
     public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
     {
@@ -132,6 +136,47 @@ public class ControllerImpl implements Controller, Observer
     {
         model.sendEvent(new Event(EventEnum.READ_JSON_AND_SCHEMA));
     }
+    
+    @Override
+    public void checkForUpdate()
+    {
+        UpdateService.checkForUpdateAsync(result ->
+                Platform.runLater(() ->
+                {
+                    if (result.updateAvailable())
+                    {
+                        view.showCustomToast(buildUpdateAvailableMessage(result.latestVersion()), Color.DODGERBLUE);
+                    }
+                    else
+                    {
+                        view.showCustomToast("You are on the latest version", Color.GREEN);
+                    }
+                }));
+    }
+    
+    @Override
+    public void checkForUpdateSilently()
+    {
+        if (updateCheckDone)
+        {
+            return;
+        }
+        updateCheckDone = true;
+        UpdateService.checkForUpdateAsync(result ->
+        {
+            if (result.updateAvailable())
+            {
+                Platform.runLater(() -> view.showCustomToast(buildUpdateAvailableMessage(result.latestVersion()), Color.DODGERBLUE));
+            }
+        });
+    }
+    
+    private static String buildUpdateAvailableMessage(final String latestVersion)
+    {
+        return "Update available: v" + latestVersion + " — visit GitHub to download";
+    }
+    
+    
     
     @Override
     public void jsonAndSchemaSelected(File jsonFile, File schemaFile, File settingsFile)
