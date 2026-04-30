@@ -57,6 +57,7 @@ public class ViewImpl implements View
                 {
                     controller.getMcpController().startMcpServer();
                 }
+                controller.checkForUpdateSilently();
                 break;
             case RESET_SUCCESSFUL:
                 showToast(Toasts.REFRESH_SUCCESSFUL_TOAST);

@@ -31,16 +31,19 @@ Every user mutation is a `Command` (`model/commands/Command.java`):
 1. Instantiate via `model.getCommandFactory().<method>()` – never use `new` directly from the View/Controller
 2. Execute via `controller.getCommandManager().executeCommand(cmd)` – this handles the undo stack
 3. `execute()` returns `List<ModelChange>` – semantic diffs used for UI refresh and undo stack
-4. `ModelChange` has static factories: `ModelChange.add(path, node)`, `.remove(path, old)`, `.set(path, old, new)`, `.move(...)`
+4. `ModelChange` has static factories: `ModelChange.add(path, node)`, `.remove(path, old)`, `.replace(path, old, new)`, `.move(...)`, `.sort(path, oldSnapshot, newSnapshot)`
 5. `isUndoable()` defaults `true`; override to `false` for non-reversible ops
 6. Extend `BaseCommand` for any command that directly mutates `WritableModelInternal`
+7. Commands have a `CommandCategory` (`STRUCTURE`, `VALUE`, `NODE`, `OTHER`) for classification
+8. `ReferenceableObjectCommand` – marker interface for commands that create referenceable objects; exposes `getCreatedObjectPath()`
 
 All concrete commands live in `model/commands/impl/`. `CommandFactory` lists all available commands.
 
 ## Event / State Flow
 After any model change the controller calls `model.sendEvent(new Event(EventEnum.X))`.  
 The `View` observes the model via `Observer.update()` and reads `model.getLatestEvent()` to decide what to refresh.  
-`EventEnum` (in `model/statemachine/impl/`) lists all state transitions – check it first when adding new UI reactions.
+`EventEnum` (in `model/statemachine/impl/`) lists all state transitions – check it first when adding new UI reactions.  
+Notable event: `COMMAND_APPLIED` fires after any command execute/undo/redo with metadata attached.
 
 ## Key Data Type
 **`JsonNodeWithPath`** (`model/json/JsonNodeWithPath.java`) – a Jackson `JsonNode` + its JSON Pointer path string (`/foo/bar/0`). Used everywhere as the primary node reference. Paths use `/`-separated JSON Pointer syntax.
@@ -61,6 +64,7 @@ UIHandlerImpl → SceneHandlerImpl
                         └── editorwindow/
                               ├── tableview/   (array nodes → table)
                               └── graph/       (reference graph view)
+              tooltips/        (TooltipHelper)
 ```
 UI components are in `view/impl/jfx/impl/scenes/impl/editor/components/`.  
 `EditorWindowManager` decides which sub-editor to render based on the selected node type.
@@ -75,8 +79,17 @@ private static final Logger logger = LoggerFactory.getLogger(MyClass.class);
 - **`JsonDiffer`** (`model/diff/JsonDiffer.java`) – static `calculateDiff(savedJson, currentJson, model)` returns `List<DiffEntry>` of what changed vs. disk. Used for the unsaved-changes indicator.
 - **Git blame** (`model/git/`) – `GitBlameService` loads blame info per path; triggers `EventEnum.GIT_BLAME_LOADED`. `JsonPathToLineMapper` maps JSON Pointer paths to source line numbers.
 
+## Validation
+`model/validation/` contains `ReferenceValidator` for cross-node reference validation. `ValidationResult` and `ValidationError` carry structured error info.
+
 ## MCP Server
-`McpController` wraps `JsonEditorMcpServer` (model-context-protocol). Starts on a configured port; exposes model write operations to external AI agents. Port set via `SettingsController.getMcpServerPort()`.
+`McpController` wraps `JsonEditorMcpServer` (model-context-protocol). Starts on a configured port; exposes model operations to external AI agents. Port set via `SettingsController.getMcpServerPort()`.
+
+Tools are registered in `McpToolRegistry` (`model/mcp/`). Two base classes:
+- `ReadOnlyMcpTool` – reads from `ReadableModel` (e.g., `GetNodeTool`, `GetSchemaForPathTool`, `GetFileInfoTool`)
+- `WriteMcpTool` – mutates via `WritableModel` (e.g., `SetNodeTool`)
+
+`McpArgumentValidator` validates tool input against schemas before execution.
 
 ## Build & Packaging
 ```bash

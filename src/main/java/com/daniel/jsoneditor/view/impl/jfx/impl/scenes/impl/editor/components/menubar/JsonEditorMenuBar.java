@@ -65,9 +65,11 @@ public class JsonEditorMenuBar extends MenuBar
         inspectMenu.getItems().add(findItem);
         
         Menu helpMenu = new Menu("Help");
+        MenuItem checkForUpdatesItem = new MenuItem("Check for Updates...");
+        checkForUpdatesItem.setOnAction(event -> controller.checkForUpdate());
         MenuItem aboutItem = new MenuItem("About");
         aboutItem.setOnAction(event -> new AboutDialog().showAndWait());
-        helpMenu.getItems().add(aboutItem);
+        helpMenu.getItems().addAll(checkForUpdatesItem, aboutItem);
         getMenus().addAll(fileMenu, editMenu, viewMenu, inspectMenu, helpMenu);
     }
     
