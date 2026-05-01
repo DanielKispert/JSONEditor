@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.daniel.jsoneditor.controller.AppService;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManagerImpl;
@@ -17,7 +18,6 @@ import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
 import com.daniel.jsoneditor.controller.mcp.McpController;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.controller.settings.UpdateService;
-import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.commands.CommandFactory;
@@ -75,13 +75,18 @@ public class ControllerImpl implements Controller, Observer
     
     private final FileSessionManager fileSessionManager;
     
+    private final AppService appService;
+    
     private String guiSessionId;
     
     private boolean updateCheckDone;
     
-    public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
+    public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage, AppService appService)
     {
-        this.settingsController = new SettingsControllerImpl();
+        this.appService = appService;
+        this.settingsController = appService.getSettingsController();
+        this.fileSessionManager = appService.getFileSessionManager();
+        this.mcpController = appService.getMcpController();
         this.commandManager = new CommandManagerImpl(model);
         this.commandFactory = readableModel.getCommandFactory();
         this.model = model;
@@ -89,8 +94,6 @@ public class ControllerImpl implements Controller, Observer
         this.subjects = new ArrayList<>();
         this.view = new ViewImpl(readableModel, this, stage);
         this.view.observe(this.readableModel.getForObservation());
-        this.fileSessionManager = new FileSessionManager();
-        this.mcpController = new McpController(fileSessionManager, settingsController);
         
         // Set up callback for unsaved changes notifications from CommandManager
         this.commandManager.setUnsavedChangesCallback(this::updateWindowTitle);
@@ -453,7 +456,7 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void openNewJson()
     {
-        launchFinished();
+        appService.createWindow();
     }
     
     @Override
@@ -683,11 +686,10 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void shutdown()
     {
-        logger.info("Shutting down application");
+        logger.info("Shutting down editor window");
         if (guiSessionId != null)
         {
             fileSessionManager.unregisterGuiSession(guiSessionId);
         }
-        mcpController.stopMcpServer();
     }
 }
