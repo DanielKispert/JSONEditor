@@ -63,9 +63,9 @@ public class FileSessionManager
         final ModelImpl model = new ModelImpl(new EventSenderImpl());
         model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
         
-        final String sessionId = UUID.randomUUID().toString().substring(0, 8);
+        final String sessionId = generateUniqueId("");
         final EditorSession session = new EditorSession(sessionId, model, jsonFile, schemaFile, false);
-        sessions.put(sessionId, session);
+        sessions.putIfAbsent(sessionId, session);
         
         logger.info("Opened file session {} for {}", sessionId, jsonPath);
         return sessionId;
@@ -81,9 +81,9 @@ public class FileSessionManager
      */
     public String registerGuiSession(final ReadableModel model, final File jsonFile, final File schemaFile)
     {
-        final String sessionId = "gui-" + UUID.randomUUID().toString().substring(0, 8);
+        final String sessionId = generateUniqueId("gui-");
         final EditorSession session = new EditorSession(sessionId, model, jsonFile, schemaFile, true);
-        sessions.put(sessionId, session);
+        sessions.putIfAbsent(sessionId, session);
         logger.info("Registered GUI session {} for {}", sessionId, jsonFile != null ? jsonFile.getAbsolutePath() : "null");
         return sessionId;
     }
@@ -95,12 +95,15 @@ public class FileSessionManager
      */
     public void unregisterGuiSession(final String sessionId)
     {
-        final EditorSession session = sessions.get(sessionId);
-        if (session != null && session.guiOwned())
+        sessions.computeIfPresent(sessionId, (key, session) ->
         {
-            sessions.remove(sessionId);
-            logger.info("Unregistered GUI session {}", sessionId);
-        }
+            if (session.guiOwned())
+            {
+                logger.info("Unregistered GUI session {}", sessionId);
+                return null; // removes the entry
+            }
+            return session;
+        });
     }
     
     /**
@@ -111,19 +114,19 @@ public class FileSessionManager
      */
     public boolean closeFile(final String sessionId)
     {
-        final EditorSession session = sessions.get(sessionId);
-        if (session == null)
+        final boolean[] closed = {false};
+        sessions.computeIfPresent(sessionId, (key, session) ->
         {
-            return false;
-        }
-        if (session.guiOwned())
-        {
-            logger.warn("Cannot close GUI-owned session {} via MCP", sessionId);
-            return false;
-        }
-        sessions.remove(sessionId);
-        logger.info("Closed file session {}", sessionId);
-        return true;
+            if (session.guiOwned())
+            {
+                logger.warn("Cannot close GUI-owned session {} via MCP", sessionId);
+                return session; // keep it
+            }
+            logger.info("Closed file session {}", sessionId);
+            closed[0] = true;
+            return null; // removes the entry
+        });
+        return closed[0];
     }
     
     /**
@@ -141,5 +144,20 @@ public class FileSessionManager
     public List<EditorSession> listSessions()
     {
         return new ArrayList<>(sessions.values());
+    }
+
+    private String generateUniqueId(final String prefix)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            final String candidate = UUID.randomUUID().toString().substring(0, 8);
+            final String fullKey = prefix + candidate;
+            if (!sessions.containsKey(fullKey))
+            {
+                return fullKey;
+            }
+        }
+        // Fallback to full UUID if collisions persist
+        return prefix + UUID.randomUUID().toString();
     }
 }

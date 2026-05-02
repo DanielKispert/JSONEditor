@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  */
 public final class McpArgumentValidator
 {
-    private static final JsonSchemaFactory SCHEMA_FACTORY = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
+    private static final JsonSchemaFactory SCHEMA_FACTORY = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
     
     private McpArgumentValidator() { /* utility */ }
 

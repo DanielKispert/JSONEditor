@@ -57,7 +57,7 @@ public final class UpdateService
             }
             catch (Exception ex)
             {
-                logger.warn("Update check failed: {}", ex.getMessage());
+                logger.warn("Update check failed", ex);
                 callback.accept(new UpdateCheckResult(false, null));
             }
         }, "update-checker");
@@ -70,6 +70,7 @@ public final class UpdateService
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(RELEASES_URL))
                 .header("Accept", "application/vnd.github+json")
+                .header("User-Agent", "JSONEditor-UpdateCheck")
                 .timeout(Duration.ofSeconds(5))
                 .GET()
                 .build();
@@ -100,7 +101,7 @@ public final class UpdateService
             }
             catch (Exception e)
             {
-                logger.warn("Update check attempt {}/{} failed: {}", attempt + 1, MAX_RETRIES + 1, e.getMessage());
+                logger.warn("Update check attempt {}/{} failed", attempt + 1, MAX_RETRIES + 1, e);
             }
         }
         return new UpdateCheckResult(false, null);
@@ -123,7 +124,7 @@ public final class UpdateService
         }
         catch (Exception e)
         {
-            logger.warn("Failed to parse GitHub release response: {}", e.getMessage());
+            logger.warn("Failed to parse GitHub release response", e);
             return new UpdateCheckResult(false, null);
         }
     }
@@ -163,17 +164,18 @@ public final class UpdateService
     
     private static int[] parseSemver(final String version)
     {
-        final String[] parts = version.split("\\.");
+        // Strip pre-release suffix (e.g., "1.0.0-beta" → "1.0.0")
+        final String cleanVersion = version.contains("-") ? version.substring(0, version.indexOf('-')) : version;
+        final String[] parts = cleanVersion.split("\\.");
         final int[] result = new int[3];
         for (int i = 0; i < Math.min(parts.length, 3); i++)
         {
-            result[i] = Integer.parseInt(parts[i]);
+            result[i] = Integer.parseInt(parts[i].trim());
         }
         return result;
     }
+
 }
-
-
 
 
 

@@ -41,15 +41,16 @@ public class AppWindow
         });
     }
     
+    /** Returns this window's controller. */
     public Controller getController()
     {
         return controller;
     }
     
+    /** Returns this window's stage. */
     public Stage getStage()
     {
         return stage;
     }
 }
-
 

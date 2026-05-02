@@ -8,8 +8,9 @@ import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -26,7 +27,8 @@ public class AppService
     
     private final McpController mcpController;
     
-    private final List<AppWindow> windows = new ArrayList<>();
+    private final List<AppWindow> windows = new CopyOnWriteArrayList<>();
+    private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     
     public AppService()
     {
@@ -36,7 +38,7 @@ public class AppService
     }
     
     /**
-     * Creates and shows a new editor window.
+     * Creates a new editor window.
      *
      * @return the new window
      */
@@ -58,16 +60,19 @@ public class AppService
         }
     }
     
+    /** Returns the shared file session manager. */
     public FileSessionManager getFileSessionManager()
     {
         return fileSessionManager;
     }
     
+    /** Returns the shared settings controller. */
     public SettingsController getSettingsController()
     {
         return settingsController;
     }
     
+    /** Returns the shared MCP controller. */
     public McpController getMcpController()
     {
         return mcpController;
@@ -75,11 +80,15 @@ public class AppService
     
     /**
      * Shuts down all shared services. Called when the application exits.
+     * Safe to call multiple times – only the first invocation performs work.
      */
     public void shutdown()
     {
+        if (!shuttingDown.compareAndSet(false, true))
+        {
+            return;
+        }
         logger.info("Shutting down AppService");
         mcpController.stopMcpServer();
     }
 }
-
