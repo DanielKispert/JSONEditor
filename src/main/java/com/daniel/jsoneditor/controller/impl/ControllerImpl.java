@@ -176,8 +176,6 @@ public class ControllerImpl implements Controller, Observer
         return "Update available: v" + latestVersion + " — visit GitHub to download";
     }
     
-    
-    
     @Override
     public void jsonAndSchemaSelected(File jsonFile, File schemaFile, File settingsFile)
     {
