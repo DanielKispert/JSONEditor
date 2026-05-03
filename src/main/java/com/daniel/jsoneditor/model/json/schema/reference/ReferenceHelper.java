@@ -351,6 +351,10 @@ public class ReferenceHelper
             // check if we need a text or number node
             final JsonSchema keySchema = model.getSubschemaForPath(pathToNode + "/" + pathToKey);
             final List<String> types = keySchema != null ? SchemaHelper.getTypes(keySchema.getSchemaNode()) : null;
+            if (types == null || types.isEmpty())
+            {
+                return;
+            }
             if (types.contains("string"))
             {
                 ((ObjectNode) parentNode).set(keyParts[keyParts.length - 1], new TextNode(newKey));
@@ -366,7 +370,7 @@ public class ReferenceHelper
                     logger.error("Could not parse key to number: " + newKey);
                 }
             }
-            
+
         }
     }
     
