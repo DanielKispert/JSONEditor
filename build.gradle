@@ -83,3 +83,18 @@ runtime {
         skipInstaller = true
     }
 }
+
+task installLaunchAgent(type: Copy)
+{
+    description = 'Installs the macOS LaunchAgent to start the JSON Editor MCP server at login'
+    group = 'installation'
+    from 'src/main/resources/launchd/com.danielkispert.jsoneditor.plist'
+    into "${System.getProperty('user.home')}/Library/LaunchAgents"
+}
+
+task uninstallLaunchAgent(type: Delete)
+{
+    description = 'Removes the macOS LaunchAgent for the JSON Editor MCP server'
+    group = 'installation'
+    delete "${System.getProperty('user.home')}/Library/LaunchAgents/com.danielkispert.jsoneditor.plist"
+}

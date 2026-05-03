@@ -2,11 +2,13 @@ package com.daniel.jsoneditor.controller.mcp;
 
 import java.io.IOException;
 
+import com.daniel.jsoneditor.controller.AppService;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.mcp.JsonEditorMcpServer;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class McpController
 {
@@ -16,9 +18,14 @@ public class McpController
     
     private final SettingsController settingsController;
     
-    public McpController(final FileSessionManager sessionManager, final SettingsController settingsController)
+    /**
+     * Creates the MCP controller. Pass appService for GUI integration (ShowGuiTool),
+     * or null for standalone/headless mode.
+     */
+    public McpController(final FileSessionManager sessionManager, final SettingsController settingsController,
+                         final AppService appService)
     {
-        this.mcpServer = new JsonEditorMcpServer(sessionManager);
+        this.mcpServer = new JsonEditorMcpServer(sessionManager, appService);
         this.settingsController = settingsController;
     }
     

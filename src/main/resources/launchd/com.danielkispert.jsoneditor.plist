@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.danielkispert.jsoneditor</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Applications/JSON Editor.app/Contents/MacOS/JSON Editor</string>
+        <string>--headless</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/tmp/jsoneditor-mcp.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/jsoneditor-mcp.log</string>
+</dict>
+</plist>

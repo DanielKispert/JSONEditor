@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.daniel.jsoneditor.util.VersionUtil;
+import com.daniel.jsoneditor.controller.AppService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,18 +57,14 @@ public class JsonEditorMcpServer
     
     private volatile boolean running;
     
-    /**
-     * Creates MCP server backed by a FileSessionManager for multi-file support.
-     *
-     * @param sessionManager manages all open file sessions
-     */
-    public JsonEditorMcpServer(final FileSessionManager sessionManager)
+    /** Creates MCP server backed by a FileSessionManager for multi-file support. */
+    public JsonEditorMcpServer(final FileSessionManager sessionManager, final AppService appService)
     {
         if (sessionManager == null)
         {
             throw new IllegalArgumentException("sessionManager cannot be null");
         }
-        this.toolRegistry = new McpToolRegistry(sessionManager);
+        this.toolRegistry = new McpToolRegistry(sessionManager, appService);
         this.running = false;
     }
     

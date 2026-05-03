@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
+import com.daniel.jsoneditor.controller.AppService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.ArrayList;
 
 
 /**
@@ -24,24 +26,31 @@ public class McpToolRegistry
     private final List<McpTool> tools;
     
     /**
-     * Create registry with all available tools backed by a FileSessionManager.
+     * Create registry with all available tools. Pass null for headless mode. When
+     * appService is provided, the show_gui tool is registered for opening GUI
+     * windows on demand.
      *
      * @param sessionManager manages all open file sessions
+     * @param appService the app service for GUI integration, or null for headless mode
      */
-    public McpToolRegistry(final FileSessionManager sessionManager)
+    public McpToolRegistry(final FileSessionManager sessionManager, final AppService appService)
     {
-        this.tools = List.of(
-                new ListFilesTool(sessionManager),
-                new OpenFileTool(sessionManager),
-                new CloseFileTool(sessionManager),
-                new GetFileInfoTool(sessionManager),
-                new GetNodeTool(sessionManager),
-                new GetSchemaForPathTool(sessionManager),
-                new GetExamplesTool(sessionManager),
-                new GetReferenceableObjectsTool(sessionManager),
-                new GetReferenceableInstancesTool(sessionManager),
-                new FindReferencesToTool(sessionManager)
-        );
+        final List<McpTool> toolList = new ArrayList<>();
+        toolList.add(new ListFilesTool(sessionManager));
+        toolList.add(new OpenFileTool(sessionManager));
+        toolList.add(new CloseFileTool(sessionManager));
+        toolList.add(new GetFileInfoTool(sessionManager));
+        toolList.add(new GetNodeTool(sessionManager));
+        toolList.add(new GetSchemaForPathTool(sessionManager));
+        toolList.add(new GetExamplesTool(sessionManager));
+        toolList.add(new GetReferenceableObjectsTool(sessionManager));
+        toolList.add(new GetReferenceableInstancesTool(sessionManager));
+        toolList.add(new FindReferencesToTool(sessionManager));
+        if (appService != null)
+        {
+            toolList.add(new ShowGuiTool(appService));
+        }
+        this.tools = List.copyOf(toolList);
     }
     
     /**

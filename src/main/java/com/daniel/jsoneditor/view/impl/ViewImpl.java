@@ -52,11 +52,6 @@ public class ViewImpl implements View
                 break;
             case MAIN_EDITOR:
                 uiHandler.showMainEditor();
-                //autostart if enabled
-                if (controller.getSettingsController().isMcpServerEnabled())
-                {
-                    controller.getMcpController().startMcpServer();
-                }
                 controller.checkForUpdateSilently();
                 break;
             case RESET_SUCCESSFUL:

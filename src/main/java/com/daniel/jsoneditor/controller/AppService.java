@@ -4,7 +4,6 @@ import com.daniel.jsoneditor.controller.mcp.McpController;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
-import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +14,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Central application service that owns shared state across all editor windows.
- * Created once at app startup, lives until the app exits.
+ * Starts the MCP server immediately so external clients (e.g. OpenCode) can connect
+ * regardless of whether any GUI windows are open.
+ * Created once at app startup, lives until explicitly quit.
  */
 public class AppService
 {
@@ -34,7 +35,30 @@ public class AppService
     {
         this.fileSessionManager = new FileSessionManager();
         this.settingsController = new SettingsControllerImpl();
-        this.mcpController = new McpController(fileSessionManager, settingsController);
+        this.mcpController = new McpController(fileSessionManager, settingsController, this);
+        startMcpServer();
+    }
+    
+    /**
+     * Starts the MCP server if enabled in settings.
+     * Called automatically during construction so the server is available before any window opens.
+     */
+    private void startMcpServer()
+    {
+        if (!settingsController.isMcpServerEnabled())
+        {
+            logger.info("MCP server disabled in settings, skipping auto-start");
+            return;
+        }
+        mcpController.startMcpServer();
+        if (mcpController.isMcpServerRunning())
+        {
+            logger.info("MCP server started on port {}", mcpController.getMcpServerPort());
+        }
+        else
+        {
+            logger.error("MCP server failed to start — check port availability");
+        }
     }
     
     /**
@@ -50,15 +74,17 @@ public class AppService
         return window;
     }
     
+    /**
+     * Called when a window is closed. Does NOT exit the application —
+     * the service keeps running (MCP stays available) even without GUI windows.
+     */
     private void onWindowClosed(final AppWindow window)
     {
         windows.remove(window);
-        if (windows.isEmpty())
-        {
-            shutdown();
-            Platform.exit();
-        }
+        logger.info("Window closed. {} window(s) remaining. MCP server still running.", windows.size());
     }
+    
+    
     
     /** Returns the shared file session manager. */
     public FileSessionManager getFileSessionManager()
@@ -76,6 +102,12 @@ public class AppService
     public McpController getMcpController()
     {
         return mcpController;
+    }
+    
+    /** Returns the number of currently open windows. */
+    public int getWindowCount()
+    {
+        return windows.size();
     }
     
     /**

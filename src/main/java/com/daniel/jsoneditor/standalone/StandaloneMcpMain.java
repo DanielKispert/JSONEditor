@@ -21,7 +21,7 @@ public class StandaloneMcpMain
         final int port = parsePort(args);
         
         final FileSessionManager sessionManager = new FileSessionManager();
-        final JsonEditorMcpServer server = new JsonEditorMcpServer(sessionManager);
+        final JsonEditorMcpServer server = new JsonEditorMcpServer(sessionManager, null);
         
         try
         {
@@ -68,4 +68,3 @@ public class StandaloneMcpMain
         return JsonEditorMcpServer.DEFAULT_PORT;
     }
 }
-
