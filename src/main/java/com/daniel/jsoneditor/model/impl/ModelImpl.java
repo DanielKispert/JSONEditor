@@ -33,6 +33,7 @@ import javafx.application.Platform;
 import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.daniel.jsoneditor.model.validation.ModelValidationException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -191,9 +192,52 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     @Override
     public void setValueAtPath(String parentPath, String propertyName, Object value)
     {
-        JsonNodeWithPath nodeWithPath = getNodeForPath(parentPath);
+        final JsonNodeWithPath parentNodeWithPath = getNodeForPath(parentPath);
+        if (parentNodeWithPath == null || !parentNodeWithPath.getNode().isObject())
+        {
+            return;
+        }
+        final ObjectNode candidateParent = parentNodeWithPath.getNode().deepCopy();
+        if (value == null)
+        {
+            candidateParent.remove(propertyName);
+        }
+        else
+        {
+            candidateParent.set(propertyName, buildCandidateNode(value));
+        }
+        final JsonSchema parentSchema = getSubschemaForPath(parentPath);
+        if (parentSchema != null)
+        {
+            final List<String> errors = SchemaHelper.validateJsonWithSchema(candidateParent, parentSchema);
+            if (!errors.isEmpty())
+            {
+                throw new ModelValidationException(parentPath + "/" + propertyName, errors);
+            }
+        }
         logger.debug("Setting value at path {} with property {} to {}", parentPath, propertyName, value);
-        nodeWithPath.setProperty(propertyName, value);
+        parentNodeWithPath.setProperty(propertyName, value);
+    }
+
+    private JsonNode buildCandidateNode(Object value)
+    {
+        if (value instanceof Boolean)
+        {
+            return JsonNodeFactory.instance.booleanNode((Boolean) value);
+        }
+        if (value instanceof Integer)
+        {
+            return JsonNodeFactory.instance.numberNode((Integer) value);
+        }
+        if (value instanceof Long)
+        {
+            return JsonNodeFactory.instance.numberNode((Long) value);
+        }
+        if (value instanceof Double)
+        {
+            return JsonNodeFactory.instance.numberNode((Double) value);
+        }
+        return JsonNodeFactory.instance.textNode(value.toString());
     }
     
     @Override
@@ -327,7 +371,12 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     @Override
     public List<String> getStringExamplesForPath(String path)
     {
-        JsonNode schema = getSubschemaForPath(path).getSchemaNode();
+        final JsonSchema jsonSchema = getSubschemaForPath(path);
+        if (jsonSchema == null)
+        {
+            return Collections.emptyList();
+        }
+        final JsonNode schema = jsonSchema.getSchemaNode();
         if (schema != null && schema.has("type") && schema.get("type").asText().equals("string"))
         {
             JsonNode examplesNode = schema.get("examples");
@@ -356,7 +405,12 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             return;
         }
         ArrayNode arrayNode = (ArrayNode) nodeAtPath.getNode();
-        JsonNode schema = getSubschemaForPath(path).getSchemaNode();
+        final JsonSchema jsonSchema = getSubschemaForPath(path);
+        if (jsonSchema == null)
+        {
+            return;
+        }
+        final JsonNode schema = jsonSchema.getSchemaNode();
         JsonNode itemsSchema = schema.get("items");
         String type = NodeSearcher.getTypeFromNode(itemsSchema);
         List<JsonNode> items = StreamSupport.stream(arrayNode.spliterator(), false).collect(Collectors.toList());
@@ -417,7 +471,12 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     @Override
     public List<String> getAllowedStringValuesForPath(String path)
     {
-        JsonNode schema = getSubschemaForPath(path).getSchemaNode();
+        final JsonSchema jsonSchema = getSubschemaForPath(path);
+        if (jsonSchema == null)
+        {
+            return Collections.emptyList();
+        }
+        final JsonNode schema = jsonSchema.getSchemaNode();
         if (schema != null && schema.has("type") && schema.get("type").asText().equals("string"))
         {
             JsonNode examplesNode = schema.get("enum");
@@ -439,7 +498,12 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     
     public boolean canAddMoreItems(String path)
     {
-        JsonNode subschema = getSubschemaForPath(path).getSchemaNode();
+        final JsonSchema jsonSchema = getSubschemaForPath(path);
+        if (jsonSchema == null)
+        {
+            return true;
+        }
+        final JsonNode subschema = jsonSchema.getSchemaNode();
         if (subschema != null && subschema.get("type").asText().equals("array"))
         {
             JsonNode maxItemsNode = subschema.get("maxItems");
@@ -499,7 +563,8 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     @Override
     public JsonNode makeArrayNode(String selectedPath)
     {
-        JsonNode itemsSchema = getSubschemaForPath(selectedPath + "/0").getSchemaNode();
+        final JsonSchema jsonSchema = getSubschemaForPath(selectedPath + "/0");
+        final JsonNode itemsSchema = jsonSchema != null ? jsonSchema.getSchemaNode() : null;
         return NodeGenerator.generateNodeFromSchema(itemsSchema);
     }
     
@@ -687,9 +752,21 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
     @Override
     public void setNode(String path, JsonNode content)
     {
+        if (content != null && path != null && !path.isEmpty())
+        {
+            final JsonSchema schema = getSubschemaForPath(path);
+            if (schema != null)
+            {
+                final List<String> errors = SchemaHelper.validateJsonWithSchema(content, schema);
+                if (!errors.isEmpty())
+                {
+                    throw new ModelValidationException(path, errors);
+                }
+            }
+        }
         removeOrSetNode(path, content);
     }
-    
+
     @Override
     public JsonSchema getSubschemaForPath(String path)
     {
@@ -748,10 +825,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         if (subNode == null)
         {
-            // fallback minimal schema (type null) so callers still receive a JsonSchema object
-            ObjectNode fallback = JsonNodeFactory.instance.objectNode();
-            fallback.put("type", "null");
-            subNode = fallback;
+            return null;
         }
         return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(subNode);
     }

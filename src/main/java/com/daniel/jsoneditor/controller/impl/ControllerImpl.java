@@ -29,13 +29,13 @@ import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.settings.Settings;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+ 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.validation.ReferenceValidator;
 import com.daniel.jsoneditor.model.validation.ValidationError;
 import com.daniel.jsoneditor.model.validation.ValidationResult;
+import com.daniel.jsoneditor.model.validation.ModelValidationException;
 import com.daniel.jsoneditor.view.View;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
@@ -244,19 +244,20 @@ public class ControllerImpl implements Controller, Observer
             final JsonNodeWithPath existingNodeAtPath = readableModel.getNodeForPath(path == null ? "" : path);
             final JsonNode contentNode = jsonReader.getNodeFromString(content);
             final JsonNode mergedNode = JsonNodeMerger.createMergedNode(readableModel, existingNodeAtPath, contentNode);
-            final JsonSchema schemaAtPath = readableModel.getSubschemaForPath(path);
-            
-            if (mergedNode != null && SchemaHelper.validateJsonWithSchema(mergedNode, schemaAtPath))
-            {
-                commandManager.executeCommand(commandFactory.setNodeCommand(path, mergedNode));
-                view.showToast(Toasts.IMPORT_SUCCESSFUL_TOAST);
-                logger.info("Successfully imported JSON at path: {}", path);
-            }
-            else
+            if (mergedNode == null)
             {
                 view.showToast(Toasts.IMPORT_VALIDATION_FAILED_TOAST);
-                logger.warn("Import validation failed for path: {}", path);
+                logger.warn("Import merge returned null for path: {}", path);
+                return;
             }
+            commandManager.executeCommand(commandFactory.setNodeCommand(path, mergedNode));
+            view.showToast(Toasts.IMPORT_SUCCESSFUL_TOAST);
+            logger.info("Successfully imported JSON at path: {}", path);
+        }
+        catch (ModelValidationException e)
+        {
+            view.showToast(Toasts.IMPORT_VALIDATION_FAILED_TOAST);
+            logger.warn("Import validation failed for path {}: {}", path, e.getMessage());
         }
         catch (JsonProcessingException e)
         {
@@ -427,7 +428,7 @@ public class ControllerImpl implements Controller, Observer
     
     private void handleJsonValidation(JsonNode json, JsonSchema schema, Runnable onSuccess)
     {
-        if (SchemaHelper.validateJsonWithSchema(json, schema))
+        if (SchemaHelper.validateJsonWithSchema(json, schema).isEmpty())
         {
             onSuccess.run();
         }
@@ -454,58 +455,17 @@ public class ControllerImpl implements Controller, Observer
     {
         final String parentPath = PathHelper.getParentPath(path);
         final String propertyName = PathHelper.getLastPathSegment(path);
-        
-        // Validate by building a candidate parent object with the change applied, then checking it against the parent schema.
-        // This way we check for both correct format and correct structure (required properties etc)
-        final JsonNodeWithPath parentNodeWithPath = readableModel.getNodeForPath(parentPath);
-        if (parentNodeWithPath == null || !parentNodeWithPath.getNode().isObject())
+        try
         {
-            return;
+            commandManager.executeCommand(commandFactory.setValueAtNodeCommand(parentPath, propertyName, value));
         }
-        final ObjectNode candidateParent = parentNodeWithPath.getNode().deepCopy();
-        if (value == null)
-        {
-            candidateParent.remove(propertyName);
-        }
-        else
-        {
-            candidateParent.set(propertyName, buildCandidateNode(value));
-        }
-        final JsonSchema parentSchema = readableModel.getSubschemaForPath(parentPath);
-        if (parentSchema != null && !SchemaHelper.validateJsonWithSchema(candidateParent, parentSchema))
+        catch (ModelValidationException e)
         {
             view.showToast(Toasts.VALUE_VALIDATION_FAILED_TOAST);
-            return;
+            logger.debug("Value validation rejected at {}: {}", path, e.getMessage());
         }
-        commandManager.executeCommand(commandFactory.setValueAtNodeCommand(parentPath, propertyName, value));
     }
 
-    /** Wraps a raw Java value into a JsonNode for pre-write schema validation. */
-    private JsonNode buildCandidateNode(Object value)
-    {
-        if (value == null)
-        {
-            return JsonNodeFactory.instance.nullNode();
-        }
-        if (value instanceof Boolean)
-        {
-            return JsonNodeFactory.instance.booleanNode((Boolean) value);
-        }
-        if (value instanceof Integer)
-        {
-            return JsonNodeFactory.instance.numberNode((Integer) value);
-        }
-        if (value instanceof Long)
-        {
-            return JsonNodeFactory.instance.numberNode((Long) value);
-        }
-        if (value instanceof Double)
-        {
-            return JsonNodeFactory.instance.numberNode((Double) value);
-        }
-        return JsonNodeFactory.instance.textNode(value.toString());
-    }
-    
     @Override
     public void overrideNodeAtPath(String path, JsonNode node)
     {
@@ -550,21 +510,31 @@ public class ControllerImpl implements Controller, Observer
                     view.showToast(Toasts.ERROR_TOAST);
                     return;
                 }
-                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(pathToInsert)))
+                try
                 {
                     commandManager.executeCommand(commandFactory.setNodeCommand(pathToInsert, jsonNode));
                     view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
-                    
                 }
-                else if (itemToInsertAt.isArray() && SchemaHelper.validateJsonWithSchema(jsonNode,
-                        readableModel.getSubschemaForPath(pathToInsert + "/0")))
+                catch (ModelValidationException e)
                 {
-                    commandManager.executeCommand(commandFactory.setNodeCommand(itemToInsertAt.getPath() + "/" + itemToInsertAt.getNode().size(), jsonNode));
-                    view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
-                }
-                else
-                {
-                    view.showToast(Toasts.ERROR_TOAST);
+                    // Try as array item if direct replacement fails and target is array
+                    if (itemToInsertAt.isArray())
+                    {
+                        try
+                        {
+                            commandManager.executeCommand(commandFactory.setNodeCommand(
+                                itemToInsertAt.getPath() + "/" + itemToInsertAt.getNode().size(), jsonNode));
+                            view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
+                        }
+                        catch (ModelValidationException e2)
+                        {
+                            view.showToast(Toasts.ERROR_TOAST);
+                        }
+                    }
+                    else
+                    {
+                        view.showToast(Toasts.ERROR_TOAST);
+                    }
                 }
             }
             catch (JsonProcessingException e)
@@ -602,16 +572,14 @@ public class ControllerImpl implements Controller, Observer
             try
             {
                 final JsonNode jsonNode = new JsonFileReaderAndWriterImpl().getNodeFromString(jsonString);
-                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(parentPath)))
-                {
-                    final int arraySize = parentNode.getNode().size();
-                    commandManager.executeCommand(commandFactory.setNodeCommand(parentNode.getPath() + "/" + arraySize, jsonNode));
-                    view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
-                }
-                else
-                {
-                    view.showToast(Toasts.ERROR_TOAST);
-                }
+                final int arraySize = parentNode.getNode().size();
+                commandManager.executeCommand(commandFactory.setNodeCommand(parentNode.getPath() + "/" + arraySize, jsonNode));
+                view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
+            }
+            catch (ModelValidationException e)
+            {
+                view.showToast(Toasts.ERROR_TOAST);
+                logger.debug("Paste validation rejected at {}: {}", parentPath, e.getMessage());
             }
             catch (JsonProcessingException e)
             {

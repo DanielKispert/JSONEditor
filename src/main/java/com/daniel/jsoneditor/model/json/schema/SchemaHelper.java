@@ -27,19 +27,25 @@ public class SchemaHelper
         return root;
     }
     
-    public static boolean validateJsonWithSchema(JsonNode json, JsonSchema schema)
+    /**
+     * Validates JSON against a schema and returns the list of validation error messages.
+     * An empty list means the JSON is valid.
+     */
+    public static List<String> validateJsonWithSchema(JsonNode json, JsonSchema schema)
     {
-        Set<ValidationMessage> messages = schema.validate(json);
-        for (ValidationMessage message : messages)
+        final Set<ValidationMessage> messages = schema.validate(json);
+        final List<String> errors = new ArrayList<>();
+        for (final ValidationMessage message : messages)
         {
             final JsonNode elementContent = json.at(convertToJSONPointer(message.getPath()));
-            final String contentPreview = elementContent.toString().length() > 100 
-                ? elementContent.toString().substring(0, 100) + "..." 
+            final String contentPreview = elementContent.toString().length() > 100
+                ? elementContent.toString().substring(0, 100) + "..."
                 : elementContent.toString();
-            logger.error("Validation Error: {} at path {} with element preview: {}", 
+            logger.debug("Schema validation: {} at path {} with element preview: {}",
                 message.getMessage(), message.getPath(), contentPreview);
+            errors.add(message.getMessage());
         }
-        return messages.isEmpty();
+        return errors;
     }
     
     private static String convertToJSONPointer(String path)
