@@ -9,6 +9,7 @@ import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.networknt.schema.JsonSchema;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -348,7 +349,8 @@ public class ReferenceHelper
         if (parentNode instanceof ObjectNode)
         {
             // check if we need a text or number node
-            List<String> types = SchemaHelper.getTypes(model.getSubschemaForPath(pathToNode + "/" + pathToKey).getSchemaNode());
+            final JsonSchema keySchema = model.getSubschemaForPath(pathToNode + "/" + pathToKey);
+            final List<String> types = keySchema != null ? SchemaHelper.getTypes(keySchema.getSchemaNode()) : null;
             if (types.contains("string"))
             {
                 ((ObjectNode) parentNode).set(keyParts[keyParts.length - 1], new TextNode(newKey));

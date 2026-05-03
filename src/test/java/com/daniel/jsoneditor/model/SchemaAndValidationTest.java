@@ -123,7 +123,7 @@ public class SchemaAndValidationTest
 
             // buildCandidateNode should convert "42" to a NumberNode, not a TextNode
             final JsonNode candidate = JsonNodeFactory.instance.numberNode(Integer.parseInt("42"));
-            assertTrue(SchemaHelper.validateJsonWithSchema(candidate, schema),
+            assertTrue(SchemaHelper.validateJsonWithSchema(candidate, schema).isEmpty(),
                     "A numeric value must pass integer schema validation regardless of original String source");
         }
 
@@ -138,7 +138,7 @@ public class SchemaAndValidationTest
             final JsonSchema schema = SCHEMA_FACTORY.getSchema(integerSchema);
 
             final JsonNode intNode = JsonNodeFactory.instance.numberNode(42);
-            assertTrue(SchemaHelper.validateJsonWithSchema(intNode, schema));
+            assertTrue(SchemaHelper.validateJsonWithSchema(intNode, schema).isEmpty());
         }
 
         /**
@@ -152,7 +152,7 @@ public class SchemaAndValidationTest
             final JsonSchema schema = SCHEMA_FACTORY.getSchema(integerSchema);
 
             final JsonNode textNode = JsonNodeFactory.instance.textNode("hello");
-            assertFalse(SchemaHelper.validateJsonWithSchema(textNode, schema));
+            assertFalse(SchemaHelper.validateJsonWithSchema(textNode, schema).isEmpty());
         }
 
         /**
@@ -170,7 +170,7 @@ public class SchemaAndValidationTest
 
             // NullNode fails property-level enum validation — the old approach's root cause
             assertFalse(SchemaHelper.validateJsonWithSchema(
-                    JsonNodeFactory.instance.nullNode(), SCHEMA_FACTORY.getSchema(enumSchema)),
+                    JsonNodeFactory.instance.nullNode(), SCHEMA_FACTORY.getSchema(enumSchema)).isEmpty(),
                     "NullNode must fail property-level enum validation (root cause of the old bug)");
 
             // Parent schema: required "status" + optional "operationstatus"
@@ -186,20 +186,20 @@ public class SchemaAndValidationTest
             // Candidate parent with optional property removed → must pass
             final ObjectNode candidateWithoutOptional = MAPPER.createObjectNode();
             candidateWithoutOptional.put("status", "active");
-            assertTrue(SchemaHelper.validateJsonWithSchema(candidateWithoutOptional, parentJsonSchema),
+            assertTrue(SchemaHelper.validateJsonWithSchema(candidateWithoutOptional, parentJsonSchema).isEmpty(),
                     "Parent object without optional property must pass validation");
 
             // Candidate parent with required property removed → must fail
             final ObjectNode candidateWithoutRequired = MAPPER.createObjectNode();
             candidateWithoutRequired.put("operationstatus", "active");
-            assertFalse(SchemaHelper.validateJsonWithSchema(candidateWithoutRequired, parentJsonSchema),
+            assertFalse(SchemaHelper.validateJsonWithSchema(candidateWithoutRequired, parentJsonSchema).isEmpty(),
                     "Parent object without required property must fail validation");
 
             // Candidate parent with invalid enum value → must fail
             final ObjectNode candidateWithInvalidValue = MAPPER.createObjectNode();
             candidateWithInvalidValue.put("status", "active");
             candidateWithInvalidValue.put("operationstatus", "bogus");
-            assertFalse(SchemaHelper.validateJsonWithSchema(candidateWithInvalidValue, parentJsonSchema),
+            assertFalse(SchemaHelper.validateJsonWithSchema(candidateWithInvalidValue, parentJsonSchema).isEmpty(),
                     "Parent object with invalid enum value must fail validation");
         }
     }
