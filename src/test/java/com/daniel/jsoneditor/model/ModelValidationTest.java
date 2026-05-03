@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.List;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceHelper;
+import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObject;
 
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManagerImpl;
@@ -304,6 +306,31 @@ public class ModelValidationTest
             assertEquals(5, m.getNodeForPath("/processes/0/sortOrder").getNode().asInt());
         }
 
+        @Test
+        void referenceKeyRenamingWorksWithSchemaDefinedKey()
+        {
+            final ModelImpl m = createModelWithArraySchema();
+            final List<ReferenceableObject> objects = m.getReferenceableObjects();
+            assertFalse(objects.isEmpty(), "Schema should declare referenceableObjects");
+            final ReferenceableObject processRef = objects.get(0);
+            assertEquals("/id", processRef.getKey());
+
+            // Rename key of first process — exercises ReferenceHelper.setKeyOfInstance → setKeyNode
+            ReferenceHelper.setKeyOfInstance(m, processRef, "/processes/0", "renamed_id");
+            assertEquals("renamed_id", m.getNodeForPath("/processes/0/id").getNode().asText());
+        }
+
+        @Test
+        void referenceKeyRenamingHandlesUndefinedSchemaPath()
+        {
+            // Test with a path where getSubschemaForPath returns null (key path not in schema)
+            final ModelImpl m = createModelWithArraySchema();
+            final ReferenceableObject objectWithBadKey = new ReferenceableObject("bad_ref", "/processes", "/nonexistent");
+
+            // Should not throw NPE — the null guard in ReferenceHelper should handle this
+            assertDoesNotThrow(() -> ReferenceHelper.setKeyOfInstance(m, objectWithBadKey, "/processes/0", "value"));
+        }
+
         /**
          * Creates a model with a complex schema: root object containing an array of typed objects
          * with required string id and optional integer sortOrder (minimum 0).
@@ -333,6 +360,16 @@ public class ModelValidationTest
             final ObjectNode rootProperties = MAPPER.createObjectNode();
             rootProperties.set("processes", processesSchema);
             schemaRoot.set("properties", rootProperties);
+
+            // Add referenceableObjects declaration (exercises ReferenceHelper code paths)
+            final ArrayNode referenceableObjects = MAPPER.createArrayNode();
+            final ObjectNode processRefDef = MAPPER.createObjectNode();
+            processRefDef.put("referencingKey", "item_ref");
+            processRefDef.put("path", "/processes");
+            processRefDef.put("key", "/id");
+            referenceableObjects.add(processRefDef);
+            schemaRoot.set("referenceableObjects", referenceableObjects);
+
             schemaRoot.set("required", MAPPER.createArrayNode().add("processes"));
 
             final JsonSchema schema = SCHEMA_FACTORY.getSchema(schemaRoot);
