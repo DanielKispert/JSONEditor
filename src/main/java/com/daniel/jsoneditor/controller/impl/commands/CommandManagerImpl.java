@@ -10,6 +10,7 @@ import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.commands.Command;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
+import com.daniel.jsoneditor.model.validation.ModelValidationException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.slf4j.Logger;
@@ -133,21 +134,30 @@ public class CommandManagerImpl implements CommandManager
     {
         for (final ModelChange c : changes)
         {
-            switch (c.getType())
+            try
             {
-                case ADD:
-                case REPLACE:
-                    model.setNode(c.getPath(), c.getNewValue());
-                    break;
-                case REMOVE:
-                    model.removeNodes(List.of(c.getPath()));
-                    break;
-                case MOVE:
-                    applyMove(c);
-                    break;
-                case SORT:
-                    applySort(c);
-                    break;
+                switch (c.getType())
+                {
+                    case ADD:
+                    case REPLACE:
+                        model.setNode(c.getPath(), c.getNewValue());
+                        break;
+                    case REMOVE:
+                        model.removeNodes(List.of(c.getPath()));
+                        break;
+                    case MOVE:
+                        applyMove(c);
+                        break;
+                    case SORT:
+                        applySort(c);
+                        break;
+                }
+            }
+            catch (ModelValidationException e)
+            {
+                // Undo/redo restores a previously valid state — validation should never block this.
+                // If it does, the model state is inconsistent. Log and continue to avoid data loss.
+                logger.error("Unexpected validation error during undo/redo at {}: {}", c.getPath(), e.getMessage());
             }
         }
     }

@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
+import com.networknt.schema.JsonSchema;
 
 /**
  * Responsible for processing JSON schemas and creating table data structures.
@@ -36,7 +38,12 @@ public class TableSchemaProcessor
     public TableData processNode(JsonNodeWithPath nodeWithPath)
     {
         final JsonNode node = nodeWithPath.getNode();
-        final JsonNode schema = model.getSubschemaForPath(nodeWithPath.getPath()).getSchemaNode();
+        final JsonSchema jsonSchema = model.getSubschemaForPath(nodeWithPath.getPath());
+        if (jsonSchema == null)
+        {
+            return new TableData(createNodesList(nodeWithPath, node), Collections.emptyList(), false);
+        }
+        final JsonNode schema = jsonSchema.getSchemaNode();
         
         final ObservableList<JsonNodeWithPath> nodesToDisplay = createNodesList(nodeWithPath, node);
         final List<Pair<Pair<String, Boolean>, JsonNode>> properties = extractProperties(schema);
