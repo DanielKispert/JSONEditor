@@ -81,7 +81,7 @@ public class ControllerImpl implements Controller, Observer
     
     private boolean updateCheckDone;
     
-    public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage, AppService appService)
+    public ControllerImpl(final WritableModel model, final ReadableModel readableModel, final Stage stage, final AppService appService)
     {
         this.appService = appService;
         this.settingsController = appService.getSettingsController();

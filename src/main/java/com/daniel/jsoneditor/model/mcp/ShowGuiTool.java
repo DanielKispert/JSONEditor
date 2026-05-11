@@ -56,7 +56,8 @@ class ShowGuiTool extends McpTool
         });
         
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        result.put("status", "ok");
+        result.put("status", "queued");
+        result.put("note", "Window creation requested. The window will appear shortly.");
         return McpToolRegistry.createToolResult(id, result);
     }
 }

@@ -52,7 +52,15 @@ public class JFXLauncher extends Application
 
         if (headless)
         {
-            logger.info("Started in headless mode — MCP server running, no GUI window.");
+            if (appService.getMcpController().isMcpServerRunning())
+            {
+                logger.info("Started in headless mode — MCP server running on port {}, no GUI window.",
+                    appService.getMcpController().getMcpServerPort());
+            }
+            else
+            {
+                logger.info("Started in headless mode — MCP server is disabled in settings, no GUI window.");
+            }
         }
         else
         {

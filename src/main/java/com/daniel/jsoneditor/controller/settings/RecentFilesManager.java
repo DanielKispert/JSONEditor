@@ -22,7 +22,8 @@ public class RecentFilesManager
 {
     private static final Logger logger = LoggerFactory.getLogger(RecentFilesManager.class);
 
-    private static final String RECENT_FILES_FILENAME = "jsoneditor_recent.properties";
+    private static final File RECENT_FILES_PATH = new File(
+            System.getProperty("user.home") + "/.jsoneditor/recent.properties");
 
     private static final int MAX_RECENT_FILES = 10;
 
@@ -99,7 +100,7 @@ public class RecentFilesManager
     private void load()
     {
         final Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream(RECENT_FILES_FILENAME))
+        try (FileInputStream in = new FileInputStream(RECENT_FILES_PATH))
         {
             props.load(in);
         }
@@ -109,7 +110,7 @@ public class RecentFilesManager
         }
         catch (IOException e)
         {
-            logger.error("Could not load recent files from {}", RECENT_FILES_FILENAME, e);
+            logger.error("Could not load recent files from {}", RECENT_FILES_PATH, e);
             return;
         }
         for (int i = 0; i < MAX_RECENT_FILES; i++)
@@ -131,6 +132,11 @@ public class RecentFilesManager
 
     private void save()
     {
+        final File dir = RECENT_FILES_PATH.getParentFile();
+        if (dir != null && !dir.exists())
+        {
+            dir.mkdirs();
+        }
         final Properties props = new Properties();
         for (int i = 0; i < recentFiles.size(); i++)
         {
@@ -138,13 +144,13 @@ public class RecentFilesManager
             props.setProperty(String.format(KEY_JSON, i), rf.jsonFile().getAbsolutePath());
             props.setProperty(String.format(KEY_SCHEMA, i), rf.schemaFile().getAbsolutePath());
         }
-        try (FileOutputStream out = new FileOutputStream(RECENT_FILES_FILENAME))
+        try (FileOutputStream out = new FileOutputStream(RECENT_FILES_PATH))
         {
             props.store(out, null);
         }
         catch (IOException e)
         {
-            logger.error("Could not save recent files to {}", RECENT_FILES_FILENAME, e);
+            logger.error("Could not save recent files to {}", RECENT_FILES_PATH, e);
         }
     }
 }

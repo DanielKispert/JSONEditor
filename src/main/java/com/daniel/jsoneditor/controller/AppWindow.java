@@ -31,7 +31,7 @@ public class AppWindow
      */
     public void setOnClose(final Runnable onClose)
     {
-        stage.setOnCloseRequest(event ->
+        stage.setOnHiding(event ->
         {
             controller.shutdown();
             if (onClose != null)
@@ -53,4 +53,3 @@ public class AppWindow
         return stage;
     }
 }
-

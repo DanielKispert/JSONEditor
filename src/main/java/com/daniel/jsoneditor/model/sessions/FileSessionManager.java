@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.model.sessions;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
+import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
@@ -59,13 +60,24 @@ public class FileSessionManager
             logger.error("Failed to load JSON or schema from files: {} / {}", jsonPath, schemaPath);
             return null;
         }
+
+        if (!SchemaHelper.validateJsonWithSchema(json, schema).isEmpty())
+        {
+            logger.error("JSON does not validate against schema: {} / {}", jsonPath, schemaPath);
+            return null;
+        }
         
         final ModelImpl model = new ModelImpl(new EventSenderImpl());
         model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
         
-        final String sessionId = generateUniqueId("");
-        final EditorSession session = new EditorSession(sessionId, model, jsonFile, schemaFile, false);
-        sessions.putIfAbsent(sessionId, session);
+        EditorSession session;
+        String sessionId;
+        do
+        {
+            sessionId = generateUniqueId("");
+            session = new EditorSession(sessionId, model, jsonFile, schemaFile, false);
+        }
+        while (sessions.putIfAbsent(sessionId, session) != null);
         
         logger.info("Opened file session {} for {}", sessionId, jsonPath);
         return sessionId;
@@ -81,9 +93,14 @@ public class FileSessionManager
      */
     public String registerGuiSession(final ReadableModel model, final File jsonFile, final File schemaFile)
     {
-        final String sessionId = generateUniqueId("gui-");
-        final EditorSession session = new EditorSession(sessionId, model, jsonFile, schemaFile, true);
-        sessions.putIfAbsent(sessionId, session);
+        EditorSession session;
+        String sessionId;
+        do
+        {
+            sessionId = generateUniqueId("gui-");
+            session = new EditorSession(sessionId, model, jsonFile, schemaFile, true);
+        }
+        while (sessions.putIfAbsent(sessionId, session) != null);
         logger.info("Registered GUI session {} for {}", sessionId, jsonFile != null ? jsonFile.getAbsolutePath() : "null");
         return sessionId;
     }
@@ -148,16 +165,6 @@ public class FileSessionManager
 
     private String generateUniqueId(final String prefix)
     {
-        for (int i = 0; i < 10; i++)
-        {
-            final String candidate = UUID.randomUUID().toString().substring(0, 8);
-            final String fullKey = prefix + candidate;
-            if (!sessions.containsKey(fullKey))
-            {
-                return fullKey;
-            }
-        }
-        // Fallback to full UUID if collisions persist
-        return prefix + UUID.randomUUID().toString();
+        return prefix + UUID.randomUUID().toString().substring(0, 8);
     }
 }
