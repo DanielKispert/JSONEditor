@@ -2,10 +2,13 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
@@ -20,33 +23,35 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
-import javafx.application.Platform;
+// Platform.runLater is not required by this class after timeline handler changes
 
 
 /**
  * Dialog for reordering array elements via drag and drop.
- * Supports multi-select drag and visual drop indicators.
+ * Supports multi-select drag, visual drop indicators, and smooth proportional auto-scrolling.
  */
 public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
 {
     private static final double CELL_HEIGHT = 32.0;
-    private static final double MAX_HEIGHT = 500.0;
-    private static final double DEFAULT_WIDTH = 550.0;
-    private static final int PREVIEW_TRUNCATE = 80;
+    private static final double MAX_HEIGHT = 600.0;
+    private static final double DEFAULT_WIDTH = 800.0;
+    private static final int PREVIEW_TRUNCATE = 140;
+
+    // auto-scroll tuning: smooth pixel-based scrolling with proportional speed
+    private static final double SCROLL_MARGIN = 50.0;
+    private static final Duration SCROLL_INTERVAL = Duration.millis(25);
+    private static final double MAX_SCROLL_SPEED = 0.008;
 
     private final ListView<ArrayItemWrapper> listView;
     private int insertionIndex = -1;
-    private List<Integer> draggingIndices = new ArrayList<>();
+    private final List<Integer> draggingIndices = new ArrayList<>();
 
-    // auto-scroll while dragging
     private final Timeline autoScrollTimeline;
     private double lastMouseY = -1;
-    private static final double SCROLL_MARGIN = 40.0; // px near top/bottom to trigger
-    private static final Duration SCROLL_INTERVAL = Duration.millis(150);
-    private static final int SCROLL_STEP = 1; // rows per tick
 
     /**
      * Create a dialog that allows reordering the given JSON array node.
@@ -58,6 +63,7 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
         super();
         setTitle("Reorder Array");
         setHeaderText("Drag items to reorder");
+        setResizable(true);
 
         final List<ArrayItemWrapper> items = buildItems(arrayNode);
 
@@ -69,28 +75,18 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
         listView.setFixedCellSize(CELL_HEIGHT);
         listView.setPrefHeight(Math.min(items.size() * CELL_HEIGHT + 4, MAX_HEIGHT));
         listView.setPrefWidth(DEFAULT_WIDTH);
-        listView.setMinHeight(150);
+        listView.setMinHeight(200);
         VBox.setVgrow(listView, Priority.ALWAYS);
 
-        // prepare auto-scroll timeline
         autoScrollTimeline = new Timeline(new KeyFrame(SCROLL_INTERVAL, ev -> handleAutoScrollTick()));
         autoScrollTimeline.setCycleCount(Timeline.INDEFINITE);
 
-        // ListView-level drag handlers for drops on empty space / end of list
         listView.setOnDragOver(event -> {
             if (event.getDragboard().hasString())
             {
                 event.acceptTransferModes(TransferMode.MOVE);
-                // compute insertion index from mouse Y in list coords
-                final double y = event.getY();
-                lastMouseY = y;
-                final int idx = (int) Math.floor(y / CELL_HEIGHT);
-                final int newIndex = Math.max(0, Math.min(listView.getItems().size(), idx));
-                if (newIndex != insertionIndex)
-                {
-                    insertionIndex = newIndex;
-                    listView.refresh();
-                }
+                lastMouseY = event.getY();
+                updateInsertionIndexFromMouseY();
                 ensureAutoScroll();
             }
             event.consume();
@@ -108,6 +104,7 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
                     success = true;
                 }
             }
+            stopAutoScroll();
             clearDragState();
             event.setDropCompleted(success);
             event.consume();
@@ -123,8 +120,106 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
         getDialogPane().setContent(content);
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         getDialogPane().setPrefWidth(DEFAULT_WIDTH + 40);
+        getDialogPane().setMinWidth(400);
 
         setResultConverter(button -> button == ButtonType.OK ? buildNewIndices() : null);
+    }
+
+    private ScrollBar getVerticalScrollBar()
+    {
+        for (final Node node : listView.lookupAll(".scroll-bar"))
+        {
+            if (node instanceof ScrollBar sb && sb.getOrientation() == Orientation.VERTICAL)
+            {
+                return sb;
+            }
+        }
+        return null;
+    }
+
+    private void updateInsertionIndexFromMouseY()
+    {
+        final ScrollBar sb = getVerticalScrollBar();
+        final int totalItems = listView.getItems().size();
+        final int visibleCount = (int) Math.floor(listView.getHeight() / CELL_HEIGHT);
+        int firstVisibleIndex = 0;
+        if (sb != null && totalItems > visibleCount && sb.getMax() > sb.getMin())
+        {
+            final double scrollFraction = (sb.getValue() - sb.getMin()) / (sb.getMax() - sb.getMin());
+            firstVisibleIndex = (int) Math.round(scrollFraction * (totalItems - visibleCount));
+        }
+        final int offsetInView = (int) Math.floor(lastMouseY / CELL_HEIGHT);
+        final int newIndex = Math.clamp(firstVisibleIndex + offsetInView, 0, totalItems);
+        if (newIndex != insertionIndex)
+        {
+            insertionIndex = newIndex;
+            listView.refresh();
+        }
+    }
+
+    private void ensureAutoScroll()
+    {
+        if (autoScrollTimeline == null || lastMouseY < 0)
+        {
+            stopAutoScroll();
+            return;
+        }
+        final double h = listView.getHeight();
+        if (lastMouseY < SCROLL_MARGIN || lastMouseY > h - SCROLL_MARGIN)
+        {
+            if (autoScrollTimeline.getStatus() != Animation.Status.RUNNING)
+            {
+                autoScrollTimeline.play();
+            }
+        }
+        else
+        {
+            stopAutoScroll();
+        }
+    }
+
+    private void stopAutoScroll()
+    {
+        if (autoScrollTimeline != null && autoScrollTimeline.getStatus() == Animation.Status.RUNNING)
+        {
+            autoScrollTimeline.stop();
+        }
+    }
+
+    private void handleAutoScrollTick()
+    {
+        if (lastMouseY < 0)
+        {
+            return;
+        }
+        final ScrollBar sb = getVerticalScrollBar();
+        if (sb == null)
+        {
+            return;
+        }
+        final double h = listView.getHeight();
+        double scrollDelta = 0;
+
+        if (lastMouseY < SCROLL_MARGIN)
+        {
+            // proportional: closer to top edge = faster scroll up
+            final double ratio = 1.0 - (lastMouseY / SCROLL_MARGIN);
+            scrollDelta = -ratio * MAX_SCROLL_SPEED;
+        }
+        else if (lastMouseY > h - SCROLL_MARGIN)
+        {
+            // proportional: closer to bottom edge = faster scroll down
+            final double ratio = (lastMouseY - (h - SCROLL_MARGIN)) / SCROLL_MARGIN;
+            scrollDelta = ratio * MAX_SCROLL_SPEED;
+        }
+
+        if (scrollDelta != 0)
+        {
+            final double range = sb.getMax() - sb.getMin();
+            final double newValue = Math.clamp(sb.getValue() + scrollDelta * range, sb.getMin(), sb.getMax());
+            sb.setValue(newValue);
+            updateInsertionIndexFromMouseY();
+        }
     }
 
     private List<ArrayItemWrapper> buildItems(JsonNode arrayNode)
@@ -158,7 +253,7 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
         {
             return out;
         }
-        for (String part : csv.split(","))
+        for (final String part : csv.split(","))
         {
             try
             {
@@ -192,10 +287,10 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
             return;
         }
 
-        int adjustedTarget = Math.max(0, Math.min(listView.getItems().size(), toIndex));
-        
+        int adjustedTarget = Math.clamp(toIndex, 0, listView.getItems().size());
+
         int itemsBeforeTarget = 0;
-        for (int idx : sorted)
+        for (final int idx : sorted)
         {
             if (idx < toIndex)
             {
@@ -206,7 +301,7 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
 
         final List<Integer> descending = new ArrayList<>(sorted);
         descending.sort(Comparator.reverseOrder());
-        for (int idx : descending)
+        for (final int idx : descending)
         {
             if (idx >= 0 && idx < listView.getItems().size())
             {
@@ -248,7 +343,7 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
             }
             else
             {
-                String text = node.asText();
+                final String text = node.asText();
                 return text.length() > PREVIEW_TRUNCATE ? text.substring(0, PREVIEW_TRUNCATE - 3) + "..." : text;
             }
         }
@@ -290,7 +385,6 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
 
         ReorderCell()
         {
-            // visual drop indicators
             topIndicator = new Region();
             topIndicator.getStyleClass().add("insertion-indicator");
             topIndicator.setPrefHeight(3);
@@ -322,7 +416,6 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
 
         private void setupDragHandlers()
         {
-            // --- Drag start ---
             setOnDragDetected(event -> {
                 if (getItem() == null || isEmpty())
                 {
@@ -337,7 +430,8 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
                     listView.getSelectionModel().clearAndSelect(getIndex());
                 }
 
-                draggingIndices = new ArrayList<>(selected);
+                draggingIndices.clear();
+                draggingIndices.addAll(selected);
                 draggingIndices.sort(Integer::compareTo);
 
                 final Dragboard db = startDragAndDrop(TransferMode.MOVE);
@@ -348,7 +442,6 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
                 event.consume();
             });
 
-            // --- Drag over: determine insertion point (allow dragging over any cell including self) ---
             setOnDragOver(event -> {
                 if (!event.getDragboard().hasString())
                 {
@@ -358,17 +451,15 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
 
                 event.acceptTransferModes(TransferMode.MOVE);
 
-                // compute mouse Y relative to listView (map scene coords)
                 lastMouseY = listView.sceneToLocal(event.getSceneX(), event.getSceneY()).getY();
 
-                // top half = insert before, bottom half = insert after
                 final double y = event.getY();
                 final double h = getBoundsInLocal().getHeight();
                 final int newInsertionIndex = (y < h / 2) ? getIndex() : getIndex() + 1;
 
                 if (newInsertionIndex != insertionIndex)
                 {
-                    insertionIndex = Math.max(0, Math.min(listView.getItems().size(), newInsertionIndex));
+                    insertionIndex = Math.clamp(newInsertionIndex, 0, listView.getItems().size());
                     listView.refresh();
                 }
 
@@ -376,7 +467,6 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
                 event.consume();
             });
 
-            // --- Drop ---
             setOnDragDropped(event -> {
                 final Dragboard db = event.getDragboard();
                 boolean success = false;
@@ -397,7 +487,6 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
                 event.consume();
             });
 
-            // --- Drag done ---
             setOnDragDone(event -> {
                 stopAutoScroll();
                 clearDragState();
@@ -422,14 +511,13 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
                 indexLabel.setText(String.valueOf(item.originalIndex));
                 textLabel.setText(item.displayText);
 
-                // show insertion indicator: top if insertionIndex matches this cell, bottom only for last cell when inserting at end
                 final boolean showTop = (insertionIndex == getIndex());
-                final boolean showBottom = (insertionIndex == listView.getItems().size() && getIndex() == listView.getItems().size() - 1);
+                final boolean showBottom =
+                        (insertionIndex == listView.getItems().size() && getIndex() == listView.getItems().size() - 1);
 
                 topIndicator.setVisible(showTop);
                 bottomIndicator.setVisible(showBottom);
 
-                // dim if being dragged
                 final boolean isDragged = draggingIndices.contains(getIndex());
                 setOpacity(isDragged ? 0.4 : 1.0);
 
@@ -439,69 +527,4 @@ public class ReorderArrayDialog extends ThemedDialog<List<Integer>>
         }
     }
 
-    private void ensureAutoScroll()
-    {
-        if (autoScrollTimeline == null)
-        {
-            return;
-        }
-        final double h = listView.getHeight();
-        if (lastMouseY < 0)
-        {
-            stopAutoScroll();
-            return;
-        }
-        if (lastMouseY < SCROLL_MARGIN || lastMouseY > h - SCROLL_MARGIN)
-        {
-            if (autoScrollTimeline.getStatus() != javafx.animation.Animation.Status.RUNNING)
-            {
-                autoScrollTimeline.play();
-            }
-        }
-        else
-        {
-            stopAutoScroll();
-        }
-    }
-
-    private void stopAutoScroll()
-    {
-        if (autoScrollTimeline != null && autoScrollTimeline.getStatus() == javafx.animation.Animation.Status.RUNNING)
-        {
-            autoScrollTimeline.stop();
-        }
-    }
-
-    private void handleAutoScrollTick()
-    {
-        if (lastMouseY < 0)
-        {
-            return;
-        }
-        final double h = listView.getHeight();
-        if (lastMouseY < SCROLL_MARGIN)
-        {
-            // scroll up a bit
-            Platform.runLater(() -> {
-                // attempt to scroll up by SCROLL_STEP
-                final int target = Math.max(0, insertionIndex - SCROLL_STEP);
-                listView.scrollTo(target);
-                // recompute insertion based on lastMouseY
-                final int idx = (int) Math.floor(lastMouseY / CELL_HEIGHT);
-                insertionIndex = Math.max(0, Math.min(listView.getItems().size(), idx));
-                listView.refresh();
-            });
-        }
-        else if (lastMouseY > h - SCROLL_MARGIN)
-        {
-            Platform.runLater(() -> {
-                final int target = Math.min(listView.getItems().size() - 1, insertionIndex + SCROLL_STEP);
-                listView.scrollTo(target);
-                final int idx = (int) Math.floor(lastMouseY / CELL_HEIGHT);
-                insertionIndex = Math.max(0, Math.min(listView.getItems().size(), idx));
-                listView.refresh();
-            });
-         }
-     }
-
- }
+}
