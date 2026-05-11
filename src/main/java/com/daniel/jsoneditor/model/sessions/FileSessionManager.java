@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 
 /**
@@ -33,9 +34,9 @@ public class FileSessionManager
      *
      * @param jsonPath absolute path to the JSON file
      * @param schemaPath absolute path to the schema file
-     * @return session ID, or null if loading failed
+     * @return result with sessionId on success, or error message on failure
      */
-    public String openFile(final String jsonPath, final String schemaPath)
+    public OpenFileResult openFile(final String jsonPath, final String schemaPath)
     {
         final File jsonFile = new File(jsonPath);
         final File schemaFile = new File(schemaPath);
@@ -43,12 +44,12 @@ public class FileSessionManager
         if (!jsonFile.exists())
         {
             logger.error("JSON file does not exist: {}", jsonPath);
-            return null;
+            return new OpenFileResult(null, "JSON file does not exist: " + jsonPath);
         }
         if (!schemaFile.exists())
         {
             logger.error("Schema file does not exist: {}", schemaPath);
-            return null;
+            return new OpenFileResult(null, "Schema file does not exist: " + schemaPath);
         }
         
         final JsonFileReaderAndWriterImpl reader = new JsonFileReaderAndWriterImpl();
@@ -58,13 +59,15 @@ public class FileSessionManager
         if (json == null || schema == null)
         {
             logger.error("Failed to load JSON or schema from files: {} / {}", jsonPath, schemaPath);
-            return null;
+            return new OpenFileResult(null, "Failed to parse JSON or schema files: " + jsonPath + " / " + schemaPath);
         }
 
-        if (!SchemaHelper.validateJsonWithSchema(json, schema).isEmpty())
+        final List<String> validationErrors = SchemaHelper.validateJsonWithSchema(json, schema);
+        if (!validationErrors.isEmpty())
         {
+            final String errorDetails = String.join(", ", validationErrors);
             logger.error("JSON does not validate against schema: {} / {}", jsonPath, schemaPath);
-            return null;
+            return new OpenFileResult(null, "JSON does not validate against schema: " + errorDetails);
         }
         
         final ModelImpl model = new ModelImpl(new EventSenderImpl());
@@ -80,7 +83,7 @@ public class FileSessionManager
         while (sessions.putIfAbsent(sessionId, session) != null);
         
         logger.info("Opened file session {} for {}", sessionId, jsonPath);
-        return sessionId;
+        return new OpenFileResult(sessionId, null);
     }
     
     /**

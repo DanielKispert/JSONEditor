@@ -95,7 +95,7 @@ The MCP server exposes JSON editor operations to external AI agents via HTTP JSO
 ### Architecture
 ```
 GUI Mode:   ControllerImpl → FileSessionManager → McpController → JsonEditorMcpServer
-Standalone: StandaloneMcpMain → FileSessionManager → JsonEditorMcpServer
+Headless:   JFXLauncher --headless → FileSessionManager → JsonEditorMcpServer
 ```
 
 `McpController` wraps `JsonEditorMcpServer`. Port set via `SettingsController.getMcpServerPort()`.
@@ -118,18 +118,18 @@ Per-file read tools (require `file_id`):
 
 `McpArgumentValidator` validates tool input against schemas before execution.
 
-### Standalone Mode
-`StandaloneMcpMain` (`standalone/`) runs the MCP server without JavaFX. Start with:
+### Headless Mode
+Run the MCP server without the GUI (no JavaFX window). Start with:
 ```bash
-./gradlew runStandalone                    # default port 4500
-./gradlew runStandalone --args="--port 5000"
+./gradlew run --args="--headless"                # default port 4500
+./gradlew run --args="--headless --port 5000"    # custom port
 ```
 
 ## Build & Packaging
 ```bash
 ./gradlew build          # compile + test
 ./gradlew run            # run GUI locally
-./gradlew runStandalone  # run standalone MCP server (no GUI)
+./gradlew run --args="--headless"  # run headless MCP server (no GUI)
 ./gradlew jpackage       # create native installer (build/jpackage/)
 ```
 Version is read from `src/main/resources/version.properties`.  
@@ -140,6 +140,3 @@ JUnit 5 + TestFX + Mockito. Tests in `src/test/java/`. Run with `./gradlew test`
 
 ## Settings
 App settings JSON (schema in `model/settings/`) can add custom toolbar buttons – see `example_settings.json` in project root.
-
-
-

@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
+import com.daniel.jsoneditor.model.sessions.OpenFileResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,20 +63,18 @@ class OpenFileTool extends ReadOnlyMcpTool
         final String jsonPath = arguments.path("json_path").asText("");
         final String schemaPath = arguments.path("schema_path").asText("");
         
-        final String sessionId = sessionManager.openFile(jsonPath, schemaPath);
-        if (sessionId == null)
+        final OpenFileResult openResult = sessionManager.openFile(jsonPath, schemaPath);
+        if (!openResult.success())
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602,
-                    "Failed to open file. Check that both paths exist and are valid JSON/schema.");
+            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, openResult.error());
         }
         
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        result.put("file_id", sessionId);
+        result.put("file_id", openResult.sessionId());
         result.put("json_path", jsonPath);
         result.put("schema_path", schemaPath);
         
         return McpToolRegistry.createToolResult(id, result);
     }
 }
-
 

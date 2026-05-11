@@ -49,9 +49,10 @@ public class FileSessionManagerTest
     @Test
     void testOpenFileCreatesSession()
     {
-        final String id = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
-
-        assertNotNull(id, "openFile must return a non-null session ID");
+        final OpenFileResult openResult = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
+        assertTrue(openResult.success(), "openFile must succeed");
+        assertNull(openResult.error(), "error must be null on success");
+        final String id = openResult.sessionId();
         assertFalse(id.isEmpty(), "Session ID must not be empty");
 
         final EditorSession session = sessionManager.getSession(id);
@@ -69,18 +70,23 @@ public class FileSessionManagerTest
         final String nonExistentJson = tempDir.resolve("no-such.json").toString();
         final String nonExistentSchema = tempDir.resolve("no-such-schema.json").toString();
 
-        assertNull(sessionManager.openFile(nonExistentJson, nonExistentSchema),
-                "openFile with non-existent JSON and schema must return null");
+        final OpenFileResult r1 = sessionManager.openFile(nonExistentJson, nonExistentSchema);
+        assertFalse(r1.success(), "openFile with non-existent JSON and schema must fail");
+        assertNotNull(r1.error(), "error message must be present");
+        assertTrue(r1.error().contains("does not exist"), "error must mention missing file");
 
-        assertNull(sessionManager.openFile(jsonFile.toString(), nonExistentSchema),
-                "openFile with existing JSON but missing schema must return null");
+        final OpenFileResult r2 = sessionManager.openFile(jsonFile.toString(), nonExistentSchema);
+        assertFalse(r2.success(), "openFile with existing JSON but missing schema must fail");
+        assertNotNull(r2.error(), "error message must be present");
+        assertTrue(r2.error().contains("does not exist"), "error must mention missing schema");
     }
 
     @Test
     void testCloseFileRemovesSession()
     {
-        final String id = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
-        assertNotNull(id, "Precondition: session must open successfully");
+        final OpenFileResult openResult = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
+        assertTrue(openResult.success(), "Precondition: session must open successfully");
+        final String id = openResult.sessionId();
 
         final boolean closed = sessionManager.closeFile(id);
         assertTrue(closed, "closeFile must return true for a valid headless session");
@@ -93,8 +99,9 @@ public class FileSessionManagerTest
     void testCannotCloseGuiSession()
     {
         // Open a headless session to get a valid ReadableModel instance
-        final String headlessId = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
-        assertNotNull(headlessId, "Precondition: headless session must open");
+        final OpenFileResult headlessResult = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
+        assertTrue(headlessResult.success(), "Precondition: headless session must open");
+        final String headlessId = headlessResult.sessionId();
         final EditorSession headlessSession = sessionManager.getSession(headlessId);
 
         // Register as GUI session (guiOwned=true)
@@ -112,8 +119,9 @@ public class FileSessionManagerTest
     @Test
     void testUnregisterGuiSession()
     {
-        final String headlessId = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
-        assertNotNull(headlessId, "Precondition: headless session must open");
+        final OpenFileResult headlessResult = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
+        assertTrue(headlessResult.success(), "Precondition: headless session must open");
+        final String headlessId = headlessResult.sessionId();
         final EditorSession headlessSession = sessionManager.getSession(headlessId);
 
         final String guiId = sessionManager.registerGuiSession(
@@ -138,10 +146,12 @@ public class FileSessionManagerTest
                 + "\"type\":\"object\","
                 + "\"properties\":{\"a\":{\"type\":\"integer\"}}}");
 
-        final String id1 = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
-        final String id2 = sessionManager.openFile(jsonFile2.toString(), schemaFile2.toString());
-        assertNotNull(id1, "First session must open");
-        assertNotNull(id2, "Second session must open");
+        final OpenFileResult result1 = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
+        final OpenFileResult result2 = sessionManager.openFile(jsonFile2.toString(), schemaFile2.toString());
+        assertTrue(result1.success(), "First session must open");
+        assertTrue(result2.success(), "Second session must open");
+        final String id1 = result1.sessionId();
+        final String id2 = result2.sessionId();
 
         final List<EditorSession> sessions = sessionManager.listSessions();
         assertEquals(2, sessions.size(), "listSessions must return exactly 2 sessions");
@@ -185,9 +195,9 @@ public class FileSessionManagerTest
                 try
                 {
                     startLatch.await();
-                    final String id = sessionManager.openFile(
+                    final OpenFileResult openResult = sessionManager.openFile(
                             jsonFiles.get(index).toString(), schemaFiles.get(index).toString());
-                    if (id == null)
+                    if (!openResult.success())
                     {
                         errorCount.incrementAndGet();
                     }
@@ -195,9 +205,9 @@ public class FileSessionManagerTest
                     {
                         synchronized (openedIds)
                         {
-                            openedIds.add(id);
+                            openedIds.add(openResult.sessionId());
                         }
-                        sessionManager.closeFile(id);
+                        sessionManager.closeFile(openResult.sessionId());
                     }
                 }
                 catch (final Exception e)
@@ -218,5 +228,33 @@ public class FileSessionManagerTest
         assertEquals(0, errorCount.get(), "No threads must encounter errors during concurrent access");
         assertEquals(threadCount, openedIds.size(), "All threads must have opened a session");
         assertTrue(sessionManager.listSessions().isEmpty(), "All sessions must be closed after concurrent test");
+    }
+
+    @Test
+    void testOpenFileWithInvalidJson() throws Exception
+    {
+        // JSON has a string where the schema expects a number - validation must reject it
+        final Path invalidJson = tempDir.resolve("invalid.json");
+        Files.writeString(invalidJson, "{\"name\":\"test\",\"value\":\"not-a-number\"}");
+
+        final OpenFileResult result = sessionManager.openFile(invalidJson.toString(), schemaFile.toString());
+
+        assertFalse(result.success(), "openFile must fail when JSON does not validate against schema");
+        assertNotNull(result.error(), "error message must be present");
+        assertFalse(result.error().isBlank(), "error message must not be blank");
+        assertTrue(result.error().toLowerCase().contains("schema") || result.error().toLowerCase().contains("validat"),
+                "error must mention schema or validation, got: " + result.error());
+    }
+
+    @Test
+    void testCloseSessionThenAccess()
+    {
+        final OpenFileResult openResult = sessionManager.openFile(jsonFile.toString(), schemaFile.toString());
+        assertTrue(openResult.success(), "Precondition: session must open");
+        final String id = openResult.sessionId();
+
+        sessionManager.closeFile(id);
+
+        assertNull(sessionManager.getSession(id), "getSession must return null after session is closed");
     }
 }

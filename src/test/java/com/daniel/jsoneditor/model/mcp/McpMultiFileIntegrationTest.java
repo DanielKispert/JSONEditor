@@ -255,6 +255,43 @@ public class McpMultiFileIntegrationTest
                 "Expected JSON-RPC error when using a bogus file_id");
     }
 
+    @Test
+    void testOpenFileValidationRejection() throws Exception
+    {
+        final Path jsonFile = createTempFile("mcp-invalid-", ".json",
+                "{\"active\":\"not-a-boolean\",\"count\":\"not-a-number\"}");
+        final Path schemaFile = createTempFile("mcp-invalid-schema-", ".json", SCHEMA_FLAGS);
+
+        final JsonNode result = callTool("open_file", OBJECT_MAPPER.createObjectNode()
+                .put("json_path", jsonFile.toString())
+                .put("schema_path", schemaFile.toString()));
+
+        assertNotNull(result.get("error"), "Expected JSON-RPC error when JSON fails schema validation");
+        final String errorMessage = result.path("error").path("message").asText("");
+        assertFalse(errorMessage.isBlank(), "Error message must not be blank");
+        assertTrue(
+                errorMessage.toLowerCase().contains("schema") || errorMessage.toLowerCase().contains("validat"),
+                "Error message must mention schema or validation failure, got: " + errorMessage);
+    }
+
+    @Test
+    void testCloseWhileReading() throws Exception
+    {
+        final String fileId = openFile(JSON_FLAGS, SCHEMA_FLAGS);
+
+        // Close the session
+        final JsonNode closeResult = parseToolResultPayload(
+                callTool("close_file", OBJECT_MAPPER.createObjectNode().put("file_id", fileId)));
+        assertTrue(closeResult.path("success").asBoolean(), "close_file must succeed");
+
+        // Now try to read from the closed session - must return an error, not crash
+        final JsonNode getNodeResult = callTool("get_node", OBJECT_MAPPER.createObjectNode()
+                .put("file_id", fileId)
+                .put("path", ""));
+        assertNotNull(getNodeResult.get("error"),
+                "Expected JSON-RPC error when accessing a closed session");
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private String openFile(final String jsonContent, final String schemaContent) throws Exception
