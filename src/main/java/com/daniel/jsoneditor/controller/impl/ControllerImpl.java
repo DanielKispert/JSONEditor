@@ -207,6 +207,7 @@ public class ControllerImpl implements Controller, Observer
                     }
                 }
                 model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
+                appService.getRecentFilesManager().addRecentFile(jsonFile, schemaFile);
                 if (guiSessionId != null)
                 {
                     fileSessionManager.unregisterGuiSession(guiSessionId);
