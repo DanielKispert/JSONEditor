@@ -262,7 +262,7 @@ public class ControllerImpl implements Controller, Observer
             final JsonNode mergedNode = JsonNodeMerger.createMergedNode(readableModel, existingNodeAtPath, contentNode);
             final JsonSchema schemaAtPath = readableModel.getSubschemaForPath(path);
             
-            if (mergedNode != null && SchemaHelper.validateJsonWithSchema(mergedNode, schemaAtPath))
+            if (mergedNode != null && SchemaHelper.validateJsonWithSchema(mergedNode, schemaAtPath).isEmpty())
             {
                 commandManager.executeCommand(commandFactory.setNodeCommand(path, mergedNode));
                 view.showToast(Toasts.IMPORT_SUCCESSFUL_TOAST);
@@ -443,7 +443,7 @@ public class ControllerImpl implements Controller, Observer
     
     private void handleJsonValidation(JsonNode json, JsonSchema schema, Runnable onSuccess)
     {
-        if (SchemaHelper.validateJsonWithSchema(json, schema))
+        if (SchemaHelper.validateJsonWithSchema(json, schema).isEmpty())
         {
             onSuccess.run();
         }
@@ -488,7 +488,7 @@ public class ControllerImpl implements Controller, Observer
             candidateParent.set(propertyName, buildCandidateNode(value));
         }
         final JsonSchema parentSchema = readableModel.getSubschemaForPath(parentPath);
-        if (parentSchema != null && !SchemaHelper.validateJsonWithSchema(candidateParent, parentSchema))
+        if (parentSchema != null && !SchemaHelper.validateJsonWithSchema(candidateParent, parentSchema).isEmpty())
         {
             view.showToast(Toasts.VALUE_VALIDATION_FAILED_TOAST);
             return;
@@ -566,14 +566,14 @@ public class ControllerImpl implements Controller, Observer
                     view.showToast(Toasts.ERROR_TOAST);
                     return;
                 }
-                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(pathToInsert)))
+                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(pathToInsert)).isEmpty())
                 {
                     commandManager.executeCommand(commandFactory.setNodeCommand(pathToInsert, jsonNode));
                     view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
                     
                 }
                 else if (itemToInsertAt.isArray() && SchemaHelper.validateJsonWithSchema(jsonNode,
-                        readableModel.getSubschemaForPath(pathToInsert + "/0")))
+                        readableModel.getSubschemaForPath(pathToInsert + "/0")).isEmpty())
                 {
                     commandManager.executeCommand(commandFactory.setNodeCommand(itemToInsertAt.getPath() + "/" + itemToInsertAt.getNode().size(), jsonNode));
                     view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
@@ -618,7 +618,7 @@ public class ControllerImpl implements Controller, Observer
             try
             {
                 final JsonNode jsonNode = new JsonFileReaderAndWriterImpl().getNodeFromString(jsonString);
-                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(parentPath)))
+                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(parentPath)).isEmpty())
                 {
                     final int arraySize = parentNode.getNode().size();
                     commandManager.executeCommand(commandFactory.setNodeCommand(parentNode.getPath() + "/" + arraySize, jsonNode));
