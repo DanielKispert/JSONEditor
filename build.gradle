@@ -58,13 +58,6 @@ test {
     useJUnitPlatform()
 }
 
-task runStandalone(type: JavaExec) {
-    description = 'Run the standalone MCP server without GUI'
-    group = 'application'
-    mainClass.set('com.daniel.jsoneditor.standalone.StandaloneMcpMain')
-    classpath = sourceSets.main.runtimeClasspath
-}
-
 runtime {
     options = ['--strip-debug', '--no-header-files', '--no-man-pages']
     additive = true
