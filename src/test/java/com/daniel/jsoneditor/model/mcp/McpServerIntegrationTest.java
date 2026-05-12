@@ -227,6 +227,30 @@ public class McpServerIntegrationTest
         assertNotNull(result.get("error"), "Expected error when opening non-existent files");
     }
 
+    @Test
+    void testGetNodeWithEmptyFileIdArgument() throws Exception
+    {
+        final JsonNode result = callTool("get_node", OBJECT_MAPPER.createObjectNode()
+                .put("file_id", "")
+                .put("path", ""));
+        assertNotNull(result.get("error"), "Expected error when file_id is empty string");
+        final String message = result.path("error").path("message").asText();
+        assertTrue(message.contains("file_id argument is required"),
+                "Expected 'file_id argument is required' for empty file_id, got: " + message);
+    }
+
+    @Test
+    void testGetNodeWithNonExistentFileId() throws Exception
+    {
+        final JsonNode result = callTool("get_node", OBJECT_MAPPER.createObjectNode()
+                .put("file_id", "nonexistent123")
+                .put("path", ""));
+        assertNotNull(result.get("error"), "Expected error when file_id is unknown");
+        final String message = result.path("error").path("message").asText();
+        assertTrue(message.contains("nonexistent123"),
+                "Expected file_id to be included in error message, got: " + message);
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private JsonNode sendJsonRpc(final String method) throws Exception

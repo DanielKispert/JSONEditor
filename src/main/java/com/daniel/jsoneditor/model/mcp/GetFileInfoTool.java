@@ -52,11 +52,12 @@ class GetFileInfoTool extends ReadOnlyMcpTool
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final ReadableModel model = resolveModel(arguments);
-        if (model == null)
+        final String error = validateFileId(arguments, id);
+        if (error != null)
         {
-            return unknownFileIdError(id);
+            return error;
         }
+        final ReadableModel model = resolveModel(arguments);
         
         final ObjectNode content = OBJECT_MAPPER.createObjectNode();
         

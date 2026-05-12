@@ -25,13 +25,13 @@ import com.daniel.jsoneditor.model.commands.CommandFactory;
 import com.daniel.jsoneditor.model.diff.DiffEntry;
 import com.daniel.jsoneditor.model.diff.JsonDiffer;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.JsonNodeHelper;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.daniel.jsoneditor.model.settings.Settings;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
@@ -493,7 +493,7 @@ public class ControllerImpl implements Controller, Observer
         }
         else
         {
-            candidateParent.set(propertyName, buildCandidateNode(value));
+            candidateParent.set(propertyName, JsonNodeHelper.toJsonNode(value));
         }
         final JsonSchema parentSchema = readableModel.getSubschemaForPath(parentPath);
         if (parentSchema != null && !SchemaHelper.validateJsonWithSchema(candidateParent, parentSchema).isEmpty())
@@ -504,35 +504,7 @@ public class ControllerImpl implements Controller, Observer
         commandManager.executeCommand(commandFactory.setValueAtNodeCommand(parentPath, propertyName, value));
     }
 
-    /** Wraps a raw Java value into a JsonNode for pre-write schema validation. */
-    private JsonNode buildCandidateNode(Object value)
-    {
-        if (value == null)
-        {
-            return JsonNodeFactory.instance.nullNode();
-        }
-        if (value instanceof Boolean)
-        {
-            return JsonNodeFactory.instance.booleanNode((Boolean) value);
-        }
-        if (value instanceof Integer)
-        {
-            return JsonNodeFactory.instance.numberNode((Integer) value);
-        }
-        if (value instanceof Long)
-        {
-            return JsonNodeFactory.instance.numberNode((Long) value);
-        }
-        if (value instanceof Double)
-        {
-            return JsonNodeFactory.instance.numberNode((Double) value);
-        }
-        if (value instanceof Number)
-        {
-            return JsonNodeFactory.instance.numberNode(((Number) value).doubleValue());
-        }
-        return JsonNodeFactory.instance.textNode(value.toString());
-    }
+    
     
     @Override
     public void overrideNodeAtPath(String path, JsonNode node)

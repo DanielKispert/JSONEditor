@@ -20,7 +20,7 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.RenameKeyDialog;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.daniel.jsoneditor.model.json.JsonNodeHelper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
@@ -221,7 +221,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         else
         {
-            candidateParent.set(propertyName, buildCandidateNode(value));
+            candidateParent.set(propertyName, JsonNodeHelper.toJsonNode(value));
         }
         final JsonSchema parentSchema = getSubschemaForPath(parentPath);
         if (parentSchema != null)
@@ -236,30 +236,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         parentNodeWithPath.setProperty(propertyName, value);
     }
 
-    private JsonNode buildCandidateNode(Object value)
-    {
-        if (value instanceof Boolean)
-        {
-            return JsonNodeFactory.instance.booleanNode((Boolean) value);
-        }
-        if (value instanceof Integer)
-        {
-            return JsonNodeFactory.instance.numberNode((Integer) value);
-        }
-        if (value instanceof Long)
-        {
-            return JsonNodeFactory.instance.numberNode((Long) value);
-        }
-        if (value instanceof Double)
-        {
-            return JsonNodeFactory.instance.numberNode((Double) value);
-        }
-        if (value instanceof Number)
-        {
-            return JsonNodeFactory.instance.numberNode(((Number) value).doubleValue());
-        }
-        return JsonNodeFactory.instance.textNode(value.toString());
-    }
+    
     
     @Override
     public JsonSchema getRootSchema()

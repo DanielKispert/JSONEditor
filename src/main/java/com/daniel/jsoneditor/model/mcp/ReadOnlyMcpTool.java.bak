@@ -69,7 +69,10 @@ public abstract class ReadOnlyMcpTool extends McpTool
      * @deprecated Use {@link #validateFileId(JsonNode, JsonNode)} instead for distinct error messages.
      */
     @Deprecated
-    
+    protected static String unknownFileIdError(final JsonNode id)
+    {
+        return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "Unknown file_id");
+    }
     
     protected static void addFileIdProperty(final ObjectNode properties)
     {
