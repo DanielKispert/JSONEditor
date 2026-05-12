@@ -43,12 +43,10 @@ public abstract class ReadOnlyMcpTool extends McpTool
      */
     protected ResolveResult resolveFileSession(final JsonNode arguments, final JsonNode id)
     {
-        final String fileId = arguments.path("file_id").asText(null);
-        if (fileId == null || fileId.isEmpty())
+        final String fileId = getValidatedFileId(arguments);
+        if (fileId == null)
         {
-            return new ResolveResult(null,
-                    JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
-                            FILE_ID_REQUIRED_MESSAGE));
+            return new ResolveResult(null, fileIdRequiredError(id));
         }
         final EditorSession session = sessionManager.getSession(fileId);
         if (session == null)
@@ -58,6 +56,26 @@ public abstract class ReadOnlyMcpTool extends McpTool
                             "Unknown file_id: " + fileId));
         }
         return new ResolveResult(session.model(), null);
+    }
+
+    /**
+     * Returns the file_id string from arguments if present and non-empty, or null if missing/empty.
+     * Callers should return {@link #fileIdRequiredError(JsonNode)} when this returns null.
+     */
+    protected String getValidatedFileId(final JsonNode arguments)
+    {
+        final String fileId = arguments.path("file_id").asText(null);
+        if (fileId == null || fileId.isEmpty())
+        {
+            return null;
+        }
+        return fileId;
+    }
+
+    /** Builds a JSON-RPC error response for a missing or empty file_id argument. */
+    protected String fileIdRequiredError(final JsonNode id)
+    {
+        return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, FILE_ID_REQUIRED_MESSAGE);
     }
 
     protected static void addFileIdProperty(final ObjectNode properties)

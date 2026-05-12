@@ -92,6 +92,13 @@ public class JFXLauncher extends Application
             {
                 logger.info("Started in headless mode — MCP server is disabled in settings, no GUI window.");
             }
+            if (headless && !appService.getMcpController().isMcpServerRunning())
+            {
+                logger.error("Headless mode with MCP disabled — nothing to do. Exiting.");
+                appService.shutdown();
+                Platform.exit();
+                return;
+            }
         }
         else
         {

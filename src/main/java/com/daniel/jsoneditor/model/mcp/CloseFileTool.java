@@ -48,11 +48,10 @@ class CloseFileTool extends ReadOnlyMcpTool
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final String fileId = arguments.path("file_id").asText(null);
-        if (fileId == null || fileId.isEmpty())
+        final String fileId = getValidatedFileId(arguments);
+        if (fileId == null)
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
-                    FILE_ID_REQUIRED_MESSAGE);
+            return fileIdRequiredError(id);
         }
 
         final CloseFileResult closeResult = sessionManager.closeFile(fileId);

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-import java.net.ServerSocket;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -41,32 +40,13 @@ abstract class McpTestBase
     @BeforeEach
     void setUp() throws Exception
     {
-        int port = 0;
         final FileSessionManager sessionManager = new FileSessionManager();
         server = new JsonEditorMcpServer(sessionManager, null);
-        for (int attempt = 0; attempt < 3; attempt++)
-        {
-            try (final ServerSocket socket = new ServerSocket(0))
-            {
-                port = socket.getLocalPort();
-            }
-            try
-            {
-                server.start(port);
-                break;
-            }
-            catch (Exception e)
-            {
-                if (attempt == 2)
-                {
-                    throw e;
-                }
-            }
-        }
+        server.start(0);
         httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
-        baseUrl = "http://127.0.0.1:" + port;
+        baseUrl = "http://127.0.0.1:" + server.getPort();
     }
 
     @AfterEach

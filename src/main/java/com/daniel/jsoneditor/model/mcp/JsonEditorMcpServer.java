@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -72,7 +73,7 @@ public class JsonEditorMcpServer
      * Starts the MCP server on the specified port.
      *
      * @param port
-     *         the port to listen on (localhost only, 1024-65535)
+     *         the port to listen on (localhost only); use 0 to let the OS assign a free port (1024-65535 for explicit ports)
      *
      * @throws IOException
      *         if the server cannot be started
@@ -81,9 +82,9 @@ public class JsonEditorMcpServer
      */
     public synchronized void start(final int port) throws IOException
     {
-        if (port < 1024 || port > 65535)
+        if (port < 0 || (port > 0 && port < 1024) || port > 65535)
         {
-            throw new IllegalArgumentException("Port must be between 1024 and 65535");
+            throw new IllegalArgumentException("Port must be 0 (OS assigns) or between 1024 and 65535");
         }
         
         if (running)
@@ -92,17 +93,17 @@ public class JsonEditorMcpServer
             stop();
         }
         
-        this.port = port;
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
+        this.port = (port == 0) ? server.getAddress().getPort() : port;
         server.createContext("/", this::handleRequest);
-        server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool(r -> {
+        server.setExecutor(Executors.newCachedThreadPool(r -> {
             Thread t = new Thread(r);
             t.setDaemon(true);
             return t;
         }));
         server.start();
         running = true;
-        logger.info("MCP Server started on http://127.0.0.1:{}", port);
+        logger.info("MCP Server started on http://127.0.0.1:{}", this.port);
     }
     
     /**
