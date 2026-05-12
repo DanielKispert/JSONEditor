@@ -18,7 +18,6 @@ class ShowGuiTool extends McpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(ShowGuiTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final int JSONRPC_INVALID_PARAMS = -32602;
 
     private final AppService appService;
 

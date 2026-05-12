@@ -12,6 +12,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public abstract class McpTool
 {
+    /** JSON-RPC error code for invalid method parameters. */
+    protected static final int JSONRPC_INVALID_PARAMS = -32602;
+
     /**
      * @return unique tool name (e.g., "get_node", "set_node")
      */

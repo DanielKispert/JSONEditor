@@ -16,9 +16,6 @@ public abstract class ReadOnlyMcpTool extends McpTool
 {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
-    /** JSON-RPC error code for invalid parameters (unknown file_id). */
-    protected static final int JSONRPC_INVALID_PARAMS = -32602;
-
     protected final FileSessionManager sessionManager;
     
     protected ReadOnlyMcpTool(final FileSessionManager sessionManager)
@@ -64,13 +61,6 @@ public abstract class ReadOnlyMcpTool extends McpTool
         return null;
     }
 
-    /**
-     * Returns a standard JSON-RPC error response for an unknown or missing {@code file_id}.
-     * @deprecated Use {@link #validateFileId(JsonNode, JsonNode)} instead for distinct error messages.
-     */
-    @Deprecated
-    
-    
     protected static void addFileIdProperty(final ObjectNode properties)
     {
         final ObjectNode fileIdProp = OBJECT_MAPPER.createObjectNode();
