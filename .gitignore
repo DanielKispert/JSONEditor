@@ -56,3 +56,5 @@ out/
 ### Mac OS ###
 .DS_Store
 .java-version
+
+*.bak
