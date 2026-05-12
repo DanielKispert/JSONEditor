@@ -105,8 +105,7 @@ Tools are registered in `McpToolRegistry` (`model/mcp/`). All per-file tools req
 
 Base classes:
 - `ReadOnlyMcpTool` – holds `FileSessionManager`, provides `resolveFileSession(arguments, id)` helper
-- `WriteMcpTool` – extends `ReadOnlyMcpTool` (currently no write tools registered)
-
+ 
 Session management tools (extend `ReadOnlyMcpTool`, no `file_id` needed):
 - `ListFilesTool` – list all open sessions
 - `OpenFileTool` – open a JSON + schema file pair, returns `file_id`

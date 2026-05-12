@@ -5,7 +5,6 @@ import com.daniel.jsoneditor.model.impl.ModelImpl;
 import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
 import javafx.stage.Stage;
 
-
 /**
  * Encapsulates a single app window with its own Model, Controller, View, and Stage.
  * Created by AppService, one per open file.

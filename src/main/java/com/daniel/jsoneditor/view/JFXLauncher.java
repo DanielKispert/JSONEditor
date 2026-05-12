@@ -21,7 +21,6 @@ import java.io.File;
 import java.util.List;
 import javax.swing.SwingUtilities;
 
-
 /**
  * JavaFX entry point. Initializes the platform, creates the AppService (which starts
  * the MCP server immediately), and optionally opens a GUI window.

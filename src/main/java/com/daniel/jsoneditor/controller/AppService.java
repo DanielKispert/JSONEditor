@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-
 /**
  * Central application service that owns shared state across all editor windows.
  * Starts the MCP server immediately so external clients (e.g. OpenCode) can connect
