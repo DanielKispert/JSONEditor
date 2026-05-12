@@ -40,8 +40,8 @@ public class AppService
     {
         this.fileSessionManager = new FileSessionManager();
         this.settingsController = new SettingsControllerImpl();
-        this.mcpController = new McpController(fileSessionManager, settingsController, this);
         this.recentFilesManager = new RecentFilesManager();
+        this.mcpController = new McpController(fileSessionManager, settingsController, this);
         startMcpServer();
     }
 

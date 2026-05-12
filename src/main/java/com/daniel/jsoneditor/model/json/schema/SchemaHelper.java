@@ -33,6 +33,10 @@ public class SchemaHelper
      */
     public static List<String> validateJsonWithSchema(JsonNode json, JsonSchema schema)
     {
+        if (schema == null)
+        {
+            return Collections.emptyList();
+        }
         final Set<ValidationMessage> messages = schema.validate(json);
         final List<String> errors = new ArrayList<>();
         for (final ValidationMessage message : messages)

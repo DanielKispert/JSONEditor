@@ -98,7 +98,7 @@ public class JFXLauncher extends Application
         catch (Exception e)
         {
             // Not on macOS or AWT desktop not available — ignore silently
-            logger.debug("Could not register macOS reopen handler: {}", e.getMessage());
+            logger.debug("Could not register macOS reopen handler", e);
         }
     }
 
@@ -124,7 +124,7 @@ public class JFXLauncher extends Application
         }
         catch (Exception e)
         {
-            logger.debug("Could not register dock menu: {}", e.getMessage());
+            logger.debug("Could not register dock menu", e);
         }
     }
 
@@ -164,7 +164,7 @@ public class JFXLauncher extends Application
         }
         catch (Exception e)
         {
-            logger.debug("Could not rebuild dock menu: {}", e.getMessage());
+            logger.debug("Could not rebuild dock menu", e);
         }
     }
 

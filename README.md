@@ -69,8 +69,8 @@ Enable in Settings → MCP Server. The server exposes the currently open file to
 Run the MCP server without the GUI — useful for CI, scripting, or AI agent workflows with multiple files:
 
 ```bash
-./gradlew runStandalone                      # default port 4500
-./gradlew runStandalone --args="--port 5000" # custom port
+./gradlew run --args="--headless"                # default port 4500
+./gradlew run --args="--headless --port 5000"    # custom port
 ```
 
 Use the `open_file` tool to load JSON + schema pairs, then query them with `get_node`, `get_schema_for_path`, etc. Each file gets a `file_id` for addressing.

@@ -520,6 +520,10 @@ public class ControllerImpl implements Controller, Observer
         {
             return JsonNodeFactory.instance.numberNode((Double) value);
         }
+        if (value instanceof Number)
+        {
+            return JsonNodeFactory.instance.numberNode(((Number) value).doubleValue());
+        }
         return JsonNodeFactory.instance.textNode(value.toString());
     }
     

@@ -8,8 +8,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -37,6 +38,7 @@ public class RecentFilesManager
     private final List<RecentFile> recentFiles;
 
     private final List<Runnable> changeListeners;
+    private final Object lock = new Object();
 
     public RecentFilesManager()
     {
@@ -56,28 +58,47 @@ public class RecentFilesManager
         {
             return;
         }
-        recentFiles.removeIf(rf -> rf.jsonFile().equals(jsonFile));
-        recentFiles.add(0, new RecentFile(jsonFile, schemaFile));
-        while (recentFiles.size() > MAX_RECENT_FILES)
+        final List<Runnable> listeners;
+        synchronized (lock)
         {
-            recentFiles.remove(recentFiles.size() - 1);
+            recentFiles.removeIf(rf -> rf.jsonFile().equals(jsonFile));
+            recentFiles.add(0, new RecentFile(jsonFile, schemaFile));
+            while (recentFiles.size() > MAX_RECENT_FILES)
+            {
+                recentFiles.remove(recentFiles.size() - 1);
+            }
+            save();
+            listeners = new ArrayList<>(changeListeners);
         }
-        save();
-        notifyChangeListeners();
+        for (final Runnable listener : listeners)
+        {
+            listener.run();
+        }
     }
 
-    /** Returns an unmodifiable view of recent files, newest first. */
+    /** Returns a snapshot of recent files, newest first. */
     public List<RecentFile> getRecentFiles()
     {
-        return Collections.unmodifiableList(recentFiles);
+        synchronized (lock)
+        {
+            return new ArrayList<>(recentFiles);
+        }
     }
 
     /** Clears all recent files and persists the empty list. */
     public void clear()
     {
-        recentFiles.clear();
-        save();
-        notifyChangeListeners();
+        final List<Runnable> listeners;
+        synchronized (lock)
+        {
+            recentFiles.clear();
+            save();
+            listeners = new ArrayList<>(changeListeners);
+        }
+        for (final Runnable listener : listeners)
+        {
+            listener.run();
+        }
     }
 
     /**
@@ -86,14 +107,9 @@ public class RecentFilesManager
      */
     public void addChangeListener(final Runnable listener)
     {
-        changeListeners.add(listener);
-    }
-
-    private void notifyChangeListeners()
-    {
-        for (final Runnable listener : changeListeners)
+        synchronized (lock)
         {
-            listener.run();
+            changeListeners.add(listener);
         }
     }
 
@@ -135,7 +151,11 @@ public class RecentFilesManager
         final File dir = RECENT_FILES_PATH.getParentFile();
         if (dir != null && !dir.exists())
         {
-            dir.mkdirs();
+            if (!dir.mkdirs() && !dir.exists())
+            {
+                logger.error("Cannot create directory for recent files: {}", dir);
+                return;
+            }
         }
         final Properties props = new Properties();
         for (int i = 0; i < recentFiles.size(); i++)
@@ -144,13 +164,33 @@ public class RecentFilesManager
             props.setProperty(String.format(KEY_JSON, i), rf.jsonFile().getAbsolutePath());
             props.setProperty(String.format(KEY_SCHEMA, i), rf.schemaFile().getAbsolutePath());
         }
-        try (FileOutputStream out = new FileOutputStream(RECENT_FILES_PATH))
+        final File tempFile = new File(RECENT_FILES_PATH.getParentFile(), RECENT_FILES_PATH.getName() + ".tmp");
+        try (FileOutputStream out = new FileOutputStream(tempFile))
         {
             props.store(out, null);
         }
         catch (IOException e)
         {
             logger.error("Could not save recent files to {}", RECENT_FILES_PATH, e);
+            return;
+        }
+        try
+        {
+            Files.move(tempFile.toPath(), RECENT_FILES_PATH.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        }
+        catch (IOException e)
+        {
+            // ATOMIC_MOVE not supported on this filesystem — fall back to direct write
+            logger.warn("Atomic rename failed, falling back to direct write: {}", e.getMessage());
+            try (FileOutputStream out = new FileOutputStream(RECENT_FILES_PATH))
+            {
+                props.store(out, null);
+            }
+            catch (IOException ex)
+            {
+                logger.error("Could not save recent files to {}", RECENT_FILES_PATH, ex);
+            }
         }
     }
 }

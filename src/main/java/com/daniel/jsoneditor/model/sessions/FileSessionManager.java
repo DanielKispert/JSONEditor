@@ -53,8 +53,18 @@ public class FileSessionManager
         }
         
         final JsonFileReaderAndWriterImpl reader = new JsonFileReaderAndWriterImpl();
-        final JsonNode json = reader.getJsonFromFile(jsonFile);
-        final JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
+        final JsonNode json;
+        final JsonSchema schema;
+        try
+        {
+            json = reader.getJsonFromFile(jsonFile);
+            schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
+        }
+        catch (Exception e)
+        {
+            logger.error("Failed to parse JSON or schema files: {} / {}", jsonPath, schemaPath, e);
+            return new OpenFileResult(null, "Failed to parse files: " + e.getMessage());
+        }
         
         if (json == null || schema == null)
         {

@@ -174,6 +174,15 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         this.rootSchema = rootSchema;
     }
     
+    /**
+     * Sends a model state event to all registered observers.
+     *
+     * In normal GUI mode this is called via {@link javafx.application.Platform#runLater} to stay
+     * on the JavaFX Application Thread. In headless mode (no JavaFX toolkit), the
+     * {@link IllegalStateException} from {@code Platform.runLater} is caught by callers and this
+     * method is invoked directly on the worker thread instead. This is safe because in headless
+     * mode no JavaFX-bound observers are registered with the {@link com.daniel.jsoneditor.model.statemachine.EventSender}.
+     */
     public void sendEvent(Event state)
     {
         eventSender.sendEvent(state);
@@ -244,6 +253,10 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         if (value instanceof Double)
         {
             return JsonNodeFactory.instance.numberNode((Double) value);
+        }
+        if (value instanceof Number)
+        {
+            return JsonNodeFactory.instance.numberNode(((Number) value).doubleValue());
         }
         return JsonNodeFactory.instance.textNode(value.toString());
     }

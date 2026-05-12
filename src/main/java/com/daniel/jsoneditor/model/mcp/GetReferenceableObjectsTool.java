@@ -58,7 +58,7 @@ class GetReferenceableObjectsTool extends ReadOnlyMcpTool
         final ReadableModel model = resolveModel(arguments);
         if (model == null)
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "Unknown file_id");
+            return unknownFileIdError(id);
         }
         
         final List<ReferenceableObject> objects = model.getReferenceableObjects();

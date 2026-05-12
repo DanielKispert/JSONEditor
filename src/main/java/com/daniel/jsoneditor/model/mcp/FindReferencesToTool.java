@@ -60,7 +60,7 @@ class FindReferencesToTool extends ReadOnlyMcpTool
         final ReadableModel model = resolveModel(arguments);
         if (model == null)
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "Unknown file_id");
+            return unknownFileIdError(id);
         }
         
         final String path = arguments.path("path").asText("");
