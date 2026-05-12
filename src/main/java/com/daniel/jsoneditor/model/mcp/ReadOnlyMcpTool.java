@@ -17,7 +17,7 @@ public abstract class ReadOnlyMcpTool extends McpTool
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
     /** JSON-RPC error code for invalid parameters (unknown file_id). */
-    private static final int JSONRPC_INVALID_PARAMS = -32602;
+    protected static final int JSONRPC_INVALID_PARAMS = -32602;
 
     protected final FileSessionManager sessionManager;
     

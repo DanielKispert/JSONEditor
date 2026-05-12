@@ -61,7 +61,7 @@ public class RecentFilesManager
         final List<Runnable> listeners;
         synchronized (lock)
         {
-            recentFiles.removeIf(rf -> rf.jsonFile().equals(jsonFile));
+            recentFiles.removeIf((final RecentFile rf) -> rf.jsonFile().equals(jsonFile));
             recentFiles.add(0, new RecentFile(jsonFile, schemaFile));
             while (recentFiles.size() > MAX_RECENT_FILES)
             {

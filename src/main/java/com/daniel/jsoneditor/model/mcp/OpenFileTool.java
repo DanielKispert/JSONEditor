@@ -66,7 +66,7 @@ class OpenFileTool extends ReadOnlyMcpTool
         final OpenFileResult openResult = sessionManager.openFile(jsonPath, schemaPath);
         if (!openResult.success())
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, openResult.error());
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, openResult.error());
         }
         
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
@@ -77,4 +77,3 @@ class OpenFileTool extends ReadOnlyMcpTool
         return McpToolRegistry.createToolResult(id, result);
     }
 }
-

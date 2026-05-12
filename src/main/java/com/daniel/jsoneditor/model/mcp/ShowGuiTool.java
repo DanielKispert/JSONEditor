@@ -9,8 +9,6 @@ import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
- 
-
 
 /**
  * MCP tool that opens a new GUI window on demand.
@@ -20,41 +18,48 @@ class ShowGuiTool extends McpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(ShowGuiTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+    private static final int JSONRPC_INVALID_PARAMS = -32602;
+
     private final AppService appService;
-    
+
     public ShowGuiTool(final AppService appService)
     {
         this.appService = appService;
     }
-    
+
     @Override
     public String getName()
     {
         return "show_gui";
     }
-    
+
     @Override
     public String getDescription()
     {
         return "Opens a new JSON Editor GUI window. Use when running in headless mode to show the editor interface.";
     }
-    
+
     @Override
     public ObjectNode getInputSchema()
     {
         return OBJECT_MAPPER.createObjectNode();
     }
-    
+
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
+        if (appService.isShuttingDown())
+        {
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
+                    "Cannot open window — application is shutting down");
+        }
+
         Platform.runLater(() ->
         {
             appService.createWindow();
             logger.info("GUI window opened via MCP tool");
         });
-        
+
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
         result.put("status", "queued");
         result.put("note", "Window creation requested. The window will appear shortly.");

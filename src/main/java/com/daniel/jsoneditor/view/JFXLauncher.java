@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view;
 
 import com.daniel.jsoneditor.controller.AppService;
+import com.daniel.jsoneditor.controller.AppWindow;
 import com.daniel.jsoneditor.controller.settings.RecentFilesManager;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -13,9 +14,12 @@ import java.awt.Menu;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.Taskbar;
+import java.awt.desktop.AppReopenedEvent;
 import java.awt.desktop.AppReopenedListener;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.List;
+import javax.swing.SwingUtilities;
 
 
 /**
@@ -64,7 +68,11 @@ public class JFXLauncher extends Application
         }
         else
         {
-            appService.createWindow();
+            final AppWindow window = appService.createWindow();
+            if (window == null)
+            {
+                logger.error("Failed to create initial window — application is shutting down");
+            }
         }
 
         // macOS: reopen app when user clicks dock icon with no windows open
@@ -84,13 +92,17 @@ public class JFXLauncher extends Application
         {
             if (Desktop.isDesktopSupported())
             {
-                Desktop.getDesktop().addAppEventListener((AppReopenedListener) event ->
+                Desktop.getDesktop().addAppEventListener((AppReopenedListener) (final AppReopenedEvent event) ->
                         Platform.runLater(() ->
                         {
                             if (appService.getWindowCount() == 0)
                             {
                                 logger.info("macOS reopen event — opening new window");
-                                appService.createWindow();
+                                final AppWindow window = appService.createWindow();
+                                if (window == null)
+                                {
+                                    logger.warn("Could not create window on dock reopen — application is shutting down");
+                                }
                             }
                         }));
             }
@@ -134,38 +146,48 @@ public class JFXLauncher extends Application
      */
     private void rebuildDockMenu(final Taskbar taskbar)
     {
-        try
+        SwingUtilities.invokeLater(() ->
         {
-            final PopupMenu menu = new PopupMenu();
-
-            final MenuItem newWindowItem = new MenuItem("New Window");
-            newWindowItem.addActionListener(evt -> Platform.runLater(() -> appService.createWindow()));
-            menu.add(newWindowItem);
-
-            final List<RecentFilesManager.RecentFile> recentFiles =
-                    appService.getRecentFilesManager().getRecentFiles();
-            if (!recentFiles.isEmpty())
+            try
             {
-                menu.addSeparator();
-                final Menu recentMenu = new Menu("Recent Projects");
-                for (final RecentFilesManager.RecentFile rf : recentFiles)
-                {
-                    final File jsonFile = rf.jsonFile();
-                    final File schemaFile = rf.schemaFile();
-                    final MenuItem item = new MenuItem(jsonFile.getName());
-                    item.addActionListener(evt ->
-                            Platform.runLater(() -> appService.openFileInNewWindow(jsonFile, schemaFile)));
-                    recentMenu.add(item);
-                }
-                menu.add(recentMenu);
-            }
+                final PopupMenu menu = new PopupMenu();
 
-            taskbar.setMenu(menu);
-        }
-        catch (Exception e)
-        {
-            logger.debug("Could not rebuild dock menu", e);
-        }
+                final MenuItem newWindowItem = new MenuItem("New Window");
+                newWindowItem.addActionListener((final ActionEvent evt) -> Platform.runLater(() ->
+                {
+                    final AppWindow window = appService.createWindow();
+                    if (window == null)
+                    {
+                        logger.warn("Could not create window from dock menu — application is shutting down");
+                    }
+                }));
+                menu.add(newWindowItem);
+
+                final List<RecentFilesManager.RecentFile> recentFiles =
+                        appService.getRecentFilesManager().getRecentFiles();
+                if (!recentFiles.isEmpty())
+                {
+                    menu.addSeparator();
+                    final Menu recentMenu = new Menu("Recent Projects");
+                    for (final RecentFilesManager.RecentFile rf : recentFiles)
+                    {
+                        final File jsonFile = rf.jsonFile();
+                        final File schemaFile = rf.schemaFile();
+                        final MenuItem item = new MenuItem(jsonFile.getName());
+                        item.addActionListener((final ActionEvent evt) ->
+                                Platform.runLater(() -> appService.openFileInNewWindow(jsonFile, schemaFile)));
+                        recentMenu.add(item);
+                    }
+                    menu.add(recentMenu);
+                }
+
+                taskbar.setMenu(menu);
+            }
+            catch (Exception e)
+            {
+                logger.debug("Could not rebuild dock menu", e);
+            }
+        });
     }
 
     @Override

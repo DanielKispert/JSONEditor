@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.daniel.jsoneditor.model.sessions.CloseFileResult;
 
 
 public class FileSessionManagerTest
@@ -88,8 +89,8 @@ public class FileSessionManagerTest
         assertTrue(openResult.success(), "Precondition: session must open successfully");
         final String id = openResult.sessionId();
 
-        final boolean closed = sessionManager.closeFile(id);
-        assertTrue(closed, "closeFile must return true for a valid headless session");
+        final CloseFileResult closeResult = sessionManager.closeFile(id);
+        assertEquals(CloseFileResult.CLOSED, closeResult, "closeFile must return CLOSED for a valid headless session");
 
         assertNull(sessionManager.getSession(id), "getSession must return null after close");
         assertTrue(sessionManager.listSessions().isEmpty(), "listSessions must be empty after close");
@@ -111,8 +112,8 @@ public class FileSessionManagerTest
         assertTrue(sessionManager.getSession(guiId).guiOwned(), "GUI session must be marked guiOwned");
 
         // Attempting to close the GUI session via closeFile must fail
-        final boolean closed = sessionManager.closeFile(guiId);
-        assertFalse(closed, "closeFile must return false for a GUI-owned session");
+        final CloseFileResult closeResult = sessionManager.closeFile(guiId);
+        assertEquals(CloseFileResult.GUI_OWNED, closeResult, "closeFile must return GUI_OWNED for a GUI-owned session");
         assertNotNull(sessionManager.getSession(guiId), "GUI session must still exist after failed close");
     }
 

@@ -125,7 +125,7 @@ public class FileSessionManager
      */
     public void unregisterGuiSession(final String sessionId)
     {
-        sessions.computeIfPresent(sessionId, (key, session) ->
+        sessions.computeIfPresent(sessionId, (final String key, final EditorSession session) ->
         {
             if (session.guiOwned())
             {
@@ -140,26 +140,30 @@ public class FileSessionManager
      * Closes a headless session. Refuses to close GUI-owned sessions.
      *
      * @param sessionId the session to close
-     * @return true if closed, false if not found or GUI-owned
+     * @return {@link CloseFileResult#CLOSED} if closed, {@link CloseFileResult#NOT_FOUND} if not found,
+     *         {@link CloseFileResult#GUI_OWNED} if the session is GUI-owned
      */
-    public boolean closeFile(final String sessionId)
+    public CloseFileResult closeFile(final String sessionId)
     {
-        final boolean[] closed = {false};
-        sessions.computeIfPresent(sessionId, (key, session) ->
+        final CloseFileResult[] result = {CloseFileResult.NOT_FOUND};
+        sessions.computeIfPresent(sessionId, (final String key, final EditorSession session) ->
         {
             if (session.guiOwned())
             {
                 logger.warn("Cannot close GUI-owned session {} via MCP", sessionId);
+                result[0] = CloseFileResult.GUI_OWNED;
                 return session; // keep it
             }
             logger.info("Closed file session {}", sessionId);
-            closed[0] = true;
+            result[0] = CloseFileResult.CLOSED;
             return null; // removes the entry
         });
-        return closed[0];
+        return result[0];
     }
     
     /**
+     * Returns the session for the given ID, or {@code null} if not found.
+     *
      * @param sessionId the session ID
      * @return the session or null if not found
      */

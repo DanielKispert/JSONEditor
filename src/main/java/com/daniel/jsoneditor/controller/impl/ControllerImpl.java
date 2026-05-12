@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.daniel.jsoneditor.controller.AppService;
+import com.daniel.jsoneditor.controller.AppWindow;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManagerImpl;
@@ -457,7 +458,11 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void openNewJson()
     {
-        appService.createWindow();
+        final AppWindow window = appService.createWindow();
+        if (window == null)
+        {
+            logger.warn("Could not create new window — application is shutting down");
+        }
     }
     
     @Override
@@ -477,6 +482,8 @@ public class ControllerImpl implements Controller, Observer
         final JsonNodeWithPath parentNodeWithPath = readableModel.getNodeForPath(parentPath);
         if (parentNodeWithPath == null || !parentNodeWithPath.getNode().isObject())
         {
+            logger.debug("Cannot set value: parent at {} is null or not an object", parentPath);
+            view.showToast(Toasts.VALUE_VALIDATION_FAILED_TOAST);
             return;
         }
         final ObjectNode candidateParent = parentNodeWithPath.getNode().deepCopy();

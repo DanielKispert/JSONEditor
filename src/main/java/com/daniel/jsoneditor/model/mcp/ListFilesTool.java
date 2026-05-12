@@ -55,4 +55,3 @@ class ListFilesTool extends ReadOnlyMcpTool
     }
 }
 
-

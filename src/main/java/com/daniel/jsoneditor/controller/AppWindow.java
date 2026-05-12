@@ -16,6 +16,7 @@ public class AppWindow
     
     private final Stage stage;
     
+    /** Creates a new editor window wired to the given AppService. */
     public AppWindow(final AppService appService)
     {
         this.stage = new Stage();

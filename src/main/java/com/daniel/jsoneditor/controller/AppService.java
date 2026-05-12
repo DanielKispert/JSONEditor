@@ -74,6 +74,11 @@ public class AppService
      */
     public AppWindow createWindow()
     {
+        if (shuttingDown.get())
+        {
+            logger.info("Cannot create window — application is shutting down");
+            return null;
+        }
         final AppWindow window = new AppWindow(this);
         windows.add(window);
         window.setOnClose(() -> onWindowClosed(window));
@@ -87,6 +92,10 @@ public class AppService
     public void openFileInNewWindow(final File jsonFile, final File schemaFile)
     {
         final AppWindow window = createWindow();
+        if (window == null)
+        {
+            return;
+        }
         window.getController().jsonAndSchemaSelected(jsonFile, schemaFile, null);
     }
 
@@ -134,6 +143,12 @@ public class AppService
     public int getWindowCount()
     {
         return windows.size();
+    }
+
+    /** Returns true if the application is shutting down. */
+    public boolean isShuttingDown()
+    {
+        return shuttingDown.get();
     }
 
     /**
