@@ -15,6 +15,8 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +32,8 @@ abstract class McpTestBase
 
     protected final AtomicInteger requestIdCounter = new AtomicInteger(1);
 
+    private final List<Path> tempFiles = new ArrayList<>();
+
     protected JsonEditorMcpServer server;
     protected HttpClient httpClient;
     protected String baseUrl;
@@ -37,14 +41,28 @@ abstract class McpTestBase
     @BeforeEach
     void setUp() throws Exception
     {
-        final int port;
-        try (final ServerSocket socket = new ServerSocket(0))
-        {
-            port = socket.getLocalPort();
-        }
+        int port = 0;
         final FileSessionManager sessionManager = new FileSessionManager();
         server = new JsonEditorMcpServer(sessionManager, null);
-        server.start(port);
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            try (final ServerSocket socket = new ServerSocket(0))
+            {
+                port = socket.getLocalPort();
+            }
+            try
+            {
+                server.start(port);
+                break;
+            }
+            catch (Exception e)
+            {
+                if (attempt == 2)
+                {
+                    throw e;
+                }
+            }
+        }
         httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
@@ -52,12 +70,21 @@ abstract class McpTestBase
     }
 
     @AfterEach
-    void tearDown()
+    void tearDown() throws Exception
     {
         if (server != null)
         {
             server.stop();
         }
+        if (httpClient != null)
+        {
+            httpClient.close();
+        }
+        for (final Path tempFile : tempFiles)
+        {
+            Files.deleteIfExists(tempFile);
+        }
+        tempFiles.clear();
     }
 
     protected JsonNode sendJsonRpc(final String method) throws Exception
@@ -107,7 +134,7 @@ abstract class McpTestBase
     {
         final Path tempFile = Files.createTempFile(prefix, suffix);
         Files.writeString(tempFile, content);
-        tempFile.toFile().deleteOnExit();
+        tempFiles.add(tempFile);
         return tempFile;
     }
 

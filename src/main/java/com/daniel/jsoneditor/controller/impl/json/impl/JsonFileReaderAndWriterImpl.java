@@ -31,8 +31,6 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         this.mapperIgnoringUnknownProperties.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-
-
     @Override
     public JsonNode getJsonFromFile(File file)
     {

@@ -52,7 +52,7 @@ class CloseFileTool extends ReadOnlyMcpTool
         if (fileId == null || fileId.isEmpty())
         {
             return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
-                    "file_id argument is required");
+                    FILE_ID_REQUIRED_MESSAGE);
         }
 
         final CloseFileResult closeResult = sessionManager.closeFile(fileId);

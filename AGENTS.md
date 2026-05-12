@@ -104,7 +104,7 @@ Headless:   JFXLauncher --headless → FileSessionManager → JsonEditorMcpServe
 Tools are registered in `McpToolRegistry` (`model/mcp/`). All per-file tools require a `file_id` argument.
 
 Base classes:
-- `ReadOnlyMcpTool` – holds `FileSessionManager`, provides `resolveModel(arguments)` helper
+- `ReadOnlyMcpTool` – holds `FileSessionManager`, provides `resolveFileSession(arguments, id)` helper
 - `WriteMcpTool` – extends `ReadOnlyMcpTool` (currently no write tools registered)
 
 Session management tools (extend `ReadOnlyMcpTool`, no `file_id` needed):

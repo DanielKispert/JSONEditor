@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public abstract class ReadOnlyMcpTool extends McpTool
 {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    protected static final String FILE_ID_REQUIRED_MESSAGE = "file_id argument is required";
 
     protected final FileSessionManager sessionManager;
 
@@ -47,7 +48,7 @@ public abstract class ReadOnlyMcpTool extends McpTool
         {
             return new ResolveResult(null,
                     JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
-                            "file_id argument is required"));
+                            FILE_ID_REQUIRED_MESSAGE));
         }
         final EditorSession session = sessionManager.getSession(fileId);
         if (session == null)
