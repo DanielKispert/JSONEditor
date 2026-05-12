@@ -83,18 +83,52 @@ private static final Logger logger = LoggerFactory.getLogger(MyClass.class);
 `model/validation/` contains `ReferenceValidator` for cross-node reference validation. `ValidationResult` and `ValidationError` carry structured error info.
 
 ## MCP Server
-`McpController` wraps `JsonEditorMcpServer` (model-context-protocol). Starts on a configured port; exposes model operations to external AI agents. Port set via `SettingsController.getMcpServerPort()`.
+The MCP server exposes JSON editor operations to external AI agents via HTTP JSON-RPC.
 
-Tools are registered in `McpToolRegistry` (`model/mcp/`). Two base classes:
-- `ReadOnlyMcpTool` – reads from `ReadableModel` (e.g., `GetNodeTool`, `GetSchemaForPathTool`, `GetFileInfoTool`)
-- `WriteMcpTool` – mutates via `WritableModel` (e.g., `SetNodeTool`)
+### Multi-File Sessions
+`FileSessionManager` (`model/sessions/`) manages multiple open file sessions. Each session has a unique `file_id`. Two session types:
+- **GUI sessions** – registered when the GUI opens a file, protected from MCP close
+- **Headless sessions** – opened via `open_file` tool, closeable via `close_file`
+
+`EditorSession` (`model/sessions/`) is a record holding `id`, `ReadableModel`, file paths, and `guiOwned` flag.
+
+### Architecture
+```
+GUI Mode:   ControllerImpl → FileSessionManager → McpController → JsonEditorMcpServer
+Headless:   JFXLauncher --headless → FileSessionManager → JsonEditorMcpServer
+```
+
+`McpController` wraps `JsonEditorMcpServer`. Port set via `SettingsController.getMcpServerPort()`.
+
+### Tools
+Tools are registered in `McpToolRegistry` (`model/mcp/`). All per-file tools require a `file_id` argument.
+
+Base classes:
+- `ReadOnlyMcpTool` – holds `FileSessionManager`, provides `resolveFileSession(arguments, id)` helper
+ 
+Session management tools (extend `ReadOnlyMcpTool`, no `file_id` needed):
+- `ListFilesTool` – list all open sessions
+- `OpenFileTool` – open a JSON + schema file pair, returns `file_id`
+- `CloseFileTool` – close a headless session
+
+Per-file read tools (require `file_id`):
+- `GetFileInfoTool`, `GetNodeTool`, `GetSchemaForPathTool`, `GetExamplesTool`
+- `GetReferenceableObjectsTool`, `GetReferenceableInstancesTool`, `FindReferencesToTool`
 
 `McpArgumentValidator` validates tool input against schemas before execution.
+
+### Headless Mode
+Run the MCP server without the GUI (no JavaFX window). Start with:
+```bash
+./gradlew run --args="--headless"                # default port 4500
+./gradlew run --args="--headless --port 5000"    # custom port
+```
 
 ## Build & Packaging
 ```bash
 ./gradlew build          # compile + test
-./gradlew run            # run locally
+./gradlew run            # run GUI locally
+./gradlew run --args="--headless"  # run headless MCP server (no GUI)
 ./gradlew jpackage       # create native installer (build/jpackage/)
 ```
 Version is read from `src/main/resources/version.properties`.  
@@ -105,6 +139,3 @@ JUnit 5 + TestFX + Mockito. Tests in `src/test/java/`. Run with `./gradlew test`
 
 ## Settings
 App settings JSON (schema in `model/settings/`) can add custom toolbar buttons – see `example_settings.json` in project root.
-
-
-

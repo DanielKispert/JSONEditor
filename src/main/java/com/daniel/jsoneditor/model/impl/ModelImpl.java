@@ -20,7 +20,7 @@ import com.daniel.jsoneditor.view.impl.jfx.dialogs.RenameKeyDialog;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.daniel.jsoneditor.model.json.JsonNodeHelper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
@@ -45,69 +45,68 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-
 public class ModelImpl implements ReadableModel, WritableModelInternal
 {
     private static final Logger logger = LoggerFactory.getLogger(ModelImpl.class);
-    
+
     private static final String NUMBER_REGEX = "-?\\d+(\\.\\d+)?";
-    
+
     private final EventSender eventSender;
-    
+
     private File jsonFile;
-    
+
     private File schemaFile;
-    
+
     private JsonNode rootJson;
-    
+
     private JsonSchema rootSchema;
-    
+
     private Settings settings;
-    
+
     private final GitBlameIntegration gitBlameIntegration = new GitBlameIntegration();
-    
+
     public ModelImpl(EventSender eventSender)
     {
         this.eventSender = eventSender;
         this.settings = new Settings(null, null);
     }
-    
+
     @Override
     public CommandFactory getCommandFactory()
     {
         return new CommandFactory(this);
     }
-    
+
     @Override
     public File getCurrentJSONFile()
     {
         return jsonFile;
     }
-    
+
     @Override
     public File getCurrentSchemaFile()
     {
-        return null;
+        return schemaFile;
     }
-    
+
     @Override
     public JsonNode getRootJson()
     {
         return rootJson;
     }
-    
+
     @Override
     public Event getLatestEvent()
     {
         return eventSender.getState();
     }
-    
+
     @Override
     public Subject getForObservation()
     {
         return eventSender;
     }
-    
+
     @Override
     public void jsonAndSchemaSuccessfullyValidated(File jsonFile, File schemaFile, JsonNode json, JsonSchema schema)
     {
@@ -117,7 +116,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         setRootSchema(schema);
         sendEvent(new Event(EventEnum.MAIN_EDITOR));
     }
-    
+
     @Override
     public void resetRootNode(JsonNode jsonNode)
     {
@@ -126,19 +125,19 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         sendEvent(new Event(EventEnum.RELOADED_JSON_FROM_DISK, ""));
         sendEvent(new Event(EventEnum.RESET_SUCCESSFUL));
     }
-    
+
     @Override
     public String searchForNode(String path, String value)
     {
         return NodeSearcher.findPathWithValue(getRootJson(), path, value);
     }
-    
+
     @Override
     public void setSettings(Settings settings)
     {
         this.settings = settings;
     }
-    
+
     public void setCurrentJSONFile(File json)
     {
         this.jsonFile = json;
@@ -146,38 +145,55 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         {
             gitBlameIntegration.initialize(json.toPath()).thenRun(() -> {
                 logger.info("Git blame loading completed");
-                Platform.runLater(() -> sendEvent(new Event(EventEnum.GIT_BLAME_LOADED)));
+                try
+                {
+                    Platform.runLater(() -> sendEvent(new Event(EventEnum.GIT_BLAME_LOADED)));
+                }
+                catch (IllegalStateException e)
+                {
+                    // JavaFX not initialized (headless mode)
+                    sendEvent(new Event(EventEnum.GIT_BLAME_LOADED));
+                }
             });
         }
     }
-    
+
     private void setCurrentSchemaFile(File schema)
     {
         this.schemaFile = schema;
     }
-    
+
     private void setRootJson(JsonNode rootJson)
     {
         this.rootJson = rootJson;
     }
-    
+
     private void setRootSchema(JsonSchema rootSchema)
     {
         this.rootSchema = rootSchema;
     }
-    
+
+    /**
+     * Sends a model state event to all registered observers.
+     *
+     * In normal GUI mode this is called via {@link javafx.application.Platform#runLater} to stay
+     * on the JavaFX Application Thread. In headless mode (no JavaFX toolkit), the
+     * {@link IllegalStateException} from {@code Platform.runLater} is caught by callers and this
+     * method is invoked directly on the worker thread instead. This is safe because in headless
+     * mode no JavaFX-bound observers are registered with the {@link com.daniel.jsoneditor.model.statemachine.EventSender}.
+     */
     public void sendEvent(Event state)
     {
         eventSender.sendEvent(state);
     }
-    
+
     @Override
     public void moveItemToIndex(JsonNodeWithPath item, int index)
     {
         JsonNodeWithPath parent = getNodeForPath(PathHelper.getParentPath(item.getPath()));
         ArrayNode arrayNode = (ArrayNode) parent.getNode();
         JsonNode itemNode = item.getNode();
-        
+
         for (int i = 0; i < arrayNode.size(); i++)
         {
             if (arrayNode.get(i).equals(itemNode))
@@ -188,7 +204,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             }
         }
     }
-    
+
     @Override
     public void setValueAtPath(String parentPath, String propertyName, Object value)
     {
@@ -204,7 +220,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         else
         {
-            candidateParent.set(propertyName, buildCandidateNode(value));
+            candidateParent.set(propertyName, JsonNodeHelper.toJsonNode(value));
         }
         final JsonSchema parentSchema = getSubschemaForPath(parentPath);
         if (parentSchema != null)
@@ -219,39 +235,18 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         parentNodeWithPath.setProperty(propertyName, value);
     }
 
-    private JsonNode buildCandidateNode(Object value)
-    {
-        if (value instanceof Boolean)
-        {
-            return JsonNodeFactory.instance.booleanNode((Boolean) value);
-        }
-        if (value instanceof Integer)
-        {
-            return JsonNodeFactory.instance.numberNode((Integer) value);
-        }
-        if (value instanceof Long)
-        {
-            return JsonNodeFactory.instance.numberNode((Long) value);
-        }
-        if (value instanceof Double)
-        {
-            return JsonNodeFactory.instance.numberNode((Double) value);
-        }
-        return JsonNodeFactory.instance.textNode(value.toString());
-    }
-    
     @Override
     public JsonSchema getRootSchema()
     {
         return rootSchema;
     }
-    
+
     @Override
     public Settings getSettings()
     {
         return settings;
     }
-    
+
     @Override
     public JsonNodeWithPath getNodeForPath(String path)
     {
@@ -262,13 +257,13 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return new JsonNodeWithPath(getRootJson().at(path), path);
     }
-    
+
     @Override
     public JsonNode getExportStructureForNodes(List<String> paths)
     {
         return NodeStructureDelegate.getExportStructureForNodes(this, paths);
     }
-    
+
     @Override
     public List<String> getDependentPaths(JsonNodeWithPath node)
     {
@@ -277,7 +272,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         collectReferencesRecursively(node, referencedNodes);
         return referencedNodes;
     }
-    
+
     @Override
     public List<ReferenceableObject> getReferenceableObjects()
     {
@@ -296,7 +291,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return referenceableObjects;
     }
-    
+
     @Override
     public List<ReferenceableObjectInstance> getReferenceableObjectInstances()
     {
@@ -307,13 +302,13 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return items;
     }
-    
+
     @Override
     public List<ReferenceableObjectInstance> getReferenceableObjectInstances(ReferenceableObject object)
     {
         return ReferenceHelper.getReferenceableObjectInstances(this, object);
     }
-    
+
     @Override
     public List<ReferenceableObjectInstance> getInstancesOfReferenceableObjectAtPath(String referenceableObjectPath)
     {
@@ -326,7 +321,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return new ArrayList<>();
     }
-    
+
     private void collectReferencesRecursively(JsonNodeWithPath node, List<String> referencedNodes)
     {
         String referencePath = ReferenceHelper.resolveReference(node, this);
@@ -365,9 +360,9 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
                 }
             }
         }
-        
+
     }
-    
+
     @Override
     public List<String> getStringExamplesForPath(String path)
     {
@@ -395,7 +390,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return Collections.emptyList();
     }
-    
+
     @Override
     public void sortArray(String path)
     {
@@ -467,7 +462,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         arrayNode.removeAll();
         arrayNode.addAll(items);
     }
-    
+
     @Override
     public List<String> getAllowedStringValuesForPath(String path)
     {
@@ -495,7 +490,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return Collections.emptyList();
     }
-    
+
     public boolean canAddMoreItems(String path)
     {
         final JsonSchema jsonSchema = getSubschemaForPath(path);
@@ -520,7 +515,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         // either the node doesn't exist or the node is not an array
         return false;
     }
-    
+
     @Override
     public ReferenceToObject getReferenceToObject(String path)
     {
@@ -534,32 +529,32 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return null;
     }
-    
+
     @Override
     public ReferenceableObject getReferenceableObject(String path)
     {
         return ReferenceHelper.getReferenceableObjectOfPath(this, path);
     }
-    
+
     @Override
     public NodeGraph getJsonAsGraph(String path, Set<String> allowedEdgeNames)
     {
         return NodeGraphCreator.createGraph(this, path, allowedEdgeNames);
     }
-    
+
     @Override
     public List<ReferenceToObjectInstance> getReferencesToObjectForPath(String path)
     {
         return ReferenceHelper.getReferencesOfObject(this, path);
     }
-    
+
     @Override
     public int addNodeToArray(String selectedPath)
     {
         JsonNode newItem = makeArrayNode(selectedPath);
         return addNodeToArray(selectedPath, newItem);
     }
-    
+
     @Override
     public JsonNode makeArrayNode(String selectedPath)
     {
@@ -567,7 +562,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         final JsonNode itemsSchema = jsonSchema != null ? jsonSchema.getSchemaNode() : null;
         return NodeGenerator.generateNodeFromSchema(itemsSchema);
     }
-    
+
     @Override
     public int addNodeToArray(String arrayPath, JsonNode nodeToAdd)
     {
@@ -578,17 +573,17 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             int indexOfNewItem = parent.getNode().size();
             ((ArrayNode) parent.getNode()).add(nodeToAdd);
             return indexOfNewItem;
-            
+
         }
         return -1;
     }
-    
+
     @Override
     public void duplicateArrayItem(String pathToItemToDuplicate)
     {
         duplicateItem(pathToItemToDuplicate);
     }
-    
+
     @Override
     public void duplicateNodeAndLink(String referencePath, String pathToItemToDuplicate)
     {
@@ -597,7 +592,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         {
             return;
         }
-        
+
         // Retrieve the parent node of the reference
         JsonNodeWithPath referencingNode = getNodeForPath(referencePath);
         if (referencingNode == null || !referencingNode.isObject())
@@ -605,42 +600,42 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             return;
         }
         ReferenceToObject reference = getReferenceToObject(referencePath);
-        
+
         String clonedPath = duplicateItem(pathToItemToDuplicate);
         if (clonedPath == null)
         {
             return;
         }
-        
+
         JsonNodeWithPath clonedNode = getNodeForPath(clonedPath);
-        
+
         String newKeyName = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath).getKeyOfInstance(clonedNode.getNode());
-        
+
         //set the objectKey of the reference to the key of the object
         ReferenceHelper.setObjectKeyOfInstance(this, reference, referencePath, newKeyName);
     }
-    
+
     private String duplicateItem(String pathToItemToDuplicate)
     {
         JsonNodeWithPath itemToDuplicate = getNodeForPath(pathToItemToDuplicate);
-        
+
         JsonNodeWithPath parentArray = getNodeForPath(PathHelper.getParentPath(pathToItemToDuplicate));
-        
+
         if (parentArray == null || !parentArray.getNode().isArray())
         {
             return null;
         }
         ArrayNode arrayNode = (ArrayNode) parentArray.getNode();
-        
+
         // Get the index of the item to be cloned so that we can insert the next item at that index + 1
         int indexToClone = Integer.parseInt(SchemaHelper.getLastPathSegment(pathToItemToDuplicate));
-        
+
         JsonNode clonedNode = itemToDuplicate.getNode().deepCopy();
         // Insert the cloned item at indexToClone + 1
         arrayNode.insert(indexToClone + 1, clonedNode);
-        
+
         String clonedPath = PathHelper.getParentPath(itemToDuplicate.getPath()) + "/" + (indexToClone + 1);
-        
+
         ReferenceableObject object = ReferenceHelper.getReferenceableObjectOfPath(this, clonedPath);
         if (object != null)
         {
@@ -658,7 +653,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return clonedPath;
     }
-    
+
     @Override
     public void removeNodes(List<String> paths)
     {
@@ -666,7 +661,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         {
             return;
         }
-        
+
         // dirty hack: remove the last item first to avoid removing unintended items
         // this will break once we add sorting
         for (int i = paths.size() - 1; i >= 0; i--)
@@ -674,7 +669,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             removeOrSetNode(paths.get(i), null);
         }
     }
-    
+
     /**
      * changes the JSON structure by setting the defined content at the defined path. If you want to notify the UI of these changes, set
      * notifyUI to true.
@@ -725,7 +720,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
             }
         }
     }
-    
+
     @Override
     public ReferenceableObjectInstance getReferenceableObjectInstanceWithKey(ReferenceableObject object, String key)
     {
@@ -742,13 +737,13 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return null;
     }
-    
+
     @Override
     public ReferenceableObject getReferenceableObjectByReferencingKey(String referencingKey)
     {
         return ReferenceHelper.getReferenceableObject(this, referencingKey);
     }
-    
+
     @Override
     public void setNode(String path, JsonNode content)
     {
@@ -905,7 +900,7 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return nodeWithRef;
     }
-    
+
     @Override
     public String getIdentifier(String pathOfParentNode, JsonNode childNode)
     {
@@ -919,13 +914,13 @@ public class ModelImpl implements ReadableModel, WritableModelInternal
         }
         return null;
     }
-    
+
     @Override
     public GitBlameInfo getBlameForPath(String jsonPath)
     {
         return gitBlameIntegration.getBlameForPath(jsonPath);
     }
-    
+
     @Override
     public boolean isGitBlameAvailable()
     {

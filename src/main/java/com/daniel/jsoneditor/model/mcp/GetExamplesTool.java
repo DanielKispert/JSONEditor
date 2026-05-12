@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,67 +12,77 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-
 class GetExamplesTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(GetExamplesTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
-    public GetExamplesTool(final ReadableModel model)
+
+    public GetExamplesTool(final FileSessionManager sessionManager)
     {
-        super(model);
+        super(sessionManager);
     }
-    
+
     @Override
     public String getName()
     {
         return "get_examples";
     }
-    
+
     @Override
     public String getDescription()
     {
         return "Get example values for a JSON path";
     }
-    
+
     @Override
     public ObjectNode getInputSchema()
     {
-        return McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path to get examples for (e.g., /processes/0)");
+        final ObjectNode props = McpToolRegistry.createSchemaWithProperty("path", "string",
+                "JSON path to get examples for (e.g., /processes/0)");
+        addFileIdProperty(props);
+        return props;
     }
 
     @Override
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        addFileIdRequired(arr);
         arr.add("path");
         return arr;
     }
-    
+
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
+        final var resolved = resolveFileSession(arguments, id);
+        if (resolved.error() != null)
+        {
+            return resolved.error();
+        }
+        final ReadableModel model = resolved.model();
+
         final String path = arguments.path("path").asText("");
-        
+
         final List<String> examples = model.getStringExamplesForPath(path);
         final List<String> allowedValues = model.getAllowedStringValuesForPath(path);
-        
+
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        
+
         final ArrayNode examplesArray = OBJECT_MAPPER.createArrayNode();
         if (examples != null)
         {
             examples.forEach(examplesArray::add);
         }
         result.set("examples", examplesArray);
-        
+
         final ArrayNode allowedArray = OBJECT_MAPPER.createArrayNode();
         if (allowedValues != null)
         {
             allowedValues.forEach(allowedArray::add);
         }
         result.set("allowed_values", allowedArray);
-        
+
         return McpToolRegistry.createToolResult(id, result);
     }
 }

@@ -58,6 +58,25 @@ You can find the license in the resources folder or in their Github repository (
 ## Column Visibility
 Empty non-required columns in array tables auto-hide (default ON). Click the eye (left of table name) to show all columns until the table refreshes; click again to hide. If you type a value into a previously empty column it stays visible.
 
+# MCP Server
+
+The JSON Editor includes an MCP (Model Context Protocol) server that lets AI agents read your JSON files.
+
+## GUI Mode
+Enable in Settings → MCP Server. The server exposes the currently open file to MCP clients on localhost.
+
+## Standalone Mode
+Run the MCP server without the GUI — useful for CI, scripting, or AI agent workflows with multiple files:
+
+```bash
+./gradlew run --args="--headless"                # default port 4500
+./gradlew run --args="--headless --port 5000"    # custom port
+```
+
+Use the `open_file` tool to load JSON + schema pairs, then query them with `get_node`, `get_schema_for_path`, etc. Each file gets a `file_id` for addressing.
+
+Available tools: `list_files`, `open_file`, `close_file`, `get_file_info`, `get_node`, `get_schema_for_path`, `get_examples`, `get_referenceable_objects`, `get_referenceable_instances`, `find_references_to`
+
 # Installation Instructions
 
 ## MacOS

@@ -16,7 +16,9 @@ import java.util.stream.Collectors;
  */
 public final class McpArgumentValidator
 {
-    private static final JsonSchemaFactory SCHEMA_FACTORY = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
+    // V202012 is used intentionally: MCP tool input schemas use simple type declarations
+    // (type, properties, required) that are fully compatible with this spec version.
+    private static final JsonSchemaFactory SCHEMA_FACTORY = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
     
     private McpArgumentValidator() { /* utility */ }
 

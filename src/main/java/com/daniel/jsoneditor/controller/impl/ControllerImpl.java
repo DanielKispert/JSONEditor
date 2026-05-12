@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.daniel.jsoneditor.controller.AppService;
+import com.daniel.jsoneditor.controller.AppWindow;
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManagerImpl;
@@ -17,25 +19,25 @@ import com.daniel.jsoneditor.controller.impl.json.impl.JsonNodeMerger;
 import com.daniel.jsoneditor.controller.mcp.McpController;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.controller.settings.UpdateService;
-import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.commands.CommandFactory;
 import com.daniel.jsoneditor.model.diff.DiffEntry;
 import com.daniel.jsoneditor.model.diff.JsonDiffer;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.daniel.jsoneditor.model.json.JsonNodeHelper;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.daniel.jsoneditor.model.settings.Settings;
- 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.validation.ReferenceValidator;
 import com.daniel.jsoneditor.model.validation.ValidationError;
 import com.daniel.jsoneditor.model.validation.ValidationResult;
-import com.daniel.jsoneditor.model.validation.ModelValidationException;
 import com.daniel.jsoneditor.view.View;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.VariableReplacementDialog;
@@ -51,32 +53,40 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class ControllerImpl implements Controller, Observer
 {
     private static final Logger logger = LoggerFactory.getLogger(ControllerImpl.class);
-    
+
     private final WritableModel model;
-    
+
     private final ReadableModel readableModel;
-    
+
     private final View view;
-    
+
     private final List<Subject> subjects;
-    
+
     private final SettingsController settingsController;
-    
+
     private final CommandManager commandManager;
-    
+
     private final CommandFactory commandFactory;
-    
+
     private final McpController mcpController;
-    
+
+    private final FileSessionManager fileSessionManager;
+
+    private final AppService appService;
+
+    private String guiSessionId;
+
     private boolean updateCheckDone;
-    
-    public ControllerImpl(WritableModel model, ReadableModel readableModel, Stage stage)
+
+    public ControllerImpl(final WritableModel model, final ReadableModel readableModel, final Stage stage, final AppService appService)
     {
-        this.settingsController = new SettingsControllerImpl();
+        this.appService = appService;
+        this.settingsController = appService.getSettingsController();
+        this.fileSessionManager = appService.getFileSessionManager();
+        this.mcpController = appService.getMcpController();
         this.commandManager = new CommandManagerImpl(model);
         this.commandFactory = readableModel.getCommandFactory();
         this.model = model;
@@ -84,12 +94,11 @@ public class ControllerImpl implements Controller, Observer
         this.subjects = new ArrayList<>();
         this.view = new ViewImpl(readableModel, this, stage);
         this.view.observe(this.readableModel.getForObservation());
-        this.mcpController = new McpController(model, settingsController);
-        
+
         // Set up callback for unsaved changes notifications from CommandManager
         this.commandManager.setUnsavedChangesCallback(this::updateWindowTitle);
     }
-    
+
     /**
      * Updates the window title with given unsaved changes count.
      * This method is called by the CommandManager callback.
@@ -98,45 +107,44 @@ public class ControllerImpl implements Controller, Observer
     {
         view.updateWindowTitle(unsavedChangesCount);
     }
-    
+
     @Override
     public SettingsController getSettingsController()
     {
         return settingsController;
     }
-    
+
     @Override
     public McpController getMcpController()
     {
         return mcpController;
     }
-    
+
     @Override
     public CommandManager getCommandManager()
     {
         return commandManager;
     }
-    
-    
+
     @Override
     public void update()
     {
     }
-    
+
     @Override
     public void observe(Subject subjectToObserve)
     {
         subjects.add(subjectToObserve);
         subjectToObserve.registerObserver(this);
-        
+
     }
-    
+
     @Override
     public void launchFinished()
     {
         model.sendEvent(new Event(EventEnum.READ_JSON_AND_SCHEMA));
     }
-    
+
     @Override
     public void checkForUpdate()
     {
@@ -153,7 +161,7 @@ public class ControllerImpl implements Controller, Observer
                     }
                 }));
     }
-    
+
     @Override
     public void checkForUpdateSilently()
     {
@@ -170,12 +178,12 @@ public class ControllerImpl implements Controller, Observer
             }
         });
     }
-    
+
     private static String buildUpdateAvailableMessage(final String latestVersion)
     {
         return "Update available: v" + latestVersion + " — visit GitHub to download";
     }
-    
+
     @Override
     public void jsonAndSchemaSelected(File jsonFile, File schemaFile, File settingsFile)
     {
@@ -196,16 +204,22 @@ public class ControllerImpl implements Controller, Observer
                     }
                 }
                 model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
+                appService.getRecentFilesManager().addRecentFile(jsonFile, schemaFile);
+                if (guiSessionId != null)
+                {
+                    fileSessionManager.unregisterGuiSession(guiSessionId);
+                }
+                guiSessionId = fileSessionManager.registerGuiSession(readableModel, jsonFile, schemaFile);
             });
-            
+
         }
         else
         {
             view.selectJsonAndSchema();
         }
-        
+
     }
-    
+
     @Override
     public void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index)
     {
@@ -216,17 +230,17 @@ public class ControllerImpl implements Controller, Observer
         // cross-parent moves not implemented (only reorder inside same array)
         commandManager.executeCommand(commandFactory.moveItemCommand(item.getPath(), index));
     }
-    
+
     @Override
     public String resolveVariablesInJson(String text)
     {
         Set<String> variables = VariableHelper.findVariables(text);
-        
+
         if (!variables.isEmpty())
         {
             VariableReplacementDialog dialog = new VariableReplacementDialog(variables);
             Map<String, String> replacements = dialog.showAndWait().orElse(null);
-            
+
             if (replacements != null)
             {
                 return VariableHelper.replaceVariables(text, replacements);
@@ -234,7 +248,7 @@ public class ControllerImpl implements Controller, Observer
         }
         return text;
     }
-    
+
     @Override
     public void importAtNode(String path, String content)
     {
@@ -244,20 +258,19 @@ public class ControllerImpl implements Controller, Observer
             final JsonNodeWithPath existingNodeAtPath = readableModel.getNodeForPath(path == null ? "" : path);
             final JsonNode contentNode = jsonReader.getNodeFromString(content);
             final JsonNode mergedNode = JsonNodeMerger.createMergedNode(readableModel, existingNodeAtPath, contentNode);
-            if (mergedNode == null)
+            final JsonSchema schemaAtPath = readableModel.getSubschemaForPath(path);
+
+            if (mergedNode != null && SchemaHelper.validateJsonWithSchema(mergedNode, schemaAtPath).isEmpty())
+            {
+                commandManager.executeCommand(commandFactory.setNodeCommand(path, mergedNode));
+                view.showToast(Toasts.IMPORT_SUCCESSFUL_TOAST);
+                logger.info("Successfully imported JSON at path: {}", path);
+            }
+            else
             {
                 view.showToast(Toasts.IMPORT_VALIDATION_FAILED_TOAST);
-                logger.warn("Import merge returned null for path: {}", path);
-                return;
+                logger.warn("Import validation failed for path: {}", path);
             }
-            commandManager.executeCommand(commandFactory.setNodeCommand(path, mergedNode));
-            view.showToast(Toasts.IMPORT_SUCCESSFUL_TOAST);
-            logger.info("Successfully imported JSON at path: {}", path);
-        }
-        catch (ModelValidationException e)
-        {
-            view.showToast(Toasts.IMPORT_VALIDATION_FAILED_TOAST);
-            logger.warn("Import validation failed for path {}: {}", path, e.getMessage());
         }
         catch (JsonProcessingException e)
         {
@@ -275,7 +288,7 @@ public class ControllerImpl implements Controller, Observer
             logger.error("Unexpected error during import at path {}: {}", path, e.getMessage(), e);
         }
     }
-    
+
     @Override
     public void exportNode(String path)
     {
@@ -290,7 +303,7 @@ public class ControllerImpl implements Controller, Observer
             exportJsonNode(filename, nodeWithPath.getNode());
         }
     }
-    
+
     @Override
     public void exportNodeWithDependencies(String path)
     {
@@ -304,7 +317,7 @@ public class ControllerImpl implements Controller, Observer
             {
                 pathsToExport.add(selectedNode);
             }
-            
+
             String fileWithEnding = readableModel.getCurrentJSONFile().getName();
             int lastDotIndex = fileWithEnding.lastIndexOf(".");
             String fileWithoutEnding = (lastDotIndex != -1) ? fileWithEnding.substring(0, lastDotIndex) : fileWithEnding;
@@ -312,7 +325,7 @@ public class ControllerImpl implements Controller, Observer
             exportJsonNode(filename, readableModel.getExportStructureForNodes(pathsToExport));
         }
     }
-    
+
     private void exportJsonNode(String exportFilename, JsonNode node)
     {
         File directory = readableModel.getCurrentJSONFile().getParentFile();
@@ -320,9 +333,9 @@ public class ControllerImpl implements Controller, Observer
         JsonFileReaderAndWriter writer = new JsonFileReaderAndWriterImpl();
         writer.writeJsonToFile(node, exportFile);
         model.sendEvent(new Event(EventEnum.EXPORT_SUCCESSFUL));
-        
+
     }
-    
+
     @Override
     public void removeNodes(List<String> paths)
     {
@@ -332,13 +345,13 @@ public class ControllerImpl implements Controller, Observer
         }
         commandManager.executeCommand(commandFactory.removeNodesCommand(paths));
     }
-    
+
     @Override
     public void addNewNodeToArray(String path)
     {
         commandManager.executeCommand(commandFactory.addNodeToArrayCommand(path));
     }
-    
+
     @Override
     public void createNewReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key)
     {
@@ -348,7 +361,7 @@ public class ControllerImpl implements Controller, Observer
         }
         commandManager.executeCommand(commandFactory.createReferenceableObjectCommand(pathOfReferenceableObject, key));
     }
-    
+
     @Override
     public void sortArray(String path)
     {
@@ -358,7 +371,7 @@ public class ControllerImpl implements Controller, Observer
         }
         commandManager.executeCommand(commandFactory.sortArrayCommand(path));
     }
-    
+
     @Override
     public void reorderArray(String path, List<Integer> newIndices)
     {
@@ -368,7 +381,7 @@ public class ControllerImpl implements Controller, Observer
         }
         commandManager.executeCommand(commandFactory.reorderArrayCommand(path, newIndices));
     }
-    
+
     @Override
     public void duplicateArrayNode(String path)
     {
@@ -378,7 +391,7 @@ public class ControllerImpl implements Controller, Observer
         }
         commandManager.executeCommand(commandFactory.duplicateArrayItemCommand(path));
     }
-    
+
     @Override
     public void duplicateReferenceableObjectForLinking(String referencePath, String pathToDuplicate)
     {
@@ -388,12 +401,12 @@ public class ControllerImpl implements Controller, Observer
         }
         commandManager.executeCommand(commandFactory.duplicateReferenceAndLinkCommand(referencePath, pathToDuplicate));
     }
-    
+
     @Override
     public void saveToFile()
     {
         final ValidationResult validationResult = ReferenceValidator.validateReferences(readableModel);
-        
+
         if (!validationResult.isValid())
         {
             for (ValidationError error : validationResult.getErrors())
@@ -402,13 +415,13 @@ public class ControllerImpl implements Controller, Observer
             }
             return;
         }
-        
+
         final JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();
         jsonWriter.writeJsonToFile(readableModel.getRootJson(), readableModel.getCurrentJSONFile());
         commandManager.markAsSaved(); // Mark current state as saved
         model.sendEvent(new Event(EventEnum.SAVING_SUCCESSFUL));
     }
-    
+
     @Override
     public void refreshFromDisk()
     {
@@ -419,13 +432,13 @@ public class ControllerImpl implements Controller, Observer
             model.resetRootNode(json);
         });
     }
-    
+
     @Override
     public String searchForNode(String path, String value)
     {
         return readableModel.searchForNode(path, value);
     }
-    
+
     private void handleJsonValidation(JsonNode json, JsonSchema schema, Runnable onSuccess)
     {
         if (SchemaHelper.validateJsonWithSchema(json, schema).isEmpty())
@@ -437,33 +450,54 @@ public class ControllerImpl implements Controller, Observer
             view.cantValidateJson();
         }
     }
-    
+
     @Override
     public void openNewJson()
     {
-        launchFinished();
+        final AppWindow window = appService.createWindow();
+        if (window == null)
+        {
+            logger.warn("Could not create new window — application is shutting down");
+        }
     }
-    
+
     @Override
     public void generateJson()
     {
-    
+
     }
-    
+
     @Override
     public void setValueAtPath(String path, Object value)
     {
         final String parentPath = PathHelper.getParentPath(path);
         final String propertyName = PathHelper.getLastPathSegment(path);
-        try
+
+        // Validate by building a candidate parent object with the change applied, then checking it against the parent schema.
+        // This way we check for both correct format and correct structure (required properties etc)
+        final JsonNodeWithPath parentNodeWithPath = readableModel.getNodeForPath(parentPath);
+        if (parentNodeWithPath == null || !parentNodeWithPath.getNode().isObject())
         {
-            commandManager.executeCommand(commandFactory.setValueAtNodeCommand(parentPath, propertyName, value));
+            logger.debug("Cannot set value: parent at {} is null or not an object", parentPath);
+            view.showToast(Toasts.VALUE_VALIDATION_FAILED_TOAST);
+            return;
         }
-        catch (ModelValidationException e)
+        final ObjectNode candidateParent = parentNodeWithPath.getNode().deepCopy();
+        if (value == null)
+        {
+            candidateParent.remove(propertyName);
+        }
+        else
+        {
+            candidateParent.set(propertyName, JsonNodeHelper.toJsonNode(value));
+        }
+        final JsonSchema parentSchema = readableModel.getSubschemaForPath(parentPath);
+        if (parentSchema != null && !SchemaHelper.validateJsonWithSchema(candidateParent, parentSchema).isEmpty())
         {
             view.showToast(Toasts.VALUE_VALIDATION_FAILED_TOAST);
-            logger.debug("Value validation rejected at {}: {}", path, e.getMessage());
+            return;
         }
+        commandManager.executeCommand(commandFactory.setValueAtNodeCommand(parentPath, propertyName, value));
     }
 
     @Override
@@ -475,7 +509,7 @@ public class ControllerImpl implements Controller, Observer
         }
         commandManager.executeCommand(commandFactory.setNodeCommand(path, node));
     }
-    
+
     @Override
     public void copyToClipboard(String path)
     {
@@ -493,7 +527,7 @@ public class ControllerImpl implements Controller, Observer
             logger.error("Failed to copy to clipboard, " + path + " is not a valid path");
         }
     }
-    
+
     @Override
     public void pasteFromClipboardReplacingChild(String pathToInsert)
     {
@@ -510,31 +544,21 @@ public class ControllerImpl implements Controller, Observer
                     view.showToast(Toasts.ERROR_TOAST);
                     return;
                 }
-                try
+                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(pathToInsert)).isEmpty())
                 {
                     commandManager.executeCommand(commandFactory.setNodeCommand(pathToInsert, jsonNode));
                     view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
+
                 }
-                catch (ModelValidationException e)
+                else if (itemToInsertAt.isArray() && SchemaHelper.validateJsonWithSchema(jsonNode,
+                        readableModel.getSubschemaForPath(pathToInsert + "/0")).isEmpty())
                 {
-                    // Try as array item if direct replacement fails and target is array
-                    if (itemToInsertAt.isArray())
-                    {
-                        try
-                        {
-                            commandManager.executeCommand(commandFactory.setNodeCommand(
-                                itemToInsertAt.getPath() + "/" + itemToInsertAt.getNode().size(), jsonNode));
-                            view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
-                        }
-                        catch (ModelValidationException e2)
-                        {
-                            view.showToast(Toasts.ERROR_TOAST);
-                        }
-                    }
-                    else
-                    {
-                        view.showToast(Toasts.ERROR_TOAST);
-                    }
+                    commandManager.executeCommand(commandFactory.setNodeCommand(itemToInsertAt.getPath() + "/" + itemToInsertAt.getNode().size(), jsonNode));
+                    view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
+                }
+                else
+                {
+                    view.showToast(Toasts.ERROR_TOAST);
                 }
             }
             catch (JsonProcessingException e)
@@ -553,9 +577,9 @@ public class ControllerImpl implements Controller, Observer
                 logger.error("Unexpected error during paste at path {}: {}", pathToInsert, e.getMessage(), e);
             }
         }
-        
+
     }
-    
+
     @Override
     public void pasteFromClipboardIntoParent(String parentPath)
     {
@@ -572,14 +596,16 @@ public class ControllerImpl implements Controller, Observer
             try
             {
                 final JsonNode jsonNode = new JsonFileReaderAndWriterImpl().getNodeFromString(jsonString);
-                final int arraySize = parentNode.getNode().size();
-                commandManager.executeCommand(commandFactory.setNodeCommand(parentNode.getPath() + "/" + arraySize, jsonNode));
-                view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
-            }
-            catch (ModelValidationException e)
-            {
-                view.showToast(Toasts.ERROR_TOAST);
-                logger.debug("Paste validation rejected at {}: {}", parentPath, e.getMessage());
+                if (SchemaHelper.validateJsonWithSchema(jsonNode, readableModel.getSubschemaForPath(parentPath)).isEmpty())
+                {
+                    final int arraySize = parentNode.getNode().size();
+                    commandManager.executeCommand(commandFactory.setNodeCommand(parentNode.getPath() + "/" + arraySize, jsonNode));
+                    view.showToast(Toasts.PASTED_FROM_CLIPBOARD_TOAST);
+                }
+                else
+                {
+                    view.showToast(Toasts.ERROR_TOAST);
+                }
             }
             catch (JsonProcessingException e)
             {
@@ -597,48 +623,51 @@ public class ControllerImpl implements Controller, Observer
                 logger.error("Unexpected error during paste into parent {}: {}", parentPath, e.getMessage(), e);
             }
         }
-        
+
     }
-    
+
     @Override
     public void undo()
     {
         commandManager.undo();
     }
-    
+
     @Override
     public void redo()
     {
         commandManager.redo();
     }
-    
+
     @Override
     public List<DiffEntry> calculateJsonDiff()
     {
         final JsonFileReaderAndWriter jsonReader = new JsonFileReaderAndWriterImpl();
         final JsonNode savedJson = jsonReader.getJsonFromFile(readableModel.getCurrentJSONFile());
-        
+
         if (savedJson == null)
         {
             logger.error("Failed to read saved JSON from file: {}", readableModel.getCurrentJSONFile());
             return new ArrayList<>();
         }
-        
+
         final JsonNode currentJson = readableModel.getRootJson();
-        
+
         if (currentJson == null)
         {
             logger.error("Current JSON in model is null");
             return new ArrayList<>();
         }
-        
+
         return JsonDiffer.calculateDiff(savedJson, currentJson, readableModel);
     }
-    
+
     @Override
     public void shutdown()
     {
-        logger.info("Shutting down application");
-        mcpController.stopMcpServer();
+        logger.info("Shutting down editor window");
+        if (guiSessionId != null)
+        {
+            fileSessionManager.unregisterGuiSession(guiSessionId);
+        }
     }
 }
