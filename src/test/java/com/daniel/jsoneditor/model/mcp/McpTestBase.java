@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 /**
  * Base class for MCP server integration tests.
  * Starts a fresh server on a random port before each test and stops it after.

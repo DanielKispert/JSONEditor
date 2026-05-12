@@ -12,9 +12,9 @@ import javafx.stage.Stage;
 public class AppWindow
 {
     private final Controller controller;
-    
+
     private final Stage stage;
-    
+
     /** Creates a new editor window wired to the given AppService. */
     public AppWindow(final AppService appService)
     {
@@ -23,7 +23,7 @@ public class AppWindow
         final ModelImpl model = new ModelImpl(new EventSenderImpl());
         this.controller = new ControllerImpl(model, model, stage, appService);
     }
-    
+
     /**
      * Sets up close behavior: shuts down this window's controller.
      *
@@ -40,13 +40,13 @@ public class AppWindow
             }
         });
     }
-    
+
     /** Returns this window's controller. */
     public Controller getController()
     {
         return controller;
     }
-    
+
     /** Returns this window's stage. */
     public Stage getStage()
     {

@@ -28,36 +28,36 @@ import java.util.concurrent.Executors;
 public class JsonEditorMcpServer
 {
     private static final Logger logger = LoggerFactory.getLogger(JsonEditorMcpServer.class);
-    
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     private static final String PROTOCOL_VERSION = "2024-11-05";
-    
+
     private static final String SERVER_NAME = "json-editor";
-    
+
     private static final String SERVER_VERSION = VersionUtil.getVersion();
-    
+
     public static final int DEFAULT_PORT = 4500;
-    
+
     private static final int HTTP_OK = 200;
     private static final int HTTP_BAD_REQUEST = 400;
     private static final int HTTP_METHOD_NOT_ALLOWED = 405;
     private static final int HTTP_INTERNAL_ERROR = 500;
-    
+
     private static final int JSONRPC_PARSE_ERROR = -32700;
     private static final int JSONRPC_INVALID_REQUEST = -32600;
     private static final int JSONRPC_METHOD_NOT_FOUND = -32601;
     private static final int JSONRPC_INVALID_PARAMS = -32602;
     private static final int JSONRPC_INTERNAL_ERROR = -32603;
-    
+
     private final McpToolRegistry toolRegistry;
-    
+
     private HttpServer server;
-    
+
     private int port;
-    
+
     private volatile boolean running;
-    
+
     /** Creates MCP server backed by a FileSessionManager for multi-file support. */
     public JsonEditorMcpServer(final FileSessionManager sessionManager, final AppService appService)
     {
@@ -68,7 +68,7 @@ public class JsonEditorMcpServer
         this.toolRegistry = new McpToolRegistry(sessionManager, appService);
         this.running = false;
     }
-    
+
     /**
      * Starts the MCP server on the specified port.
      *
@@ -86,13 +86,13 @@ public class JsonEditorMcpServer
         {
             throw new IllegalArgumentException("Port must be 0 (OS assigns) or between 1024 and 65535");
         }
-        
+
         if (running)
         {
             logger.warn("MCP Server already running on port {}, stopping first", this.port);
             stop();
         }
-        
+
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
         this.port = (port == 0) ? server.getAddress().getPort() : port;
         server.createContext("/", this::handleRequest);
@@ -105,7 +105,7 @@ public class JsonEditorMcpServer
         running = true;
         logger.info("MCP Server started on http://127.0.0.1:{}", this.port);
     }
-    
+
     /**
      * Stops the MCP server gracefully.
      */
@@ -119,21 +119,21 @@ public class JsonEditorMcpServer
             logger.info("MCP Server stopped");
         }
     }
-    
+
     public boolean isRunning()
     {
         return running;
     }
-    
+
     public int getPort()
     {
         return port;
     }
-    
+
     private void handleRequest(final HttpExchange exchange) throws IOException
     {
         final String path = exchange.getRequestURI().getPath();
-        
+
         if ("/health".equals(path))
         {
             handleHealthCheck(exchange);
@@ -143,13 +143,13 @@ public class JsonEditorMcpServer
             handleMcpRequest(exchange);
         }
     }
-    
+
     private void handleHealthCheck(final HttpExchange exchange) throws IOException
     {
         final String response = "{\"status\":\"ok\",\"service\":\"json-editor-mcp\"}";
         sendJsonResponse(exchange, HTTP_OK, response);
     }
-    
+
     private void handleMcpRequest(final HttpExchange exchange) throws IOException
     {
         if (!"POST".equals(exchange.getRequestMethod()))
@@ -157,17 +157,17 @@ public class JsonEditorMcpServer
             sendJsonResponse(exchange, HTTP_METHOD_NOT_ALLOWED, createErrorResponse(null, JSONRPC_INVALID_REQUEST, "Method not allowed"));
             return;
         }
-        
+
         String requestBody = null;
         try (InputStream is = exchange.getRequestBody())
         {
             requestBody = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             final JsonNode request = OBJECT_MAPPER.readTree(requestBody);
-            
+
             final String method = request.path("method").asText();
             final JsonNode params = request.path("params");
             final JsonNode id = request.path("id");
-            
+
             final String response = processMethod(method, params, id);
             sendJsonResponse(exchange, HTTP_OK, response);
         }
@@ -177,7 +177,7 @@ public class JsonEditorMcpServer
             sendJsonResponse(exchange, HTTP_BAD_REQUEST, createErrorResponse(null, JSONRPC_PARSE_ERROR, "Parse error"));
         }
     }
-    
+
     private String processMethod(final String method, final JsonNode params, final JsonNode id) throws JsonProcessingException
     {
         return switch (method)
@@ -188,39 +188,39 @@ public class JsonEditorMcpServer
             default -> createErrorResponse(id, JSONRPC_METHOD_NOT_FOUND, "Method not found: " + method);
         };
     }
-    
+
     private String handleInitialize(final JsonNode id) throws JsonProcessingException
     {
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
         result.put("protocolVersion", PROTOCOL_VERSION);
-        
+
         final ObjectNode capabilities = OBJECT_MAPPER.createObjectNode();
         final ObjectNode tools = OBJECT_MAPPER.createObjectNode();
         capabilities.set("tools", tools);
         result.set("capabilities", capabilities);
-        
+
         final ObjectNode serverInfo = OBJECT_MAPPER.createObjectNode();
         serverInfo.put("name", SERVER_NAME);
         serverInfo.put("version", SERVER_VERSION);
         result.set("serverInfo", serverInfo);
-        
+
         return createSuccessResponse(id, result);
     }
-    
+
     private String handleToolsList(final JsonNode id) throws JsonProcessingException
     {
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
         result.set("tools", toolRegistry.getToolDefinitions());
         return createSuccessResponse(id, result);
     }
-    
+
     private String handleToolsCall(final JsonNode params, final JsonNode id) throws JsonProcessingException
     {
         final String toolName = params.path("name").asText();
         final JsonNode arguments = params.path("arguments");
-        
+
         logger.info("MCP tool called: {} with arguments: {}", toolName, arguments);
-        
+
         final McpTool tool = toolRegistry.getTool(toolName);
         if (tool == null)
         {
@@ -239,7 +239,7 @@ public class JsonEditorMcpServer
             logger.warn("Tool {} validation failed: {}", toolName, e.getMessage());
             return createErrorResponse(id, JSONRPC_INVALID_PARAMS, e.getMessage());
         }
-        
+
         final String result = tool.execute(arguments, id);
         logger.debug("Tool {} completed successfully", toolName);
         return result;
@@ -253,7 +253,7 @@ public class JsonEditorMcpServer
         response.set("result", result);
         return OBJECT_MAPPER.writeValueAsString(response);
     }
-    
+
 
     private String createErrorResponse(final JsonNode id, final int code, final String message)
     {
@@ -262,12 +262,12 @@ public class JsonEditorMcpServer
             final ObjectNode response = OBJECT_MAPPER.createObjectNode();
             response.put("jsonrpc", "2.0");
             response.set("id", id);
-            
+
             final ObjectNode error = OBJECT_MAPPER.createObjectNode();
             error.put("code", code);
             error.put("message", message);
             response.set("error", error);
-            
+
             return OBJECT_MAPPER.writeValueAsString(response);
         }
         catch (JsonProcessingException e)
@@ -283,12 +283,12 @@ public class JsonEditorMcpServer
             final ObjectNode response = OBJECT_MAPPER.createObjectNode();
             response.put("jsonrpc", "2.0");
             response.set("id", id);
-            
+
             final ObjectNode error = OBJECT_MAPPER.createObjectNode();
             error.put("code", code);
             error.put("message", message);
             response.set("error", error);
-            
+
             return OBJECT_MAPPER.writeValueAsString(response);
         }
         catch (JsonProcessingException e)
@@ -296,7 +296,7 @@ public class JsonEditorMcpServer
             return "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Internal error\"}}";
         }
     }
-    
+
     private void sendJsonResponse(final HttpExchange exchange, final int statusCode, final String response) throws IOException
     {
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
