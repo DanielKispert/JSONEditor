@@ -9,15 +9,14 @@ import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class McpController
 {
     private static final Logger logger = LoggerFactory.getLogger(McpController.class);
-    
+
     private final JsonEditorMcpServer mcpServer;
-    
+
     private final SettingsController settingsController;
-    
+
     /**
      * Creates the MCP controller. Pass appService for GUI integration (ShowGuiTool),
      * or null for standalone/headless mode.
@@ -28,26 +27,27 @@ public class McpController
         this.mcpServer = new JsonEditorMcpServer(sessionManager, appService);
         this.settingsController = settingsController;
     }
-    
+
     /**
-     * Starts the MCP server.
+     * Starts the MCP server on the given port.
+     *
+     * @param port the port to listen on
      */
-    public void startMcpServer()
+    public void startMcpServer(final int port)
     {
         if (!mcpServer.isRunning())
         {
             try
             {
-                mcpServer.start(settingsController.getMcpServerPort());
+                mcpServer.start(port);
             }
             catch (IOException e)
             {
-                logger.error("Failed to start MCP server on port {}: {}",
-                    settingsController.getMcpServerPort(), e.getMessage());
+                logger.error("Failed to start MCP server on port {}: {}", port, e.getMessage());
             }
         }
     }
-    
+
     /**
      * Stops the MCP server if it's running.
      */
@@ -55,7 +55,7 @@ public class McpController
     {
         mcpServer.stop();
     }
-    
+
     /**
      * Checks if the MCP server is currently running.
      *
@@ -65,7 +65,7 @@ public class McpController
     {
         return mcpServer.isRunning();
     }
-    
+
     /**
      * Gets the current port the server is running on or configured to use.
      *

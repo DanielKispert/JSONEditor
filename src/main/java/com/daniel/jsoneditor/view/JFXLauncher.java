@@ -40,6 +40,33 @@ public class JFXLauncher extends Application
         launch(args);
     }
 
+    /**
+     * Parses {@code --port N} from the launch arguments.
+     * Returns the port number if valid, or {@code 0} if not specified (use settings default).
+     */
+    private int parsePortOverride(final List<String> args)
+    {
+        final int portIdx = args.indexOf("--port");
+        if (portIdx >= 0 && portIdx + 1 < args.size())
+        {
+            try
+            {
+                final int port = Integer.parseInt(args.get(portIdx + 1));
+                if (port > 0 && port <= 65535)
+                {
+                    return port;
+                }
+                logger.warn("Invalid --port value '{}': must be 1-65535, using settings default",
+                        args.get(portIdx + 1));
+            }
+            catch (final NumberFormatException e)
+            {
+                logger.warn("Invalid --port argument '{}', using settings default", args.get(portIdx + 1));
+            }
+        }
+        return 0;
+    }
+
     @Override
     public void start(final Stage stage)
     {
@@ -47,12 +74,13 @@ public class JFXLauncher extends Application
         Platform.setImplicitExit(false);
         stage.close();
 
-        // Core service starts MCP server immediately
-        appService = new AppService();
-
-        // Parse launch arguments
+        // Parse launch arguments before creating AppService so port override can be applied
         final List<String> args = getParameters().getRaw();
         final boolean headless = args.contains("--headless");
+        final int portOverride = parsePortOverride(args);
+
+        // Core service starts MCP server immediately
+        appService = new AppService(portOverride);
 
         if (headless)
         {

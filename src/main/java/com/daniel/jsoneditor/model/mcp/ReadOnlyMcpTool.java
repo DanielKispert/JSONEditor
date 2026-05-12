@@ -8,16 +8,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-
 /**
  * Base class for read-only MCP tools. Resolves the target model from a file_id argument.
  */
 public abstract class ReadOnlyMcpTool extends McpTool
 {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     protected final FileSessionManager sessionManager;
-    
+
+    /**
+     * Holds either a resolved {@link ReadableModel} on success, or a pre-built JSON-RPC
+     * error response string on failure. Exactly one field is non-null.
+     */
+    record ResolveResult(ReadableModel model, String error) {}
+
     protected ReadOnlyMcpTool(final FileSessionManager sessionManager)
     {
         if (sessionManager == null)
@@ -26,39 +31,32 @@ public abstract class ReadOnlyMcpTool extends McpTool
         }
         this.sessionManager = sessionManager;
     }
-    
-    /**
-     * Resolves the target model from the {@code file_id} argument.
-     * Returns {@code null} if the {@code file_id} is absent or unknown.
-     */
-    protected ReadableModel resolveModel(final JsonNode arguments)
-    {
-        final String fileId = arguments.path("file_id").asText(null);
-        if (fileId == null)
-        {
-            return null;
-        }
-        final EditorSession session = sessionManager.getSession(fileId);
-        return session != null ? session.model() : null;
-    }
 
     /**
-     * Validates that the {@code file_id} argument is present and refers to a known session.
-     * Returns a JSON-RPC error response string if validation fails, or {@code null} if valid.
-     * Tools should call this at the start of {@code execute()} and return early if non-null.
+     * Atomically resolves the {@code file_id} argument to a {@link ReadableModel}.
+     * <p>
+     * Returns a {@link ResolveResult} where either {@link ResolveResult#model()} is non-null
+     * (success) or {@link ResolveResult#error()} is non-null (failure). Tools should call
+     * this at the start of {@code execute()} and return {@link ResolveResult#error()}
+     * immediately when non-null, eliminating the TOCTOU window between validation and lookup.
      */
-    protected String validateFileId(final JsonNode arguments, final JsonNode id)
+    protected ResolveResult resolveFileSession(final JsonNode arguments, final JsonNode id)
     {
         final String fileId = arguments.path("file_id").asText(null);
         if (fileId == null || fileId.isEmpty())
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "file_id argument is required");
+            return new ResolveResult(null,
+                    JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
+                            "file_id argument is required"));
         }
-        if (sessionManager.getSession(fileId) == null)
+        final EditorSession session = sessionManager.getSession(fileId);
+        if (session == null)
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "Unknown file_id: " + fileId);
+            return new ResolveResult(null,
+                    JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
+                            "Unknown file_id: " + fileId));
         }
-        return null;
+        return new ResolveResult(session.model(), null);
     }
 
     protected static void addFileIdProperty(final ObjectNode properties)
@@ -68,7 +66,7 @@ public abstract class ReadOnlyMcpTool extends McpTool
         fileIdProp.put("description", "Session ID of the file to operate on (from list_files or open_file)");
         properties.set("file_id", fileIdProp);
     }
-    
+
     protected static void addFileIdRequired(final ArrayNode required)
     {
         required.add("file_id");

@@ -239,7 +239,7 @@ public class SettingsDialog extends ThemedDialog<Void>
         else
         {
             settingsController.setMcpServerPort(tmpMcpServerPort);
-            mcpController.startMcpServer();
+            mcpController.startMcpServer(tmpMcpServerPort);
         }
         updateMcpStatusLabel();
         updateMcpToggleButton();

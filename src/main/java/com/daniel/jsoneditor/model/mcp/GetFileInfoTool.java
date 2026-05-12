@@ -10,29 +10,28 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 class GetFileInfoTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(GetFileInfoTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     public GetFileInfoTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
     }
-    
+
     @Override
     public String getName()
     {
         return "get_file_info";
     }
-    
+
     @Override
     public String getDescription()
     {
         return "Get information about an open JSON file and schema";
     }
-    
+
     @Override
     public ObjectNode getInputSchema()
     {
@@ -40,7 +39,7 @@ class GetFileInfoTool extends ReadOnlyMcpTool
         addFileIdProperty(props);
         return props;
     }
-    
+
     @Override
     public ArrayNode getRequiredInputProperties()
     {
@@ -48,19 +47,19 @@ class GetFileInfoTool extends ReadOnlyMcpTool
         addFileIdRequired(arr);
         return arr;
     }
-    
+
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final String error = validateFileId(arguments, id);
-        if (error != null)
+        final var resolved = resolveFileSession(arguments, id);
+        if (resolved.error() != null)
         {
-            return error;
+            return resolved.error();
         }
-        final ReadableModel model = resolveModel(arguments);
-        
+        final ReadableModel model = resolved.model();
+
         final ObjectNode content = OBJECT_MAPPER.createObjectNode();
-        
+
         if (model.getCurrentJSONFile() != null)
         {
             content.put("file_path", model.getCurrentJSONFile().getAbsolutePath());
@@ -71,7 +70,7 @@ class GetFileInfoTool extends ReadOnlyMcpTool
             content.putNull("file_path");
             content.putNull("file_name");
         }
-        
+
         if (model.getCurrentSchemaFile() != null)
         {
             content.put("schema_path", model.getCurrentSchemaFile().getAbsolutePath());
@@ -80,9 +79,9 @@ class GetFileInfoTool extends ReadOnlyMcpTool
         {
             content.putNull("schema_path");
         }
-        
+
         content.put("has_content", model.getRootJson() != null);
-        
+
         return McpToolRegistry.createToolResult(id, content);
     }
 }

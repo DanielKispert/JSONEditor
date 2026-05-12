@@ -172,6 +172,7 @@ public class RecentFilesManager
         catch (IOException e)
         {
             logger.error("Could not save recent files to {}", RECENT_FILES_PATH, e);
+            tempFile.delete();
             return;
         }
         try

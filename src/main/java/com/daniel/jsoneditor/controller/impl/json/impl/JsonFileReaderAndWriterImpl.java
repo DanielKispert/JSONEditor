@@ -18,21 +18,21 @@ import org.slf4j.LoggerFactory;
 public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
 {
     private static final Logger logger = LoggerFactory.getLogger(JsonFileReaderAndWriterImpl.class);
-    
+
     private final ObjectMapper regularMapper;
-    
+
     private final ObjectMapper mapperIgnoringUnknownProperties;
-    
+
     public JsonFileReaderAndWriterImpl()
     {
         this.regularMapper = new ObjectMapper();
-        
+
         this.mapperIgnoringUnknownProperties = new ObjectMapper();
         this.mapperIgnoringUnknownProperties.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
-    
 
-    
+
+
     @Override
     public JsonNode getJsonFromFile(File file)
     {
@@ -46,7 +46,7 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         }
         return null;
     }
-    
+
     @Override
     public JsonNode getNodeFromString(String content) throws JsonProcessingException
     {
@@ -54,10 +54,10 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         {
             throw new IllegalArgumentException("Content cannot be null");
         }
-        
+
         return regularMapper.readTree(content);
     }
-    
+
     @Override
     public <T> T getJsonFromFile(File file, Class<T> classOfObject, boolean ignoreUnknownProperties)
     {
@@ -78,13 +78,13 @@ public class JsonFileReaderAndWriterImpl implements JsonFileReaderAndWriter
         }
         return null;
     }
-    
+
     @Override
     public JsonSchema getSchemaFromFileResolvingRefs(File file)
     {
         return SchemaHelper.resolveJsonRefsInSchema(CustomSchemaFactory.makeCustomFactory().getSchema(getJsonFromFile(file)));
     }
-    
+
     @Override
     public boolean writeJsonToFile(JsonNode json, File file)
     {

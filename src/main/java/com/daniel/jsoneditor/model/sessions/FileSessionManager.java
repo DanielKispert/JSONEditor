@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
 
 /**
  * Manages multiple open file sessions. Used by both GUI and MCP server.
@@ -26,9 +24,9 @@ import java.util.stream.Collectors;
 public class FileSessionManager
 {
     private static final Logger logger = LoggerFactory.getLogger(FileSessionManager.class);
-    
+
     private final Map<String, EditorSession> sessions = new ConcurrentHashMap<>();
-    
+
     /**
      * Opens a JSON file with its schema and creates a new headless session.
      *
@@ -40,7 +38,7 @@ public class FileSessionManager
     {
         final File jsonFile = new File(jsonPath);
         final File schemaFile = new File(schemaPath);
-        
+
         if (!jsonFile.exists())
         {
             logger.error("JSON file does not exist: {}", jsonPath);
@@ -51,7 +49,7 @@ public class FileSessionManager
             logger.error("Schema file does not exist: {}", schemaPath);
             return new OpenFileResult(null, "Schema file does not exist: " + schemaPath);
         }
-        
+
         final JsonFileReaderAndWriterImpl reader = new JsonFileReaderAndWriterImpl();
         final JsonNode json;
         final JsonSchema schema;
@@ -65,7 +63,7 @@ public class FileSessionManager
             logger.error("Failed to parse JSON or schema files: {} / {}", jsonPath, schemaPath, e);
             return new OpenFileResult(null, "Failed to parse files: " + e.getMessage());
         }
-        
+
         if (json == null || schema == null)
         {
             logger.error("Failed to load JSON or schema from files: {} / {}", jsonPath, schemaPath);
@@ -79,10 +77,10 @@ public class FileSessionManager
             logger.error("JSON does not validate against schema: {} / {}", jsonPath, schemaPath);
             return new OpenFileResult(null, "JSON does not validate against schema: " + errorDetails);
         }
-        
+
         final ModelImpl model = new ModelImpl(new EventSenderImpl());
         model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
-        
+
         EditorSession session;
         String sessionId;
         do
@@ -91,11 +89,11 @@ public class FileSessionManager
             session = new EditorSession(sessionId, model, jsonFile, schemaFile, false);
         }
         while (sessions.putIfAbsent(sessionId, session) != null);
-        
+
         logger.info("Opened file session {} for {}", sessionId, jsonPath);
         return new OpenFileResult(sessionId, null);
     }
-    
+
     /**
      * Registers an existing GUI model as a session. Protected from MCP close.
      *
@@ -117,7 +115,7 @@ public class FileSessionManager
         logger.info("Registered GUI session {} for {}", sessionId, jsonFile != null ? jsonFile.getAbsolutePath() : "null");
         return sessionId;
     }
-    
+
     /**
      * Unregisters a GUI session (called when GUI closes a file).
      *
@@ -135,7 +133,7 @@ public class FileSessionManager
             return session;
         });
     }
-    
+
     /**
      * Closes a headless session. Refuses to close GUI-owned sessions.
      *
@@ -160,7 +158,7 @@ public class FileSessionManager
         });
         return result[0];
     }
-    
+
     /**
      * Returns the session for the given ID, or {@code null} if not found.
      *
@@ -171,7 +169,7 @@ public class FileSessionManager
     {
         return sessions.get(sessionId);
     }
-    
+
     /**
      * @return list of all active sessions
      */

@@ -13,29 +13,28 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-
 class FindReferencesToTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(FindReferencesToTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     public FindReferencesToTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
     }
-    
+
     @Override
     public String getName()
     {
         return "find_references_to";
     }
-    
+
     @Override
     public String getDescription()
     {
         return "Find all references pointing to a referenceable object instance at a given path";
     }
-    
+
     @Override
     public ObjectNode getInputSchema()
     {
@@ -53,23 +52,23 @@ class FindReferencesToTool extends ReadOnlyMcpTool
         arr.add("path");
         return arr;
     }
-    
+
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final String error = validateFileId(arguments, id);
-        if (error != null)
+        final var resolved = resolveFileSession(arguments, id);
+        if (resolved.error() != null)
         {
-            return error;
+            return resolved.error();
         }
-        final ReadableModel model = resolveModel(arguments);
-        
+        final ReadableModel model = resolved.model();
+
         final String path = arguments.path("path").asText("");
-        
+
         final List<ReferenceToObjectInstance> references = model.getReferencesToObjectForPath(path);
-        
+
         final ArrayNode result = OBJECT_MAPPER.createArrayNode();
-        
+
         if (references != null)
         {
             for (final ReferenceToObjectInstance ref : references)
@@ -79,7 +78,7 @@ class FindReferencesToTool extends ReadOnlyMcpTool
                 refNode.put("key", ref.getKey());
                 refNode.put("display_name", ref.getFancyName());
                 refNode.put("referencing_key", ref.getReference().getObjectReferencingKey());
-                
+
                 final String remarks = ref.getRemarks();
                 if (remarks != null)
                 {
@@ -89,11 +88,11 @@ class FindReferencesToTool extends ReadOnlyMcpTool
                 {
                     refNode.putNull("remarks");
                 }
-                
+
                 result.add(refNode);
             }
         }
-        
+
         return McpToolRegistry.createToolResult(id, result);
     }
 }

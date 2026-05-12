@@ -13,29 +13,28 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-
 class GetReferenceableObjectsTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(GetReferenceableObjectsTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     public GetReferenceableObjectsTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
     }
-    
+
     @Override
     public String getName()
     {
         return "get_referenceable_objects";
     }
-    
+
     @Override
     public String getDescription()
     {
         return "List all referenceable object types defined in the schema";
     }
-    
+
     @Override
     public ObjectNode getInputSchema()
     {
@@ -43,7 +42,7 @@ class GetReferenceableObjectsTool extends ReadOnlyMcpTool
         addFileIdProperty(props);
         return props;
     }
-    
+
     @Override
     public ArrayNode getRequiredInputProperties()
     {
@@ -51,20 +50,20 @@ class GetReferenceableObjectsTool extends ReadOnlyMcpTool
         addFileIdRequired(arr);
         return arr;
     }
-    
+
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final String error = validateFileId(arguments, id);
-        if (error != null)
+        final var resolved = resolveFileSession(arguments, id);
+        if (resolved.error() != null)
         {
-            return error;
+            return resolved.error();
         }
-        final ReadableModel model = resolveModel(arguments);
-        
+        final ReadableModel model = resolved.model();
+
         final List<ReferenceableObject> objects = model.getReferenceableObjects();
         final ArrayNode result = OBJECT_MAPPER.createArrayNode();
-        
+
         if (objects != null)
         {
             for (final ReferenceableObject obj : objects)
@@ -76,7 +75,7 @@ class GetReferenceableObjectsTool extends ReadOnlyMcpTool
                 result.add(objNode);
             }
         }
-        
+
         return McpToolRegistry.createToolResult(id, result);
     }
 }

@@ -36,27 +36,40 @@ public class AppService
     private final List<AppWindow> windows = new CopyOnWriteArrayList<>();
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
+    /** Creates the service using the port configured in settings. */
     public AppService()
+    {
+        this(0);
+    }
+
+    /**
+     * Creates the service, overriding the MCP server port when {@code portOverride > 0}.
+     *
+     * @param portOverride port to use for the MCP server, or {@code 0} to use the settings value
+     */
+    public AppService(final int portOverride)
     {
         this.fileSessionManager = new FileSessionManager();
         this.settingsController = new SettingsControllerImpl();
         this.recentFilesManager = new RecentFilesManager();
         this.mcpController = new McpController(fileSessionManager, settingsController, this);
-        startMcpServer();
+        startMcpServer(portOverride);
     }
 
     /**
      * Starts the MCP server if enabled in settings.
+     * Uses {@code portOverride} when positive; otherwise falls back to the settings port.
      * Called automatically during construction so the server is available before any window opens.
      */
-    private void startMcpServer()
+    private void startMcpServer(final int portOverride)
     {
         if (!settingsController.isMcpServerEnabled())
         {
             logger.info("MCP server disabled in settings, skipping auto-start");
             return;
         }
-        mcpController.startMcpServer();
+        final int port = portOverride > 0 ? portOverride : settingsController.getMcpServerPort();
+        mcpController.startMcpServer(port);
         if (mcpController.isMcpServerRunning())
         {
             logger.info("MCP server started on port {}", mcpController.getMcpServerPort());
@@ -70,7 +83,7 @@ public class AppService
     /**
      * Creates a new editor window.
      *
-     * @return the new window
+     * @return the new {@link AppWindow}, or {@code null} if the application is shutting down
      */
     public AppWindow createWindow()
     {

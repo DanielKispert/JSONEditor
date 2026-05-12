@@ -14,29 +14,28 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-
 class GetReferenceableInstancesTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(GetReferenceableInstancesTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     public GetReferenceableInstancesTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
     }
-    
+
     @Override
     public String getName()
     {
         return "get_referenceable_instances";
     }
-    
+
     @Override
     public String getDescription()
     {
         return "Get all instances of a referenceable object type";
     }
-    
+
     @Override
     public ObjectNode getInputSchema()
     {
@@ -54,28 +53,28 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
         arr.add("referencing_key");
         return arr;
     }
-    
+
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final String error = validateFileId(arguments, id);
-        if (error != null)
+        final var resolved = resolveFileSession(arguments, id);
+        if (resolved.error() != null)
         {
-            return error;
+            return resolved.error();
         }
-        final ReadableModel model = resolveModel(arguments);
-        
+        final ReadableModel model = resolved.model();
+
         final String referencingKey = arguments.path("referencing_key").asText("");
-        
+
         final ReferenceableObject refObject = model.getReferenceableObjectByReferencingKey(referencingKey);
         if (refObject == null)
         {
             return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "No referenceable object found with key: " + referencingKey);
         }
-        
+
         final List<ReferenceableObjectInstance> instances = model.getReferenceableObjectInstances(refObject);
         final ArrayNode result = OBJECT_MAPPER.createArrayNode();
-        
+
         if (instances != null)
         {
             for (final ReferenceableObjectInstance instance : instances)
@@ -87,7 +86,7 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
                 result.add(instNode);
             }
         }
-        
+
         return McpToolRegistry.createToolResult(id, result);
     }
 }

@@ -12,29 +12,28 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-
 class GetExamplesTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(GetExamplesTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     public GetExamplesTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
     }
-    
+
     @Override
     public String getName()
     {
         return "get_examples";
     }
-    
+
     @Override
     public String getDescription()
     {
         return "Get example values for a JSON path";
     }
-    
+
     @Override
     public ObjectNode getInputSchema()
     {
@@ -52,38 +51,38 @@ class GetExamplesTool extends ReadOnlyMcpTool
         arr.add("path");
         return arr;
     }
-    
+
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final String error = validateFileId(arguments, id);
-        if (error != null)
+        final var resolved = resolveFileSession(arguments, id);
+        if (resolved.error() != null)
         {
-            return error;
+            return resolved.error();
         }
-        final ReadableModel model = resolveModel(arguments);
-        
+        final ReadableModel model = resolved.model();
+
         final String path = arguments.path("path").asText("");
-        
+
         final List<String> examples = model.getStringExamplesForPath(path);
         final List<String> allowedValues = model.getAllowedStringValuesForPath(path);
-        
+
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        
+
         final ArrayNode examplesArray = OBJECT_MAPPER.createArrayNode();
         if (examples != null)
         {
             examples.forEach(examplesArray::add);
         }
         result.set("examples", examplesArray);
-        
+
         final ArrayNode allowedArray = OBJECT_MAPPER.createArrayNode();
         if (allowedValues != null)
         {
             allowedValues.forEach(allowedArray::add);
         }
         result.set("allowed_values", allowedArray);
-        
+
         return McpToolRegistry.createToolResult(id, result);
     }
 }

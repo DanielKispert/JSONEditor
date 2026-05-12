@@ -8,39 +8,38 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-
 class ListFilesTool extends ReadOnlyMcpTool
 {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     public ListFilesTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
     }
-    
+
     @Override
     public String getName()
     {
         return "list_files";
     }
-    
+
     @Override
     public String getDescription()
     {
         return "List all currently open file sessions with their IDs and paths";
     }
-    
+
     @Override
     public ObjectNode getInputSchema()
     {
         return OBJECT_MAPPER.createObjectNode();
     }
-    
+
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
         final ArrayNode result = OBJECT_MAPPER.createArrayNode();
-        
+
         for (final EditorSession session : sessionManager.listSessions())
         {
             final ObjectNode entry = OBJECT_MAPPER.createObjectNode();
@@ -50,7 +49,7 @@ class ListFilesTool extends ReadOnlyMcpTool
             entry.put("gui_owned", session.guiOwned());
             result.add(entry);
         }
-        
+
         return McpToolRegistry.createToolResult(id, result);
     }
 }

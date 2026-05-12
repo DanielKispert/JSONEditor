@@ -1,7 +1,7 @@
 package com.daniel.jsoneditor.model.mcp;
 
-import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.daniel.jsoneditor.controller.AppService;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,9 +10,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.ArrayList;
-
+import java.util.List;
 
 /**
  * Registry of all available MCP tools for the JSON Editor.
@@ -22,9 +21,9 @@ public class McpToolRegistry
 {
     private static final Logger logger = LoggerFactory.getLogger(McpToolRegistry.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     private final List<McpTool> tools;
-    
+
     /**
      * Create registry with all available tools. Pass null for headless mode. When
      * appService is provided, the show_gui tool is registered for opening GUI
@@ -52,7 +51,7 @@ public class McpToolRegistry
         }
         this.tools = List.copyOf(toolList);
     }
-    
+
     /**
      * @return list of all registered tools
      */
@@ -60,7 +59,7 @@ public class McpToolRegistry
     {
         return tools;
     }
-    
+
     /**
      * Find tool by name.
      *
@@ -78,7 +77,7 @@ public class McpToolRegistry
         }
         return null;
     }
-    
+
     /**
      * Create JSON array of tool definitions for tools/list response.
      *
@@ -87,21 +86,21 @@ public class McpToolRegistry
     public ArrayNode getToolDefinitions()
     {
         final ArrayNode toolsArray = OBJECT_MAPPER.createArrayNode();
-        
+
         for (final McpTool tool : tools)
         {
             final ObjectNode toolDef = OBJECT_MAPPER.createObjectNode();
             toolDef.put("name", tool.getName());
             toolDef.put("description", tool.getDescription());
-            
+
             toolDef.set("inputSchema", buildInputSchema(tool));
-            
+
             toolsArray.add(toolDef);
         }
-        
+
         return toolsArray;
     }
-    
+
     /**
      * Build complete input schema for a tool including type, properties, required, and additionalProperties.
      * This is the canonical schema used both for tools/list and for validation.
@@ -112,16 +111,16 @@ public class McpToolRegistry
         schema.put("type", "object");
         schema.set("properties", tool.getInputSchema());
         schema.put("additionalProperties", false);
-        
+
         final ArrayNode required = tool.getRequiredInputProperties();
         if (required != null && !required.isEmpty())
         {
             schema.set("required", required);
         }
-        
+
         return schema;
     }
-    
+
     /**
      * Create a tool result where content contains a single text element with JSON payload.
      * The payload is serialized as a JSON string in the "text" field per MCP specification.
@@ -136,14 +135,14 @@ public class McpToolRegistry
         textContent.put("text", jsonText);
         contentArray.add(textContent);
         result.set("content", contentArray);
-        
+
         final ObjectNode response = OBJECT_MAPPER.createObjectNode();
         response.put("jsonrpc", "2.0");
         response.set("id", id);
         response.set("result", result);
         return OBJECT_MAPPER.writeValueAsString(response);
     }
-    
+
     protected static ObjectNode createSchemaWithProperty(final String propName, final String propType, final String description)
     {
         final ObjectNode props = OBJECT_MAPPER.createObjectNode();

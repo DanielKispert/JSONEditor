@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-
 class CloseFileTool extends ReadOnlyMcpTool
 {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -49,7 +48,12 @@ class CloseFileTool extends ReadOnlyMcpTool
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final String fileId = arguments.path("file_id").asText("");
+        final String fileId = arguments.path("file_id").asText(null);
+        if (fileId == null || fileId.isEmpty())
+        {
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
+                    "file_id argument is required");
+        }
 
         final CloseFileResult closeResult = sessionManager.closeFile(fileId);
         if (closeResult == CloseFileResult.NOT_FOUND)

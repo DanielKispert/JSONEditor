@@ -14,7 +14,7 @@ public final class VersionUtil
 {
     private static final Logger logger = LoggerFactory.getLogger(VersionUtil.class);
     private static final String VERSION;
-    
+
     static
     {
         String loadedVersion = "unknown";
@@ -37,12 +37,12 @@ public final class VersionUtil
         }
         VERSION = loadedVersion;
     }
-    
+
     private VersionUtil()
     {
         throw new UnsupportedOperationException("Utility class");
     }
-    
+
     /**
      * @return the application version (e.g., "0.16.1")
      */

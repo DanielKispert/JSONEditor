@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.controller.AppService;
+import com.daniel.jsoneditor.controller.AppWindow;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,7 +9,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * MCP tool that opens a new GUI window on demand.
@@ -55,8 +55,15 @@ class ShowGuiTool extends McpTool
 
         Platform.runLater(() ->
         {
-            appService.createWindow();
-            logger.info("GUI window opened via MCP tool");
+            final AppWindow window = appService.createWindow();
+            if (window != null)
+            {
+                logger.info("GUI window opened via MCP tool");
+            }
+            else
+            {
+                logger.warn("GUI window creation failed — application may be shutting down");
+            }
         });
 
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
