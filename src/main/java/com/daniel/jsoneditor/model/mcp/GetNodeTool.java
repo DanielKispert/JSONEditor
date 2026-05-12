@@ -66,7 +66,7 @@ class GetNodeTool extends ReadOnlyMcpTool
         final JsonNodeWithPath node = model.getNodeForPath(path);
         if (node == null)
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "No node found at path: " + path);
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "No node found at path: " + path);
         }
         
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();

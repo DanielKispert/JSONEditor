@@ -70,7 +70,7 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
         final ReferenceableObject refObject = model.getReferenceableObjectByReferencingKey(referencingKey);
         if (refObject == null)
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "No referenceable object found with key: " + referencingKey);
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "No referenceable object found with key: " + referencingKey);
         }
         
         final List<ReferenceableObjectInstance> instances = model.getReferenceableObjectInstances(refObject);

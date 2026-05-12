@@ -67,7 +67,7 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
         final JsonSchema schema = model.getSubschemaForPath(path);
         if (schema == null)
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, -32602, "No schema found for path: " + path);
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "No schema found for path: " + path);
         }
         
         final ObjectNode out = OBJECT_MAPPER.createObjectNode();
