@@ -32,6 +32,8 @@ public class AppService
 
     private final RecentFilesManager recentFilesManager;
 
+    private final SystemTrayManager systemTrayManager;
+
     private final List<AppWindow> windows = new CopyOnWriteArrayList<>();
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
@@ -52,6 +54,7 @@ public class AppService
         this.settingsController = new SettingsControllerImpl();
         this.recentFilesManager = new RecentFilesManager();
         this.mcpController = new McpController(fileSessionManager, settingsController, this);
+        this.systemTrayManager = new SystemTrayManager(this);
         startMcpServer(portOverride);
     }
 
@@ -59,6 +62,7 @@ public class AppService
      * Starts the MCP server if enabled in settings.
      * Uses {@code portOverride} when positive; otherwise falls back to the settings port.
      * Called automatically during construction so the server is available before any window opens.
+     * When the server starts successfully the system tray icon is shown.
      */
     private void startMcpServer(final int portOverride)
     {
@@ -72,6 +76,7 @@ public class AppService
         if (mcpController.isMcpServerRunning())
         {
             logger.info("MCP server started on port {}", mcpController.getMcpServerPort());
+            systemTrayManager.show(mcpController.getMcpServerPort());
         }
         else
         {
@@ -174,6 +179,7 @@ public class AppService
             return;
         }
         logger.info("Shutting down AppService");
+        systemTrayManager.hide();
         mcpController.stopMcpServer();
     }
 }
