@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.AWTException;
+import java.awt.HeadlessException;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -44,11 +45,19 @@ public class SystemTrayManager
      *
      * @param port the MCP server port shown in the tooltip
      */
-    public void show(final int port)
+    public synchronized void show(final int port)
     {
-        if (!SystemTray.isSupported())
+        try
         {
-            logger.info("System tray not supported on this platform — skipping tray icon");
+            if (!SystemTray.isSupported())
+            {
+                logger.info("System tray not supported on this platform — skipping tray icon");
+                return;
+            }
+        }
+        catch (final HeadlessException ex)
+        {
+            logger.info("Headless environment detected — skipping tray icon");
             return;
         }
         if (trayIcon != null)
@@ -72,17 +81,22 @@ public class SystemTrayManager
         popup.addSeparator();
         popup.add(quitItem);
 
-        final Dimension traySize = SystemTray.getSystemTray().getTrayIconSize();
-        final int iconSize = Math.max(traySize.width, traySize.height);
-
-        trayIcon = new TrayIcon(createIcon(iconSize), "JSON Editor (MCP Server running on port " + port + ")", popup);
-        trayIcon.setImageAutoSize(true);
-        trayIcon.addActionListener(e -> Platform.runLater(appService::createWindow));
-
         try
         {
+            final Dimension traySize = SystemTray.getSystemTray().getTrayIconSize();
+            final int iconSize = Math.max(traySize.width, traySize.height);
+
+            trayIcon = new TrayIcon(createIcon(iconSize), "JSON Editor (MCP Server running on port " + port + ")", popup);
+            trayIcon.setImageAutoSize(true);
+            trayIcon.addActionListener(e -> Platform.runLater(appService::createWindow));
+
             SystemTray.getSystemTray().add(trayIcon);
             logger.info("System tray icon added (port {})", port);
+        }
+        catch (final HeadlessException ex)
+        {
+            logger.info("Headless environment detected — skipping tray icon");
+            trayIcon = null;
         }
         catch (final AWTException ex)
         {
@@ -93,11 +107,18 @@ public class SystemTrayManager
     /**
      * Removes the tray icon. Safe to call when no icon is currently showing.
      */
-    public void hide()
+    public synchronized void hide()
     {
         if (trayIcon != null)
         {
-            SystemTray.getSystemTray().remove(trayIcon);
+            try
+            {
+                SystemTray.getSystemTray().remove(trayIcon);
+            }
+            catch (final HeadlessException ex)
+            {
+                logger.info("Headless environment — cannot remove tray icon from system tray");
+            }
             trayIcon = null;
             logger.info("System tray icon removed");
         }

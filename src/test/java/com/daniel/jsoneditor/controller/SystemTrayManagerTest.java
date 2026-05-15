@@ -45,7 +45,7 @@ public class SystemTrayManagerTest
     @Test
     void showIsNoOpWhenTrayNotSupported()
     {
-        assumeFalse(SystemTray.isSupported(), "Skipped: runs only where SystemTray is not supported (headless/CI)");
+        assumeFalse(isSystemTrayAvailable(), "Skipped: runs only where SystemTray is not supported (headless/CI)");
         assertDoesNotThrow(() -> manager.show(8080));
         assertNull(getTrayIcon(manager), "trayIcon should remain null when SystemTray is not supported");
     }
@@ -56,7 +56,7 @@ public class SystemTrayManagerTest
     @Test
     void showTwiceDoesNotCreateDuplicateIcons()
     {
-        assumeTrue(SystemTray.isSupported(), "Skipped: SystemTray not supported on this platform");
+        assumeTrue(isSystemTrayAvailable(), "Skipped: SystemTray not supported on this platform");
         manager.show(8080);
         manager.show(9090);
         assertEquals(1, SystemTray.getSystemTray().getTrayIcons().length,
@@ -81,7 +81,7 @@ public class SystemTrayManagerTest
     @Test
     void hideRemovesIconWhenOneExists()
     {
-        assumeTrue(SystemTray.isSupported(), "Skipped: SystemTray not supported on this platform");
+        assumeTrue(isSystemTrayAvailable(), "Skipped: SystemTray not supported on this platform");
         manager.show(8080);
         assertNotNull(getTrayIcon(manager), "Precondition: show() should set trayIcon");
         manager.hide();
@@ -102,6 +102,23 @@ public class SystemTrayManagerTest
         assertEquals(size, icon.getWidth(), "Width should match requested size");
         assertEquals(size, icon.getHeight(), "Height should match requested size");
         assertEquals(BufferedImage.TYPE_INT_ARGB, icon.getType(), "Image type should be ARGB");
+    }
+
+    /**
+     * Returns true if the system tray is available, false if not supported or if running in a
+     * headless environment (where {@link SystemTray#isSupported()} itself throws
+     * {@link java.awt.HeadlessException}).
+     */
+    private static boolean isSystemTrayAvailable()
+    {
+        try
+        {
+            return SystemTray.isSupported();
+        }
+        catch (final java.awt.HeadlessException ex)
+        {
+            return false;
+        }
     }
 
     // --- reflection helpers ---

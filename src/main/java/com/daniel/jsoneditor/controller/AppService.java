@@ -56,9 +56,16 @@ public class AppService
         this.mcpController = new McpController(fileSessionManager, settingsController, this);
         startMcpServer(portOverride);
         this.systemTrayManager = new SystemTrayManager(this);
-        if (mcpController.isMcpServerRunning())
+        try
         {
-            systemTrayManager.show(mcpController.getMcpServerPort());
+            if (mcpController.isMcpServerRunning())
+            {
+                systemTrayManager.show(mcpController.getMcpServerPort());
+            }
+        }
+        catch (final Exception ex)
+        {
+            logger.warn("System tray icon could not be shown — app will continue without it", ex);
         }
     }
 
