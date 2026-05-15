@@ -32,6 +32,8 @@ public class AppService
 
     private final RecentFilesManager recentFilesManager;
 
+    private final SystemTrayManager systemTrayManager;
+
     private final List<AppWindow> windows = new CopyOnWriteArrayList<>();
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
@@ -53,6 +55,18 @@ public class AppService
         this.recentFilesManager = new RecentFilesManager();
         this.mcpController = new McpController(fileSessionManager, settingsController, this);
         startMcpServer(portOverride);
+        this.systemTrayManager = new SystemTrayManager(this);
+        try
+        {
+            if (mcpController.isMcpServerRunning())
+            {
+                systemTrayManager.show(mcpController.getMcpServerPort());
+            }
+        }
+        catch (final Exception ex)
+        {
+            logger.warn("System tray icon could not be shown — app will continue without it", ex);
+        }
     }
 
     /**
@@ -174,6 +188,7 @@ public class AppService
             return;
         }
         logger.info("Shutting down AppService");
+        systemTrayManager.hide();
         mcpController.stopMcpServer();
     }
 }
