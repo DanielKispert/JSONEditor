@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -18,14 +19,19 @@ import java.awt.image.BufferedImage;
 
 /**
  * Manages the system tray icon for platforms that support it (Windows, some Linux DEs).
- * Skipped on macOS (which uses the dock icon) and when {@link SystemTray} is not available.
+ * Skipped on platforms where {@link SystemTray} is not available.
  */
 public class SystemTrayManager
 {
     private static final Logger logger = LoggerFactory.getLogger(SystemTrayManager.class);
 
+    private static final Color ICON_BACKGROUND = new Color(30, 100, 200);
+    private static final int ICON_ARC = 4;
+    private static final int ICON_FONT_SIZE = 11;
+    private static final String ICON_LETTER = "J";
+
     private final AppService appService;
-    private TrayIcon trayIcon;
+    private volatile TrayIcon trayIcon;
 
     public SystemTrayManager(final AppService appService)
     {
@@ -34,21 +40,20 @@ public class SystemTrayManager
 
     /**
      * Adds the system tray icon with a popup menu.
-     * No-op on macOS or platforms where {@link SystemTray} is not supported.
+     * No-op on platforms where {@link SystemTray} is not supported.
      *
      * @param port the MCP server port shown in the tooltip
      */
     public void show(final int port)
     {
-        if (isMacOs())
-        {
-            logger.debug("Skipping system tray on macOS");
-            return;
-        }
         if (!SystemTray.isSupported())
         {
             logger.info("System tray not supported on this platform — skipping tray icon");
             return;
+        }
+        if (trayIcon != null)
+        {
+            hide();
         }
 
         final PopupMenu popup = new PopupMenu();
@@ -67,7 +72,10 @@ public class SystemTrayManager
         popup.addSeparator();
         popup.add(quitItem);
 
-        trayIcon = new TrayIcon(createIcon(), "JSON Editor (MCP Server running on port " + port + ")", popup);
+        final Dimension traySize = SystemTray.getSystemTray().getTrayIconSize();
+        final int iconSize = Math.max(traySize.width, traySize.height);
+
+        trayIcon = new TrayIcon(createIcon(iconSize), "JSON Editor (MCP Server running on port " + port + ")", popup);
         trayIcon.setImageAutoSize(true);
         trayIcon.addActionListener(e -> Platform.runLater(appService::createWindow));
 
@@ -96,31 +104,25 @@ public class SystemTrayManager
     }
 
     /**
-     * Creates a simple 16x16 icon: a rounded blue rectangle with a white "J" letter.
+     * Creates a rounded blue rectangle icon with a white "J" letter, sized for the system tray.
      */
-    private static BufferedImage createIcon()
+    private static BufferedImage createIcon(final int size)
     {
-        final int size = 16;
         final BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         final Graphics2D g = image.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g.setColor(new Color(30, 100, 200));
-        g.fillRoundRect(0, 0, size, size, 4, 4);
+        g.setColor(ICON_BACKGROUND);
+        g.fillRoundRect(0, 0, size, size, ICON_ARC, ICON_ARC);
 
         g.setColor(Color.WHITE);
-        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
+        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, (int) (size * ICON_FONT_SIZE / 16.0)));
         final FontMetrics fm = g.getFontMetrics();
-        final int x = (size - fm.stringWidth("J")) / 2;
+        final int x = (size - fm.stringWidth(ICON_LETTER)) / 2;
         final int y = (size - fm.getHeight()) / 2 + fm.getAscent();
-        g.drawString("J", x, y);
+        g.drawString(ICON_LETTER, x, y);
 
         g.dispose();
         return image;
-    }
-
-    private static boolean isMacOs()
-    {
-        return System.getProperty("os.name", "").contains("Mac");
     }
 }
