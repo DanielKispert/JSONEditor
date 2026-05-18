@@ -42,6 +42,7 @@ class ValidateNodeTool extends ReadOnlyMcpTool
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("path", "string",
                 "JSON pointer where the value would be validated (e.g., /items/0)");
         addFileIdProperty(props);
+        // No "type" constraint — content accepts any JSON value (object, array, string, number, boolean, or null)
         final ObjectNode contentProp = OBJECT_MAPPER.createObjectNode();
         contentProp.put("description", "The JSON value to validate (object, array, string, number, boolean, or null)");
         props.set("content", contentProp);
@@ -87,10 +88,10 @@ class ValidateNodeTool extends ReadOnlyMcpTool
         {
             errors = SchemaHelper.validateJsonWithSchema(content, schema);
         }
-        catch (Exception e)
+        catch (RuntimeException e)
         {
             logger.warn("Schema validation failed unexpectedly for path {}: {}", path, e.getMessage(), e);
-            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "Schema validation failed: " + e.getMessage());
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "Schema validation failed unexpectedly");
         }
 
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
