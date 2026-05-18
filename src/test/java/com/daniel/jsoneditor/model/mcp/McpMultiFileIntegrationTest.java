@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -148,6 +149,21 @@ public class McpMultiFileIntegrationTest extends McpTestBase
 
         assertEquals("Acme", companyRoot.path("value").path("company").asText());
         assertEquals(2, itemsRoot.path("value").path("items").size());
+
+        // validate_node: same content is valid for company schema but invalid for items schema — proves schema isolation
+        final JsonNode mixedJson = OBJECT_MAPPER.readTree("{\"items\":\"not-an-array\"}");
+
+        final ObjectNode companyValidateParams = OBJECT_MAPPER.createObjectNode()
+                .put("file_id", idCompany).put("path", "");
+        companyValidateParams.set("content", mixedJson);
+        assertTrue(parseToolResultPayload(callTool("validate_node", companyValidateParams)).path("valid").asBoolean(),
+                "Company schema must accept {items:string} — it has no 'items' constraint");
+
+        final ObjectNode itemsValidateParams = OBJECT_MAPPER.createObjectNode()
+                .put("file_id", idItems).put("path", "");
+        itemsValidateParams.set("content", mixedJson);
+        assertFalse(parseToolResultPayload(callTool("validate_node", itemsValidateParams)).path("valid").asBoolean(),
+                "Items schema must reject {items:string} because 'items' must be an array");
     }
 
     @Test

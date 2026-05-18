@@ -204,6 +204,72 @@ public class McpServerIntegrationTest extends McpTestBase
                 "Expected file_id to be included in error message, got: " + message);
     }
 
+    @Test
+    void testValidateNode() throws Exception
+    {
+        final String schema = "{"
+                + "\"$schema\":\"http://json-schema.org/draft-07/schema#\","
+                + "\"type\":\"object\","
+                + "\"properties\":{"
+                + "\"name\":{\"type\":\"string\"},"
+                + "\"value\":{\"type\":\"number\"}"
+                + "}"
+                + "}";
+        final String fileId = openFile("{\"name\":\"test\",\"value\":42}", schema);
+
+        // valid content → valid=true, no errors
+        final JsonNode validResult = callTool("validate_node", OBJECT_MAPPER.createObjectNode()
+                .put("file_id", fileId)
+                .put("path", "")
+                .set("content", OBJECT_MAPPER.readTree("{\"name\":\"hello\",\"value\":10}")));
+        assertNull(validResult.get("error"), "Expected no error from validate_node with valid content");
+        final JsonNode validPayload = parseToolResultPayload(validResult);
+        assertTrue(validPayload.path("valid").asBoolean(), "Expected valid=true for matching content");
+        assertTrue(validPayload.path("errors").isEmpty(), "Expected empty errors for valid content");
+
+        // invalid content (wrong types) → valid=false, errors non-empty mentioning bad fields
+        final JsonNode invalidResult = callTool("validate_node", OBJECT_MAPPER.createObjectNode()
+                .put("file_id", fileId)
+                .put("path", "")
+                .set("content", OBJECT_MAPPER.readTree("{\"name\":123,\"value\":\"wrong\"}")));
+        assertNull(invalidResult.get("error"), "Expected no RPC error from validate_node with invalid content");
+        final JsonNode invalidPayload = parseToolResultPayload(invalidResult);
+        assertFalse(invalidPayload.path("valid").asBoolean(), "Expected valid=false for mismatched content");
+        assertFalse(invalidPayload.path("errors").isEmpty(), "Expected non-empty errors for invalid content");
+        final String errorsText = invalidPayload.path("errors").toString();
+        assertTrue(errorsText.contains("name") || errorsText.contains("value"),
+                "Expected errors to mention 'name' or 'value', got: " + errorsText);
+    }
+
+    @Test
+    void testValidateNodeErrors() throws Exception
+    {
+        final String schema = "{"
+                + "\"$schema\":\"http://json-schema.org/draft-07/schema#\","
+                + "\"type\":\"object\","
+                + "\"properties\":{"
+                + "\"name\":{\"type\":\"string\"},"
+                + "\"value\":{\"type\":\"number\"}"
+                + "}"
+                + "}";
+        final String fileId = openFile("{\"name\":\"test\",\"value\":42}", schema);
+
+        // missing content argument → error mentioning "content"
+        final JsonNode missingContent = callTool("validate_node", OBJECT_MAPPER.createObjectNode()
+                .put("file_id", fileId)
+                .put("path", ""));
+        assertNotNull(missingContent.get("error"), "Expected error when content argument is missing");
+        final String missingContentMessage = missingContent.path("error").path("message").asText();
+        assertTrue(missingContentMessage.contains("content"), "Expected 'content' in error message, got: " + missingContentMessage);
+
+        // path with no schema → error response
+        final JsonNode noSchema = callTool("validate_node", OBJECT_MAPPER.createObjectNode()
+                .put("file_id", fileId)
+                .put("path", "/unknown_field_xyz")
+                .set("content", OBJECT_MAPPER.readTree("\"anything\"")));
+        assertNotNull(noSchema.get("error"), "Expected error when path has no schema");
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private Path createTempJsonFile() throws Exception

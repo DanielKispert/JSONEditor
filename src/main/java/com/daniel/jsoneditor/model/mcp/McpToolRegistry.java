@@ -45,6 +45,7 @@ public class McpToolRegistry
         toolList.add(new GetReferenceableObjectsTool(sessionManager));
         toolList.add(new GetReferenceableInstancesTool(sessionManager));
         toolList.add(new FindReferencesToTool(sessionManager));
+        toolList.add(new ValidateNodeTool(sessionManager));
         if (appService != null)
         {
             toolList.add(new ShowGuiTool(appService));
