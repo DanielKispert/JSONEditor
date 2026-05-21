@@ -51,7 +51,9 @@ public class UIHandlerImpl implements UIHandler
     @Override
     public void showSelectJsonAndSchema()
     {
-        stage.setScene(new JSONSelectionScene(this, controller, model).getScene(stage));
+        final JSONSelectionScene scene = new JSONSelectionScene(this, controller.getSettingsController(), model,
+                controller::jsonAndSchemaSelected);
+        stage.setScene(scene.getScene(stage));
         stage.setWidth(700);
         stage.setHeight(300);
         stage.show();

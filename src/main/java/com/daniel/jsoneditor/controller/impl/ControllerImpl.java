@@ -1,15 +1,17 @@
 package com.daniel.jsoneditor.controller.impl;
 
 import java.io.File;
-import java.io.IOException;
+import com.daniel.jsoneditor.util.CanonicalPaths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Map;
 import java.util.Set;
 
 import com.daniel.jsoneditor.controller.AppService;
 import com.daniel.jsoneditor.controller.AppWindow;
 import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.controller.WindowRegistry;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManagerImpl;
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
@@ -21,6 +23,7 @@ import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.controller.settings.UpdateService;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.impl.ModelImpl;
 import com.daniel.jsoneditor.model.commands.CommandFactory;
 import com.daniel.jsoneditor.model.diff.DiffEntry;
 import com.daniel.jsoneditor.model.diff.JsonDiffer;
@@ -78,6 +81,7 @@ public class ControllerImpl implements Controller, Observer
     private final AppService appService;
 
     private String guiSessionId;
+    private AppWindow appWindow;
 
     private boolean updateCheckDone;
 
@@ -100,12 +104,76 @@ public class ControllerImpl implements Controller, Observer
     }
 
     /**
+     * Constructs a controller with a model that is already populated from disk.
+     * Skips the file-picker phase and goes straight to the editor scene.
+     * Used by the bootstrap flow when {@link com.daniel.jsoneditor.model.sessions.FileSessionManager#attachSession}
+     * returns an already-loaded {@link ModelImpl} (either freshly loaded or shared from another session).
+     *
+     * <p>After this constructor returns, the caller must invoke {@link #setAppWindow(AppWindow)} then
+     * {@link #registerInWindowRegistry(String)} to complete window dedup registration.</p>
+     *
+     * @param loadedModel a fully loaded ModelImpl (must implement both ReadableModel and WritableModel)
+     * @param stage the JavaFX stage to render into
+     * @param appService the shared application service
+     * @param jsonFile the JSON file backing the model (used for GUI session registration)
+     * @param schemaFile the schema file
+     */
+    public ControllerImpl(final ModelImpl loadedModel, final Stage stage, final AppService appService,
+            final File jsonFile, final File schemaFile)
+    {
+        this(loadedModel, loadedModel, stage, appService);
+        // The base constructor registered this as an observer and triggered update().
+        // Since loadedModel's latest event is MAIN_EDITOR (set by jsonAndSchemaSuccessfullyValidated),
+        // ViewImpl.update() sees MAIN_EDITOR and calls showMainEditor() automatically — no explicit
+        // event firing needed. The editor scene is already showing after the delegating call above.
+        refreshGuiSession(jsonFile, schemaFile);
+    }
+
+    /**
      * Updates the window title with given unsaved changes count.
      * This method is called by the CommandManager callback.
      */
     private void updateWindowTitle(final int unsavedChangesCount)
     {
         view.updateWindowTitle(unsavedChangesCount);
+    }
+
+    public void setAppWindow(final AppWindow window)
+    {
+        this.appWindow = window;
+    }
+
+    /**
+     * Unregisters the current GUI session (if any) and registers a new one for the given files.
+     * Idempotent: safe to call from the loaded constructor (where guiSessionId is null) and
+     * from loadJsonAndSchema (where it replaces the previous registration).
+     */
+    private void refreshGuiSession(final File jsonFile, final File schemaFile)
+    {
+        if (guiSessionId != null)
+        {
+            fileSessionManager.unregisterGuiSession(guiSessionId);
+        }
+        guiSessionId = fileSessionManager.registerGuiSession(readableModel, jsonFile, schemaFile);
+    }
+
+    /**
+     * Registers this controller's window in the {@link com.daniel.jsoneditor.controller.AppService}
+     * window registry so that subsequent "open same file" requests focus this window instead of
+     * opening a duplicate. Must be called AFTER {@link #setAppWindow(AppWindow)}.
+     *
+     * @param canonicalPath the canonical path of the JSON file (use {@link java.io.File#getCanonicalPath()})
+     */
+    public void registerInWindowRegistry(final String canonicalPath)
+    {
+        if (appWindow != null)
+        {
+            appService.getWindowRegistry().register(canonicalPath, appWindow);
+        }
+        else
+        {
+            logger.warn("registerInWindowRegistry called before setAppWindow — window not registered for {}", canonicalPath);
+        }
     }
 
     @Override
@@ -185,39 +253,61 @@ public class ControllerImpl implements Controller, Observer
     }
 
     @Override
-    public void jsonAndSchemaSelected(File jsonFile, File schemaFile, File settingsFile)
+    public void jsonAndSchemaSelected(final File jsonFile, final File schemaFile, final File settingsFile)
     {
         if (jsonFile != null && schemaFile != null)
         {
-            // grab Json from files and validate
-            JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
-            JsonNode json = reader.getJsonFromFile(jsonFile);
-            JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
-            handleJsonValidation(json, schema, () -> {
-                // settings file is optional
-                if (settingsFile != null)
-                {
-                    Settings settingsFromFile = reader.getJsonFromFile(settingsFile, Settings.class, true);
-                    if (settingsFromFile != null)
-                    {
-                        model.setSettings(settingsFromFile);
-                    }
-                }
-                model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
-                appService.getRecentFilesManager().addRecentFile(jsonFile, schemaFile);
-                if (guiSessionId != null)
-                {
-                    fileSessionManager.unregisterGuiSession(guiSessionId);
-                }
-                guiSessionId = fileSessionManager.registerGuiSession(readableModel, jsonFile, schemaFile);
-            });
+            // Compute canonical path for dedup check and registry
+            final String canonicalPath = CanonicalPaths.canonicalize(jsonFile);
 
+            // Dedup: if another window already shows this file, focus it and close this empty window
+            final WindowRegistry registry = appService.getWindowRegistry();
+            final Optional<AppWindow> existing = registry.findByPath(canonicalPath);
+            if (existing.isPresent())
+            {
+                existing.get().focus();
+                if (appWindow != null)
+                {
+                    appWindow.getStage().close();
+                }
+                return;
+            }
+
+            loadJsonAndSchema(jsonFile, schemaFile, settingsFile, canonicalPath);
         }
         else
         {
             view.selectJsonAndSchema();
         }
+    }
 
+    private void loadJsonAndSchema(final File jsonFile, final File schemaFile, final File settingsFile,
+            final String canonicalPath)
+    {
+        // grab Json from files and validate
+        final JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
+        final JsonNode json = reader.getJsonFromFile(jsonFile);
+        final JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
+        final WindowRegistry registry = appService.getWindowRegistry();
+        handleJsonValidation(json, schema, () -> {
+            // settings file is optional
+            if (settingsFile != null)
+            {
+                final Settings settingsFromFile = reader.getJsonFromFile(settingsFile, Settings.class, true);
+                if (settingsFromFile != null)
+                {
+                    model.setSettings(settingsFromFile);
+                }
+            }
+            model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
+            appService.getRecentFilesManager().addRecentFile(jsonFile, schemaFile);
+            refreshGuiSession(jsonFile, schemaFile);
+            // Register this window so future opens of the same file focus here instead
+            if (appWindow != null)
+            {
+                registry.register(canonicalPath, appWindow);
+            }
+        });
     }
 
     @Override

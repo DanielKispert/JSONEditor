@@ -1,6 +1,17 @@
 package com.daniel.jsoneditor.controller;
 
 import com.daniel.jsoneditor.controller.mcp.McpController;
+import com.daniel.jsoneditor.controller.impl.ControllerImpl;
+import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
+import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.impl.ModelImpl;
+import com.daniel.jsoneditor.model.sessions.AttachResult;
+import com.daniel.jsoneditor.model.sessions.EditorSession;
+import com.daniel.jsoneditor.model.settings.Settings;
+import com.daniel.jsoneditor.util.CanonicalPaths;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.stage.Stage;
 import com.daniel.jsoneditor.controller.settings.RecentFilesManager;
 import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.controller.settings.impl.SettingsControllerImpl;
@@ -36,6 +47,9 @@ public class AppService
 
     private final List<AppWindow> windows = new CopyOnWriteArrayList<>();
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
+    private final WindowRegistry windowRegistry;
+
+    private final FileOpenCoordinator fileOpenCoordinator;
 
     /** Creates the service using the port configured in settings. */
     public AppService()
@@ -55,6 +69,8 @@ public class AppService
         this.recentFilesManager = new RecentFilesManager();
         this.mcpController = new McpController(fileSessionManager, settingsController, this);
         startMcpServer(portOverride);
+        this.windowRegistry = new WindowRegistry();
+        this.fileOpenCoordinator = new FileOpenCoordinator(windowRegistry, this);
         this.systemTrayManager = new SystemTrayManager(this);
         try
         {
@@ -105,24 +121,50 @@ public class AppService
             logger.info("Cannot create window — application is shutting down");
             return null;
         }
-        final AppWindow window = new AppWindow(this);
+        final AppWindow window = AppWindow.bootstrap(this);
         windows.add(window);
         window.setOnClose(() -> onWindowClosed(window));
         return window;
     }
 
     /**
-     * Opens a new editor window and immediately loads the given JSON+schema file pair.
+     * Opens the given JSON+schema file pair in a window.
+     * If a window is already showing this file, focuses it instead of creating a new one.
      * Must be called on the JavaFX Application Thread.
      */
     public void openFileInNewWindow(final File jsonFile, final File schemaFile)
     {
-        final AppWindow window = createWindow();
-        if (window == null)
+        fileOpenCoordinator.open(jsonFile, schemaFile);
+    }
+
+    /**
+     * Opens a new editor window and immediately loads the given JSON+schema file pair.
+     * Delegates to {@link AppWindow#openLoaded} which attaches a (possibly shared) session via
+     * {@link com.daniel.jsoneditor.model.sessions.FileSessionManager#attachSession}.
+     * Must be called on the JavaFX Application Thread.
+     */
+    public void openFileInNewWindowDirect(final File jsonFile, final File schemaFile)
+    {
+        if (shuttingDown.get())
         {
+            logger.info("Cannot open file — application is shutting down");
             return;
         }
-        window.getController().jsonAndSchemaSelected(jsonFile, schemaFile, null);
+        final AppWindow window = AppWindow.createBlank(this);
+        final AttachResult result = attachLoadedSession(window, window.getStage(), jsonFile, schemaFile, null);
+        if (!result.success())
+        {
+            final String error = result.error();
+            Platform.runLater(() ->
+            {
+                final Alert alert = new Alert(Alert.AlertType.ERROR, error != null ? error : "Failed to open file", ButtonType.OK);
+                alert.setTitle("Cannot open file");
+                alert.showAndWait();
+            });
+            return;
+        }
+        windows.add(window);
+        window.setOnClose(() -> onWindowClosed(window));
     }
 
     /**
@@ -132,6 +174,7 @@ public class AppService
      */
     private void onWindowClosed(final AppWindow window)
     {
+        windowRegistry.unregisterWindow(window);
         windows.remove(window);
         logger.info("Window closed. {} window(s) remaining.", windows.size());
         if (windows.isEmpty() && !mcpController.isMcpServerRunning())
@@ -163,6 +206,63 @@ public class AppService
     public RecentFilesManager getRecentFilesManager()
     {
         return recentFilesManager;
+    }
+
+    /** Returns the window registry. */
+    public WindowRegistry getWindowRegistry()
+    {
+        return windowRegistry;
+    }
+
+    /** Returns the file-open coordinator. */
+    public FileOpenCoordinator getFileOpenCoordinator()
+    {
+        return fileOpenCoordinator;
+    }
+
+    /**
+     * Attaches a loaded file session and wires a new {@link ControllerImpl} to the given window/stage.
+     * Handles: FSM session attach, optional settings application, controller construction,
+     * window registration. Package-private — called by {@link AppWindow} factory methods and
+     * by {@link #openFileInNewWindowDirect}.
+     *
+     * @param window       the AppWindow that will host the editor
+     * @param stage        the JavaFX stage for the window
+     * @param jsonFile     the JSON file to open
+     * @param schemaFile   the schema file (may be {@code null} — treated as empty path)
+     * @param settingsFile optional settings file, may be {@code null}
+     * @return the FSM {@link AttachResult}; on failure {@link AttachResult#success()} is {@code false}
+     */
+    AttachResult attachLoadedSession(final AppWindow window, final Stage stage, final File jsonFile,
+            final File schemaFile, final File settingsFile)
+    {
+        final AttachResult result = fileSessionManager.attachSession(
+                jsonFile.getAbsolutePath(),
+                schemaFile != null ? schemaFile.getAbsolutePath() : "",
+                true);
+        if (!result.success())
+        {
+            logger.warn("attachSession failed for {}: {}", jsonFile, result.error());
+            return result;
+        }
+
+        final EditorSession session = fileSessionManager.getSession(result.sessionId());
+        final ModelImpl loadedModel = (ModelImpl) session.model();
+
+        if (settingsFile != null && !settingsFile.getPath().isEmpty() && settingsFile.exists())
+        {
+            final Settings settings = new JsonFileReaderAndWriterImpl().getJsonFromFile(settingsFile, Settings.class, true);
+            if (settings != null)
+            {
+                ((WritableModel) loadedModel).setSettings(settings);
+            }
+        }
+
+        final ControllerImpl controller = new ControllerImpl(loadedModel, stage, this, jsonFile, schemaFile);
+        controller.setAppWindow(window);
+        controller.registerInWindowRegistry(CanonicalPaths.canonicalize(jsonFile));
+        window.attachLoadedController(controller);
+        return result;
     }
 
     /** Returns the number of currently open windows. */

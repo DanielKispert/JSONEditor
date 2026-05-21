@@ -3,6 +3,7 @@ package com.daniel.jsoneditor.model;
 import java.io.File;
 
 import com.daniel.jsoneditor.model.impl.ModelImpl;
+import com.daniel.jsoneditor.model.impl.ModelFactory;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
@@ -29,7 +30,7 @@ public class SchemaAndValidationTest
     private ModelImpl createModel(ObjectNode schemaRoot, ObjectNode dataRoot)
     {
         final JsonSchema schema = SCHEMA_FACTORY.getSchema(schemaRoot);
-        final ModelImpl model = new ModelImpl(new EventSenderImpl());
+        final ModelImpl model = ModelFactory.createEmpty();
         model.jsonAndSchemaSuccessfullyValidated(new File("dummy.json"), new File("dummy_schema.json"), dataRoot, schema);
         return model;
     }

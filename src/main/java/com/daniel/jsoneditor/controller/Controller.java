@@ -38,6 +38,8 @@ public interface Controller
 
     void launchFinished();
     
+    
+    
     void jsonAndSchemaSelected(File json, File schema, File settings);
     
     void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index);

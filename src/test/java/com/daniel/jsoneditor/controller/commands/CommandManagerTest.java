@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.controller.commands;
 
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManagerImpl;
+import com.daniel.jsoneditor.model.impl.ModelFactory;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
 import com.daniel.jsoneditor.model.commands.CommandFactory;
 import com.daniel.jsoneditor.model.changes.ChangeType;
@@ -44,7 +45,7 @@ public class CommandManagerTest
         properties.set("arr", arrSchema);
         schemaRoot.set("properties", properties);
         JsonSchema schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(schemaRoot);
-        ModelImpl model = new ModelImpl(new EventSenderImpl());
+        ModelImpl model = ModelFactory.createEmpty();
         model.jsonAndSchemaSuccessfullyValidated(new File("dummy.json"), new File("dummy_schema.json"), root, schema);
         return model;
     }
