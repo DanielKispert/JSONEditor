@@ -63,7 +63,7 @@ public class UIHandlerImpl implements UIHandler
     public void showMainEditor()
     {
         EditorDimensions dimensions = controller.getSettingsController().getEditorDimensions();
-        stage.setMaximized(dimensions.isMaximized()); //start maximized if the editor was maximized last
+        stage.setMaximized(dimensions.isMaximized());
         stage.setWidth(dimensions.getWidth());
         stage.setHeight(dimensions.getHeight());
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
@@ -146,7 +146,6 @@ public class UIHandlerImpl implements UIHandler
     {
         if (editorScene != null && event.getChanges() != null)
         {
-            // Process each model change granularly
             for (final ModelChange change : event.getChanges())
             {
                 handleModelChange(change, event);
@@ -221,17 +220,13 @@ public class UIHandlerImpl implements UIHandler
     private void handleMove(ModelChange change)
     {
         final String path = change.getPath();
-        // Update navbar to reflect new order
         editorScene.getNavbar().handlePathMoved(path);
-        // Update any open editors showing the parent array
         editorScene.getEditorWindowManager().handlePathMoved(change);
     }
     
     private void handleSort(String path)
     {
-        // Update navbar to reflect new sort order
         editorScene.getNavbar().handlePathSorted(path);
-        // Update any open editors showing the sorted array
         editorScene.getEditorWindowManager().handlePathSorted(path);
     }
     

@@ -104,7 +104,6 @@ public class JSONSelectionScene extends SceneHandlerImpl
 
     private void askToGenerateJson(Stage stage)
     {
-        // Create an alert dialog to ask for the JSON path
         final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("JSON Path");
         alert.setHeaderText("No JSON path entered");
@@ -113,7 +112,6 @@ public class JSONSelectionScene extends SceneHandlerImpl
         final ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.NO);
         alert.getButtonTypes().setAll(yesButton, noButton);
 
-        // Apply the common CSS to the alert dialog
         final DialogPane dialogPane = alert.getDialogPane();
         dialogPane.getStylesheets().add(getClass().getResource("/css/style_darkmode.css").toExternalForm());
 
@@ -121,23 +119,19 @@ public class JSONSelectionScene extends SceneHandlerImpl
 
         if (result.isPresent() && result.get() == yesButton)
         {
-            // Create the file chooser with a default JSON path
             final FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Save As");
             fileChooser.setInitialDirectory(lastDirectory);
             fileChooser.setInitialFileName("newfile.json");
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
 
-            // Show the file chooser dialog
             final File selectedDirectory = fileChooser.showSaveDialog(stage);
 
             if (selectedDirectory != null)
             {
-                // Get the selected file name and directory
                 final String fileName = fileChooser.getInitialFileName();
                 final File selectedFile = new File(selectedDirectory, fileName);
-                // generate a JSON and save it in the selected file
-                // TODO
+                // TODO: implement save-generated-JSON-from-schema flow
             }
         }
     }

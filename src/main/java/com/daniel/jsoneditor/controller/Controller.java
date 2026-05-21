@@ -17,10 +17,6 @@ public interface Controller
     
     McpController getMcpController();
     
-    /**
-     * Gets the command manager for accessing command history
-     * @return the command manager instance
-     */
     CommandManager getCommandManager();
     
     /**
@@ -40,43 +36,55 @@ public interface Controller
     
     
     
-    void jsonAndSchemaSelected(File json, File schema, File settings);
-    
-    void moveItemToIndex(JsonNodeWithPath newParent, JsonNodeWithPath item, int index);
-    
-    String resolveVariablesInJson(String json);
-    
-    void importAtNode(String path, String content);
-    
-    void exportNode(String path);
-    
-    void exportNodeWithDependencies(String path);
-    
-    void removeNodes(List<String> paths);
-    
-    void addNewNodeToArray(String path);
-    
-    void createNewReferenceableObjectNodeWithKey(String pathOfReferenceableObject, String key);
-    
-    void sortArray(String path);
-    
-    void reorderArray(String path, List<Integer> newIndices);
-    
-    void duplicateArrayNode(String path);
-    
-    void duplicateReferenceableObjectForLinking(String referencePath, String pathToDuplicate);
-    
+    /** Loads the given JSON and schema files; {@code settings} may be {@code null} for no per-file settings. */
+    void jsonAndSchemaSelected(final File json, final File schema, final File settings);
+
+    /** Moves {@code item} to position {@code index} (0-based) within {@code newParent}. */
+    void moveItemToIndex(final JsonNodeWithPath newParent, final JsonNodeWithPath item, final int index);
+
+    /** Resolves {@code ${VAR}} placeholders in {@code json} by prompting the user for values; returns the result. */
+    String resolveVariablesInJson(final String json);
+
+    /** Merges {@code content} (a JSON string) into the node at {@code path}. */
+    void importAtNode(final String path, final String content);
+
+    /** Exports only the node at {@code path} to a file (no dependencies). */
+    void exportNode(final String path);
+
+    /** Exports the node at {@code path} together with all nodes it depends on. */
+    void exportNodeWithDependencies(final String path);
+
+    /** Removes all nodes at the given {@code paths} as a single undoable batch operation. */
+    void removeNodes(final List<String> paths);
+
+    void addNewNodeToArray(final String path);
+
+    /** Creates a new referenceable object under {@code pathOfReferenceableObject} using {@code key} as its identifier. */
+    void createNewReferenceableObjectNodeWithKey(final String pathOfReferenceableObject, final String key);
+
+    void sortArray(final String path);
+
+    /** Reorders the array at {@code path} according to {@code newIndices}, which must be a permutation of [0, size). */
+    void reorderArray(final String path, final List<Integer> newIndices);
+
+    void duplicateArrayNode(final String path);
+
+    /** Duplicates the referenceable object at {@code pathToDuplicate} and links the copy to {@code referencePath}. */
+    void duplicateReferenceableObjectForLinking(final String referencePath, final String pathToDuplicate);
+
     void saveToFile();
-    
+
     void refreshFromDisk();
-    
-    String searchForNode(String path, String value);
-    
+
+    /** Searches at/under {@code path} for a node matching {@code value}; returns the matching path or {@code null}. */
+    String searchForNode(final String path, final String value);
+
     void openNewJson();
-    
+
     void generateJson();
-    
-    void setValueAtPath(String path, Object value);
+
+    /** Sets the value at {@code path}; {@code value} may be a {@link String}, {@link Number}, {@link Boolean}, or {@code null}. */
+    void setValueAtPath(final String path, final Object value);
     
     /**
      * Sets a complete JSON node at the given path.
@@ -85,16 +93,15 @@ public interface Controller
      * @param path The path to the node
      * @param node The JsonNode to set
      */
-    void overrideNodeAtPath(String path, JsonNode node);
+    void overrideNodeAtPath(final String path, final JsonNode node);
     
-    /**
-     * copy the node at the path to the clipboard
-     */
-    void copyToClipboard(String path);
-    
-    void pasteFromClipboardReplacingChild(String pathToInsert);
-    
-    void pasteFromClipboardIntoParent(String parentPath);
+    /** Copies the JSON node at {@code path} to the system clipboard. */
+    void copyToClipboard(final String path);
+    /** Pastes the clipboard JSON, replacing the existing child node at {@code pathToInsert}. */
+    void pasteFromClipboardReplacingChild(final String pathToInsert);
+
+    /** Pastes the clipboard JSON as a new element appended to the array at {@code parentPath}. */
+    void pasteFromClipboardIntoParent(final String parentPath);
     
     /**
      * Calculates differences between the JSON currently in the editor and the JSON saved on disk.

@@ -127,7 +127,6 @@ public class AppWindow
         return controller;
     }
 
-    /** Returns this window's stage. */
     public Stage getStage()
     {
         return stage;

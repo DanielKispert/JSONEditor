@@ -122,32 +122,22 @@ public class ControllerImpl implements Controller, Observer
             final File jsonFile, final File schemaFile)
     {
         this(loadedModel, loadedModel, stage, appService);
-        // The base constructor registered this as an observer and triggered update().
-        // Since loadedModel's latest event is MAIN_EDITOR (set by jsonAndSchemaSuccessfullyValidated),
-        // ViewImpl.update() sees MAIN_EDITOR and calls showMainEditor() automatically — no explicit
-        // event firing needed. The editor scene is already showing after the delegating call above.
+        // showMainEditor() fires automatically via update() because loadedModel state is already MAIN_EDITOR.
         refreshGuiSession(jsonFile, schemaFile);
     }
 
-    /**
-     * Updates the window title with given unsaved changes count.
-     * This method is called by the CommandManager callback.
-     */
     private void updateWindowTitle(final int unsavedChangesCount)
     {
         view.updateWindowTitle(unsavedChangesCount);
     }
 
+    /** Must be called before {@link #registerInWindowRegistry()}. */
     public void setAppWindow(final AppWindow window)
     {
         this.appWindow = window;
     }
 
-    /**
-     * Unregisters the current GUI session (if any) and registers a new one for the given files.
-     * Idempotent: safe to call from the loaded constructor (where guiSessionId is null) and
-     * from loadJsonAndSchema (where it replaces the previous registration).
-     */
+    // Replaces GUI session registration; idempotent — safe when guiSessionId is null.
     private void refreshGuiSession(final File jsonFile, final File schemaFile)
     {
         if (guiSessionId != null)
@@ -257,7 +247,6 @@ public class ControllerImpl implements Controller, Observer
     {
         if (jsonFile != null && schemaFile != null)
         {
-            // Compute canonical path for dedup check and registry
             final String canonicalPath = CanonicalPaths.canonicalize(jsonFile);
 
             // Dedup: if another window already shows this file, focus it and close this empty window
@@ -284,13 +273,11 @@ public class ControllerImpl implements Controller, Observer
     private void loadJsonAndSchema(final File jsonFile, final File schemaFile, final File settingsFile,
             final String canonicalPath)
     {
-        // grab Json from files and validate
         final JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
         final JsonNode json = reader.getJsonFromFile(jsonFile);
         final JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
         final WindowRegistry registry = appService.getWindowRegistry();
         handleJsonValidation(json, schema, () -> {
-            // settings file is optional
             if (settingsFile != null)
             {
                 final Settings settingsFromFile = reader.getJsonFromFile(settingsFile, Settings.class, true);
@@ -382,7 +369,6 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void exportNode(String path)
     {
-        // exporting a node does not require writing to the model, hence we only need the controller and the readable model
         JsonNodeWithPath nodeWithPath = readableModel.getNodeForPath(path);
         if (nodeWithPath != null)
         {
@@ -508,7 +494,7 @@ public class ControllerImpl implements Controller, Observer
 
         final JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();
         jsonWriter.writeJsonToFile(readableModel.getRootJson(), readableModel.getCurrentJSONFile());
-        commandManager.markAsSaved(); // Mark current state as saved
+        commandManager.markAsSaved();
         model.sendEvent(new Event(EventEnum.SAVING_SUCCESSFUL));
     }
 
@@ -518,7 +504,7 @@ public class ControllerImpl implements Controller, Observer
         JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
         JsonNode json = reader.getJsonFromFile(readableModel.getCurrentJSONFile());
         handleJsonValidation(json, readableModel.getRootSchema(), () -> {
-            commandManager.clearHistory(); // Clear undo/redo stacks before reset
+            commandManager.clearHistory();
             model.resetRootNode(json);
         });
     }
@@ -563,8 +549,7 @@ public class ControllerImpl implements Controller, Observer
         final String parentPath = PathHelper.getParentPath(path);
         final String propertyName = PathHelper.getLastPathSegment(path);
 
-        // Validate by building a candidate parent object with the change applied, then checking it against the parent schema.
-        // This way we check for both correct format and correct structure (required properties etc)
+        // Validate candidate parent against schema before applying the change.
         final JsonNodeWithPath parentNodeWithPath = readableModel.getNodeForPath(parentPath);
         if (parentNodeWithPath == null || !parentNodeWithPath.getNode().isObject())
         {

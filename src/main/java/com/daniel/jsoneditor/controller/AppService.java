@@ -85,11 +85,7 @@ public class AppService
         }
     }
 
-    /**
-     * Starts the MCP server if enabled in settings.
-     * Uses {@code portOverride} when positive; otherwise falls back to the settings port.
-     * Called automatically during construction so the server is available before any window opens.
-     */
+    // Starts MCP server if enabled; uses portOverride when > 0, else settings port.
     private void startMcpServer(final int portOverride)
     {
         if (!settingsController.isMcpServerEnabled())
@@ -137,12 +133,7 @@ public class AppService
         fileOpenCoordinator.open(jsonFile, schemaFile);
     }
 
-    /**
-     * Opens a new editor window and immediately loads the given JSON+schema file pair.
-     * Delegates to {@link AppWindow#openLoaded} which attaches a (possibly shared) session via
-     * {@link com.daniel.jsoneditor.model.sessions.FileSessionManager#attachSession}.
-     * Must be called on the JavaFX Application Thread.
-     */
+    /** Opens a new editor window and immediately loads the given JSON+schema file pair via {@link #attachLoadedSession}. */
     public void openFileInNewWindowDirect(final File jsonFile, final File schemaFile)
     {
         if (shuttingDown.get())
@@ -167,11 +158,7 @@ public class AppService
         window.setOnClose(() -> onWindowClosed(window));
     }
 
-    /**
-     * Called when a window is closed.
-     * Exits the application when the last window closes and the MCP server is not running.
-     * When MCP is enabled and running the service stays alive in the background.
-     */
+    // Exits when last window closes, unless MCP server is running.
     private void onWindowClosed(final AppWindow window)
     {
         windowRegistry.unregisterWindow(window);
@@ -184,37 +171,31 @@ public class AppService
         }
     }
 
-    /** Returns the shared file session manager. */
     public FileSessionManager getFileSessionManager()
     {
         return fileSessionManager;
     }
 
-    /** Returns the shared settings controller. */
     public SettingsController getSettingsController()
     {
         return settingsController;
     }
 
-    /** Returns the shared MCP controller. */
     public McpController getMcpController()
     {
         return mcpController;
     }
 
-    /** Returns the recent files manager. */
     public RecentFilesManager getRecentFilesManager()
     {
         return recentFilesManager;
     }
 
-    /** Returns the window registry. */
     public WindowRegistry getWindowRegistry()
     {
         return windowRegistry;
     }
 
-    /** Returns the file-open coordinator. */
     public FileOpenCoordinator getFileOpenCoordinator()
     {
         return fileOpenCoordinator;
@@ -265,13 +246,11 @@ public class AppService
         return result;
     }
 
-    /** Returns the number of currently open windows. */
     public int getWindowCount()
     {
         return windows.size();
     }
 
-    /** Returns true if the application is shutting down. */
     public boolean isShuttingDown()
     {
         return shuttingDown.get();
