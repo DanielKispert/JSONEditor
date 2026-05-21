@@ -53,6 +53,8 @@ public class FileSessionManagerTest
         Files.writeString(schemaFile, SIMPLE_SCHEMA);
     }
 
+    // ─── Gap 2+4: MCP-GUI shared lifecycle, mutation visibility, and refcount correctness ───
+
     @Test
     void testOpenFileCreatesSession()
     {
@@ -397,5 +399,124 @@ public class FileSessionManagerTest
         // Mutation must be immediately visible via session2's model (proves shared state: GUI sees MCP edits)
         assertSame(newRoot, sessionManager.getSession(result2.sessionId()).model().getRootJson(),
                 "write via session1 must be visible via session2 — GUI sees MCP edits at the model layer");
+    }
+
+    @Test
+    void attachSession_sharedModelLifecycleAcrossMcpAndGui()
+    {
+        // ── Phase A: MCP-first attach, then GUI ───────────────────────────────────────
+
+        // A1. Attach MCP session
+        final AttachResult mcpResult = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(mcpResult.success(), "Phase A: MCP attach must succeed");
+        final String idMcp = mcpResult.sessionId();
+
+        // A2. Attach GUI session — must reuse the already-loaded model
+        final AttachResult guiResult = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), true);
+        assertTrue(guiResult.success(), "Phase A: GUI attach must succeed");
+        final String idGui = guiResult.sessionId();
+
+        // A3. Both sessions present in registry
+        assertEquals(2, sessionManager.listSessions().size(), "Phase A: both sessions must be listed");
+        assertNotNull(sessionManager.getSession(idMcp), "Phase A: MCP session must be accessible");
+        assertNotNull(sessionManager.getSession(idGui), "Phase A: GUI session must be accessible");
+
+        // A4. Same ModelImpl instance shared
+        assertSame(sessionManager.getSession(idMcp).model(), sessionManager.getSession(idGui).model(),
+                "Phase A: MCP and GUI sessions must share one ModelImpl");
+
+        // A5. Mutate via MCP session — observe via GUI session (proves shared in-memory state)
+        final WritableModel writable = (WritableModel) sessionManager.getSession(idMcp).model();
+        final ObjectNode mutatedRoot = new ObjectMapper().createObjectNode();
+        mutatedRoot.put("phase", "A");
+        writable.resetRootNode(mutatedRoot);
+        assertSame(mutatedRoot, sessionManager.getSession(idGui).model().getRootJson(),
+                "Phase A: mutation via MCP session must be visible via GUI session (shared model)");
+
+        final ReadableModel sharedModelA = sessionManager.getSession(idMcp).model();
+
+        // A6. closeFile(idMcp): MCP gone, GUI session and model survive (refcount 2→1)
+        final CloseFileResult closeResultA = sessionManager.closeFile(idMcp);
+        assertEquals(CloseFileResult.CLOSED, closeResultA, "Phase A: closeFile must return CLOSED for headless session");
+        assertNull(sessionManager.getSession(idMcp), "Phase A: MCP session must be gone after closeFile");
+        assertNotNull(sessionManager.getSession(idGui), "Phase A: GUI session must survive MCP closeFile");
+        assertNotNull(sessionManager.getSession(idGui).model().getRootJson(),
+                "Phase A: GUI model must still be functional after MCP closeFile");
+
+        // A7. unregisterGuiSession(idGui): refcount 1→0, model evicted; fresh attach confirms eviction
+        sessionManager.unregisterGuiSession(idGui);
+        assertNull(sessionManager.getSession(idGui), "Phase A: GUI session must be gone after unregisterGuiSession");
+
+        final AttachResult phaseAProbe = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(phaseAProbe.success(), "Phase A: re-attach after eviction must succeed");
+        final ReadableModel freshModelA = sessionManager.getSession(phaseAProbe.sessionId()).model();
+        assertNotSame(sharedModelA, freshModelA,
+                "Phase A: re-attach must produce a fresh ModelImpl (old model was evicted)");
+        assertNull(freshModelA.getRootJson().get("phase"),
+                "Phase A: fresh model reads from disk — in-memory mutation is gone (eviction confirmed)");
+
+        // Close eviction probe before Phase B
+        sessionManager.closeFile(phaseAProbe.sessionId());
+
+        // ── Phase B: GUI-first attach, then MCP (reverse close order) ────────────────
+
+        // B1. Attach GUI session first — fresh model (Phase A fully evicted)
+        final AttachResult guiResult2 = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), true);
+        assertTrue(guiResult2.success(), "Phase B: GUI attach must succeed");
+        final String idGui2 = guiResult2.sessionId();
+        final ReadableModel sharedModelB = sessionManager.getSession(idGui2).model();
+        assertNotSame(sharedModelA, sharedModelB,
+                "Phase B: must start with a new model instance (Phase A model was evicted)");
+
+        // B2. Attach MCP session — must reuse the already-loaded model
+        final AttachResult mcpResult2 = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(mcpResult2.success(), "Phase B: MCP attach must succeed");
+        final String idMcp2 = mcpResult2.sessionId();
+
+        // B3. Same ModelImpl shared
+        assertSame(sharedModelB, sessionManager.getSession(idMcp2).model(),
+                "Phase B: GUI and MCP sessions must share one ModelImpl");
+
+        // B4. unregisterGuiSession first — MCP session survives with same model (refcount 2→1)
+        sessionManager.unregisterGuiSession(idGui2);
+        assertNull(sessionManager.getSession(idGui2), "Phase B: GUI session must be gone after unregisterGuiSession");
+        assertNotNull(sessionManager.getSession(idMcp2), "Phase B: MCP session must survive GUI unregister");
+        assertSame(sharedModelB, sessionManager.getSession(idMcp2).model(),
+                "Phase B: MCP session must still hold the shared model after GUI unregistered");
+
+        // B5. closeFile(idMcp2): refcount 1→0, model evicted
+        final CloseFileResult closeResultB = sessionManager.closeFile(idMcp2);
+        assertEquals(CloseFileResult.CLOSED, closeResultB, "Phase B: closeFile must return CLOSED for last headless session");
+        assertNull(sessionManager.getSession(idMcp2), "Phase B: MCP session must be gone after closeFile");
+
+        // B6. Re-attach proves order-independence of the refcount lifecycle
+        final AttachResult phaseBFresh = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(phaseBFresh.success(), "Phase B: re-attach after eviction must succeed");
+        assertNotSame(sharedModelB, sessionManager.getSession(phaseBFresh.sessionId()).model(),
+                "Phase B: re-attach must produce a fresh ModelImpl (order-independence of eviction proven)");
+    }
+
+    // ─── Gap 3: Refcount underflow protection ──────────────────────────────────
+
+    @Test
+    void detachSession_doubleDetach_isNoOpWithoutException()
+    {
+        // Attach one session (refcount=1)
+        final AttachResult result = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(result.success(), "attach must succeed");
+        final String id = result.sessionId();
+
+        // First detach removes the session and evicts the file (refcount reaches 0)
+        sessionManager.detachSession(id);
+        assertNull(sessionManager.getSession(id), "session must be gone after first detach");
+
+        // Second detach on the same id must be a no-op — no exception, no negative refcount
+        assertDoesNotThrow(() -> sessionManager.detachSession(id),
+                "second detach on the same sessionId must not throw");
+
+        // Subsequent attach on the same path must produce a clean working session
+        final AttachResult freshResult = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(freshResult.success(), "fresh attach after double detach must succeed");
+        assertNotNull(sessionManager.getSession(freshResult.sessionId()), "fresh session must be accessible");
     }
 }
