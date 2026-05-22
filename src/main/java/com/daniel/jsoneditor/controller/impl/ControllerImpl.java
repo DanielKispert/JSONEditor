@@ -23,7 +23,6 @@ import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.controller.settings.UpdateService;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.WritableModel;
-import com.daniel.jsoneditor.model.impl.ModelImpl;
 import com.daniel.jsoneditor.model.commands.CommandFactory;
 import com.daniel.jsoneditor.model.diff.DiffEntry;
 import com.daniel.jsoneditor.model.diff.JsonDiffer;
@@ -81,6 +80,7 @@ public class ControllerImpl implements Controller, Observer
     private final AppService appService;
 
     private String guiSessionId;
+
     private AppWindow appWindow;
 
     private boolean updateCheckDone;
@@ -107,23 +107,33 @@ public class ControllerImpl implements Controller, Observer
      * Constructs a controller with a model that is already populated from disk.
      * Skips the file-picker phase and goes straight to the editor scene.
      * Used by the bootstrap flow when {@link com.daniel.jsoneditor.model.sessions.FileSessionManager#attachSession}
-     * returns an already-loaded {@link ModelImpl} (either freshly loaded or shared from another session).
+     * returns an already-loaded model (either freshly loaded or shared from another session).
      *
      * <p>After this constructor returns, the caller must invoke {@link #setAppWindow(AppWindow)} then
      * {@link #registerInWindowRegistry(String)} to complete window dedup registration.</p>
      *
-     * @param loadedModel a fully loaded ModelImpl (must implement both ReadableModel and WritableModel)
+     * @param writableModel a fully loaded model implementing {@link WritableModel}
+     * @param readableModel the same model viewed as {@link ReadableModel}
      * @param stage the JavaFX stage to render into
      * @param appService the shared application service
      * @param jsonFile the JSON file backing the model (used for GUI session registration)
      * @param schemaFile the schema file
+     * @param sessionId  the session ID returned by
+     *                   {@link com.daniel.jsoneditor.model.sessions.FileSessionManager#attachSession};
+     *                   stored directly to avoid creating a duplicate GUI session
      */
-    public ControllerImpl(final ModelImpl loadedModel, final Stage stage, final AppService appService,
-            final File jsonFile, final File schemaFile)
+    public ControllerImpl(final WritableModel writableModel, final ReadableModel readableModel, final Stage stage,
+            final AppService appService, final File jsonFile, final File schemaFile, final String sessionId)
     {
-        this(loadedModel, loadedModel, stage, appService);
-        // showMainEditor() fires automatically via update() because loadedModel state is already MAIN_EDITOR.
-        refreshGuiSession(jsonFile, schemaFile);
+        this(writableModel, readableModel, stage, appService);
+        // The base constructor registered this as an observer and triggered update().
+        // Since the model's latest event is MAIN_EDITOR (set by jsonAndSchemaSuccessfullyValidated),
+        // ViewImpl.update() sees MAIN_EDITOR and calls showMainEditor() automatically — no explicit
+        // event firing needed. The editor scene is already showing after the delegating call above.
+        //
+        // Use the session ID from attachSession directly — do NOT call refreshGuiSession here.
+        // refreshGuiSession would create a second GUI session (causing a refcount/session leak).
+        this.guiSessionId = sessionId;
     }
 
     private void updateWindowTitle(final int unsavedChangesCount)
@@ -152,7 +162,8 @@ public class ControllerImpl implements Controller, Observer
      * window registry so that subsequent "open same file" requests focus this window instead of
      * opening a duplicate. Must be called AFTER {@link #setAppWindow(AppWindow)}.
      *
-     * @param canonicalPath the canonical path of the JSON file (use {@link java.io.File#getCanonicalPath()})
+     * @param canonicalPath the canonical path of the JSON file
+     *                      (use {@link com.daniel.jsoneditor.util.CanonicalPaths#canonicalize(java.io.File)})
      */
     public void registerInWindowRegistry(final String canonicalPath)
     {
@@ -742,7 +753,11 @@ public class ControllerImpl implements Controller, Observer
         logger.info("Shutting down editor window");
         if (guiSessionId != null)
         {
-            fileSessionManager.unregisterGuiSession(guiSessionId);
+            fileSessionManager.detachSession(guiSessionId);
+        }
+        else
+        {
+            logger.debug("No GUI session to detach — bootstrap window closed without file selection");
         }
     }
 }

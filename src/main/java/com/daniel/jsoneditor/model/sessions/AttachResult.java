@@ -1,6 +1,5 @@
 package com.daniel.jsoneditor.model.sessions;
 
-
 /**
  * Result of a {@link FileSessionManager#attachSession} call.
  * On success, {@link #sessionId()} is non-null and {@link #error()} is null.
@@ -8,6 +7,16 @@ package com.daniel.jsoneditor.model.sessions;
  */
 public record AttachResult(String sessionId, String error)
 {
+    /** Compact constructor: enforces exactly one of sessionId / error is non-null. */
+    public AttachResult
+    {
+        if ((sessionId == null) == (error == null))
+        {
+            throw new IllegalArgumentException(
+                    "Exactly one of sessionId or error must be non-null; got sessionId=" + sessionId + ", error=" + error);
+        }
+    }
+
     /** @return true when the session was attached successfully */
     public boolean success()
     {

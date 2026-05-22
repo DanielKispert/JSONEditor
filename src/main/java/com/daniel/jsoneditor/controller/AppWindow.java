@@ -16,6 +16,7 @@ import java.io.File;
 public class AppWindow
 {
     private static final Logger logger = LoggerFactory.getLogger(AppWindow.class);
+
     private final Stage stage;
 
     private final AppService appService;
@@ -58,29 +59,6 @@ public class AppWindow
         final AppWindow window = createBlank(appService);
         final BootstrapController bootstrap = new BootstrapController(window.getStage(), appService, window);
         bootstrap.showPicker();
-        return window;
-    }
-
-    /**
-     * Opens an AppWindow displaying an already-loaded file. Used for direct-file-load flows
-     * (drag/drop, recents, programmatic open). The file is loaded via
-     * {@link FileSessionManager#attachSession} which returns a (possibly shared) {@link ModelImpl}
-     * — if another GUI window or MCP session has the file open, this window joins that session.
-     *
-     * @param appService the shared application service
-     * @param jsonFile   the JSON file to open
-     * @param schemaFile the schema file
-     * @return the new {@link AppWindow} with the editor scene already showing, or {@code null} if attachSession failed
-     */
-    public static AppWindow openLoaded(final AppService appService, final File jsonFile, final File schemaFile)
-    {
-        final AppWindow window = createBlank(appService);
-        final AttachResult result = appService.attachLoadedSession(window, window.getStage(), jsonFile, schemaFile, null);
-        if (!result.success())
-        {
-            logger.warn("Cannot open {}: {}", jsonFile, result.error());
-            return null;
-        }
         return window;
     }
 
@@ -138,7 +116,11 @@ public class AppWindow
      */
     public void focus()
     {
-        assert Platform.isFxApplicationThread() : "focus() must be called on the FX thread";
+        if (!Platform.isFxApplicationThread())
+        {
+            Platform.runLater(this::focus);
+            return;
+        }
         stage.setIconified(false);
         stage.toFront();
         stage.requestFocus();

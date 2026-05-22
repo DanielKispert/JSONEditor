@@ -31,8 +31,8 @@ public class JSONSelectionScene extends SceneHandlerImpl
 
     private boolean remember;
 
-    public JSONSelectionScene(UIHandler handler, SettingsController settingsController, ReadableModel model,
-            JsonSchemaSelectionListener listener)
+    public JSONSelectionScene(final UIHandler handler, final SettingsController settingsController, final ReadableModel model,
+            final JsonSchemaSelectionListener listener)
     {
         super(handler, null, model);
         this.settingsController = settingsController;

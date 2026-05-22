@@ -4,7 +4,7 @@ import com.daniel.jsoneditor.controller.mcp.McpController;
 import com.daniel.jsoneditor.controller.impl.ControllerImpl;
 import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
 import com.daniel.jsoneditor.model.WritableModel;
-import com.daniel.jsoneditor.model.impl.ModelImpl;
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.model.sessions.EditorSession;
 import com.daniel.jsoneditor.model.settings.Settings;
@@ -47,6 +47,7 @@ public class AppService
 
     private final List<AppWindow> windows = new CopyOnWriteArrayList<>();
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
+
     private final WindowRegistry windowRegistry;
 
     private final FileOpenCoordinator fileOpenCoordinator;
@@ -107,6 +108,7 @@ public class AppService
 
     /**
      * Creates a new editor window.
+     * Must be called on the JavaFX Application Thread.
      *
      * @return the new {@link AppWindow}, or {@code null} if the application is shutting down
      */
@@ -133,7 +135,12 @@ public class AppService
         fileOpenCoordinator.open(jsonFile, schemaFile);
     }
 
-    /** Opens a new editor window and immediately loads the given JSON+schema file pair via {@link #attachLoadedSession}. */
+    /**
+     * Opens a new editor window and immediately loads the given JSON+schema file pair.
+     * Attaches a (possibly shared) session via
+     * {@link com.daniel.jsoneditor.model.sessions.FileSessionManager#attachSession}.
+     * Must be called on the JavaFX Application Thread.
+     */
     public void openFileInNewWindowDirect(final File jsonFile, final File schemaFile)
     {
         if (shuttingDown.get())
@@ -142,9 +149,12 @@ public class AppService
             return;
         }
         final AppWindow window = AppWindow.createBlank(this);
+        windows.add(window);
+        window.setOnClose(() -> onWindowClosed(window));
         final AttachResult result = attachLoadedSession(window, window.getStage(), jsonFile, schemaFile, null);
         if (!result.success())
         {
+            windows.remove(window);
             final String error = result.error();
             Platform.runLater(() ->
             {
@@ -152,10 +162,7 @@ public class AppService
                 alert.setTitle("Cannot open file");
                 alert.showAndWait();
             });
-            return;
         }
-        windows.add(window);
-        window.setOnClose(() -> onWindowClosed(window));
     }
 
     // Exits when last window closes, unless MCP server is running.
@@ -210,16 +217,21 @@ public class AppService
      * @param window       the AppWindow that will host the editor
      * @param stage        the JavaFX stage for the window
      * @param jsonFile     the JSON file to open
-     * @param schemaFile   the schema file (may be {@code null} — treated as empty path)
+     * @param schemaFile   the schema file; must not be {@code null} — an {@link AttachResult#ofError} is returned if null
      * @param settingsFile optional settings file, may be {@code null}
      * @return the FSM {@link AttachResult}; on failure {@link AttachResult#success()} is {@code false}
      */
     AttachResult attachLoadedSession(final AppWindow window, final Stage stage, final File jsonFile,
             final File schemaFile, final File settingsFile)
     {
+        if (schemaFile == null)
+        {
+            return AttachResult.ofError("Schema file is required and must not be null");
+        }
+
         final AttachResult result = fileSessionManager.attachSession(
                 jsonFile.getAbsolutePath(),
-                schemaFile != null ? schemaFile.getAbsolutePath() : "",
+                schemaFile.getAbsolutePath(),
                 true);
         if (!result.success())
         {
@@ -228,18 +240,23 @@ public class AppService
         }
 
         final EditorSession session = fileSessionManager.getSession(result.sessionId());
-        final ModelImpl loadedModel = (ModelImpl) session.model();
+        final ReadableModel sessionModel = session.model();
+        if (!(sessionModel instanceof WritableModel writableModel))
+        {
+            throw new IllegalStateException("Session model does not implement WritableModel: " + sessionModel.getClass());
+        }
 
         if (settingsFile != null && !settingsFile.getPath().isEmpty() && settingsFile.exists())
         {
             final Settings settings = new JsonFileReaderAndWriterImpl().getJsonFromFile(settingsFile, Settings.class, true);
             if (settings != null)
             {
-                ((WritableModel) loadedModel).setSettings(settings);
+                writableModel.setSettings(settings);
             }
         }
 
-        final ControllerImpl controller = new ControllerImpl(loadedModel, stage, this, jsonFile, schemaFile);
+        final ControllerImpl controller = new ControllerImpl(writableModel, sessionModel, stage, this, jsonFile, schemaFile,
+                result.sessionId());
         controller.setAppWindow(window);
         controller.registerInWindowRegistry(CanonicalPaths.canonicalize(jsonFile));
         window.attachLoadedController(controller);
@@ -268,6 +285,7 @@ public class AppService
         }
         logger.info("Shutting down AppService");
         systemTrayManager.hide();
+        fileSessionManager.closeAllHeadlessSessions();
         mcpController.stopMcpServer();
     }
 }

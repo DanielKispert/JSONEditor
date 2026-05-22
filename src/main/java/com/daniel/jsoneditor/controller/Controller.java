@@ -14,28 +14,32 @@ import com.fasterxml.jackson.databind.JsonNode;
 public interface Controller
 {
     SettingsController getSettingsController();
-    
+
     McpController getMcpController();
-    
+
+    /**
+     * Gets the command manager for accessing command history
+     * @return the command manager instance
+     */
     CommandManager getCommandManager();
-    
+
     /**
      * Undo the last action performed by the user.
      * If no action can be undone, this method does nothing.
      */
     void undo();
-    
+
     /**
      * Redo the last undone action performed by the user.
      * If no action can be redone, this method does nothing.
      */
     void redo();
-    
+
 
     void launchFinished();
-    
-    
-    
+
+
+
     /** Loads the given JSON and schema files; {@code settings} may be {@code null} for no per-file settings. */
     void jsonAndSchemaSelected(final File json, final File schema, final File settings);
 

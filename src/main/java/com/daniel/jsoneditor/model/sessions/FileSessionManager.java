@@ -5,13 +5,13 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.impl.ModelFactory;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
-import com.daniel.jsoneditor.util.CanonicalPaths;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,15 +28,42 @@ public class FileSessionManager
 {
     private static final Logger logger = LoggerFactory.getLogger(FileSessionManager.class);
 
+    private static final String GUI_SESSION_PREFIX = "gui-";
+
     private final Map<String, EditorSession> sessions = new ConcurrentHashMap<>();
 
+    /**
+     * Tracks a file that may be shared across multiple sessions.
+     * {@code canonicalSchemaPath} is stored so schema-mismatch checks never need I/O inside a lock.
+     */
     private record SharedFile(
             String canonicalPath,
-            String schemaCanonicalPath,
+            String canonicalSchemaPath,
             ModelImpl model,
             File jsonFile,
             File schemaFile,
             AtomicInteger refCount) {}
+
+    /**
+     * Typed result of a single attach attempt — replaces the raw {@code String[] errorHolder} side-channel.
+     */
+    private record AttachAttempt(SharedFile shared, String error)
+    {
+        static AttachAttempt ofShared(final SharedFile shared)
+        {
+            return new AttachAttempt(shared, null);
+        }
+
+        static AttachAttempt ofError(final String error)
+        {
+            return new AttachAttempt(null, error);
+        }
+
+        boolean isSuccess()
+        {
+            return error == null;
+        }
+    }
 
     /** Map from canonical JSON file path to the shared file entry. */
     private final Map<String, SharedFile> filesByPath = new ConcurrentHashMap<>();
@@ -58,7 +85,7 @@ public class FileSessionManager
         String sessionId;
         do
         {
-            sessionId = generateUniqueId("gui-");
+            sessionId = generateUniqueId(GUI_SESSION_PREFIX);
             session = new EditorSession(sessionId, model, jsonFile, schemaFile, true);
         }
         while (sessions.putIfAbsent(sessionId, session) != null);
@@ -68,23 +95,23 @@ public class FileSessionManager
 
     /**
      * Unregisters a GUI session (called when GUI closes a file).
+     * Delegates to {@link #detachSession(String)} to ensure the shared-file ref count is
+     * decremented and the session is removed from {@code sessionToCanonicalPath}.
      *
      * @param sessionId the session to unregister
      */
     public void unregisterGuiSession(final String sessionId)
     {
-        sessions.computeIfPresent(sessionId, (final String key, final EditorSession session) ->
+        final EditorSession session = sessions.get(sessionId);
+        if (session != null && session.guiOwned())
         {
-            if (session.guiOwned())
-            {
-                logger.info("Unregistered GUI session {}", sessionId);
-                return null; // removes the entry
-            }
-            return session;
-        });
-        // BUG 3 fix: decrement refcount for sessions created via attachSession(guiOwned=true).
-        // For sessions created by registerGuiSession (not in sessionToCanonicalPath), this is a safe no-op.
-        decrementRefCount(sessionId);
+            logger.info("Unregistered GUI session {}", sessionId);
+            detachSession(sessionId);
+        }
+        else if (session != null)
+        {
+            logger.warn("unregisterGuiSession called with non-GUI session id {}", sessionId);
+        }
     }
 
     /**
@@ -137,6 +164,25 @@ public class FileSessionManager
     }
 
     /**
+     * Returns an existing {@link EditorSession} for the given canonical JSON file path, if any
+     * session is currently attached to it. Useful for "focus existing window" UX.
+     *
+     * @param canonicalPath the canonical path of the JSON file (as returned by {@link File#getCanonicalPath()})
+     * @return the first session found for the path, or {@link Optional#empty()} if none
+     */
+    public Optional<EditorSession> getSessionByCanonicalPath(final String canonicalPath)
+    {
+        if (!filesByPath.containsKey(canonicalPath))
+        {
+            return Optional.empty();
+        }
+        return sessionToCanonicalPath.entrySet().stream()
+                .filter(e -> canonicalPath.equals(e.getValue()))
+                .findFirst()
+                .map(e -> sessions.get(e.getKey()));
+    }
+
+    /**
      * Attaches a new session to the given file path. Deduplication-aware: if the path is already
      * open, the existing {@link ModelImpl} is reused. Concurrent attaches to the same new path are
      * atomic — only one model is created.
@@ -160,49 +206,104 @@ public class FileSessionManager
             return AttachResult.ofError("Schema file does not exist: " + schemaPath);
         }
 
-        // BUG 4 fix: use CanonicalPaths.canonicalize instead of raw getCanonicalPath() to match FileOpenCoordinator behavior.
-        final String canonical = CanonicalPaths.canonicalize(jsonFile);
-        // Pre-compute schema canonical path outside any lock — cheap and idempotent.
-        final String requestedSchemaCanonical = CanonicalPaths.canonicalize(schemaFile);
-
-        // BUG 2 fix: two-step approach so heavy IO (JSON read, schema read, validation) is NEVER done inside compute().
-        // Fast path: file already loaded, just atomically increment its refcount.
-        final SharedFile preExisting = filesByPath.get(canonical);
-        if (preExisting != null)
+        // Pre-canonicalize both paths before any map operations — no I/O inside locks
+        final String canonicalJson;
+        final String canonicalSchema;
+        try
         {
-            final String[] errorHolder = {null};
-            final SharedFile[] resultHolder = {null};
-            filesByPath.compute(canonical, (final String key, final SharedFile sf) ->
-            {
-                if (sf == null)
-                {
-                    // Eviction race: entry removed between get() and compute(). Signal to fall through to slow path.
-                    errorHolder[0] = "__RETRY__";
-                    return null;
-                }
-                if (!sf.schemaCanonicalPath().equals(requestedSchemaCanonical))
-                {
-                    errorHolder[0] = "Schema mismatch: path " + key + " is already open with schema "
-                            + sf.schemaCanonicalPath() + " but requested " + requestedSchemaCanonical;
-                    return sf;
-                }
-                sf.refCount().incrementAndGet();
-                resultHolder[0] = sf;
-                return sf;
-            });
-            if (!"__RETRY__".equals(errorHolder[0]))
-            {
-                if (errorHolder[0] != null)
-                {
-                    return AttachResult.ofError(errorHolder[0]);
-                }
-                return finishAttach(resultHolder[0], canonical, guiOwned);
-            }
-            // Fall through to slow path: the entry was evicted between get() and compute().
+            canonicalJson = jsonFile.getCanonicalPath();
+            canonicalSchema = schemaFile.getCanonicalPath();
+        }
+        catch (final IOException e)
+        {
+            return AttachResult.ofError("Cannot resolve canonical path: " + e.getMessage());
         }
 
-        // Slow path: file not currently loaded — perform heavy IO outside any lock.
-        // Two threads racing on a fresh path each load IO independently; only one SharedFile wins the compute() insert.
+        final AttachAttempt attempt = getOrCreateSharedFile(
+                jsonFile, schemaFile, canonicalJson, canonicalSchema, jsonPath, schemaPath);
+        if (!attempt.isSuccess())
+        {
+            return AttachResult.ofError(attempt.error());
+        }
+        final SharedFile sharedFile = attempt.shared();
+
+        final String prefix = guiOwned ? GUI_SESSION_PREFIX : "";
+        EditorSession session;
+        String sessionId;
+        // Insert canonical mapping BEFORE session is visible in `sessions` to close the
+        // TOCTOU gap. On the rare event of a sessionId collision, clean up the orphan mapping and retry.
+        do
+        {
+            sessionId = generateUniqueId(prefix);
+            session = new EditorSession(sessionId, sharedFile.model(), sharedFile.jsonFile(), sharedFile.schemaFile(), guiOwned);
+            sessionToCanonicalPath.put(sessionId, canonicalJson);
+            if (sessions.putIfAbsent(sessionId, session) == null)
+            {
+                break;
+            }
+            sessionToCanonicalPath.remove(sessionId); // clean up orphan mapping on the rare ID collision
+        }
+        while (true);
+
+        logger.info("Attached session {} to path {} (refCount={})", sessionId, canonicalJson, sharedFile.refCount().get());
+        return AttachResult.ofSuccess(sessionId);
+    }
+
+    /**
+     * Retrieves the existing {@link SharedFile} for the given canonical JSON path (incrementing its
+     * ref-count), or builds a brand-new one. All blocking I/O happens BEFORE any {@code compute()}
+     * call so no {@link ConcurrentHashMap} bucket lock is held during disk access.
+     *
+     * <p>Dedup correctness: concurrent slow-path races are resolved inside the final {@code compute()}
+     * call — the thread that loses the race discards its freshly-built model and increments the
+     * winner's ref-count instead.</p>
+     */
+    private AttachAttempt getOrCreateSharedFile(
+            final File jsonFile,
+            final File schemaFile,
+            final String canonicalJson,
+            final String canonicalSchema,
+            final String jsonPath,
+            final String schemaPath)
+    {
+        // ── Fast path: peek without holding a lock ────────────────────────────────
+        final SharedFile peeked = filesByPath.get(canonicalJson);
+        if (peeked != null)
+        {
+            if (!peeked.canonicalSchemaPath().equals(canonicalSchema))
+            {
+                return AttachAttempt.ofError("Schema mismatch: path " + canonicalJson
+                        + " is already open with schema " + peeked.canonicalSchemaPath()
+                        + " but requested " + canonicalSchema);
+            }
+            // Increment refCount inside compute() so it is atomic with concurrent decrements
+            final AttachAttempt[] fastResult = {null};
+            filesByPath.compute(canonicalJson, (final String key, final SharedFile cur) ->
+            {
+                if (cur == null)
+                {
+                    return null; // evicted between get() and compute(); caller falls through to slow path
+                }
+                // Re-verify schema: another thread may have evicted and reinstalled with a different schema
+                if (!cur.canonicalSchemaPath().equals(canonicalSchema))
+                {
+                    fastResult[0] = AttachAttempt.ofError("Schema mismatch: path " + canonicalJson
+                            + " is already open with schema " + cur.canonicalSchemaPath()
+                            + " but requested " + canonicalSchema);
+                    return cur; // leave the entry unchanged; do not increment
+                }
+                cur.refCount().incrementAndGet();
+                fastResult[0] = AttachAttempt.ofShared(cur);
+                return cur;
+            });
+            if (fastResult[0] != null)
+            {
+                return fastResult[0];
+            }
+            // Entry was evicted between the peek and the compute; fall through to slow path
+        }
+
+        // ── Slow path: build model entirely outside any lock ─────────────────────
         final JsonFileReaderAndWriterImpl reader = new JsonFileReaderAndWriterImpl();
         final JsonNode json;
         final JsonSchema schema;
@@ -213,97 +314,44 @@ public class FileSessionManager
         }
         catch (final Exception e)
         {
-            return AttachResult.ofError("Failed to parse files: " + e.getMessage());
+            return AttachAttempt.ofError("Failed to parse files: " + e.getMessage());
         }
         if (json == null || schema == null)
         {
-            return AttachResult.ofError("Failed to parse JSON or schema files: " + jsonPath + " / " + schemaPath);
+            return AttachAttempt.ofError("Failed to parse JSON or schema files: " + jsonPath + " / " + schemaPath);
         }
         final List<String> validationErrors = SchemaHelper.validateJsonWithSchema(json, schema);
         if (!validationErrors.isEmpty())
         {
-            return AttachResult.ofError("JSON does not validate against schema: " + String.join(", ", validationErrors));
+            return AttachAttempt.ofError("JSON does not validate against schema: " + String.join(", ", validationErrors));
         }
-        final ModelImpl model = ModelFactory.createEmpty();
-        model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
-        final SharedFile candidate = new SharedFile(canonical, requestedSchemaCanonical, model, jsonFile, schemaFile, new AtomicInteger(1));
+        final ModelImpl newModel = ModelFactory.createEmpty();
+        newModel.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
+        final SharedFile newShared = new SharedFile(
+                canonicalJson, canonicalSchema, newModel, jsonFile, schemaFile, new AtomicInteger(1));
 
-        // Atomically insert our freshly loaded file, or adopt the one a concurrent thread already inserted.
-        final String[] errorHolder = {null};
-        final SharedFile[] winnerHolder = {null};
-        filesByPath.compute(canonical, (final String key, final SharedFile sf) ->
+        // Atomically install: if another thread won the race, use theirs and increment its refCount
+        final AttachAttempt[] resultHolder = {null};
+        filesByPath.compute(canonicalJson, (final String key, final SharedFile cur) ->
         {
-            if (sf == null)
+            if (cur != null)
             {
-                // We win the race — insert our candidate.
-                winnerHolder[0] = candidate;
-                return candidate;
+                // Another thread installed first — verify schema compatibility then increment
+                if (!cur.canonicalSchemaPath().equals(canonicalSchema))
+                {
+                    resultHolder[0] = AttachAttempt.ofError("Schema mismatch: path " + canonicalJson
+                            + " is already open with schema " + cur.canonicalSchemaPath()
+                            + " but requested " + canonicalSchema);
+                    return cur;
+                }
+                cur.refCount().incrementAndGet();
+                resultHolder[0] = AttachAttempt.ofShared(cur);
+                return cur;
             }
-            // Another thread already inserted its SharedFile; discard our candidate (it will be GC'd).
-            if (!sf.schemaCanonicalPath().equals(requestedSchemaCanonical))
-            {
-                errorHolder[0] = "Schema mismatch: path " + key + " is already open with schema "
-                        + sf.schemaCanonicalPath() + " but requested " + requestedSchemaCanonical;
-                return sf;
-            }
-            sf.refCount().incrementAndGet();
-            winnerHolder[0] = sf;
-            return sf;
+            resultHolder[0] = AttachAttempt.ofShared(newShared);
+            return newShared;
         });
-
-        if (errorHolder[0] != null)
-        {
-            return AttachResult.ofError(errorHolder[0]);
-        }
-        if (winnerHolder[0] == null)
-        {
-            return AttachResult.ofError("Failed to load file: " + jsonPath);
-        }
-        return finishAttach(winnerHolder[0], canonical, guiOwned);
-    }
-
-    /** Registers the session entry and canonical-path mapping, then returns an AttachResult. */
-    private AttachResult finishAttach(final SharedFile sharedFile, final String canonical, final boolean guiOwned)
-    {
-        final String prefix = guiOwned ? "gui-" : "";
-        String sessionId;
-        EditorSession session;
-        // BUG 7 fix: insert canonical mapping BEFORE session is visible in `sessions` to close the
-        // TOCTOU gap. On the rare event of a sessionId collision, clean up the orphan mapping and retry.
-        do
-        {
-            sessionId = generateUniqueId(prefix);
-            session = new EditorSession(sessionId, sharedFile.model(), sharedFile.jsonFile(), sharedFile.schemaFile(), guiOwned);
-            sessionToCanonicalPath.put(sessionId, canonical);
-            if (sessions.putIfAbsent(sessionId, session) == null)
-            {
-                break;
-            }
-            sessionToCanonicalPath.remove(sessionId); // clean up orphan mapping on the rare ID collision
-        }
-        while (true);
-
-        logger.info("Attached session {} to path {} (refCount={})", sessionId, canonical, sharedFile.refCount().get());
-        return AttachResult.ofSuccess(sessionId);
-    }
-
-    /**
-     * Returns an existing {@link EditorSession} for the given canonical JSON file path, if any
-     * session is currently attached to it. Useful for "focus existing window" UX.
-     *
-     * @param canonicalPath the canonical path of the JSON file (as returned by {@link File#getCanonicalPath()})
-     * @return the first session found for the path, or {@link Optional#empty()} if none
-     */
-    public Optional<EditorSession> getSessionByCanonicalPath(final String canonicalPath)
-    {
-        if (!filesByPath.containsKey(canonicalPath))
-        {
-            return Optional.empty();
-        }
-        return sessionToCanonicalPath.entrySet().stream()
-                .filter(e -> canonicalPath.equals(e.getValue()))
-                .findFirst()
-                .map(e -> sessions.get(e.getKey()));
+        return resultHolder[0];
     }
 
     /**
@@ -314,13 +362,33 @@ public class FileSessionManager
      */
     public void detachSession(final String sessionId)
     {
-        // detachSession is the internal teardown call from window-close / MCP-client-disconnect; closeFile is the MCP-protected variant.
         sessions.remove(sessionId);
         decrementRefCount(sessionId);
         logger.info("Detached session {}", sessionId);
     }
 
-    // Decrements filesByPath ref count for this session; evicts model when count reaches zero.
+    /**
+     * Closes all headless (non-GUI-owned) sessions.
+     * Called during application shutdown to drain in-flight MCP sessions before the MCP server stops.
+     * Collect IDs before iterating to avoid {@link java.util.ConcurrentModificationException}.
+     */
+    public void closeAllHeadlessSessions()
+    {
+        final List<String> headlessIds = sessions.entrySet().stream()
+                .filter(e -> !e.getValue().guiOwned())
+                .map(Map.Entry::getKey)
+                .toList();
+        for (final String id : headlessIds)
+        {
+            detachSession(id);
+        }
+    }
+
+    /**
+     * Removes this session from {@code sessionToCanonicalPath} and decrements the ref count in
+     * {@code filesByPath}. When the count reaches zero the shared model is evicted from the map.
+     * Called by both {@link #closeFile(String)} and {@link #detachSession(String)}.
+     */
     private void decrementRefCount(final String sessionId)
     {
         final String canonical = sessionToCanonicalPath.remove(sessionId);
@@ -331,8 +399,6 @@ public class FileSessionManager
                 final int remaining = sharedFile.refCount().decrementAndGet();
                 if (remaining <= 0)
                 {
-                    // TODO: ModelImpl currently has no dispose() — listener/thread cleanup relies on GC.
-                    // Revisit when adding closable resources to the model.
                     logger.info("Removed shared file for path {} (last session detached)", key);
                     return null; // removes the entry from the map
                 }

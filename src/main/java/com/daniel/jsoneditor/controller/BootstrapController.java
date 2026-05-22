@@ -6,6 +6,9 @@ import com.daniel.jsoneditor.model.impl.ModelImpl;
 import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.JSONSelectionScene;
 import javafx.stage.Stage;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
  * On file pick, attaches a session via {@link FileSessionManager}, then transitions
  * the owning {@link AppWindow} to a real {@link ControllerImpl} via
  * {@link AppWindow#attachLoadedController(ControllerImpl)}.
+ * <p>Must be called on the JavaFX Application Thread.</p>
  */
 public final class BootstrapController
 {
@@ -33,6 +37,7 @@ public final class BootstrapController
 
     /**
      * Shows the file picker scene.
+     * Must be called on the JavaFX Application Thread.
      * <p>
      * A disposable empty {@link ModelImpl} is passed as a placeholder — {@link JSONSelectionScene}
      * requires a non-null {@link com.daniel.jsoneditor.model.ReadableModel} for its parent
@@ -54,12 +59,19 @@ public final class BootstrapController
         stage.show();
     }
 
-    private void onFilesPicked(final File jsonFile, final File schemaFile, final File settingsFile)
+    void onFilesPicked(final File jsonFile, final File schemaFile, final File settingsFile)
     {
         final AttachResult result = appService.attachLoadedSession(appWindow, stage, jsonFile, schemaFile, settingsFile);
         if (!result.success())
         {
             logger.warn("attachSession failed: {}", result.error());
+            final String message = result.error() != null ? result.error() : "Failed to open file";
+            Platform.runLater(() ->
+            {
+                final Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
+                alert.setTitle("Cannot open file");
+                alert.showAndWait();
+            });
             // Picker stays visible — the user can correct the file selection
         }
     }

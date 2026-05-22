@@ -5,7 +5,6 @@ import java.io.File;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
 import com.daniel.jsoneditor.model.impl.ModelFactory;
 import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
-import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

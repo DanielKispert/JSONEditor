@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ public final class CanonicalPaths
      */
     public static String canonicalize(final File file)
     {
+        Objects.requireNonNull(file, "file must not be null");
         try
         {
             return file.getCanonicalPath();
