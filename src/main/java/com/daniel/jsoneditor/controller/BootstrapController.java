@@ -27,7 +27,6 @@ public final class BootstrapController
     private final AppService appService;
     private final AppWindow appWindow;
 
-    /** Owns the Phase-1 (picker) lifecycle for a new {@link AppWindow}. */
     public BootstrapController(final Stage stage, final AppService appService, final AppWindow appWindow)
     {
         this.stage = stage;

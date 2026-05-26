@@ -17,19 +17,16 @@ public final class WindowRegistry
 
     private final Map<String, AppWindow> windowsByCanonicalPath = new ConcurrentHashMap<>();
 
-    /** Registers the given window as the owner of {@code canonicalPath}. */
     public void register(final String canonicalPath, final AppWindow window)
     {
         windowsByCanonicalPath.put(canonicalPath, window);
     }
 
-    /** Returns the window currently showing {@code canonicalPath}, or empty if none. */
     public Optional<AppWindow> findByPath(final String canonicalPath)
     {
         return Optional.ofNullable(windowsByCanonicalPath.get(canonicalPath));
     }
 
-    /** Removes all entries pointing to the given window (used when a window closes). */
     public void unregisterWindow(final AppWindow window)
     {
         final boolean removed = windowsByCanonicalPath.values().removeIf(w -> w == window);

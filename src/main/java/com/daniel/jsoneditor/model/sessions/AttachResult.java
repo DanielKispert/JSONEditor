@@ -17,19 +17,16 @@ public record AttachResult(String sessionId, String error)
         }
     }
 
-    /** @return true when the session was attached successfully */
     public boolean success()
     {
         return sessionId != null;
     }
 
-    /** @return a successful result with the given session ID */
     public static AttachResult ofSuccess(final String id)
     {
         return new AttachResult(id, null);
     }
 
-    /** @return a failed result with the given error message */
     public static AttachResult ofError(final String msg)
     {
         return new AttachResult(null, msg);
