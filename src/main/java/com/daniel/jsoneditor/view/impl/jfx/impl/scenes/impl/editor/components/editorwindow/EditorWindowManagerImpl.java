@@ -99,8 +99,8 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     }
     
     /**
-     * Checks if the given path is already visible in any editor window (as main selection, child table, or parent array of an array item).
-     * If found, focuses the window and returns true.
+     * Checks if the given path is already visible in any editor window (as main selection or child table).
+     * If found, flashes the window and returns true.
      */
     private boolean focusExistingWindowForPath(String path)
     {
@@ -120,24 +120,6 @@ public class EditorWindowManagerImpl implements EditorWindowManager
                     window.flash();
                     window.focusArrayItem(path);
                     return true;
-                }
-            }
-        }
-        // Check if the path is an array item whose parent array is already visible
-        String parentPath = PathHelper.getParentPath(path);
-        if (parentPath != null)
-        {
-            for (Node windowNode : windowsAsNodes)
-            {
-                if (windowNode instanceof JsonEditorEditorWindow)
-                {
-                    JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
-                    if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
-                    {
-                        window.flash();
-                        window.focusArrayItem(path);
-                        return true;
-                    }
                 }
             }
         }
