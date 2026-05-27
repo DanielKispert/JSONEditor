@@ -7,6 +7,7 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManagerImpl;
 import com.daniel.jsoneditor.view.testutil.TestEditorWindow;
+import java.util.List;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -15,14 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests that EditorWindowManagerImpl.focusExistingWindowForPath() only flashes a window
@@ -47,7 +46,9 @@ class EditorWindowManagerFlashTest
         settingsController = mock(SettingsController.class);
         editorScene = mock(EditorScene.class);
         when(controller.getSettingsController()).thenReturn(settingsController);
-        // Limit to 1 window so addWindow() is never called — avoids constructing a full UI window
+        // "1" is clamped to 3 by getMaxWindows()'s Math.max(3, ...) floor.
+        // Bug-regression scenarios fill all 3 slots so canAnotherWindowBeAdded() stays false --
+        // no real JsonEditorEditorWindow is ever constructed.
         when(settingsController.getMaxEditorWindows()).thenReturn("1");
         editorWindowManager = new EditorWindowManagerImpl(editorScene, model, controller);
         stage.setScene(new Scene(new StackPane(editorWindowManager.getEditorWindowContainer()), 800, 600));
@@ -93,8 +94,9 @@ class EditorWindowManagerFlashTest
         addWindows(rootWindow, fillers1[0], fillers1[1]);
         openPath("/root/name");
         assertFalse(rootWindow.isFlashCalled(),
-                "flash() must NOT fire when /root/name is not visible — user wants item details in a new window, not a highlight on the parent /root");
-        assertNoneFlashed("parent-path block", fillers1[0], fillers1[1]);
+                "flash() must NOT fire when /root/name is not visible in the window; "
+                        + "user wants to open the child in a new window, not highlight the parent /root");
+        assertNoneFlashed("parent-path scenario", fillers1[0], fillers1[1]);
         assertEquals(3, windowCount(), "no new window added when at max capacity");
 
         clearWindows();
@@ -107,8 +109,9 @@ class EditorWindowManagerFlashTest
         addWindows(processParent, fillers2[0], fillers2[1]);
         openPath("/processes/1");
         assertFalse(processParent.isFlashCalled(),
-                "flash() must NOT fire when /processes is a child table but /processes/1 is not — user wants the item record, not the array");
-        assertNoneFlashed("child-table block", fillers2[0], fillers2[1]);
+                "flash() must NOT fire when /processes is a child table but /processes/1 is not -- "
+                        + "user wants the item record, not the array");
+        assertNoneFlashed("child-table scenario", fillers2[0], fillers2[1]);
         assertEquals(3, windowCount(), "no new window added when at max capacity");
 
         clearWindows();
@@ -120,7 +123,7 @@ class EditorWindowManagerFlashTest
         openPath("/other/thing");
         assertFalse(unrelated.isFlashCalled(),
                 "flash() must not fire when no path relationship exists at all");
-        assertNoneFlashed("unrelated-path block", fillers3[0], fillers3[1]);
+        assertNoneFlashed("unrelated-path scenario", fillers3[0], fillers3[1]);
         assertEquals(3, windowCount(), "no new window added when at max capacity");
     }
 
@@ -131,11 +134,13 @@ class EditorWindowManagerFlashTest
     @Test
     void flashWhenPathIsOpenChildTable()
     {
-        final TestEditorWindow window = createTestWindow("/root", List.of("/root/child"));
-        addWindows(window);
+        final TestEditorWindow childTableWindow = createTestWindow("/root", List.of("/root/child"));
+        addWindows(childTableWindow);
         openPath("/root/child");
-        assertTrue(window.isFlashCalled(),
-                "flash() MUST fire when the exact path is in openChildPaths — it is already rendered as a child table in this window");
+        assertTrue(childTableWindow.isFlashCalled(),
+                "flash() MUST fire when the exact path is in openChildPaths -- it is already rendered as a child table in this window");
+        assertTrue(childTableWindow.isFocusArrayItemCalled(),
+                "focusArrayItem() must be called when path matches an open child table");
         assertEquals(1, windowCount(), "no new window when exact match found in openChildPaths");
     }
 

@@ -13,13 +13,15 @@ import java.util.List;
  * and navigation methods with configurable in-memory values.
  *
  * <p>Construct on the JavaFX Application Thread (e.g. via {@code WaitForAsyncUtils.asyncFx}).
- * Call {@link #resetFlash()} between scenarios in a multi-step test.
+ * Either create a new instance per scenario, or call {@link #resetFlash()} to reset
+ * between scenarios when reusing the same instance.
  */
 public class TestEditorWindow extends JsonEditorEditorWindow
 {
     private final String testSelectedPath;
     private final List<String> testOpenChildPaths;
     private boolean flashCalled = false;
+    private boolean focusArrayItemCalled = false;
 
     public TestEditorWindow(
             final EditorWindowManager manager,
@@ -54,7 +56,7 @@ public class TestEditorWindow extends JsonEditorEditorWindow
     @Override
     public void focusArrayItem(final String path)
     {
-        // no-op: prevents navigation side-effects during test
+        focusArrayItemCalled = true;
     }
 
     @Override
@@ -75,9 +77,16 @@ public class TestEditorWindow extends JsonEditorEditorWindow
         return flashCalled;
     }
 
+    /** Returns {@code true} if {@link #focusArrayItem(String)} has been called since construction or the last {@link #resetFlash()}. */
+    public boolean isFocusArrayItemCalled()
+    {
+        return focusArrayItemCalled;
+    }
+
     /** Resets the flash-called flag, allowing the same instance to be reused across multiple test scenarios. */
     public void resetFlash()
     {
         flashCalled = false;
+        focusArrayItemCalled = false;
     }
 }
