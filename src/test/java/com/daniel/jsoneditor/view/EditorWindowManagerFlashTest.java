@@ -6,7 +6,7 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.EditorScene;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManagerImpl;
-import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
+import com.daniel.jsoneditor.view.testutil.TestEditorWindow;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -39,7 +39,7 @@ class EditorWindowManagerFlashTest
     private EditorScene editorScene;
 
     @Start
-    void start(Stage stage)
+    void start(final Stage stage)
     {
         model = mock(ReadableModel.class);
         controller = mock(Controller.class);
@@ -64,7 +64,7 @@ class EditorWindowManagerFlashTest
     void flashOnlyWhenExactPathAlreadyOpen()
     {
         // --- exact selectedPath match → flash, no new window ---
-        final TestWindow exactMatch = createTestWindow("/target", Collections.emptyList());
+        final TestEditorWindow exactMatch = createTestWindow("/target", Collections.emptyList());
         addWindows(exactMatch);
         openPath("/target");
         assertTrue(exactMatch.isFlashCalled(),
@@ -74,8 +74,8 @@ class EditorWindowManagerFlashTest
         clearWindows();
 
         // --- multiple windows: only the window with the exact match must flash ---
-        final TestWindow nonTarget = createTestWindow("/other", Collections.emptyList());
-        final TestWindow targetWindow = createTestWindow("/target", Collections.emptyList());
+        final TestEditorWindow nonTarget = createTestWindow("/other", Collections.emptyList());
+        final TestEditorWindow targetWindow = createTestWindow("/target", Collections.emptyList());
         addWindows(nonTarget, targetWindow);
         openPath("/target");
         assertFalse(nonTarget.isFlashCalled(), "wrong window must NOT be flashed");
@@ -87,9 +87,9 @@ class EditorWindowManagerFlashTest
         // --- bug regression: parent visible but child not in openChildPaths → no flash ---
         // Opening /root/name when the window shows /root should open a new window for the child,
         // not flash the root window (which does not display /root/name directly).
-        final TestWindow rootWindow = createTestWindow("/root", Collections.emptyList());
-        final TestWindow filler1 = createTestWindow("/filler1", Collections.emptyList());
-        final TestWindow filler2 = createTestWindow("/filler2", Collections.emptyList());
+        final TestEditorWindow rootWindow = createTestWindow("/root", Collections.emptyList());
+        final TestEditorWindow filler1 = createTestWindow("/filler1", Collections.emptyList());
+        final TestEditorWindow filler2 = createTestWindow("/filler2", Collections.emptyList());
         addWindows(rootWindow, filler1, filler2);
         openPath("/root/name");
         assertFalse(rootWindow.isFlashCalled(),
@@ -103,9 +103,9 @@ class EditorWindowManagerFlashTest
         // --- bug regression: parent array visible as child table, but the array item is not directly open → no flash ---
         // /processes is shown as a child table inside the window, but /processes/1 is a separate item
         // the user wants to navigate to — do not confuse the array table with the item record.
-        final TestWindow processParent = createTestWindow("/root", List.of("/processes"));
-        final TestWindow filler3 = createTestWindow("/filler1", Collections.emptyList());
-        final TestWindow filler4 = createTestWindow("/filler2", Collections.emptyList());
+        final TestEditorWindow processParent = createTestWindow("/root", List.of("/processes"));
+        final TestEditorWindow filler3 = createTestWindow("/filler1", Collections.emptyList());
+        final TestEditorWindow filler4 = createTestWindow("/filler2", Collections.emptyList());
         addWindows(processParent, filler3, filler4);
         openPath("/processes/1");
         assertFalse(processParent.isFlashCalled(),
@@ -117,9 +117,9 @@ class EditorWindowManagerFlashTest
         clearWindows();
 
         // --- completely unrelated path → no flash ---
-        final TestWindow unrelated = createTestWindow("/root", Collections.emptyList());
-        final TestWindow filler5 = createTestWindow("/filler1", Collections.emptyList());
-        final TestWindow filler6 = createTestWindow("/filler2", Collections.emptyList());
+        final TestEditorWindow unrelated = createTestWindow("/root", Collections.emptyList());
+        final TestEditorWindow filler5 = createTestWindow("/filler1", Collections.emptyList());
+        final TestEditorWindow filler6 = createTestWindow("/filler2", Collections.emptyList());
         addWindows(unrelated, filler5, filler6);
         openPath("/other/thing");
         assertFalse(unrelated.isFlashCalled(),
@@ -136,7 +136,7 @@ class EditorWindowManagerFlashTest
     @Test
     void flashWhenPathIsOpenChildTable()
     {
-        final TestWindow window = createTestWindow("/root", List.of("/root/child"));
+        final TestEditorWindow window = createTestWindow("/root", List.of("/root/child"));
         addWindows(window);
         openPath("/root/child");
         assertTrue(window.isFlashCalled(),
@@ -146,11 +146,11 @@ class EditorWindowManagerFlashTest
 
     // --- helpers ---
 
-    private void addWindows(final TestWindow... windows)
+    private void addWindows(final TestEditorWindow... windows)
     {
         WaitForAsyncUtils.asyncFx(() ->
         {
-            for (final TestWindow w : windows)
+            for (final TestEditorWindow w : windows)
             {
                 editorWindowManager.getEditorWindowContainer().getItems().add(w);
             }
@@ -175,76 +175,12 @@ class EditorWindowManagerFlashTest
         return editorWindowManager.getEditorWindowContainer().getItems().size();
     }
 
-    private TestWindow createTestWindow(final String selectedPath, final List<String> openChildPaths)
+    private TestEditorWindow createTestWindow(final String selectedPath, final List<String> openChildPaths)
     {
-        final TestWindow[] result = new TestWindow[1];
+        final TestEditorWindow[] result = new TestEditorWindow[1];
         WaitForAsyncUtils.asyncFx(
-                () -> result[0] = new TestWindow(editorWindowManager, model, controller, selectedPath, openChildPaths));
+                () -> result[0] = new TestEditorWindow(editorWindowManager, model, controller, selectedPath, openChildPaths));
         WaitForAsyncUtils.waitForFxEvents();
         return result[0];
-    }
-
-    /**
-     * A minimal test double for JsonEditorEditorWindow that tracks flash() calls and prevents
-     * live model queries by overriding path accessors and navigation methods.
-     */
-    static class TestWindow extends JsonEditorEditorWindow
-    {
-        private final String testSelectedPath;
-        private final List<String> testOpenChildPaths;
-        private boolean flashCalled = false;
-
-        TestWindow(
-                final EditorWindowManager manager,
-                final ReadableModel model,
-                final Controller controller,
-                final String selectedPath,
-                final List<String> openChildPaths)
-        {
-            super(manager, model, controller);
-            this.testSelectedPath = selectedPath;
-            this.testOpenChildPaths = openChildPaths;
-        }
-
-        @Override
-        public String getSelectedPath()
-        {
-            return testSelectedPath;
-        }
-
-        @Override
-        public List<String> getOpenChildPaths()
-        {
-            return testOpenChildPaths;
-        }
-
-        @Override
-        public void flash()
-        {
-            flashCalled = true;
-        }
-
-        @Override
-        public void focusArrayItem(final String path)
-        {
-            // no-op: prevents navigation side-effects during test
-        }
-
-        @Override
-        public void setSelectedPath(final String path, final boolean openObjectParentOfArray)
-        {
-            // no-op: prevents model queries during fallback path assignment
-        }
-
-        @Override
-        public void setSelectedPath(final String path)
-        {
-            // no-op
-        }
-
-        public boolean isFlashCalled()
-        {
-            return flashCalled;
-        }
     }
 }
