@@ -18,7 +18,6 @@ import org.testfx.util.WaitForAsyncUtils;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(ApplicationExtension.class)
 class EditorWindowManagerFlashTest
 {
+    private static final List<String> NO_CHILD_PATHS = List.of();
+
     private EditorWindowManagerImpl editorWindowManager;
     private ReadableModel model;
     private Controller controller;
@@ -64,7 +65,7 @@ class EditorWindowManagerFlashTest
     void flashOnlyWhenExactPathAlreadyOpen()
     {
         // --- exact selectedPath match → flash, no new window ---
-        final TestEditorWindow exactMatch = createTestWindow("/target", Collections.emptyList());
+        final TestEditorWindow exactMatch = createTestWindow("/target", NO_CHILD_PATHS);
         addWindows(exactMatch);
         openPath("/target");
         assertTrue(exactMatch.isFlashCalled(),
@@ -74,8 +75,8 @@ class EditorWindowManagerFlashTest
         clearWindows();
 
         // --- multiple windows: only the window with the exact match must flash ---
-        final TestEditorWindow nonTarget = createTestWindow("/other", Collections.emptyList());
-        final TestEditorWindow targetWindow = createTestWindow("/target", Collections.emptyList());
+        final TestEditorWindow nonTarget = createTestWindow("/other", NO_CHILD_PATHS);
+        final TestEditorWindow targetWindow = createTestWindow("/target", NO_CHILD_PATHS);
         addWindows(nonTarget, targetWindow);
         openPath("/target");
         assertFalse(nonTarget.isFlashCalled(), "wrong window must NOT be flashed");
@@ -87,15 +88,13 @@ class EditorWindowManagerFlashTest
         // --- bug regression: parent visible but child not in openChildPaths → no flash ---
         // Opening /root/name when the window shows /root should open a new window for the child,
         // not flash the root window (which does not display /root/name directly).
-        final TestEditorWindow rootWindow = createTestWindow("/root", Collections.emptyList());
-        final TestEditorWindow filler1 = createTestWindow("/filler1", Collections.emptyList());
-        final TestEditorWindow filler2 = createTestWindow("/filler2", Collections.emptyList());
-        addWindows(rootWindow, filler1, filler2);
+        final TestEditorWindow rootWindow = createTestWindow("/root", NO_CHILD_PATHS);
+        final TestEditorWindow[] fillers1 = createFillerWindows();
+        addWindows(rootWindow, fillers1[0], fillers1[1]);
         openPath("/root/name");
         assertFalse(rootWindow.isFlashCalled(),
                 "flash() must NOT fire when /root/name is not visible — user wants item details in a new window, not a highlight on the parent /root");
-        assertFalse(filler1.isFlashCalled(), "filler must not be flashed");
-        assertFalse(filler2.isFlashCalled(), "filler must not be flashed");
+        assertNoneFlashed("parent-path block", fillers1[0], fillers1[1]);
         assertEquals(3, windowCount(), "no new window added when at max capacity");
 
         clearWindows();
@@ -104,28 +103,24 @@ class EditorWindowManagerFlashTest
         // /processes is shown as a child table inside the window, but /processes/1 is a separate item
         // the user wants to navigate to — do not confuse the array table with the item record.
         final TestEditorWindow processParent = createTestWindow("/root", List.of("/processes"));
-        final TestEditorWindow filler3 = createTestWindow("/filler1", Collections.emptyList());
-        final TestEditorWindow filler4 = createTestWindow("/filler2", Collections.emptyList());
-        addWindows(processParent, filler3, filler4);
+        final TestEditorWindow[] fillers2 = createFillerWindows();
+        addWindows(processParent, fillers2[0], fillers2[1]);
         openPath("/processes/1");
         assertFalse(processParent.isFlashCalled(),
                 "flash() must NOT fire when /processes is a child table but /processes/1 is not — user wants the item record, not the array");
-        assertFalse(filler3.isFlashCalled(), "filler must not be flashed");
-        assertFalse(filler4.isFlashCalled(), "filler must not be flashed");
+        assertNoneFlashed("child-table block", fillers2[0], fillers2[1]);
         assertEquals(3, windowCount(), "no new window added when at max capacity");
 
         clearWindows();
 
         // --- completely unrelated path → no flash ---
-        final TestEditorWindow unrelated = createTestWindow("/root", Collections.emptyList());
-        final TestEditorWindow filler5 = createTestWindow("/filler1", Collections.emptyList());
-        final TestEditorWindow filler6 = createTestWindow("/filler2", Collections.emptyList());
-        addWindows(unrelated, filler5, filler6);
+        final TestEditorWindow unrelated = createTestWindow("/root", NO_CHILD_PATHS);
+        final TestEditorWindow[] fillers3 = createFillerWindows();
+        addWindows(unrelated, fillers3[0], fillers3[1]);
         openPath("/other/thing");
         assertFalse(unrelated.isFlashCalled(),
                 "flash() must not fire when no path relationship exists at all");
-        assertFalse(filler5.isFlashCalled(), "filler must not be flashed");
-        assertFalse(filler6.isFlashCalled(), "filler must not be flashed");
+        assertNoneFlashed("unrelated-path block", fillers3[0], fillers3[1]);
         assertEquals(3, windowCount(), "no new window added when at max capacity");
     }
 
@@ -145,6 +140,22 @@ class EditorWindowManagerFlashTest
     }
 
     // --- helpers ---
+
+    private TestEditorWindow[] createFillerWindows()
+    {
+        return new TestEditorWindow[]{
+            createTestWindow("/filler1", NO_CHILD_PATHS),
+            createTestWindow("/filler2", NO_CHILD_PATHS)
+        };
+    }
+
+    private void assertNoneFlashed(final String context, final TestEditorWindow... windows)
+    {
+        for (final TestEditorWindow w : windows)
+        {
+            assertFalse(w.isFlashCalled(), context + ": window at " + w.getSelectedPath() + " must not be flashed");
+        }
+    }
 
     private void addWindows(final TestEditorWindow... windows)
     {
