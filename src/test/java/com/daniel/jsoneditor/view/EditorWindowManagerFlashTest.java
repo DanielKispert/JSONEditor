@@ -16,6 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
+import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -198,5 +201,77 @@ class EditorWindowManagerFlashTest
                 () -> result[0] = new TestEditorWindow(editorWindowManager, model, controller, selectedPath, openChildPaths));
         WaitForAsyncUtils.waitForFxEvents();
         return result[0];
+    }
+
+    @Test
+    void parentArrayFallback_flashesOnlyForNonNavigableItems()
+    {
+        when(model.getNodeForPath("/items")).thenReturn(
+                new JsonNodeWithPath(JsonNodeFactory.instance.arrayNode(), "/items"));
+        final TestEditorWindow arrayWindow = createTestWindow("/items", NO_CHILD_PATHS);
+        addWindows(arrayWindow);
+
+        // --- sub-scenario 1: primitive item → flash + focusArrayItem, no new window ---
+        when(model.getNodeForPath("/items/0")).thenReturn(
+                new JsonNodeWithPath(JsonNodeFactory.instance.textNode("foo"), "/items/0"));
+        openPath("/items/0");
+        assertTrue(arrayWindow.isFlashCalled(),
+                "flash() MUST fire when navigating to a primitive array item whose parent array is already open");
+        assertTrue(arrayWindow.isFocusArrayItemCalled(),
+                "focusArrayItem() must be called: primitive item is rendered inline in the parent array table");
+        assertEquals(1, windowCount(), "no new window: primitive item shown in existing parent window");
+        arrayWindow.resetFlash();
+
+        // --- sub-scenario 2: flat-object item → flash + focusArrayItem, no new window ---
+        final ObjectNode flatObject = JsonNodeFactory.instance.objectNode();
+        flatObject.put("name", "foo");
+        flatObject.put("count", 42);
+        when(model.getNodeForPath("/items/1")).thenReturn(new JsonNodeWithPath(flatObject, "/items/1"));
+        openPath("/items/1");
+        assertTrue(arrayWindow.isFlashCalled(),
+                "flash() MUST fire when navigating to a flat-object array item whose parent array is already open");
+        assertTrue(arrayWindow.isFocusArrayItemCalled(),
+                "focusArrayItem() must be called: flat-object item is rendered as a row in the parent array table");
+        assertEquals(1, windowCount(), "no new window: flat-object item shown in existing parent window");
+
+        // fill capacity to prevent a new window from opening in sub-scenario 3
+        clearWindows();
+        final TestEditorWindow[] fillers = createFillerWindows();
+        addWindows(arrayWindow, fillers[0], fillers[1]);
+        arrayWindow.resetFlash();
+
+        // --- sub-scenario 3: complex-object item → NO flash, no focusArrayItem ---
+        final ObjectNode complexObject = JsonNodeFactory.instance.objectNode();
+        complexObject.put("name", "Alice");
+        complexObject.set("hobbies", JsonNodeFactory.instance.arrayNode());
+        when(model.getNodeForPath("/items/2")).thenReturn(new JsonNodeWithPath(complexObject, "/items/2"));
+        openPath("/items/2");
+        assertFalse(arrayWindow.isFlashCalled(),
+                "flash() must NOT fire for a complex object that deserves its own editor window");
+        assertFalse(arrayWindow.isFocusArrayItemCalled(),
+                "focusArrayItem() must NOT be called: complex item should open in a new window, not be focused inline");
+        assertNoneFlashed("complex-object sub-scenario", fillers[0], fillers[1]);
+        assertEquals(3, windowCount(), "no new window added when at max capacity");
+    }
+
+    @Test
+    void childTableFallback_flashesForItemsInOpenChildPaths()
+    {
+        // The window shows /persons/0 and has /persons/0/hobbies rendered as an inline child table.
+        // Navigating to an item inside that child array must flash this window and focus the row.
+        when(model.getNodeForPath("/persons/0/hobbies")).thenReturn(
+                new JsonNodeWithPath(JsonNodeFactory.instance.arrayNode(), "/persons/0/hobbies"));
+        when(model.getNodeForPath("/persons/0/hobbies/2")).thenReturn(
+                new JsonNodeWithPath(JsonNodeFactory.instance.textNode("painting"), "/persons/0/hobbies/2"));
+
+        final TestEditorWindow objectWindow = createTestWindow("/persons/0", List.of("/persons/0/hobbies"));
+        addWindows(objectWindow);
+        openPath("/persons/0/hobbies/2");
+
+        assertTrue(objectWindow.isFlashCalled(),
+                "flash() MUST fire when navigating to a primitive item whose parent array is a child table in an open window");
+        assertTrue(objectWindow.isFocusArrayItemCalled(),
+                "focusArrayItem() must be called: item is rendered inline in the child table already visible in this window");
+        assertEquals(1, windowCount(), "no new window: item is visible via child table in existing window");
     }
 }
