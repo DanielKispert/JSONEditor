@@ -62,13 +62,11 @@ public class TestEditorWindow extends JsonEditorEditorWindow
     @Override
     public void setSelectedPath(final String path, final boolean openObjectParentOfArray)
     {
-        // no-op: prevents model queries during fallback path assignment
     }
 
     @Override
     public void setSelectedPath(final String path)
     {
-        // no-op
     }
 
     /** Returns {@code true} if {@link #flash()} has been called since construction or the last {@link #resetFlash()}. */

@@ -42,21 +42,18 @@ class EditorWindowFlashTest
     @Test
     void flashAnimationCleansUpProperly() throws InterruptedException
     {
-        // --- single flash: at most one CSS class entry is added immediately ---
         WaitForAsyncUtils.asyncFx(() -> testNode.flash());
         WaitForAsyncUtils.waitForFxEvents();
 
         assertTrue(countFlashClasses() <= 1,
                 "A single flash() must not add more than one CSS class instance, found: " + countFlashClasses());
 
-        // wait for the animation to complete (3 keyframes × 200 ms = 600 ms, plus margin)
         Thread.sleep(900);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertEquals(0, countFlashClasses(),
                 "Flash CSS class must be fully removed after animation completes");
 
-        // --- rapid double-trigger: CSS class must not accumulate ---
         WaitForAsyncUtils.asyncFx(() ->
         {
             testNode.flash();
@@ -67,7 +64,6 @@ class EditorWindowFlashTest
         assertTrue(countFlashClasses() <= 1,
                 "Calling flash() twice rapidly must not accumulate CSS class entries, found: " + countFlashClasses());
 
-        // wait for the animation to complete after the double-trigger as well
         Thread.sleep(900);
         WaitForAsyncUtils.waitForFxEvents();
 

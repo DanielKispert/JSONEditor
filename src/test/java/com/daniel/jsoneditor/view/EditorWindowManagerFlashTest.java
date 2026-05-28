@@ -49,9 +49,6 @@ class EditorWindowManagerFlashTest
         settingsController = mock(SettingsController.class);
         editorScene = mock(EditorScene.class);
         when(controller.getSettingsController()).thenReturn(settingsController);
-        // "1" is clamped to 3 by getMaxWindows()'s Math.max(3, ...) floor.
-        // Bug-regression scenarios fill all 3 slots so canAnotherWindowBeAdded() stays false --
-        // no real JsonEditorEditorWindow is ever constructed.
         when(settingsController.getMaxEditorWindows()).thenReturn("1");
         editorWindowManager = new EditorWindowManagerImpl(editorScene, model, controller);
         stage.setScene(new Scene(new StackPane(editorWindowManager.getEditorWindowContainer()), 800, 600));
@@ -68,7 +65,6 @@ class EditorWindowManagerFlashTest
     @Test
     void flashOnlyWhenExactPathAlreadyOpen()
     {
-        // --- exact selectedPath match → flash, no new window ---
         final TestEditorWindow exactMatch = createTestWindow("/target", NO_CHILD_PATHS);
         addWindows(exactMatch);
         openPath("/target");
@@ -78,7 +74,6 @@ class EditorWindowManagerFlashTest
 
         clearWindows();
 
-        // --- multiple windows: only the window with the exact match must flash ---
         final TestEditorWindow nonTarget = createTestWindow("/other", NO_CHILD_PATHS);
         final TestEditorWindow targetWindow = createTestWindow("/target", NO_CHILD_PATHS);
         addWindows(nonTarget, targetWindow);
@@ -89,9 +84,6 @@ class EditorWindowManagerFlashTest
 
         clearWindows();
 
-        // --- bug regression: parent visible but child not in openChildPaths → no flash ---
-        // Opening /root/name when the window shows /root should open a new window for the child,
-        // not flash the root window (which does not display /root/name directly).
         final TestEditorWindow rootWindow = createTestWindow("/root", NO_CHILD_PATHS);
         final TestEditorWindow[] fillers1 = createFillerWindows();
         addWindows(rootWindow, fillers1[0], fillers1[1]);
@@ -104,9 +96,6 @@ class EditorWindowManagerFlashTest
 
         clearWindows();
 
-        // --- bug regression: parent array visible as child table, but the array item is not directly open → no flash ---
-        // /processes is shown as a child table inside the window, but /processes/1 is a separate item
-        // the user wants to navigate to — do not confuse the array table with the item record.
         final TestEditorWindow processParent = createTestWindow("/root", List.of("/processes"));
         final TestEditorWindow[] fillers2 = createFillerWindows();
         addWindows(processParent, fillers2[0], fillers2[1]);
@@ -119,7 +108,6 @@ class EditorWindowManagerFlashTest
 
         clearWindows();
 
-        // --- completely unrelated path → no flash ---
         final TestEditorWindow unrelated = createTestWindow("/root", NO_CHILD_PATHS);
         final TestEditorWindow[] fillers3 = createFillerWindows();
         addWindows(unrelated, fillers3[0], fillers3[1]);
@@ -146,8 +134,6 @@ class EditorWindowManagerFlashTest
                 "focusArrayItem() must be called when path matches an open child table");
         assertEquals(1, windowCount(), "no new window when exact match found in openChildPaths");
     }
-
-    // --- helpers ---
 
     private TestEditorWindow[] createFillerWindows()
     {
@@ -211,7 +197,6 @@ class EditorWindowManagerFlashTest
         final TestEditorWindow arrayWindow = createTestWindow("/items", NO_CHILD_PATHS);
         addWindows(arrayWindow);
 
-        // --- sub-scenario 1: primitive item → flash + focusArrayItem, no new window ---
         when(model.getNodeForPath("/items/0")).thenReturn(
                 new JsonNodeWithPath(JsonNodeFactory.instance.textNode("foo"), "/items/0"));
         openPath("/items/0");
@@ -222,7 +207,6 @@ class EditorWindowManagerFlashTest
         assertEquals(1, windowCount(), "no new window: primitive item shown in existing parent window");
         arrayWindow.resetFlash();
 
-        // --- sub-scenario 2: flat-object item → flash + focusArrayItem, no new window ---
         final ObjectNode flatObject = JsonNodeFactory.instance.objectNode();
         flatObject.put("name", "foo");
         flatObject.put("count", 42);
@@ -234,13 +218,11 @@ class EditorWindowManagerFlashTest
                 "focusArrayItem() must be called: flat-object item is rendered as a row in the parent array table");
         assertEquals(1, windowCount(), "no new window: flat-object item shown in existing parent window");
 
-        // fill capacity to prevent a new window from opening in sub-scenario 3
         clearWindows();
         final TestEditorWindow[] fillers = createFillerWindows();
         addWindows(arrayWindow, fillers[0], fillers[1]);
         arrayWindow.resetFlash();
 
-        // --- sub-scenario 3: complex-object item → NO flash, no focusArrayItem ---
         final ObjectNode complexObject = JsonNodeFactory.instance.objectNode();
         complexObject.put("name", "Alice");
         complexObject.set("hobbies", JsonNodeFactory.instance.arrayNode());
@@ -257,8 +239,6 @@ class EditorWindowManagerFlashTest
     @Test
     void childTableFallback_flashesForItemsInOpenChildPaths()
     {
-        // The window shows /persons/0 and has /persons/0/hobbies rendered as an inline child table.
-        // Navigating to an item inside that child array must flash this window and focus the row.
         when(model.getNodeForPath("/persons/0/hobbies")).thenReturn(
                 new JsonNodeWithPath(JsonNodeFactory.instance.arrayNode(), "/persons/0/hobbies"));
         when(model.getNodeForPath("/persons/0/hobbies/2")).thenReturn(
