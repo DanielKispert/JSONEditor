@@ -12,6 +12,10 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.SplitPane;
 import javafx.stage.Screen;
+import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Iterator;
+import java.util.Map;
 
 // manages the positions of editor windows etc
 public class EditorWindowManagerImpl implements EditorWindowManager
@@ -99,17 +103,17 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     }
     
     /**
-     * Checks if the given path is already visible in any editor window (as main selection, child table, or parent array of an array item).
-     * If found, focuses the window and returns true.
+     * Checks if the given path is already visible in any editor window (as main selection or child table).
+     * If found, flashes the window and returns true.
      */
     private boolean focusExistingWindowForPath(String path)
     {
-        ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
-        for (Node windowNode : windowsAsNodes)
+        final ObservableList<Node> windowsAsNodes = editorWindowContainer.getItems();
+        for (final Node windowNode : windowsAsNodes)
         {
             if (windowNode instanceof JsonEditorEditorWindow)
             {
-                JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+                final JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
                 if (path.equals(window.getSelectedPath()))
                 {
                     window.flash();
@@ -123,15 +127,16 @@ public class EditorWindowManagerImpl implements EditorWindowManager
                 }
             }
         }
-        // Check if the path is an array item whose parent array is already visible
-        String parentPath = PathHelper.getParentPath(path);
-        if (parentPath != null)
+
+        // nuanced parent-path fallback: only when the node would be diverted to its parent array
+        final String parentPath = PathHelper.getParentPath(path);
+        if (parentPath != null && wouldDivertToParentArray(path, parentPath))
         {
-            for (Node windowNode : windowsAsNodes)
+            for (final Node windowNode : windowsAsNodes)
             {
                 if (windowNode instanceof JsonEditorEditorWindow)
                 {
-                    JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
+                    final JsonEditorEditorWindow window = (JsonEditorEditorWindow) windowNode;
                     if (parentPath.equals(window.getSelectedPath()) || window.getOpenChildPaths().contains(parentPath))
                     {
                         window.flash();
@@ -141,7 +146,44 @@ public class EditorWindowManagerImpl implements EditorWindowManager
                 }
             }
         }
+
         return false;
+    }
+
+    /**
+     * Returns true if navigating to {@code path} would be diverted back to {@code parentPath} by
+     * {@link JsonEditorEditorWindow#divertPathToSelect}: specifically, when the parent is an array
+     * and the child is either a primitive or a flat object (no nested object/array fields).
+     * Returns false when the model node is unknown (null or missing) — safe default that prevents
+     * spurious parent flashes.
+     */
+    private boolean wouldDivertToParentArray(String path, String parentPath)
+    {
+        final JsonNodeWithPath parentNode = model.getNodeForPath(parentPath);
+        if (parentNode == null || !parentNode.isArray())
+        {
+            return false;
+        }
+        final JsonNodeWithPath node = model.getNodeForPath(path);
+        if (node == null || node.isMissing())
+        {
+            return false;
+        }
+        if (!node.isObject())
+        {
+            return true;  // primitive → always diverted to parent array
+        }
+        // Object: diverted only when it has no nested object/array fields
+        final Iterator<Map.Entry<String, JsonNode>> fields = node.getNode().fields();
+        while (fields.hasNext())
+        {
+            final Map.Entry<String, JsonNode> entry = fields.next();
+            if (entry.getValue().isObject() || entry.getValue().isArray())
+            {
+                return false;
+            }
+        }
+        return true;  // flat object → diverted to parent array
     }
     
     @Override
