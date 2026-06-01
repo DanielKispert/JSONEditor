@@ -14,9 +14,15 @@ import org.testfx.framework.junit5.Start;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.lang.reflect.Field;
+
+import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.sessions.EditorSession;
+import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
 
 /**
@@ -145,5 +151,54 @@ class AppServiceTest
         assertTrue(resultB.error().toLowerCase().contains("schema"),
                 "FSM error must mention schema mismatch, got: " + resultB.error());
         verifyNoInteractions(windowB);
+    }
+
+    @Test
+    void attachLoadedSession_postAttachFailures_alwaysDetachSession() throws Exception
+    {
+        {
+            final FileSessionManager fsm = mock(FileSessionManager.class);
+            when(fsm.attachSession(any(), any(), anyBoolean()))
+                    .thenReturn(AttachResult.ofSuccess("ghost-session"));
+            when(fsm.getSession("ghost-session"))
+                    .thenReturn(null);
+
+            final Field field = AppService.class.getDeclaredField("fileSessionManager");
+            field.setAccessible(true);
+            field.set(appService, fsm);
+
+            final AppWindow window = mock(AppWindow.class);
+            final AttachResult result = appService.attachLoadedSession(
+                    window, fxStage, new File("/fake/test.json"), new File("/fake/schema.json"), null);
+
+            assertFalse(result.success());
+            assertNotNull(result.error());
+            verify(fsm).detachSession("ghost-session");
+            verifyNoInteractions(window);
+        }
+
+        {
+            final FileSessionManager fsm = mock(FileSessionManager.class);
+            when(fsm.attachSession(any(), any(), anyBoolean()))
+                    .thenReturn(AttachResult.ofSuccess("leaked-session"));
+            when(fsm.getSession("leaked-session"))
+                    .thenReturn(new EditorSession(
+                            "leaked-session",
+                            mock(ReadableModel.class),
+                            new File("/fake.json"),
+                            new File("/fake.schema"),
+                            true));
+
+            final Field field = AppService.class.getDeclaredField("fileSessionManager");
+            field.setAccessible(true);
+            field.set(appService, fsm);
+
+            final AppWindow window = mock(AppWindow.class);
+
+            assertThrows(IllegalStateException.class, () -> appService.attachLoadedSession(
+                    window, null, new File("/fake/test.json"), new File("/fake/schema.json"), null));
+
+            verify(fsm).detachSession("leaked-session");
+        }
     }
 }

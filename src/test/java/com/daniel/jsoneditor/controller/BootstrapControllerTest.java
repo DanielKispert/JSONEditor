@@ -23,10 +23,11 @@ class BootstrapControllerTest
      * Exercises both the success and failure branches of {@link BootstrapController#onFilesPicked}.
      * Success: attachLoadedSession called with correct args; no alert scheduled; stage not closed.
      * Failure: onFilesPicked does not throw; stage stays visible; error alert scheduled via Platform.runLater.
+     * ISE thrown: onFilesPicked does not propagate; stage stays open.
      * Fresh controller instances are used per branch to avoid state accumulation.
      */
     @Test
-    void onFilesPicked_handlesSuccessAndFailure()
+    void onFilesPicked_handlesAllOutcomes()
     {
         final File jsonFile = new File("/data/file.json");
         final File schemaFile = new File("/data/schema.json");
@@ -72,6 +73,24 @@ class BootstrapControllerTest
             // Error alert was scheduled via Platform.runLater — not executed synchronously (no FX toolkit needed)
             platformMock.verify(() -> Platform.runLater(any(Runnable.class)));
         }
+
+        // === Branch 3: attachLoadedSession throws ISE → no propagation, stage stays open ===
+        try (final MockedStatic<Platform> platformMock = mockStatic(Platform.class))
+        {
+            final Stage stage = mock(Stage.class);
+            final AppService appService = mock(AppService.class);
+            final AppWindow appWindow = mock(AppWindow.class);
+            when(appService.attachLoadedSession(any(), any(), any(), any(), any()))
+                    .thenThrow(new IllegalStateException("session detached: duplicate attach"));
+
+            final BootstrapController bootstrap = new BootstrapController(stage, appService, appWindow);
+            assertDoesNotThrow(
+                    () -> bootstrap.onFilesPicked(new File("/data/file.json"), new File("/data/schema.json"), null),
+                    "onFilesPicked must not propagate IllegalStateException from attachLoadedSession");
+
+            verify(stage, never()).close();
+            verify(stage, never()).hide();
+        }
     }
 
     /**
@@ -93,4 +112,6 @@ class BootstrapControllerTest
         assertSame(loadedController, window.getController(),
                 "controller must be the real one after attachLoadedController (Phase 2)");
     }
+
+    
 }

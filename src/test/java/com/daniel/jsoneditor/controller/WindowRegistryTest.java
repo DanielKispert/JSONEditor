@@ -10,7 +10,7 @@ import static org.mockito.Mockito.mock;
 class WindowRegistryTest
 {
     @Test
-    void windowRegistry_registerLookupAndUnregisterCleanup()
+    void windowRegistry_fullLifecycle()
     {
         final WindowRegistry registry = new WindowRegistry();
         final AppWindow windowA = mock(AppWindow.class);
@@ -21,6 +21,13 @@ class WindowRegistryTest
         registry.register("/foo/bar.json", windowA);
         assertTrue(registry.findByPath("/foo/bar.json").isPresent(), "lookup after register must succeed");
         assertSame(windowA, registry.findByPath("/foo/bar.json").get(), "findByPath must return the registered window");
+
+        // Simulate same window re-registering at new paths (stale entry eviction)
+        registry.register("/files/a.json", windowA);
+        registry.register("/files/b.json", windowA);
+        assertFalse(registry.findByPath("/files/a.json").isPresent(),
+                "Old path must be evicted when the same window re-registers at a new path");
+        assertTrue(registry.findByPath("/files/b.json").isPresent(), "New path must be registered");
 
         // Register multiple paths for windowA and one for windowB
         registry.register("/path/a.json", windowA);

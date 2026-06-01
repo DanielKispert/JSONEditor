@@ -303,6 +303,7 @@ public class ControllerImpl implements Controller, Observer
             // Register this window so future opens of the same file focus here instead
             if (appWindow != null)
             {
+                registry.unregisterWindow(appWindow);
                 registry.register(canonicalPath, appWindow);
             }
         });

@@ -60,7 +60,16 @@ public final class BootstrapController
 
     void onFilesPicked(final File jsonFile, final File schemaFile, final File settingsFile)
     {
-        final AttachResult result = appService.attachLoadedSession(appWindow, stage, jsonFile, schemaFile, settingsFile);
+        final AttachResult result;
+        try
+        {
+            result = appService.attachLoadedSession(appWindow, stage, jsonFile, schemaFile, settingsFile);
+        }
+        catch (final IllegalStateException e)
+        {
+            logger.error("attachLoadedSession threw IllegalStateException: {}", e.getMessage(), e);
+            return;
+        }
         if (!result.success())
         {
             logger.warn("attachSession failed: {}", result.error());

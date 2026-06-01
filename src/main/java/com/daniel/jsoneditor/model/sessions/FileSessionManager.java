@@ -270,12 +270,7 @@ public class FileSessionManager
         final SharedFile peeked = filesByPath.get(canonicalJson);
         if (peeked != null)
         {
-            if (!peeked.canonicalSchemaPath().equals(canonicalSchema))
-            {
-                return AttachAttempt.ofError("Schema mismatch: path " + canonicalJson
-                        + " is already open with schema " + peeked.canonicalSchemaPath()
-                        + " but requested " + canonicalSchema);
-            }
+            afterFastPathPeek(canonicalJson);
             // Increment refCount inside compute() so it is atomic with concurrent decrements
             final AttachAttempt[] fastResult = {null};
             filesByPath.compute(canonicalJson, (final String key, final SharedFile cur) ->
@@ -405,6 +400,10 @@ public class FileSessionManager
                 return sharedFile;
             });
         }
+    }
+
+    protected void afterFastPathPeek(final String canonicalJson)
+    {
     }
 
     private String generateUniqueId(final String prefix)

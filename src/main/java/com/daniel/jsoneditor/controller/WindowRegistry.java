@@ -19,6 +19,7 @@ public final class WindowRegistry
 
     public void register(final String canonicalPath, final AppWindow window)
     {
+        windowsByCanonicalPath.values().removeIf(w -> w == window);
         windowsByCanonicalPath.put(canonicalPath, window);
     }
 

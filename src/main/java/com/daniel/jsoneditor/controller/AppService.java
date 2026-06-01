@@ -239,28 +239,41 @@ public class AppService
             return result;
         }
 
-        final EditorSession session = fileSessionManager.getSession(result.sessionId());
-        final ReadableModel sessionModel = session.model();
-        if (!(sessionModel instanceof WritableModel writableModel))
+        try
         {
-            throw new IllegalStateException("Session model does not implement WritableModel: " + sessionModel.getClass());
-        }
-
-        if (settingsFile != null && !settingsFile.getPath().isEmpty() && settingsFile.exists())
-        {
-            final Settings settings = new JsonFileReaderAndWriterImpl().getJsonFromFile(settingsFile, Settings.class, true);
-            if (settings != null)
+            final EditorSession session = fileSessionManager.getSession(result.sessionId());
+            if (session == null)
             {
-                writableModel.setSettings(settings);
+                fileSessionManager.detachSession(result.sessionId());
+                return AttachResult.ofError("Session unavailable after attach");
             }
-        }
+            final ReadableModel sessionModel = session.model();
+            if (!(sessionModel instanceof WritableModel writableModel))
+            {
+                throw new IllegalStateException("Session model does not implement WritableModel: " + sessionModel.getClass());
+            }
 
-        final ControllerImpl controller = new ControllerImpl(writableModel, sessionModel, stage, this, jsonFile, schemaFile,
-                result.sessionId());
-        controller.setAppWindow(window);
-        controller.registerInWindowRegistry(CanonicalPaths.canonicalize(jsonFile));
-        window.attachLoadedController(controller);
-        return result;
+            if (settingsFile != null && !settingsFile.getPath().isEmpty() && settingsFile.exists())
+            {
+                final Settings settings = new JsonFileReaderAndWriterImpl().getJsonFromFile(settingsFile, Settings.class, true);
+                if (settings != null)
+                {
+                    writableModel.setSettings(settings);
+                }
+            }
+
+            final ControllerImpl controller = new ControllerImpl(writableModel, sessionModel, stage, this, jsonFile, schemaFile,
+                    result.sessionId());
+            controller.setAppWindow(window);
+            controller.registerInWindowRegistry(CanonicalPaths.canonicalize(jsonFile));
+            window.attachLoadedController(controller);
+            return result;
+        }
+        catch (final IllegalStateException e)
+        {
+            fileSessionManager.detachSession(result.sessionId());
+            throw e;
+        }
     }
 
     public int getWindowCount()

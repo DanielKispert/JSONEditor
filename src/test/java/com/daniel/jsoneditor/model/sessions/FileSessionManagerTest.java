@@ -155,8 +155,10 @@ public class FileSessionManagerTest
     }
 
     @Test
-    void testOpenInvalidFileReturnsNull()
+    void attachSession_rejectsInvalidInput()
+            throws Exception
     {
+        // Case A — non-existent files
         final String nonExistentJson = tempDir.resolve("no-such.json").toString();
         final String nonExistentSchema = tempDir.resolve("no-such-schema.json").toString();
 
@@ -169,44 +171,60 @@ public class FileSessionManagerTest
         assertFalse(r2.success(), "attachSession with existing JSON but missing schema must fail");
         assertNotNull(r2.error(), "error message must be present");
         assertTrue(r2.error().contains("does not exist"), "error must mention missing schema");
+
+        // Case B — invalid JSON against schema
+        final Path invalidJson = tempDir.resolve("invalid.json");
+        Files.writeString(invalidJson, "{\"name\":\"test\",\"value\":\"not-a-number\"}");
+        final AttachResult invalidResult = sessionManager.attachSession(invalidJson.toString(), schemaFile.toString(), false);
+        assertFalse(invalidResult.success(), "attachSession must fail when JSON does not validate against schema");
+        assertNotNull(invalidResult.error(), "error message must be present");
+        assertFalse(invalidResult.error().isBlank(), "error message must not be blank");
+        assertTrue(invalidResult.error().toLowerCase().contains("schema") || invalidResult.error().toLowerCase().contains("validat"),
+                "error must mention schema or validation, got: " + invalidResult.error());
+
+        // Case C — schema mismatch on second attach
+        final Path schema2 = tempDir.resolve("schema2.json");
+        Files.writeString(schema2,
+                "{\"$schema\":\"http://json-schema.org/draft-07/schema#\","
+                        + "\"type\":\"object\","
+                        + "\"properties\":{"
+                        + "\"name\":{\"type\":\"string\"}}}");
+
+        final AttachResult result1 = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(result1.success(), "first attach must succeed");
+
+        final AttachResult result2 = sessionManager.attachSession(jsonFile.toString(), schema2.toString(), false);
+        assertFalse(result2.success(), "attach with mismatched schema must fail");
+        assertNotNull(result2.error(), "error must be present on schema mismatch");
+        assertTrue(result2.error().toLowerCase().contains("schema"),
+                "error must mention 'schema', got: " + result2.error());
+
+        assertNotNull(sessionManager.getSession(result1.sessionId()),
+                "original session must remain accessible after rejected attach");
     }
 
     @Test
-    void testCannotCloseGuiSession()
+    void guiSession_closeProhibitedAndUnregisterable()
+            throws Exception
     {
-        // Open a headless session to get a valid ReadableModel instance
         final AttachResult headlessResult = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
         assertTrue(headlessResult.success(), "Precondition: headless session must open");
         final String headlessId = headlessResult.sessionId();
         final EditorSession headlessSession = sessionManager.getSession(headlessId);
 
-        // Register as GUI session (guiOwned=true)
         final String guiId = sessionManager.registerGuiSession(
                 headlessSession.model(), jsonFile.toFile(), schemaFile.toFile());
         assertNotNull(guiId, "registerGuiSession must return a session ID");
         assertTrue(sessionManager.getSession(guiId).guiOwned(), "GUI session must be marked guiOwned");
 
-        // Attempting to close the GUI session via closeFile must fail
+        // Branch A (close prohibited)
         final CloseFileResult closeResult = sessionManager.closeFile(guiId);
         assertEquals(CloseFileResult.GUI_OWNED, closeResult, "closeFile must return GUI_OWNED for a GUI-owned session");
         assertNotNull(sessionManager.getSession(guiId), "GUI session must still exist after failed close");
-    }
 
-    @Test
-    void testUnregisterGuiSession()
-    {
-        final AttachResult headlessResult = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
-        assertTrue(headlessResult.success(), "Precondition: headless session must open");
-        final String headlessId = headlessResult.sessionId();
-        final EditorSession headlessSession = sessionManager.getSession(headlessId);
-
-        final String guiId = sessionManager.registerGuiSession(
-                headlessSession.model(), jsonFile.toFile(), schemaFile.toFile());
-        assertNotNull(sessionManager.getSession(guiId), "GUI session must exist before unregister");
-
+        // Branch B (unregister)
         sessionManager.unregisterGuiSession(guiId);
-        assertNull(sessionManager.getSession(guiId),
-                "GUI session must be gone after unregisterGuiSession");
+        assertNull(sessionManager.getSession(guiId), "GUI session must be gone after unregisterGuiSession");
     }
 
     @Test
@@ -307,49 +325,6 @@ public class FileSessionManagerTest
     }
 
     @Test
-    void testOpenFileWithInvalidJson() throws Exception
-    {
-        // JSON has a string where the schema expects a number - validation must reject it
-        final Path invalidJson = tempDir.resolve("invalid.json");
-        Files.writeString(invalidJson, "{\"name\":\"test\",\"value\":\"not-a-number\"}");
-
-        final AttachResult result = sessionManager.attachSession(invalidJson.toString(), schemaFile.toString(), false);
-
-        assertFalse(result.success(), "attachSession must fail when JSON does not validate against schema");
-        assertNotNull(result.error(), "error message must be present");
-        assertFalse(result.error().isBlank(), "error message must not be blank");
-        assertTrue(result.error().toLowerCase().contains("schema") || result.error().toLowerCase().contains("validat"),
-                "error must mention schema or validation, got: " + result.error());
-    }
-
-    @Test
-    void attachSession_rejectsSchemaMismatch() throws Exception
-    {
-        // A different schema — same JSON is valid against it but it differs from schemaFile
-        final Path schema2 = tempDir.resolve("schema2.json");
-        Files.writeString(schema2,
-                "{\"$schema\":\"http://json-schema.org/draft-07/schema#\","
-                + "\"type\":\"object\","
-                + "\"properties\":{"
-                + "\"name\":{\"type\":\"string\"}"
-                + "}}");
-
-        final AttachResult result1 = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
-        assertTrue(result1.success(), "first attach must succeed");
-
-        // Second attach with a different schema must be rejected
-        final AttachResult result2 = sessionManager.attachSession(jsonFile.toString(), schema2.toString(), false);
-        assertFalse(result2.success(), "attach with mismatched schema must fail");
-        assertNotNull(result2.error(), "error must be present on schema mismatch");
-        assertTrue(result2.error().toLowerCase().contains("schema"),
-                "error must mention 'schema', got: " + result2.error());
-
-        // Original session must remain accessible and unaffected
-        assertNotNull(sessionManager.getSession(result1.sessionId()),
-                "original session must remain accessible after rejected attach");
-    }
-
-    @Test
     void attachSession_concurrentSamePathSharesOneModel() throws Exception
     {
         final int threadCount = 10;
@@ -390,6 +365,61 @@ public class FileSessionManagerTest
         {
             assertSame(referenceModel, sessionManager.getSession(r.sessionId()).model(),
                     "all concurrent attaches to same path must share one ModelImpl");
+        }
+    }
+
+    @Test
+    void attachSession_falseSchemaError_whenEvictedAfterPeek() throws Exception
+    {
+        final Path schemaB = tempDir.resolve("schema-b.json");
+        Files.writeString(schemaB,
+                "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"number\"},\"extra\":{\"type\":\"string\"}}}");
+
+        final CountDownLatch peekDone = new CountDownLatch(1);
+        final CountDownLatch evictionDone = new CountDownLatch(1);
+
+        final FileSessionManager timedManager = new FileSessionManager()
+        {
+            @Override
+            protected void afterFastPathPeek(final String canonicalJson)
+            {
+                peekDone.countDown();
+                try
+                {
+                    evictionDone.await(5, TimeUnit.SECONDS);
+                }
+                catch (final InterruptedException e)
+                {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        };
+
+        final AttachResult rA = timedManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(rA.success(), "first attach must succeed");
+        final String idA = rA.sessionId();
+
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        final Future<AttachResult> futureC = executor.submit(() ->
+        {
+            return timedManager.attachSession(jsonFile.toString(), schemaB.toString(), false);
+        });
+
+        assertTrue(peekDone.await(5, TimeUnit.SECONDS), "timed peek must complete within timeout");
+
+        // Evict the shared file by detaching the original session
+        timedManager.detachSession(idA);
+
+        // Allow the attaching thread to continue after eviction
+        evictionDone.countDown();
+
+        final AttachResult resultC = futureC.get(5, TimeUnit.SECONDS);
+        executor.shutdown();
+
+        assertTrue(resultC.success(), "attach with schema-b must succeed after eviction — stale peek must not produce false schema-mismatch error; got: " + resultC.error());
+        if (resultC.success())
+        {
+            timedManager.closeFile(resultC.sessionId());
         }
     }
 
