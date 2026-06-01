@@ -33,6 +33,8 @@ import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
+import com.daniel.jsoneditor.model.sessions.EditorSession;
+import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.model.settings.Settings;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
@@ -59,9 +61,9 @@ public class ControllerImpl implements Controller, Observer
 {
     private static final Logger logger = LoggerFactory.getLogger(ControllerImpl.class);
 
-    private final WritableModel model;
+    private WritableModel model;
 
-    private final ReadableModel readableModel;
+    private ReadableModel readableModel;
 
     private final View view;
 
@@ -69,9 +71,9 @@ public class ControllerImpl implements Controller, Observer
 
     private final SettingsController settingsController;
 
-    private final CommandManager commandManager;
+    private CommandManager commandManager;
 
-    private final CommandFactory commandFactory;
+    private CommandFactory commandFactory;
 
     private final McpController mcpController;
 
@@ -85,7 +87,7 @@ public class ControllerImpl implements Controller, Observer
 
     private boolean updateCheckDone;
 
-    public ControllerImpl(final WritableModel model, final ReadableModel readableModel, final Stage stage, final AppService appService)
+    ControllerImpl(final WritableModel model, final ReadableModel readableModel, final Stage stage, final AppService appService)
     {
         this.appService = appService;
         this.settingsController = appService.getSettingsController();
@@ -289,6 +291,41 @@ public class ControllerImpl implements Controller, Observer
         final JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
         final WindowRegistry registry = appService.getWindowRegistry();
         handleJsonValidation(json, schema, () -> {
+            // Detach from the old SharedFile so any concurrent MCP session retains its own
+            // isolated model instance and is not corrupted by the new file's data.
+            if (guiSessionId != null)
+            {
+                fileSessionManager.detachSession(guiSessionId);
+            }
+            guiSessionId = null;
+
+            // Attach a fresh (or shared) session for the new file.
+            final AttachResult attachResult = fileSessionManager.attachSession(
+                    jsonFile.getAbsolutePath(), schemaFile.getAbsolutePath(), true);
+            if (!attachResult.success())
+            {
+                logger.error("Cannot open new session for {}: {}", jsonFile.getAbsolutePath(), attachResult.error());
+                view.cantValidateJson();
+                // guiSessionId stays null; shutdown() handles that case safely
+                return;
+            }
+
+            // Swap model references — the old model now belongs exclusively to any remaining MCP sessions.
+            guiSessionId = attachResult.sessionId();
+            final EditorSession newSession = fileSessionManager.getSession(guiSessionId);
+            final ReadableModel sessionModel = newSession.model();
+            if (!(sessionModel instanceof WritableModel writableModel))
+            {
+                logger.error("New session model does not implement WritableModel: {}", sessionModel.getClass());
+                view.cantValidateJson();
+                return;
+            }
+            model = writableModel;
+            readableModel = sessionModel;
+            commandManager = new CommandManagerImpl(model);
+            commandManager.setUnsavedChangesCallback(this::updateWindowTitle);
+            commandFactory = readableModel.getCommandFactory();
+
             if (settingsFile != null)
             {
                 final Settings settingsFromFile = reader.getJsonFromFile(settingsFile, Settings.class, true);
@@ -297,10 +334,11 @@ public class ControllerImpl implements Controller, Observer
                     model.setSettings(settingsFromFile);
                 }
             }
+
+            // Re-wire the view to observe the new model, then fire MAIN_EDITOR to refresh the editor scene.
+            view.reloadForNewModel(readableModel);
             model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
             appService.getRecentFilesManager().addRecentFile(jsonFile, schemaFile);
-            refreshGuiSession(jsonFile, schemaFile);
-            // Register this window so future opens of the same file focus here instead
             if (appWindow != null)
             {
                 registry.unregisterWindow(appWindow);

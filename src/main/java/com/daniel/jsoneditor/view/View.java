@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view;
 
 import com.daniel.jsoneditor.model.observe.Observer;
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.scene.paint.Color;
 
@@ -32,4 +33,13 @@ public interface View extends Observer
      * @param unsavedChangesCount number of unsaved changes
      */
     void updateWindowTitle(int unsavedChangesCount);
+
+    /**
+     * Swaps the model this view observes and re-wires all internal components to use the new model.
+     * Called when the controller loads a different file in the same window, replacing the old model
+     * with a fresh session-managed instance so that former MCP sessions on the old file are not affected.
+     *
+     * @param newModel the new model to observe
+     */
+    void reloadForNewModel(ReadableModel newModel);
 }

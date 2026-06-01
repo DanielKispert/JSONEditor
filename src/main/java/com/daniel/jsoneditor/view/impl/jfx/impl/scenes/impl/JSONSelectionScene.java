@@ -98,7 +98,9 @@ public class JSONSelectionScene extends SceneHandlerImpl
 
     private void continueToEditor()
     {
-        listener.onFilesSelected(new File(selectedJsonPath), new File(selectedSchemaPath), new File(selectedSettingsPath));
+        final File schemaFile = selectedSchemaPath != null ? new File(selectedSchemaPath) : null;
+        final File settingsFile = selectedSettingsPath != null ? new File(selectedSettingsPath) : null;
+        listener.onFilesSelected(new File(selectedJsonPath), schemaFile, settingsFile);
         settingsController.setFileProperties(remember, selectedJsonPath, selectedSchemaPath, selectedSettingsPath);
     }
 

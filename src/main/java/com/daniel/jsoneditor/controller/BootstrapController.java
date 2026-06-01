@@ -48,7 +48,7 @@ public final class BootstrapController
     {
         final ModelImpl placeholder = ModelFactory.createEmpty();
         final JSONSelectionScene pickerScene = new JSONSelectionScene(
-                null,
+                null, // null: picker-only scene has no toast capability
                 appService.getSettingsController(),
                 placeholder,
                 this::onFilesPicked);

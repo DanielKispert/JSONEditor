@@ -151,14 +151,33 @@ public class AppService
         final AppWindow window = AppWindow.createBlank(this);
         windows.add(window);
         window.setOnClose(() -> onWindowClosed(window));
-        final AttachResult result = attachLoadedSession(window, window.getStage(), jsonFile, schemaFile, null);
-        if (!result.success())
+        try
+        {
+            final AttachResult result = attachLoadedSession(window, window.getStage(), jsonFile, schemaFile, null);
+            if (!result.success())
+            {
+                windows.remove(window);
+                final String error = result.error();
+                Platform.runLater(() ->
+                {
+                    final Alert alert = new Alert(Alert.AlertType.ERROR, error != null ? error : "Failed to open file", ButtonType.OK);
+                    alert.setTitle("Cannot open file");
+                    alert.showAndWait();
+                });
+            }
+        }
+        catch (final RuntimeException e)
         {
             windows.remove(window);
-            final String error = result.error();
+            if (window.getStage().isShowing())
+            {
+                window.getStage().close();
+            }
+            logger.error("Unexpected error while opening file — window cleaned up", e);
+            final String message = e.getMessage() != null ? e.getMessage() : "An unexpected error occurred while opening the file";
             Platform.runLater(() ->
             {
-                final Alert alert = new Alert(Alert.AlertType.ERROR, error != null ? error : "Failed to open file", ButtonType.OK);
+                final Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
                 alert.setTitle("Cannot open file");
                 alert.showAndWait();
             });
@@ -269,9 +288,16 @@ public class AppService
             window.attachLoadedController(controller);
             return result;
         }
-        catch (final IllegalStateException e)
+        catch (final RuntimeException e)
         {
-            fileSessionManager.detachSession(result.sessionId());
+            try
+            {
+                fileSessionManager.detachSession(result.sessionId());
+            }
+            catch (final Exception detachEx)
+            {
+                logger.warn("detachSession failed during cleanup after exception; session {} may leak", result.sessionId(), detachEx);
+            }
             throw e;
         }
     }

@@ -163,24 +163,7 @@ public class FileSessionManager
         return new ArrayList<>(sessions.values());
     }
 
-    /**
-     * Returns an existing {@link EditorSession} for the given canonical JSON file path, if any
-     * session is currently attached to it. Useful for "focus existing window" UX.
-     *
-     * @param canonicalPath the canonical path of the JSON file (as returned by {@link File#getCanonicalPath()})
-     * @return the first session found for the path, or {@link Optional#empty()} if none
-     */
-    public Optional<EditorSession> getSessionByCanonicalPath(final String canonicalPath)
-    {
-        if (!filesByPath.containsKey(canonicalPath))
-        {
-            return Optional.empty();
-        }
-        return sessionToCanonicalPath.entrySet().stream()
-                .filter(e -> canonicalPath.equals(e.getValue()))
-                .findFirst()
-                .map(e -> sessions.get(e.getKey()));
-    }
+
 
     /**
      * Attaches a new session to the given file path. Deduplication-aware: if the path is already

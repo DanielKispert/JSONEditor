@@ -4,9 +4,11 @@ import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.UIHandler;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.SceneHandler;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class SceneHandlerImpl implements SceneHandler
 {
+    @Nullable
     private final UIHandler handler;
     
     protected final Controller controller;
@@ -21,6 +23,7 @@ public abstract class SceneHandlerImpl implements SceneHandler
     }
     
     @Override
+    @Nullable
     public final UIHandler getHandlerForToasting()
     {
         return handler;

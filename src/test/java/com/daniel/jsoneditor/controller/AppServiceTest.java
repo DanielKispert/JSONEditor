@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.lang.reflect.Field;
 
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.sessions.EditorSession;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 
@@ -200,5 +201,69 @@ class AppServiceTest
 
             verify(fsm).detachSession("leaked-session");
         }
+    }
+
+    /**
+     * A generic RuntimeException (not ISE) thrown during post-attach wiring must still trigger
+     * detachSession so the session does not leak.
+     */
+    @Test
+    void attachLoadedSession_genericRuntimeException_detachesSession(final FxRobot robot) throws Exception
+    {
+        final FileSessionManager fsm = mock(FileSessionManager.class);
+        final WritableModel writableModel = mock(WritableModel.class);
+        final EditorSession session = new EditorSession(
+                "npe-session", writableModel, new File("/fake.json"), new File("/fake.schema"), true);
+        when(fsm.attachSession(any(), any(), anyBoolean())).thenReturn(AttachResult.ofSuccess("npe-session"));
+        when(fsm.getSession("npe-session")).thenReturn(session);
+
+        final Field field = AppService.class.getDeclaredField("fileSessionManager");
+        field.setAccessible(true);
+        field.set(appService, fsm);
+
+        final AppWindow window = mock(AppWindow.class);
+        doThrow(new NullPointerException("simulated post-attach failure")).when(window).attachLoadedController(any());
+
+        final RuntimeException[] caught = {null};
+        robot.interact(() ->
+        {
+            try
+            {
+                appService.attachLoadedSession(window, fxStage, new File("/fake/test.json"), new File("/fake/schema.json"), null);
+            }
+            catch (final RuntimeException e)
+            {
+                caught[0] = e;
+            }
+        });
+
+        assertNotNull(caught[0], "A RuntimeException must have been thrown");
+        verify(fsm).detachSession("npe-session");
+    }
+
+    /**
+     * When attachLoadedSession throws a RuntimeException, openFileInNewWindowDirect must remove
+     * the window from the list and not propagate the exception.
+     */
+    @Test
+    void openFileInNewWindowDirect_exceptionDuringAttach_windowRemovedAndNoThrow(final FxRobot robot) throws Exception
+    {
+        // A ReadableModel mock (not WritableModel) causes ISE inside attachLoadedSession,
+        // which is rethrown; openFileInNewWindowDirect must catch it and remove the window.
+        final FileSessionManager fsm = mock(FileSessionManager.class);
+        when(fsm.attachSession(any(), any(), anyBoolean())).thenReturn(AttachResult.ofSuccess("zombie-session"));
+        when(fsm.getSession("zombie-session")).thenReturn(
+                new EditorSession("zombie-session", mock(ReadableModel.class),
+                        new File("/fake.json"), new File("/fake.schema"), true));
+
+        final Field field = AppService.class.getDeclaredField("fileSessionManager");
+        field.setAccessible(true);
+        field.set(appService, fsm);
+
+        // Must not throw
+        robot.interact(() -> appService.openFileInNewWindowDirect(
+                new File("/fake/test.json"), new File("/fake/schema.json")));
+
+        assertEquals(0, appService.getWindowCount(), "Window must be removed from the list after exception in attachLoadedSession");
     }
 }

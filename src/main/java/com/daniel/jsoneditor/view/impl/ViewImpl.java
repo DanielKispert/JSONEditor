@@ -23,7 +23,7 @@ public class ViewImpl implements View
 {
     private final List<Subject> subjects;
     
-    private final ReadableModel model;
+    private ReadableModel model;
     
     private final Controller controller;
     
@@ -96,6 +96,20 @@ public class ViewImpl implements View
     {
         subjectToObserve.registerObserver(this);
         subjects.add(subjectToObserve);
+    }
+
+    @Override
+    public void reloadForNewModel(final ReadableModel newModel)
+    {
+        for (final Subject subject : subjects)
+        {
+            subject.removeObserver(this);
+        }
+        subjects.clear();
+        this.model = newModel;
+        uiHandler.swapModel(newModel);
+        newModel.getForObservation().registerObserver(this);
+        subjects.add(newModel.getForObservation());
     }
     
     @Override

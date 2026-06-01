@@ -423,4 +423,61 @@ public class FileSessionManagerTest
         }
     }
 
+    /**
+     * Verifies that when the GUI switches from file A to file B (detach A, attach B),
+     * any MCP session still open on file A keeps its original model data intact.
+     * This guards against the shared-model mutation bug where loading a new file
+     * would silently corrupt concurrent MCP sessions on the old file.
+     */
+    @Test
+    void fileChange_detachAttach_preservesOldModelIntegrity() throws Exception
+    {
+        // Setup file 2 with different content but compatible schema
+        final Path jsonFile2 = tempDir.resolve("file2.json");
+        Files.writeString(jsonFile2, "{\"name\":\"file-two\",\"value\":2}");
+        // Reuse the existing SIMPLE_SCHEMA — both files validate against it
+
+        // GUI opens file 1
+        final AttachResult guiResult = sessionManager.attachSession(
+                jsonFile.toString(), schemaFile.toString(), true);
+        assertTrue(guiResult.success(), "GUI attach to file 1 must succeed");
+        final String guiId = guiResult.sessionId();
+
+        // MCP opens the same file 1 — shares one model with the GUI session
+        final AttachResult mcpResult = sessionManager.attachSession(
+                jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(mcpResult.success(), "MCP attach to file 1 must succeed");
+        final String mcpId = mcpResult.sessionId();
+        final ReadableModel sharedModel = sessionManager.getSession(mcpId).model();
+        assertSame(sharedModel, sessionManager.getSession(guiId).model(),
+                "GUI and MCP sessions on file 1 must share one ModelImpl");
+
+        // GUI switches to file 2: detach from file 1, attach to file 2
+        sessionManager.detachSession(guiId);
+        final AttachResult newGuiResult = sessionManager.attachSession(
+                jsonFile2.toString(), schemaFile.toString(), true);
+        assertTrue(newGuiResult.success(), "GUI attach to file 2 must succeed");
+        final String newGuiId = newGuiResult.sessionId();
+
+        // MCP session on file 1 must still be accessible and hold the original model
+        assertNotNull(sessionManager.getSession(mcpId),
+                "MCP session on file 1 must still be accessible after GUI file switch");
+        assertSame(sharedModel, sessionManager.getSession(mcpId).model(),
+                "MCP session must still reference the original shared model");
+        assertEquals("test", sessionManager.getSession(mcpId).model().getRootJson().get("name").asText(),
+                "File 1 model must still contain its original data — not file 2 data");
+
+        // New GUI session must use a separate model with file 2's data
+        final ReadableModel newModel = sessionManager.getSession(newGuiId).model();
+        assertNotSame(sharedModel, newModel,
+                "File 2 must use a different ModelImpl — models are file-specific");
+        assertEquals("file-two", newModel.getRootJson().get("name").asText(),
+                "File 2 model must contain file-two data");
+
+        // Cleanup
+        sessionManager.detachSession(newGuiId);
+        sessionManager.closeFile(mcpId);
+        assertTrue(sessionManager.listSessions().isEmpty(), "All sessions must be cleaned up");
+    }
+
 }

@@ -27,6 +27,12 @@ public class EventSenderImpl implements EventSender
     }
     
     @Override
+    public void removeObserver(final Observer observer)
+    {
+        this.observers.remove(observer);
+    }
+    
+    @Override
     public void notifyObservers()
     {
         new ArrayList<>(observers).forEach(Observer::update);

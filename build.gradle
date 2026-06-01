@@ -43,6 +43,7 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic:1.5.17'
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
     implementation 'com.brunomnsilva:smartgraph:2.3.0'
+    compileOnly 'org.jetbrains:annotations:24.0.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.0'

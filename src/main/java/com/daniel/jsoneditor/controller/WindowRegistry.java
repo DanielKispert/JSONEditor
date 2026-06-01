@@ -17,18 +17,19 @@ public final class WindowRegistry
 
     private final Map<String, AppWindow> windowsByCanonicalPath = new ConcurrentHashMap<>();
 
-    public void register(final String canonicalPath, final AppWindow window)
+    // synchronized: remove-old + insert-new must be atomic
+    public synchronized void register(final String canonicalPath, final AppWindow window)
     {
         windowsByCanonicalPath.values().removeIf(w -> w == window);
         windowsByCanonicalPath.put(canonicalPath, window);
     }
 
-    public Optional<AppWindow> findByPath(final String canonicalPath)
+    public synchronized Optional<AppWindow> findByPath(final String canonicalPath)
     {
         return Optional.ofNullable(windowsByCanonicalPath.get(canonicalPath));
     }
 
-    public void unregisterWindow(final AppWindow window)
+    public synchronized void unregisterWindow(final AppWindow window)
     {
         final boolean removed = windowsByCanonicalPath.values().removeIf(w -> w == window);
         if (removed)

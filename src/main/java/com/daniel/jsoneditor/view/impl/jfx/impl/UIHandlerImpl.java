@@ -30,7 +30,7 @@ public class UIHandlerImpl implements UIHandler
     
     private final Stage stage;
     
-    private final ReadableModel model;
+    private ReadableModel model;
     
     private final ToastManager toastManager = new ToastManager();
     
@@ -46,6 +46,12 @@ public class UIHandlerImpl implements UIHandler
             controller.getSettingsController().setEditorDimensions(oldDimensions.getWidth(), oldDimensions.getHeight(), newValue);
         });
         
+    }
+
+    @Override
+    public void swapModel(final ReadableModel newModel)
+    {
+        this.model = newModel;
     }
     
     @Override
