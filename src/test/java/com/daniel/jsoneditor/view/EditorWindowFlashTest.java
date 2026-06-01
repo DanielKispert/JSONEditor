@@ -12,7 +12,8 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -27,59 +28,41 @@ class EditorWindowFlashTest
     private FlashableVBox testNode;
 
     @Start
-    void start(Stage stage)
+    void start(final Stage stage)
     {
         testNode = new FlashableVBox();
         stage.setScene(new Scene(new StackPane(testNode), 200, 100));
         stage.show();
     }
 
+    /**
+     * Full lifecycle: single flash adds at most one CSS class; rapid double-trigger does not accumulate;
+     * after each animation completes the class is fully removed — verified at every stage.
+     */
     @Test
-    void singleFlashShouldAddAtMostOneStyleClass()
+    void flashAnimationCleansUpProperly() throws InterruptedException
     {
         WaitForAsyncUtils.asyncFx(() -> testNode.flash());
         WaitForAsyncUtils.waitForFxEvents();
 
-        final long count = countFlashClasses();
-        assertTrue(count <= 1, "A single flash() must not add more than one CSS class instance, found: " + count);
-    }
+        assertTrue(countFlashClasses() <= 1,
+                "A single flash() must not add more than one CSS class instance, found: " + countFlashClasses());
 
-    @Test
-    void rapidDoubleFlashShouldNotAccumulateStyleClasses()
-    {
-        WaitForAsyncUtils.asyncFx(() -> {
-            testNode.flash();
-            testNode.flash();
-        });
-        WaitForAsyncUtils.waitForFxEvents();
-
-        final long count = countFlashClasses();
-        assertTrue(count <= 1,
-                "Calling flash() twice rapidly must not accumulate CSS class entries, found: " + count);
-    }
-
-    @Test
-    void flashStyleClassShouldBeRemovedAfterAnimationCompletes() throws InterruptedException
-    {
-        WaitForAsyncUtils.asyncFx(() -> testNode.flash());
-        WaitForAsyncUtils.waitForFxEvents();
-
-        // animation duration: 3 keyframes × 200ms = 600ms, plus margin
         Thread.sleep(900);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertEquals(0, countFlashClasses(),
                 "Flash CSS class must be fully removed after animation completes");
-    }
 
-    @Test
-    void doubleFlashStyleClassShouldBeFullyRemovedAfterAnimation() throws InterruptedException
-    {
-        WaitForAsyncUtils.asyncFx(() -> {
+        WaitForAsyncUtils.asyncFx(() ->
+        {
             testNode.flash();
             testNode.flash();
         });
         WaitForAsyncUtils.waitForFxEvents();
+
+        assertTrue(countFlashClasses() <= 1,
+                "Calling flash() twice rapidly must not accumulate CSS class entries, found: " + countFlashClasses());
 
         Thread.sleep(900);
         WaitForAsyncUtils.waitForFxEvents();
