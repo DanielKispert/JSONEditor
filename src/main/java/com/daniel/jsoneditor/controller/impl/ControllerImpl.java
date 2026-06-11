@@ -296,6 +296,13 @@ public class ControllerImpl implements Controller, Observer
 
             // 2. Validate cast BEFORE mutating any state
             final EditorSession newSession = fileSessionManager.getSession(attachResult.sessionId());
+            if (newSession == null)
+            {
+                logger.error("Session {} vanished immediately after attach", attachResult.sessionId());
+                fileSessionManager.unregisterGuiSession(attachResult.sessionId());
+                view.cantValidateJson();
+                return;
+            }
             final ReadableModel sessionModel = newSession.model();
             if (!(sessionModel instanceof WritableModel newWritableModel))
             {

@@ -65,9 +65,9 @@ public final class BootstrapController
         {
             result = appService.attachLoadedSession(appWindow, stage, jsonFile, schemaFile, settingsFile);
         }
-        catch (final IllegalStateException e)
+        catch (final RuntimeException e)
         {
-            logger.error("attachLoadedSession threw IllegalStateException: {}", e.getMessage(), e);
+            logger.error("attachLoadedSession failed: {}", e.getMessage(), e);
             Platform.runLater(() ->
             {
                 final Alert alert = new Alert(Alert.AlertType.ERROR,

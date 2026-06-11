@@ -335,12 +335,23 @@ public class AppService
         fileSessionManager.closeAllHeadlessSessions();
         mcpController.stopMcpServer();
         // Close all GUI windows to trigger their onHiding cleanup (controller.shutdown() + session detach)
-        for (final AppWindow window : new ArrayList<>(windows))
+        final Runnable closeWindows = () ->
         {
-            if (window.isShowing())
+            for (final AppWindow window : new ArrayList<>(windows))
             {
-                window.getStage().close();
+                if (window.isShowing())
+                {
+                    window.getStage().close();
+                }
             }
+        };
+        if (Platform.isFxApplicationThread())
+        {
+            closeWindows.run();
+        }
+        else
+        {
+            Platform.runLater(closeWindows);
         }
     }
 }

@@ -1,13 +1,11 @@
 package com.daniel.jsoneditor.controller;
 
 import com.daniel.jsoneditor.controller.impl.ControllerImpl;
-import com.daniel.jsoneditor.model.sessions.AttachResult;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 
 /**
  * Encapsulates a single app window with its own Model, Controller, View, and Stage.
