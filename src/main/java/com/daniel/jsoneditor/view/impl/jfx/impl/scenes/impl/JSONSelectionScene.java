@@ -58,7 +58,6 @@ public class JSONSelectionScene extends SceneHandlerImpl
         {
             selectedSettingsPath = rememberedSettingsPath;
         }
-        final boolean rememberedRememberSettings = settingsController.rememberPaths();
 
         final FileSelectionBox jsonBox = new FileSelectionBox("JSON to edit:", selectedJsonPath, stage,
                 new FileChooser.ExtensionFilter("JSON Files", "*.json"));
@@ -68,7 +67,7 @@ public class JSONSelectionScene extends SceneHandlerImpl
                 new FileChooser.ExtensionFilter("JSON Files", "*.json"));
 
         final CheckBox rememberCheckBox = new CheckBox("Remember");
-        rememberCheckBox.setSelected(rememberedRememberSettings);
+        rememberCheckBox.setSelected(rememberFiles);
 
         final Button okButton = new Button("OK");
         okButton.setOnAction(e ->

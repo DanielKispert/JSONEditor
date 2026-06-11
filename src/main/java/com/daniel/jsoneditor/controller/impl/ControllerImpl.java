@@ -336,16 +336,9 @@ public class ControllerImpl implements Controller, Observer
                 }
             }
 
-            // Guard: if the new model is already in MAIN_EDITOR state (shared session), reloadForNewModel
-            // will immediately trigger showMainEditor() via observer notification. Skip the explicit
-            // jsonAndSchemaSuccessfullyValidated call in that case to avoid calling showMainEditor() twice.
-            final boolean alreadyInMainEditor = readableModel.getLatestEvent() != null
-                    && readableModel.getLatestEvent().getEvent() == EventEnum.MAIN_EDITOR;
             view.reloadForNewModel(readableModel);
-            if (!alreadyInMainEditor)
-            {
-                model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
-            }
+            // attachSession already initialised the model; reloadForNewModel triggers showMainEditor()
+            // via the observer notification — no explicit jsonAndSchemaSuccessfullyValidated call needed.
             appService.getRecentFilesManager().addRecentFile(jsonFile, schemaFile);
             if (appWindow != null)
             {
@@ -657,7 +650,7 @@ public class ControllerImpl implements Controller, Observer
         else
         {
             view.showToast(Toasts.ERROR_TOAST);
-            logger.error("Failed to copy to clipboard, " + path + " is not a valid path");
+            logger.error("Failed to copy to clipboard, {} is not a valid path", path);
         }
     }
 

@@ -4,14 +4,11 @@ import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 class OpenFileTool extends ReadOnlyMcpTool
 {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     public OpenFileTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);

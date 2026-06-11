@@ -96,6 +96,7 @@ public class UIHandlerImpl implements UIHandler
      * @param unsavedChangesCount
      *         number of unsaved changes
      */
+    @Override
     public void updateWindowTitle(final int unsavedChangesCount)
     {
         final String baseTitle = "JSON Editor";

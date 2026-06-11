@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -168,8 +167,6 @@ public class FileSessionManager
     {
         return new ArrayList<>(sessions.values());
     }
-
-
 
     /**
      * Attaches a new session to the given file path. Deduplication-aware: if the path is already

@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public abstract class ReadOnlyMcpTool extends McpTool
 {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     protected static final String FILE_ID_REQUIRED_MESSAGE = "file_id argument is required";
 
     protected final FileSessionManager sessionManager;
