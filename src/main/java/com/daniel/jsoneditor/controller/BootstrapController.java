@@ -68,6 +68,12 @@ public final class BootstrapController
         catch (final IllegalStateException e)
         {
             logger.error("attachLoadedSession threw IllegalStateException: {}", e.getMessage(), e);
+            Platform.runLater(() ->
+            {
+                final Alert alert = new Alert(Alert.AlertType.ERROR,
+                        "Failed to open file: " + e.getMessage(), ButtonType.OK);
+                alert.showAndWait();
+            });
             return;
         }
         if (!result.success())

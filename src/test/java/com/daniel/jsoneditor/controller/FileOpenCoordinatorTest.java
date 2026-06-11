@@ -9,6 +9,7 @@ import java.nio.file.Path;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -33,6 +34,7 @@ class FileOpenCoordinatorTest
         final String canonicalPath = jsonFile.getCanonicalPath();
         final WindowRegistry registry = new WindowRegistry();
         final AppWindow mockWindow = mock(AppWindow.class);
+        when(mockWindow.isShowing()).thenReturn(true);
         registry.register(canonicalPath, mockWindow);
 
         final AppService mockAppService = mock(AppService.class);

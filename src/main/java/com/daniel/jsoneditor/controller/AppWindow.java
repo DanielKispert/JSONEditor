@@ -87,6 +87,8 @@ public class AppWindow
             {
                 controller.shutdown();
             }
+            // onClose (supplied by AppService) calls onWindowClosed(), which unregisters this window from
+            // the WindowRegistry and checks whether the application should exit.
             if (onClose != null)
             {
                 onClose.run();
@@ -110,19 +112,31 @@ public class AppWindow
         return stage;
     }
 
+    public boolean isShowing()
+    {
+        return stage.isShowing();
+    }
+
     /**
-     * Brings this window to the front, restoring it if iconified.
-     * Must be called on the JavaFX Application Thread.
+     * Brings this window to the front, restoring it if iconified. If called off the JavaFX
+     * Application Thread the request is scheduled to run there and an optimistic success is
+     * returned.
      */
-    public void focus()
+    public boolean focus()
     {
         if (!Platform.isFxApplicationThread())
         {
             Platform.runLater(this::focus);
-            return;
+            return true; // optimistic — will be attempted on FX thread
+        }
+        if (!stage.isShowing())
+        {
+            logger.warn("Cannot focus a non-showing window");
+            return false;
         }
         stage.setIconified(false);
         stage.toFront();
         stage.requestFocus();
+        return true;
     }
 }

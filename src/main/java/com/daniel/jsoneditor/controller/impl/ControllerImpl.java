@@ -149,15 +149,7 @@ public class ControllerImpl implements Controller, Observer
         this.appWindow = window;
     }
 
-    // Replaces GUI session registration; idempotent — safe when guiSessionId is null.
-    private void refreshGuiSession(final File jsonFile, final File schemaFile)
-    {
-        if (guiSessionId != null)
-        {
-            fileSessionManager.unregisterGuiSession(guiSessionId);
-        }
-        guiSessionId = fileSessionManager.registerGuiSession(readableModel, jsonFile, schemaFile);
-    }
+    
 
     /**
      * Registers this controller's window in the {@link com.daniel.jsoneditor.controller.AppService}
@@ -290,41 +282,43 @@ public class ControllerImpl implements Controller, Observer
         final JsonNode json = reader.getJsonFromFile(jsonFile);
         final JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
         final WindowRegistry registry = appService.getWindowRegistry();
-        handleJsonValidation(json, schema, () -> {
-            // Detach from the old SharedFile so any concurrent MCP session retains its own
-            // isolated model instance and is not corrupted by the new file's data.
-            if (guiSessionId != null)
-            {
-                fileSessionManager.detachSession(guiSessionId);
-            }
-            guiSessionId = null;
-
-            // Attach a fresh (or shared) session for the new file.
+        handleJsonValidation(json, schema, () ->
+        {
+            // 1. Attach a fresh (or shared) session for the new file.
             final AttachResult attachResult = fileSessionManager.attachSession(
                     jsonFile.getAbsolutePath(), schemaFile.getAbsolutePath(), true);
             if (!attachResult.success())
             {
                 logger.error("Cannot open new session for {}: {}", jsonFile.getAbsolutePath(), attachResult.error());
                 view.cantValidateJson();
-                // guiSessionId stays null; shutdown() handles that case safely
                 return;
             }
 
-            // Swap model references — the old model now belongs exclusively to any remaining MCP sessions.
-            guiSessionId = attachResult.sessionId();
-            final EditorSession newSession = fileSessionManager.getSession(guiSessionId);
+            // 2. Validate cast BEFORE mutating any state
+            final EditorSession newSession = fileSessionManager.getSession(attachResult.sessionId());
             final ReadableModel sessionModel = newSession.model();
-            if (!(sessionModel instanceof WritableModel writableModel))
+            if (!(sessionModel instanceof WritableModel newWritableModel))
             {
-                logger.error("New session model does not implement WritableModel: {}", sessionModel.getClass());
+                logger.error("Attached session model is not writable — rolling back");
+                fileSessionManager.unregisterGuiSession(attachResult.sessionId());
                 view.cantValidateJson();
                 return;
             }
-            model = writableModel;
+
+            // 3. Only NOW mutate state (all-or-nothing)
+            final String oldSessionId = guiSessionId;
+            guiSessionId = attachResult.sessionId();
+            model = newWritableModel;
             readableModel = sessionModel;
             commandManager = new CommandManagerImpl(model);
             commandManager.setUnsavedChangesCallback(this::updateWindowTitle);
             commandFactory = readableModel.getCommandFactory();
+
+            // 4. Detach old session AFTER successful swap
+            if (oldSessionId != null)
+            {
+                fileSessionManager.unregisterGuiSession(oldSessionId);
+            }
 
             if (settingsFile != null)
             {
@@ -335,9 +329,16 @@ public class ControllerImpl implements Controller, Observer
                 }
             }
 
-            // Re-wire the view to observe the new model, then fire MAIN_EDITOR to refresh the editor scene.
+            // Guard: if the new model is already in MAIN_EDITOR state (shared session), reloadForNewModel
+            // will immediately trigger showMainEditor() via observer notification. Skip the explicit
+            // jsonAndSchemaSuccessfullyValidated call in that case to avoid calling showMainEditor() twice.
+            final boolean alreadyInMainEditor = readableModel.getLatestEvent() != null
+                    && readableModel.getLatestEvent().getEvent() == EventEnum.MAIN_EDITOR;
             view.reloadForNewModel(readableModel);
-            model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
+            if (!alreadyInMainEditor)
+            {
+                model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
+            }
             appService.getRecentFilesManager().addRecentFile(jsonFile, schemaFile);
             if (appWindow != null)
             {

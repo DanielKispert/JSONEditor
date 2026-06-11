@@ -32,7 +32,7 @@ public final class CanonicalPaths
         {
             return file.getCanonicalPath();
         }
-        catch (final IOException e)
+        catch (final IOException | SecurityException e)
         {
             logger.warn("Cannot canonicalize {}, falling back to absolute path", file, e);
             return file.getAbsolutePath();

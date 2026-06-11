@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,6 +30,8 @@ public class FileSessionManager
     private static final Logger logger = LoggerFactory.getLogger(FileSessionManager.class);
 
     private static final String GUI_SESSION_PREFIX = "gui-";
+
+    private static final int MAX_SESSIONS = 64;
 
     private final Map<String, EditorSession> sessions = new ConcurrentHashMap<>();
 
@@ -102,6 +105,7 @@ public class FileSessionManager
      */
     public void unregisterGuiSession(final String sessionId)
     {
+        Objects.requireNonNull(sessionId, "sessionId must not be null");
         final EditorSession session = sessions.get(sessionId);
         if (session != null && session.guiOwned())
         {
@@ -124,6 +128,7 @@ public class FileSessionManager
      */
     public CloseFileResult closeFile(final String sessionId)
     {
+        Objects.requireNonNull(sessionId, "sessionId must not be null");
         final CloseFileResult[] result = {CloseFileResult.NOT_FOUND};
         sessions.computeIfPresent(sessionId, (final String key, final EditorSession session) ->
         {
@@ -152,6 +157,7 @@ public class FileSessionManager
      */
     public EditorSession getSession(final String sessionId)
     {
+        Objects.requireNonNull(sessionId, "sessionId must not be null");
         return sessions.get(sessionId);
     }
 
@@ -200,6 +206,11 @@ public class FileSessionManager
         catch (final IOException e)
         {
             return AttachResult.ofError("Cannot resolve canonical path: " + e.getMessage());
+        }
+
+        if (sessions.size() >= MAX_SESSIONS)
+        {
+            return AttachResult.ofError("Maximum number of concurrent sessions (" + MAX_SESSIONS + ") reached");
         }
 
         final AttachAttempt attempt = getOrCreateSharedFile(
@@ -303,10 +314,20 @@ public class FileSessionManager
         {
             return AttachAttempt.ofError("JSON does not validate against schema: " + String.join(", ", validationErrors));
         }
-        final ModelImpl newModel = ModelFactory.createEmpty();
-        newModel.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
-        final SharedFile newShared = new SharedFile(
-                canonicalJson, canonicalSchema, newModel, jsonFile, schemaFile, new AtomicInteger(1));
+        final ModelImpl newModel;
+        final SharedFile newShared;
+        try
+        {
+            newModel = ModelFactory.createEmpty();
+            newModel.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
+            newShared = new SharedFile(
+                    canonicalJson, canonicalSchema, newModel, jsonFile, schemaFile, new AtomicInteger(1));
+        }
+        catch (final RuntimeException e)
+        {
+            logger.error("Failed to initialize model for {}: {}", jsonPath, e.getMessage(), e);
+            return AttachAttempt.ofError("Internal error: " + e.getMessage());
+        }
 
         // Atomically install: if another thread won the race, use theirs and increment its refCount
         final AttachAttempt[] resultHolder = {null};

@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -69,9 +70,9 @@ public class AppService
         this.settingsController = new SettingsControllerImpl();
         this.recentFilesManager = new RecentFilesManager();
         this.mcpController = new McpController(fileSessionManager, settingsController, this);
-        startMcpServer(portOverride);
         this.windowRegistry = new WindowRegistry();
         this.fileOpenCoordinator = new FileOpenCoordinator(windowRegistry, this);
+        startMcpServer(portOverride);
         this.systemTrayManager = new SystemTrayManager(this);
         try
         {
@@ -114,6 +115,7 @@ public class AppService
      */
     public AppWindow createWindow()
     {
+        assert Platform.isFxApplicationThread() : "Must be called on JavaFX Application Thread";
         if (shuttingDown.get())
         {
             logger.info("Cannot create window — application is shutting down");
@@ -143,6 +145,7 @@ public class AppService
      */
     public void openFileInNewWindowDirect(final File jsonFile, final File schemaFile)
     {
+        assert Platform.isFxApplicationThread() : "Must be called on JavaFX Application Thread";
         if (shuttingDown.get())
         {
             logger.info("Cannot open file — application is shutting down");
@@ -157,6 +160,7 @@ public class AppService
             if (!result.success())
             {
                 windows.remove(window);
+                window.getStage().close();
                 final String error = result.error();
                 Platform.runLater(() ->
                 {
@@ -243,6 +247,10 @@ public class AppService
     AttachResult attachLoadedSession(final AppWindow window, final Stage stage, final File jsonFile,
             final File schemaFile, final File settingsFile)
     {
+        if (jsonFile == null)
+        {
+            return AttachResult.ofError("JSON file is required");
+        }
         if (schemaFile == null)
         {
             return AttachResult.ofError("Schema file is required and must not be null");
@@ -326,5 +334,13 @@ public class AppService
         systemTrayManager.hide();
         fileSessionManager.closeAllHeadlessSessions();
         mcpController.stopMcpServer();
+        // Close all GUI windows to trigger their onHiding cleanup (controller.shutdown() + session detach)
+        for (final AppWindow window : new ArrayList<>(windows))
+        {
+            if (window.isShowing())
+            {
+                window.getStage().close();
+            }
+        }
     }
 }

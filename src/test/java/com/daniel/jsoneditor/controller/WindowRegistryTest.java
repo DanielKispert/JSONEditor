@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
+import org.mockito.Mockito;
 
 class WindowRegistryTest
 {
@@ -13,8 +13,10 @@ class WindowRegistryTest
     void windowRegistry_fullLifecycle()
     {
         final WindowRegistry registry = new WindowRegistry();
-        final AppWindow windowA = mock(AppWindow.class);
-        final AppWindow windowB = mock(AppWindow.class);
+        final AppWindow windowA = Mockito.mock(AppWindow.class);
+        Mockito.when(windowA.isShowing()).thenReturn(true);
+        final AppWindow windowB = Mockito.mock(AppWindow.class);
+        Mockito.when(windowB.isShowing()).thenReturn(true);
 
         // Register and look up a single entry
         assertFalse(registry.findByPath("/foo/bar.json").isPresent(), "lookup before register must return empty");
