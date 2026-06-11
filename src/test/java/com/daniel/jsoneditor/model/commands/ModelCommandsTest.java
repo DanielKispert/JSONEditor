@@ -7,7 +7,7 @@ import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.commands.impl.AddNodeToArrayCommand;
 import com.daniel.jsoneditor.model.commands.impl.SetValueAtNodeCommand;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
-import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
+import com.daniel.jsoneditor.model.impl.ModelFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -146,7 +146,7 @@ public class ModelCommandsTest {
         // allow arbitrary properties (like 'a', 'notArray')
         schemaRoot.set("properties", properties);
         JsonSchema schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(schemaRoot);
-        ModelImpl m = new ModelImpl(new EventSenderImpl());
+        ModelImpl m = ModelFactory.createEmpty();
         m.jsonAndSchemaSuccessfullyValidated(new File("dummy.json"), new File("dummy_schema.json"), root, schema);
         return m;
     }

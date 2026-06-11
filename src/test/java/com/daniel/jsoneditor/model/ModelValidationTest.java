@@ -1,7 +1,7 @@
 package com.daniel.jsoneditor.model;
 
 import com.daniel.jsoneditor.model.impl.ModelImpl;
-import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
+import com.daniel.jsoneditor.model.impl.ModelFactory;
 import com.daniel.jsoneditor.model.validation.ModelValidationException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -383,7 +383,7 @@ public class ModelValidationTest
             processes.add(process);
             data.set("processes", processes);
 
-            final ModelImpl m = new ModelImpl(new EventSenderImpl());
+            final ModelImpl m = ModelFactory.createEmpty();
             m.jsonAndSchemaSuccessfullyValidated(
                 new File("dummy.json"), new File("dummy_schema.json"), data, schema);
             return m;
@@ -437,7 +437,7 @@ public class ModelValidationTest
         person.put("age", 42);
         data.set("person", person);
 
-        final ModelImpl m = new ModelImpl(new EventSenderImpl());
+        final ModelImpl m = ModelFactory.createEmpty();
         m.jsonAndSchemaSuccessfullyValidated(new File("dummy.json"), new File("dummy_schema.json"), data, schema);
         return m;
     }

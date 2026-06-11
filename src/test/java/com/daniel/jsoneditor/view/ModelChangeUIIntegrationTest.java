@@ -7,8 +7,8 @@ import com.daniel.jsoneditor.controller.settings.SettingsController;
 import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.commands.impl.*;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
+import com.daniel.jsoneditor.model.impl.ModelFactory;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
-import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.JsonEditorEditorWindow;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.components.tableview.impl.EditorTableViewImpl;
@@ -295,7 +295,7 @@ class ModelChangeUIIntegrationTest
 
     private ModelImpl createTestModel()
     {
-        final ModelImpl testModel = new ModelImpl(new EventSenderImpl());
+        final ModelImpl testModel = ModelFactory.createEmpty();
 
         final ObjectNode root = MAPPER.createObjectNode();
 
@@ -392,4 +392,3 @@ class ModelChangeUIIntegrationTest
         return schema;
     }
 }
-

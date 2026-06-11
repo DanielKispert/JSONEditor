@@ -1,15 +1,17 @@
 package com.daniel.jsoneditor.controller.impl;
 
 import java.io.File;
-import java.io.IOException;
+import com.daniel.jsoneditor.util.CanonicalPaths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Map;
 import java.util.Set;
 
 import com.daniel.jsoneditor.controller.AppService;
 import com.daniel.jsoneditor.controller.AppWindow;
 import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.controller.WindowRegistry;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManager;
 import com.daniel.jsoneditor.controller.impl.commands.CommandManagerImpl;
 import com.daniel.jsoneditor.controller.impl.json.JsonFileReaderAndWriter;
@@ -31,6 +33,8 @@ import com.daniel.jsoneditor.model.json.schema.paths.PathHelper;
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.observe.Subject;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
+import com.daniel.jsoneditor.model.sessions.EditorSession;
+import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.model.settings.Settings;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
@@ -57,9 +61,9 @@ public class ControllerImpl implements Controller, Observer
 {
     private static final Logger logger = LoggerFactory.getLogger(ControllerImpl.class);
 
-    private final WritableModel model;
+    private WritableModel model;
 
-    private final ReadableModel readableModel;
+    private ReadableModel readableModel;
 
     private final View view;
 
@@ -67,9 +71,9 @@ public class ControllerImpl implements Controller, Observer
 
     private final SettingsController settingsController;
 
-    private final CommandManager commandManager;
+    private CommandManager commandManager;
 
-    private final CommandFactory commandFactory;
+    private CommandFactory commandFactory;
 
     private final McpController mcpController;
 
@@ -79,9 +83,11 @@ public class ControllerImpl implements Controller, Observer
 
     private String guiSessionId;
 
+    private AppWindow appWindow;
+
     private boolean updateCheckDone;
 
-    public ControllerImpl(final WritableModel model, final ReadableModel readableModel, final Stage stage, final AppService appService)
+    ControllerImpl(final WritableModel model, final ReadableModel readableModel, final Stage stage, final AppService appService)
     {
         this.appService = appService;
         this.settingsController = appService.getSettingsController();
@@ -100,12 +106,69 @@ public class ControllerImpl implements Controller, Observer
     }
 
     /**
-     * Updates the window title with given unsaved changes count.
-     * This method is called by the CommandManager callback.
+     * Constructs a controller with a model that is already populated from disk.
+     * Skips the file-picker phase and goes straight to the editor scene.
+     * Used by the bootstrap flow when {@link com.daniel.jsoneditor.model.sessions.FileSessionManager#attachSession}
+     * returns an already-loaded model (either freshly loaded or shared from another session).
+     *
+     * <p>After this constructor returns, the caller must invoke {@link #setAppWindow(AppWindow)} then
+     * {@link #registerInWindowRegistry(String)} to complete window dedup registration.</p>
+     *
+     * @param writableModel a fully loaded model implementing {@link WritableModel}
+     * @param readableModel the same model viewed as {@link ReadableModel}
+     * @param stage the JavaFX stage to render into
+     * @param appService the shared application service
+     * @param jsonFile the JSON file backing the model (used for GUI session registration)
+     * @param schemaFile the schema file
+     * @param sessionId  the session ID returned by
+     *                   {@link com.daniel.jsoneditor.model.sessions.FileSessionManager#attachSession};
+     *                   stored directly to avoid creating a duplicate GUI session
      */
+    public ControllerImpl(final WritableModel writableModel, final ReadableModel readableModel, final Stage stage,
+            final AppService appService, final File jsonFile, final File schemaFile, final String sessionId)
+    {
+        this(writableModel, readableModel, stage, appService);
+        // The base constructor registered this as an observer and triggered update().
+        // Since the model's latest event is MAIN_EDITOR (set by jsonAndSchemaSuccessfullyValidated),
+        // ViewImpl.update() sees MAIN_EDITOR and calls showMainEditor() automatically — no explicit
+        // event firing needed. The editor scene is already showing after the delegating call above.
+        //
+        // Use the session ID from attachSession directly — do NOT call refreshGuiSession here.
+        // refreshGuiSession would create a second GUI session (causing a refcount/session leak).
+        this.guiSessionId = sessionId;
+    }
+
     private void updateWindowTitle(final int unsavedChangesCount)
     {
         view.updateWindowTitle(unsavedChangesCount);
+    }
+
+    /** Must be called before {@link #registerInWindowRegistry()}. */
+    public void setAppWindow(final AppWindow window)
+    {
+        this.appWindow = window;
+    }
+
+    
+
+    /**
+     * Registers this controller's window in the {@link com.daniel.jsoneditor.controller.AppService}
+     * window registry so that subsequent "open same file" requests focus this window instead of
+     * opening a duplicate. Must be called AFTER {@link #setAppWindow(AppWindow)}.
+     *
+     * @param canonicalPath the canonical path of the JSON file
+     *                      (use {@link com.daniel.jsoneditor.util.CanonicalPaths#canonicalize(java.io.File)})
+     */
+    public void registerInWindowRegistry(final String canonicalPath)
+    {
+        if (appWindow != null)
+        {
+            appService.getWindowRegistry().register(canonicalPath, appWindow);
+        }
+        else
+        {
+            logger.warn("registerInWindowRegistry called before setAppWindow — window not registered for {}", canonicalPath);
+        }
     }
 
     @Override
@@ -185,39 +248,104 @@ public class ControllerImpl implements Controller, Observer
     }
 
     @Override
-    public void jsonAndSchemaSelected(File jsonFile, File schemaFile, File settingsFile)
+    public void jsonAndSchemaSelected(final File jsonFile, final File schemaFile, final File settingsFile)
     {
         if (jsonFile != null && schemaFile != null)
         {
-            // grab Json from files and validate
-            JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
-            JsonNode json = reader.getJsonFromFile(jsonFile);
-            JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
-            handleJsonValidation(json, schema, () -> {
-                // settings file is optional
-                if (settingsFile != null)
-                {
-                    Settings settingsFromFile = reader.getJsonFromFile(settingsFile, Settings.class, true);
-                    if (settingsFromFile != null)
-                    {
-                        model.setSettings(settingsFromFile);
-                    }
-                }
-                model.jsonAndSchemaSuccessfullyValidated(jsonFile, schemaFile, json, schema);
-                appService.getRecentFilesManager().addRecentFile(jsonFile, schemaFile);
-                if (guiSessionId != null)
-                {
-                    fileSessionManager.unregisterGuiSession(guiSessionId);
-                }
-                guiSessionId = fileSessionManager.registerGuiSession(readableModel, jsonFile, schemaFile);
-            });
+            final String canonicalPath = CanonicalPaths.canonicalize(jsonFile);
 
+            // Dedup: if another window already shows this file, focus it and close this empty window
+            final WindowRegistry registry = appService.getWindowRegistry();
+            final Optional<AppWindow> existing = registry.findByPath(canonicalPath);
+            if (existing.isPresent())
+            {
+                existing.get().focus();
+                if (appWindow != null)
+                {
+                    appWindow.getStage().close();
+                }
+                return;
+            }
+
+            loadJsonAndSchema(jsonFile, schemaFile, settingsFile, canonicalPath);
         }
         else
         {
             view.selectJsonAndSchema();
         }
+    }
 
+    private void loadJsonAndSchema(final File jsonFile, final File schemaFile, final File settingsFile,
+            final String canonicalPath)
+    {
+        final JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
+        final JsonNode json = reader.getJsonFromFile(jsonFile);
+        final JsonSchema schema = reader.getSchemaFromFileResolvingRefs(schemaFile);
+        final WindowRegistry registry = appService.getWindowRegistry();
+        handleJsonValidation(json, schema, () ->
+        {
+            // 1. Attach a fresh (or shared) session for the new file.
+            final AttachResult attachResult = fileSessionManager.attachSession(
+                    jsonFile.getAbsolutePath(), schemaFile.getAbsolutePath(), true);
+            if (!attachResult.success())
+            {
+                logger.error("Cannot open new session for {}: {}", jsonFile.getAbsolutePath(), attachResult.error());
+                view.cantValidateJson();
+                return;
+            }
+
+            // 2. Validate cast BEFORE mutating any state
+            final EditorSession newSession = fileSessionManager.getSession(attachResult.sessionId());
+            if (newSession == null)
+            {
+                logger.error("Session {} vanished immediately after attach", attachResult.sessionId());
+                fileSessionManager.unregisterGuiSession(attachResult.sessionId());
+                view.cantValidateJson();
+                return;
+            }
+            final ReadableModel sessionModel = newSession.model();
+            if (!(sessionModel instanceof WritableModel newWritableModel))
+            {
+                logger.error("Attached session model is not writable — rolling back");
+                fileSessionManager.unregisterGuiSession(attachResult.sessionId());
+                view.cantValidateJson();
+                return;
+            }
+
+            // 3. Only NOW mutate state (all-or-nothing)
+            final String oldSessionId = guiSessionId;
+            guiSessionId = attachResult.sessionId();
+            model = newWritableModel;
+            readableModel = sessionModel;
+            commandManager = new CommandManagerImpl(model);
+            commandManager.setUnsavedChangesCallback(this::updateWindowTitle);
+            commandFactory = readableModel.getCommandFactory();
+
+            // 4. Detach old session AFTER successful swap
+            if (oldSessionId != null)
+            {
+                fileSessionManager.unregisterGuiSession(oldSessionId);
+            }
+
+            if (settingsFile != null)
+            {
+                final Settings settingsFromFile = reader.getJsonFromFile(settingsFile, Settings.class, true);
+                if (settingsFromFile != null)
+                {
+                    model.setSettings(settingsFromFile);
+                }
+            }
+
+            view.reloadForNewModel(readableModel);
+            // attachSession already initialised the model; reloadForNewModel triggers showMainEditor()
+            // via the observer notification — no explicit jsonAndSchemaSuccessfullyValidated call needed.
+            appService.getRecentFilesManager().addRecentFile(jsonFile, schemaFile);
+            if (appWindow != null)
+            {
+                registry.unregisterWindow(appWindow);
+                registry.register(canonicalPath, appWindow);
+            }
+        });
     }
 
     @Override
@@ -292,7 +420,6 @@ public class ControllerImpl implements Controller, Observer
     @Override
     public void exportNode(String path)
     {
-        // exporting a node does not require writing to the model, hence we only need the controller and the readable model
         JsonNodeWithPath nodeWithPath = readableModel.getNodeForPath(path);
         if (nodeWithPath != null)
         {
@@ -418,7 +545,7 @@ public class ControllerImpl implements Controller, Observer
 
         final JsonFileReaderAndWriter jsonWriter = new JsonFileReaderAndWriterImpl();
         jsonWriter.writeJsonToFile(readableModel.getRootJson(), readableModel.getCurrentJSONFile());
-        commandManager.markAsSaved(); // Mark current state as saved
+        commandManager.markAsSaved();
         model.sendEvent(new Event(EventEnum.SAVING_SUCCESSFUL));
     }
 
@@ -428,7 +555,7 @@ public class ControllerImpl implements Controller, Observer
         JsonFileReaderAndWriter reader = new JsonFileReaderAndWriterImpl();
         JsonNode json = reader.getJsonFromFile(readableModel.getCurrentJSONFile());
         handleJsonValidation(json, readableModel.getRootSchema(), () -> {
-            commandManager.clearHistory(); // Clear undo/redo stacks before reset
+            commandManager.clearHistory();
             model.resetRootNode(json);
         });
     }
@@ -473,8 +600,7 @@ public class ControllerImpl implements Controller, Observer
         final String parentPath = PathHelper.getParentPath(path);
         final String propertyName = PathHelper.getLastPathSegment(path);
 
-        // Validate by building a candidate parent object with the change applied, then checking it against the parent schema.
-        // This way we check for both correct format and correct structure (required properties etc)
+        // Validate candidate parent against schema before applying the change.
         final JsonNodeWithPath parentNodeWithPath = readableModel.getNodeForPath(parentPath);
         if (parentNodeWithPath == null || !parentNodeWithPath.getNode().isObject())
         {
@@ -524,7 +650,7 @@ public class ControllerImpl implements Controller, Observer
         else
         {
             view.showToast(Toasts.ERROR_TOAST);
-            logger.error("Failed to copy to clipboard, " + path + " is not a valid path");
+            logger.error("Failed to copy to clipboard, {} is not a valid path", path);
         }
     }
 
@@ -667,7 +793,11 @@ public class ControllerImpl implements Controller, Observer
         logger.info("Shutting down editor window");
         if (guiSessionId != null)
         {
-            fileSessionManager.unregisterGuiSession(guiSessionId);
+            fileSessionManager.detachSession(guiSessionId);
+        }
+        else
+        {
+            logger.debug("No GUI session to detach — bootstrap window closed without file selection");
         }
     }
 }

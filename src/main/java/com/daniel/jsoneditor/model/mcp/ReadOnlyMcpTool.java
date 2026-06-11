@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public abstract class ReadOnlyMcpTool extends McpTool
 {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     protected static final String FILE_ID_REQUIRED_MESSAGE = "file_id argument is required";
 
     protected final FileSessionManager sessionManager;
@@ -34,12 +34,15 @@ public abstract class ReadOnlyMcpTool extends McpTool
     }
 
     /**
-     * Atomically resolves the {@code file_id} argument to a {@link ReadableModel}.
+     * Resolves the {@code file_id} argument to a {@link ReadableModel},
+     * eliminating the double-lookup between validation and retrieval.
+     * <p>Note: the returned model reference remains valid even if the session
+     * is concurrently closed, but may represent stale state.</p>
      * <p>
      * Returns a {@link ResolveResult} where either {@link ResolveResult#model()} is non-null
      * (success) or {@link ResolveResult#error()} is non-null (failure). Tools should call
      * this at the start of {@code execute()} and return {@link ResolveResult#error()}
-     * immediately when non-null, eliminating the TOCTOU window between validation and lookup.
+     * immediately when non-null.
      */
     protected ResolveResult resolveFileSession(final JsonNode arguments, final JsonNode id)
     {

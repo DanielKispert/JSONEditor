@@ -6,7 +6,7 @@ import com.daniel.jsoneditor.model.changes.ChangeType;
 import com.daniel.jsoneditor.model.changes.ModelChange;
 import com.daniel.jsoneditor.model.commands.impl.*;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
-import com.daniel.jsoneditor.model.statemachine.impl.EventSenderImpl;
+import com.daniel.jsoneditor.model.impl.ModelFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -75,7 +75,7 @@ public class ModelImplTest
             schemaRoot.set("properties", properties);
             
             final JsonSchema schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(schemaRoot);
-            final ModelImpl model = new ModelImpl(new EventSenderImpl());
+            final ModelImpl model = ModelFactory.createEmpty();
             model.jsonAndSchemaSuccessfullyValidated(new File("dummy.json"), new File("dummy_schema.json"), root, schema);
             return model;
         }

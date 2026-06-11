@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.view.impl.jfx.toast.ToastLike;
 import javafx.scene.paint.Color;
 
@@ -46,5 +47,13 @@ public interface UIHandler
      * Handles git blame data being loaded, refreshes relevant UI components.
      */
     void handleGitBlameLoaded();
+    
+    /**
+     * Updates the internal model reference to {@code newModel}. Called during a file swap
+     * so that subsequent scene creations (e.g., {@link #showMainEditor()}) use the new model.
+     *
+     * @param newModel the replacement model
+     */
+    void swapModel(ReadableModel newModel);
     
 }

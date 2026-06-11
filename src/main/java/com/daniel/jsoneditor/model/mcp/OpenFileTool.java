@@ -1,17 +1,14 @@
 package com.daniel.jsoneditor.model.mcp;
 
+import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
-import com.daniel.jsoneditor.model.sessions.OpenFileResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 class OpenFileTool extends ReadOnlyMcpTool
 {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     public OpenFileTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
@@ -62,14 +59,14 @@ class OpenFileTool extends ReadOnlyMcpTool
         final String jsonPath = arguments.path("json_path").asText("");
         final String schemaPath = arguments.path("schema_path").asText("");
 
-        final OpenFileResult openResult = sessionManager.openFile(jsonPath, schemaPath);
-        if (!openResult.success())
+        final AttachResult attachResult = sessionManager.attachSession(jsonPath, schemaPath, false);
+        if (!attachResult.success())
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, openResult.error());
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, attachResult.error());
         }
 
         final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        result.put("file_id", openResult.sessionId());
+        result.put("file_id", attachResult.sessionId());
         result.put("json_path", jsonPath);
         result.put("schema_path", schemaPath);
 
