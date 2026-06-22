@@ -5,6 +5,7 @@ import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 class OpenFileTool extends ReadOnlyMcpTool
@@ -29,14 +30,14 @@ class OpenFileTool extends ReadOnlyMcpTool
     @Override
     public ObjectNode getInputSchema()
     {
-        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode props = JsonNodeFactory.instance.objectNode();
 
-        final ObjectNode jsonPathProp = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode jsonPathProp = JsonNodeFactory.instance.objectNode();
         jsonPathProp.put("type", "string");
         jsonPathProp.put("description", "Absolute path to the JSON file");
         props.set("json_path", jsonPathProp);
 
-        final ObjectNode schemaPathProp = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode schemaPathProp = JsonNodeFactory.instance.objectNode();
         schemaPathProp.put("type", "string");
         schemaPathProp.put("description", "Absolute path to the JSON schema file");
         props.set("schema_path", schemaPathProp);
@@ -47,7 +48,7 @@ class OpenFileTool extends ReadOnlyMcpTool
     @Override
     public ArrayNode getRequiredInputProperties()
     {
-        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
         arr.add("json_path");
         arr.add("schema_path");
         return arr;
@@ -65,7 +66,7 @@ class OpenFileTool extends ReadOnlyMcpTool
             return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, attachResult.error());
         }
 
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode result = JsonNodeFactory.instance.objectNode();
         result.put("file_id", attachResult.sessionId());
         result.put("json_path", jsonPath);
         result.put("schema_path", schemaPath);

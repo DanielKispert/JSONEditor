@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
@@ -191,15 +192,15 @@ public class JsonEditorMcpServer
 
     private String handleInitialize(final JsonNode id) throws JsonProcessingException
     {
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode result = JsonNodeFactory.instance.objectNode();
         result.put("protocolVersion", PROTOCOL_VERSION);
 
-        final ObjectNode capabilities = OBJECT_MAPPER.createObjectNode();
-        final ObjectNode tools = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode capabilities = JsonNodeFactory.instance.objectNode();
+        final ObjectNode tools = JsonNodeFactory.instance.objectNode();
         capabilities.set("tools", tools);
         result.set("capabilities", capabilities);
 
-        final ObjectNode serverInfo = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode serverInfo = JsonNodeFactory.instance.objectNode();
         serverInfo.put("name", SERVER_NAME);
         serverInfo.put("version", SERVER_VERSION);
         result.set("serverInfo", serverInfo);
@@ -209,7 +210,7 @@ public class JsonEditorMcpServer
 
     private String handleToolsList(final JsonNode id) throws JsonProcessingException
     {
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode result = JsonNodeFactory.instance.objectNode();
         result.set("tools", toolRegistry.getToolDefinitions());
         return createSuccessResponse(id, result);
     }
@@ -247,7 +248,7 @@ public class JsonEditorMcpServer
 
     private String createSuccessResponse(final JsonNode id, final JsonNode result) throws JsonProcessingException
     {
-        final ObjectNode response = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode response = JsonNodeFactory.instance.objectNode();
         response.put("jsonrpc", "2.0");
         response.set("id", id);
         response.set("result", result);
@@ -259,11 +260,11 @@ public class JsonEditorMcpServer
     {
         try
         {
-            final ObjectNode response = OBJECT_MAPPER.createObjectNode();
+            final ObjectNode response = JsonNodeFactory.instance.objectNode();
             response.put("jsonrpc", "2.0");
             response.set("id", id);
 
-            final ObjectNode error = OBJECT_MAPPER.createObjectNode();
+            final ObjectNode error = JsonNodeFactory.instance.objectNode();
             error.put("code", code);
             error.put("message", message);
             response.set("error", error);
@@ -280,11 +281,11 @@ public class JsonEditorMcpServer
     {
         try
         {
-            final ObjectNode response = OBJECT_MAPPER.createObjectNode();
+            final ObjectNode response = JsonNodeFactory.instance.objectNode();
             response.put("jsonrpc", "2.0");
             response.set("id", id);
 
-            final ObjectNode error = OBJECT_MAPPER.createObjectNode();
+            final ObjectNode error = JsonNodeFactory.instance.objectNode();
             error.put("code", code);
             error.put("message", message);
             response.set("error", error);

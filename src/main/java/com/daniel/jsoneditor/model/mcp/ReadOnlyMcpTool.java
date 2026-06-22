@@ -4,16 +4,16 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.sessions.EditorSession;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Base class for read-only MCP tools. Resolves the target model from a file_id argument.
  */
 public abstract class ReadOnlyMcpTool extends McpTool
-{
-    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    {
     protected static final String FILE_ID_REQUIRED_MESSAGE = "file_id argument is required";
 
     protected final FileSessionManager sessionManager;
@@ -83,7 +83,7 @@ public abstract class ReadOnlyMcpTool extends McpTool
 
     protected static void addFileIdProperty(final ObjectNode properties)
     {
-        final ObjectNode fileIdProp = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode fileIdProp = JsonNodeFactory.instance.objectNode();
         fileIdProp.put("type", "string");
         fileIdProp.put("description", "Session ID of the file to operate on (from list_files or open_file)");
         properties.set("file_id", fileIdProp);

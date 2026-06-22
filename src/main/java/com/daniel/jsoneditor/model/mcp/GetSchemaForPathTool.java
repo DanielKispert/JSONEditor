@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import org.slf4j.Logger;
@@ -45,7 +46,7 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
     @Override
     public ArrayNode getRequiredInputProperties()
     {
-        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
         addFileIdRequired(arr);
         arr.add("path");
         return arr;
@@ -69,7 +70,7 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
             return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "No schema found for path: " + path);
         }
 
-        final ObjectNode out = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode out = JsonNodeFactory.instance.objectNode();
         out.set("schema", OBJECT_MAPPER.readTree(schema.getSchemaNode().toString()));
         return McpToolRegistry.createToolResult(id, out);
     }

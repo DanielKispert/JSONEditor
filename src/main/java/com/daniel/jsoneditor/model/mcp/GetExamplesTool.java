@@ -4,8 +4,8 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +15,6 @@ import java.util.List;
 class GetExamplesTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(GetExamplesTool.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public GetExamplesTool(final FileSessionManager sessionManager)
     {
@@ -46,7 +45,7 @@ class GetExamplesTool extends ReadOnlyMcpTool
     @Override
     public ArrayNode getRequiredInputProperties()
     {
-        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
         addFileIdRequired(arr);
         arr.add("path");
         return arr;
@@ -67,16 +66,16 @@ class GetExamplesTool extends ReadOnlyMcpTool
         final List<String> examples = model.getStringExamplesForPath(path);
         final List<String> allowedValues = model.getAllowedStringValuesForPath(path);
 
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode result = JsonNodeFactory.instance.objectNode();
 
-        final ArrayNode examplesArray = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode examplesArray = JsonNodeFactory.instance.arrayNode();
         if (examples != null)
         {
             examples.forEach(examplesArray::add);
         }
         result.set("examples", examplesArray);
 
-        final ArrayNode allowedArray = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode allowedArray = JsonNodeFactory.instance.arrayNode();
         if (allowedValues != null)
         {
             allowedValues.forEach(allowedArray::add);

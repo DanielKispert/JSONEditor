@@ -5,8 +5,9 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceToObjectInstan
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,7 @@ import java.util.List;
 class FindReferencesToTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(FindReferencesToTool.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    
 
     public FindReferencesToTool(final FileSessionManager sessionManager)
     {
@@ -47,7 +48,7 @@ class FindReferencesToTool extends ReadOnlyMcpTool
     @Override
     public ArrayNode getRequiredInputProperties()
     {
-        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
         addFileIdRequired(arr);
         arr.add("path");
         return arr;
@@ -67,13 +68,13 @@ class FindReferencesToTool extends ReadOnlyMcpTool
 
         final List<ReferenceToObjectInstance> references = model.getReferencesToObjectForPath(path);
 
-        final ArrayNode result = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode result = JsonNodeFactory.instance.arrayNode();
 
         if (references != null)
         {
             for (final ReferenceToObjectInstance ref : references)
             {
-                final ObjectNode refNode = OBJECT_MAPPER.createObjectNode();
+                final ObjectNode refNode = JsonNodeFactory.instance.objectNode();
                 refNode.put("path", ref.getPath());
                 refNode.put("key", ref.getKey());
                 refNode.put("display_name", ref.getFancyName());

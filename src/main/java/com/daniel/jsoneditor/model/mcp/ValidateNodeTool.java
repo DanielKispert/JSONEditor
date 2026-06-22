@@ -5,8 +5,8 @@ import com.daniel.jsoneditor.model.json.schema.SchemaHelper;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import org.slf4j.Logger;
@@ -17,7 +17,6 @@ import java.util.List;
 class ValidateNodeTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(ValidateNodeTool.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public ValidateNodeTool(final FileSessionManager sessionManager)
     {
@@ -43,7 +42,7 @@ class ValidateNodeTool extends ReadOnlyMcpTool
                 "JSON pointer where the value would be validated (e.g., /items/0)");
         addFileIdProperty(props);
         // No "type" constraint — content accepts any JSON value (object, array, string, number, boolean, or null)
-        final ObjectNode contentProp = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode contentProp = JsonNodeFactory.instance.objectNode();
         contentProp.put("description", "The JSON value to validate (object, array, string, number, boolean, or null)");
         props.set("content", contentProp);
         return props;
@@ -52,7 +51,7 @@ class ValidateNodeTool extends ReadOnlyMcpTool
     @Override
     public ArrayNode getRequiredInputProperties()
     {
-        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
         addFileIdRequired(arr);
         arr.add("path");
         arr.add("content");
@@ -94,9 +93,9 @@ class ValidateNodeTool extends ReadOnlyMcpTool
             return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "Schema validation failed unexpectedly");
         }
 
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode result = JsonNodeFactory.instance.objectNode();
         result.put("valid", errors.isEmpty());
-        final ArrayNode errorsArray = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode errorsArray = JsonNodeFactory.instance.arrayNode();
         for (final String error : errors)
         {
             errorsArray.add(error);

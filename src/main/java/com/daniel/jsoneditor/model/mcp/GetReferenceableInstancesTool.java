@@ -6,8 +6,8 @@ import com.daniel.jsoneditor.model.json.schema.reference.ReferenceableObjectInst
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,6 @@ import java.util.List;
 class GetReferenceableInstancesTool extends ReadOnlyMcpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(GetReferenceableInstancesTool.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public GetReferenceableInstancesTool(final FileSessionManager sessionManager)
     {
@@ -48,7 +47,7 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
     @Override
     public ArrayNode getRequiredInputProperties()
     {
-        final ArrayNode arr = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
         addFileIdRequired(arr);
         arr.add("referencing_key");
         return arr;
@@ -73,13 +72,13 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
         }
 
         final List<ReferenceableObjectInstance> instances = model.getReferenceableObjectInstances(refObject);
-        final ArrayNode result = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode result = JsonNodeFactory.instance.arrayNode();
 
         if (instances != null)
         {
             for (final ReferenceableObjectInstance instance : instances)
             {
-                final ObjectNode instNode = OBJECT_MAPPER.createObjectNode();
+                final ObjectNode instNode = JsonNodeFactory.instance.objectNode();
                 instNode.put("path", instance.getPath());
                 instNode.put("key", instance.getKey());
                 instNode.put("display_name", instance.getFancyName());
