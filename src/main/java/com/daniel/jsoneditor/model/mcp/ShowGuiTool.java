@@ -4,7 +4,7 @@ import com.daniel.jsoneditor.controller.AppService;
 import com.daniel.jsoneditor.controller.AppWindow;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.application.Platform;
 import org.slf4j.Logger;
@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 class ShowGuiTool extends McpTool
 {
     private static final Logger logger = LoggerFactory.getLogger(ShowGuiTool.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final AppService appService;
 
@@ -41,7 +40,7 @@ class ShowGuiTool extends McpTool
     @Override
     public ObjectNode getInputSchema()
     {
-        return OBJECT_MAPPER.createObjectNode();
+        return JsonNodeFactory.instance.objectNode();
     }
 
     @Override
@@ -66,7 +65,7 @@ class ShowGuiTool extends McpTool
             }
         });
 
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode result = JsonNodeFactory.instance.objectNode();
         result.put("status", "queued");
         result.put("note", "Window creation requested. The window will appear shortly.");
         return McpToolRegistry.createToolResult(id, result);

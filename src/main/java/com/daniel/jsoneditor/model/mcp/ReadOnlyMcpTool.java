@@ -4,8 +4,9 @@ import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.sessions.EditorSession;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -13,7 +14,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public abstract class ReadOnlyMcpTool extends McpTool
 {
-    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     protected static final String FILE_ID_REQUIRED_MESSAGE = "file_id argument is required";
 
     protected final FileSessionManager sessionManager;
@@ -25,9 +25,9 @@ public abstract class ReadOnlyMcpTool extends McpTool
     record ResolveResult(ReadableModel model, String error) {}
 
     protected ReadOnlyMcpTool(final FileSessionManager sessionManager)
-    {
+{
         if (sessionManager == null)
-        {
+    {
             throw new IllegalArgumentException("sessionManager cannot be null");
         }
         this.sessionManager = sessionManager;
@@ -45,15 +45,15 @@ public abstract class ReadOnlyMcpTool extends McpTool
      * immediately when non-null.
      */
     protected ResolveResult resolveFileSession(final JsonNode arguments, final JsonNode id)
-    {
+{
         final String fileId = getValidatedFileId(arguments);
         if (fileId == null)
-        {
+    {
             return new ResolveResult(null, fileIdRequiredError(id));
         }
         final EditorSession session = sessionManager.getSession(fileId);
         if (session == null)
-        {
+    {
             return new ResolveResult(null,
                     JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
                             "Unknown file_id: " + fileId));
@@ -66,10 +66,10 @@ public abstract class ReadOnlyMcpTool extends McpTool
      * Callers should return {@link #fileIdRequiredError(JsonNode)} when this returns null.
      */
     protected String getValidatedFileId(final JsonNode arguments)
-    {
+{
         final String fileId = arguments.path("file_id").asText(null);
         if (fileId == null || fileId.isEmpty())
-        {
+    {
             return null;
         }
         return fileId;
@@ -77,20 +77,20 @@ public abstract class ReadOnlyMcpTool extends McpTool
 
     /** Builds a JSON-RPC error response for a missing or empty file_id argument. */
     protected String fileIdRequiredError(final JsonNode id)
-    {
+{
         return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, FILE_ID_REQUIRED_MESSAGE);
     }
 
     protected static void addFileIdProperty(final ObjectNode properties)
-    {
-        final ObjectNode fileIdProp = OBJECT_MAPPER.createObjectNode();
+{
+        final ObjectNode fileIdProp = JsonNodeFactory.instance.objectNode();
         fileIdProp.put("type", "string");
         fileIdProp.put("description", "Session ID of the file to operate on (from list_files or open_file)");
         properties.set("file_id", fileIdProp);
     }
 
     protected static void addFileIdRequired(final ArrayNode required)
-    {
+{
         required.add("file_id");
     }
 }

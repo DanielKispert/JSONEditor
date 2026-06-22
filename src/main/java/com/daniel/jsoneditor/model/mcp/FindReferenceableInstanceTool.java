@@ -9,16 +9,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
-class GetReferenceableInstancesTool extends ReadOnlyMcpTool
+class FindReferenceableInstanceTool extends ReadOnlyMcpTool
 {
-    private static final Logger logger = LoggerFactory.getLogger(GetReferenceableInstancesTool.class);
-
-    public GetReferenceableInstancesTool(final FileSessionManager sessionManager)
+    public FindReferenceableInstanceTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
     }
@@ -26,13 +20,13 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
     @Override
     public String getName()
     {
-        return "get_referenceable_instances";
+        return "find_referenceable_instance";
     }
 
     @Override
     public String getDescription()
     {
-        return "Get all instances of a referenceable object type";
+        return "Find a single referenceable object instance by its key. Returns {path, key, display_name} or null if not found.";
     }
 
     @Override
@@ -41,6 +35,10 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("referencing_key", "string",
                 "The referencing key of the referenceable object type");
         addFileIdProperty(props);
+        final ObjectNode instanceKeyProp = JsonNodeFactory.instance.objectNode();
+        instanceKeyProp.put("type", "string");
+        instanceKeyProp.put("description", "The key value of the specific instance to find");
+        props.set("instance_key", instanceKeyProp);
         return props;
     }
 
@@ -50,6 +48,7 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
         final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
         addFileIdRequired(arr);
         arr.add("referencing_key");
+        arr.add("instance_key");
         return arr;
     }
 
@@ -64,28 +63,25 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
         final ReadableModel model = resolved.model();
 
         final String referencingKey = arguments.path("referencing_key").asText("");
+        final String instanceKey = arguments.path("instance_key").asText("");
 
         final ReferenceableObject refObject = model.getReferenceableObjectByReferencingKey(referencingKey);
         if (refObject == null)
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "No referenceable object found with key: " + referencingKey);
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
+                    "No referenceable object found with key: " + referencingKey);
         }
 
-        final List<ReferenceableObjectInstance> instances = model.getReferenceableObjectInstances(refObject);
-        final ArrayNode result = JsonNodeFactory.instance.arrayNode();
-
-        if (instances != null)
+        final ReferenceableObjectInstance instance = model.getReferenceableObjectInstanceWithKey(refObject, instanceKey);
+        if (instance == null)
         {
-            for (final ReferenceableObjectInstance instance : instances)
-            {
-                final ObjectNode instNode = JsonNodeFactory.instance.objectNode();
-                instNode.put("path", instance.getPath());
-                instNode.put("key", instance.getKey());
-                instNode.put("display_name", instance.getFancyName());
-                result.add(instNode);
-            }
+            return McpToolRegistry.createToolResult(id, JsonNodeFactory.instance.nullNode());
         }
 
+        final ObjectNode result = JsonNodeFactory.instance.objectNode();
+        result.put("path", instance.getPath());
+        result.put("key", instance.getKey());
+        result.put("display_name", instance.getFancyName());
         return McpToolRegistry.createToolResult(id, result);
     }
 }
