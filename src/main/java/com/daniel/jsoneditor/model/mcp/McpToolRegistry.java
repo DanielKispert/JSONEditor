@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ public class McpToolRegistry
         toolList.add(new GetExamplesTool(sessionManager));
         toolList.add(new GetReferenceableObjectsTool(sessionManager));
         toolList.add(new GetReferenceableInstancesTool(sessionManager));
+        toolList.add(new FindReferenceableInstanceTool(sessionManager));
         toolList.add(new FindReferencesToTool(sessionManager));
         toolList.add(new ValidateNodeTool(sessionManager));
         if (appService != null)
@@ -86,11 +88,11 @@ public class McpToolRegistry
      */
     public ArrayNode getToolDefinitions()
     {
-        final ArrayNode toolsArray = OBJECT_MAPPER.createArrayNode();
+        final ArrayNode toolsArray = JsonNodeFactory.instance.arrayNode();
 
         for (final McpTool tool : tools)
         {
-            final ObjectNode toolDef = OBJECT_MAPPER.createObjectNode();
+            final ObjectNode toolDef = JsonNodeFactory.instance.objectNode();
             toolDef.put("name", tool.getName());
             toolDef.put("description", tool.getDescription());
 
@@ -108,7 +110,7 @@ public class McpToolRegistry
      */
     public static ObjectNode buildInputSchema(final McpTool tool)
     {
-        final ObjectNode schema = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode schema = JsonNodeFactory.instance.objectNode();
         schema.put("type", "object");
         schema.set("properties", tool.getInputSchema());
         schema.put("additionalProperties", false);
@@ -128,16 +130,16 @@ public class McpToolRegistry
      */
     protected static String createToolResult(final JsonNode id, final JsonNode payload) throws JsonProcessingException
     {
-        final ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        final ArrayNode contentArray = OBJECT_MAPPER.createArrayNode();
-        final ObjectNode textContent = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode result = JsonNodeFactory.instance.objectNode();
+        final ArrayNode contentArray = JsonNodeFactory.instance.arrayNode();
+        final ObjectNode textContent = JsonNodeFactory.instance.objectNode();
         textContent.put("type", "text");
-        final String jsonText = OBJECT_MAPPER.writeValueAsString(payload == null ? OBJECT_MAPPER.nullNode() : payload);
+        final String jsonText = OBJECT_MAPPER.writeValueAsString(payload == null ? JsonNodeFactory.instance.nullNode() : payload);
         textContent.put("text", jsonText);
         contentArray.add(textContent);
         result.set("content", contentArray);
 
-        final ObjectNode response = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode response = JsonNodeFactory.instance.objectNode();
         response.put("jsonrpc", "2.0");
         response.set("id", id);
         response.set("result", result);
@@ -146,8 +148,8 @@ public class McpToolRegistry
 
     protected static ObjectNode createSchemaWithProperty(final String propName, final String propType, final String description)
     {
-        final ObjectNode props = OBJECT_MAPPER.createObjectNode();
-        final ObjectNode prop = OBJECT_MAPPER.createObjectNode();
+        final ObjectNode props = JsonNodeFactory.instance.objectNode();
+        final ObjectNode prop = JsonNodeFactory.instance.objectNode();
         prop.put("type", propType);
         prop.put("description", description);
         props.set(propName, prop);
