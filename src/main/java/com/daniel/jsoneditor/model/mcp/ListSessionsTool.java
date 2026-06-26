@@ -8,9 +8,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-class ListFilesTool extends ReadOnlyMcpTool
+import java.util.List;
+
+// Extends ReadOnlyMcpTool for FileSessionManager injection and session_id schema helpers.
+class ListSessionsTool extends ReadOnlyMcpTool
 {
-    public ListFilesTool(final FileSessionManager sessionManager)
+    public ListSessionsTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
     }
@@ -18,13 +21,13 @@ class ListFilesTool extends ReadOnlyMcpTool
     @Override
     public String getName()
     {
-        return "list_files";
+        return "list_sessions";
     }
 
     @Override
     public String getDescription()
     {
-        return "List all currently open file sessions with their IDs and paths";
+        return "List all active editing sessions. Returns session IDs and their associated file paths.";
     }
 
     @Override
@@ -36,19 +39,17 @@ class ListFilesTool extends ReadOnlyMcpTool
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final ArrayNode result = JsonNodeFactory.instance.arrayNode();
-
-        for (final EditorSession session : sessionManager.listSessions())
+        final List<EditorSession> sessions = sessionManager.listSessions();
+        final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
+        for (final EditorSession session : sessions)
         {
             final ObjectNode entry = JsonNodeFactory.instance.objectNode();
-            entry.put("file_id", session.id());
-            entry.put("json_path", session.jsonFile() != null ? session.jsonFile().getAbsolutePath() : null);
-            entry.put("schema_path", session.schemaFile() != null ? session.schemaFile().getAbsolutePath() : null);
+            entry.put("session_id", session.id());
+            entry.put("json_path", session.jsonFile() != null ? session.jsonFile().getAbsolutePath() : "");
+            entry.put("schema_path", session.schemaFile() != null ? session.schemaFile().getAbsolutePath() : "");
             entry.put("gui_owned", session.guiOwned());
-            result.add(entry);
+            arr.add(entry);
         }
-
-        return McpToolRegistry.createToolResult(id, result);
+        return McpToolRegistry.createToolResult(id, arr);
     }
 }
-

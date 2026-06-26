@@ -9,15 +9,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 class GetReferenceableInstancesTool extends ReadOnlyMcpTool
 {
-    private static final Logger logger = LoggerFactory.getLogger(GetReferenceableInstancesTool.class);
-
     public GetReferenceableInstancesTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
@@ -40,7 +36,7 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
     {
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("referencing_key", "string",
                 "The referencing key of the referenceable object type");
-        addFileIdProperty(props);
+        addSessionIdProperty(props);
         return props;
     }
 
@@ -48,7 +44,7 @@ class GetReferenceableInstancesTool extends ReadOnlyMcpTool
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
-        addFileIdRequired(arr);
+        addSessionIdRequired(arr);
         arr.add("referencing_key");
         return arr;
     }

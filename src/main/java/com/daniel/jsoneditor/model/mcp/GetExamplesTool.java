@@ -7,15 +7,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 class GetExamplesTool extends ReadOnlyMcpTool
 {
-    private static final Logger logger = LoggerFactory.getLogger(GetExamplesTool.class);
-
     public GetExamplesTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
@@ -38,7 +34,7 @@ class GetExamplesTool extends ReadOnlyMcpTool
     {
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("path", "string",
                 "JSON path to get examples for (e.g., /processes/0)");
-        addFileIdProperty(props);
+        addSessionIdProperty(props);
         return props;
     }
 
@@ -46,7 +42,7 @@ class GetExamplesTool extends ReadOnlyMcpTool
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
-        addFileIdRequired(arr);
+        addSessionIdRequired(arr);
         arr.add("path");
         return arr;
     }

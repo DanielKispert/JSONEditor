@@ -27,8 +27,7 @@ public class McpToolRegistry
 
     /**
      * Create registry with all available tools. Pass null for headless mode. When
-     * appService is provided, the show_gui tool is registered for opening GUI
-     * windows on demand.
+     * appService is provided, the show_gui and session-aware tools are registered.
      *
      * @param sessionManager manages all open file sessions
      * @param appService the app service for GUI integration, or null for headless mode
@@ -36,9 +35,10 @@ public class McpToolRegistry
     public McpToolRegistry(final FileSessionManager sessionManager, final AppService appService)
     {
         final List<McpTool> toolList = new ArrayList<>();
-        toolList.add(new ListFilesTool(sessionManager));
+        toolList.add(new ListSessionsTool(sessionManager));
+        toolList.add(new OpenSessionTool(sessionManager));
         toolList.add(new OpenFileTool(sessionManager));
-        toolList.add(new CloseFileTool(sessionManager));
+        toolList.add(new CloseSessionTool(sessionManager));
         toolList.add(new GetFileInfoTool(sessionManager));
         toolList.add(new GetNodeTool(sessionManager));
         toolList.add(new GetSchemaForPathTool(sessionManager));
@@ -50,7 +50,7 @@ public class McpToolRegistry
         toolList.add(new ValidateNodeTool(sessionManager));
         if (appService != null)
         {
-            toolList.add(new ShowGuiTool(appService));
+            toolList.add(new ShowGuiTool(appService, sessionManager));
         }
         this.tools = List.copyOf(toolList);
     }

@@ -86,9 +86,9 @@ private static final Logger logger = LoggerFactory.getLogger(MyClass.class);
 The MCP server exposes JSON editor operations to external AI agents via HTTP JSON-RPC.
 
 ### Multi-File Sessions
-`FileSessionManager` (`model/sessions/`) manages multiple open file sessions. Each session has a unique `file_id`. Two session types:
+`FileSessionManager` (`model/sessions/`) manages multiple open file sessions. Each session has a unique `session_id`. Two session types:
 - **GUI sessions** – registered when the GUI opens a file, protected from MCP close
-- **Headless sessions** – opened via `open_file` tool, closeable via `close_file`
+- **Headless sessions** – opened via `open_session` tool, closeable via `close_session`
 
 `EditorSession` (`model/sessions/`) is a record holding `id`, `ReadableModel`, file paths, and `guiOwned` flag.
 
@@ -101,19 +101,21 @@ Headless:   JFXLauncher --headless → FileSessionManager → JsonEditorMcpServe
 `McpController` wraps `JsonEditorMcpServer`. Port set via `SettingsController.getMcpServerPort()`.
 
 ### Tools
-Tools are registered in `McpToolRegistry` (`model/mcp/`). All per-file tools require a `file_id` argument.
+Tools are registered in `McpToolRegistry` (`model/mcp/`). All per-file tools require a `session_id` argument.
 
 Base classes:
-- `ReadOnlyMcpTool` – holds `FileSessionManager`, provides `resolveFileSession(arguments, id)` helper
+- `ReadOnlyMcpTool` – holds `FileSessionManager`, provides `resolveFileSession(arguments, id)` helper. Uses `session_id` parameter.
  
-Session management tools (extend `ReadOnlyMcpTool`, no `file_id` needed):
-- `ListFilesTool` – list all open sessions
-- `OpenFileTool` – open a JSON + schema file pair, returns `file_id`
-- `CloseFileTool` – close a headless session
+Session management tools (extend `ReadOnlyMcpTool`, no `session_id` needed):
+- `ListSessionsTool` / `list_sessions` – list all active sessions
+- `OpenSessionTool` / `open_session` – open a JSON + schema + optional settings file, returns `session_id`. Deprecated alias: `open_file`
+- `CloseSessionTool` / `close_session` – close a headless session
 
-Per-file read tools (require `file_id`):
+Per-file read tools (require `session_id`):
 - `GetFileInfoTool`, `GetNodeTool`, `GetSchemaForPathTool`, `GetExamplesTool`
 - `GetReferenceableObjectsTool`, `GetReferenceableInstancesTool`, `FindReferencesToTool`
+
+- `ShowGuiTool` / `show_gui` – open GUI for a file; requires EITHER `session_id` OR `json_path`+`schema_path` (mutually exclusive)
 
 `McpArgumentValidator` validates tool input against schemas before execution.
 

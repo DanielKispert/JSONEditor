@@ -1,7 +1,7 @@
 package com.daniel.jsoneditor.model.sessions;
 
 /**
- * Result of a {@link FileSessionManager#closeFile(String)} operation.
+ * Result of a {@link FileSessionManager#closeSession(String)} operation.
  */
 public enum CloseFileResult
 {

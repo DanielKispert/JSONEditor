@@ -9,12 +9,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class GetSchemaForPathTool extends ReadOnlyMcpTool
 {
-    private static final Logger logger = LoggerFactory.getLogger(GetSchemaForPathTool.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public GetSchemaForPathTool(final FileSessionManager sessionManager)
@@ -39,7 +36,7 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
     {
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("path", "string",
                 "JSON path to get schema for (e.g., /processes/0)");
-        addFileIdProperty(props);
+        addSessionIdProperty(props);
         return props;
     }
 
@@ -47,7 +44,7 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
-        addFileIdRequired(arr);
+        addSessionIdRequired(arr);
         arr.add("path");
         return arr;
     }

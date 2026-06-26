@@ -38,7 +38,7 @@ public class McpReferenceableInstancesIntegrationTest extends McpTestBase
 
         // happy path: proc_a is at /processes/0
         final JsonNode resultA = callTool("find_referenceable_instance", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("referencing_key", "item_ref")
                 .put("instance_key", "proc_a"));
         assertNull(resultA.get("error"), "Expected no error for proc_a lookup");
@@ -49,7 +49,7 @@ public class McpReferenceableInstancesIntegrationTest extends McpTestBase
 
         // second instance: proc_b is at /processes/1
         final JsonNode resultB = callTool("find_referenceable_instance", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("referencing_key", "item_ref")
                 .put("instance_key", "proc_b"));
         assertNull(resultB.get("error"), "Expected no error for proc_b lookup");
@@ -58,7 +58,7 @@ public class McpReferenceableInstancesIntegrationTest extends McpTestBase
 
         // not found: nonexistent key returns JSON null payload
         final JsonNode resultMissing = callTool("find_referenceable_instance", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("referencing_key", "item_ref")
                 .put("instance_key", "nonexistent"));
         assertNull(resultMissing.get("error"), "Expected no RPC error for nonexistent instance key");
@@ -67,7 +67,7 @@ public class McpReferenceableInstancesIntegrationTest extends McpTestBase
 
         // unknown referencing_key → RPC error
         final JsonNode resultUnknown = callTool("find_referenceable_instance", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("referencing_key", "unknown_key")
                 .put("instance_key", "proc_a"));
         assertNotNull(resultUnknown.get("error"), "Expected RPC error for unknown referencing_key");

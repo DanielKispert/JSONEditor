@@ -96,7 +96,7 @@ public class FileSessionManagerTest
                 "surviving session must still hold the original shared model after first detach");
 
         // === Section: close last session evicts the shared model and empties the sessions map ===
-        final CloseFileResult closeResult = sessionManager.closeFile(id2);
+        final CloseFileResult closeResult = sessionManager.closeSession(id2);
         assertEquals(CloseFileResult.CLOSED, closeResult, "closeFile on last headless session must return CLOSED");
         assertNull(sessionManager.getSession(id2), "closed session must not be accessible");
         assertTrue(sessionManager.listSessions().isEmpty(), "sessions must be empty after all sessions closed");
@@ -106,7 +106,7 @@ public class FileSessionManagerTest
         assertTrue(result3.success(), "re-attach after eviction must succeed");
         assertNotSame(model1, sessionManager.getSession(result3.sessionId()).model(),
                 "re-attach after eviction must create a fresh ModelImpl — SharedFile entry was evicted");
-        sessionManager.closeFile(result3.sessionId());
+        sessionManager.closeSession(result3.sessionId());
 
         // === Section: detach idempotency — second detach must be a no-op (guards re-entrant shutdown) ===
         final AttachResult idempotentResult =
@@ -218,7 +218,7 @@ public class FileSessionManagerTest
         assertTrue(sessionManager.getSession(guiId).guiOwned(), "GUI session must be marked guiOwned");
 
         // Branch A (close prohibited)
-        final CloseFileResult closeResult = sessionManager.closeFile(guiId);
+        final CloseFileResult closeResult = sessionManager.closeSession(guiId);
         assertEquals(CloseFileResult.GUI_OWNED, closeResult, "closeFile must return GUI_OWNED for a GUI-owned session");
         assertNotNull(sessionManager.getSession(guiId), "GUI session must still exist after failed close");
 
@@ -301,7 +301,7 @@ public class FileSessionManagerTest
                         {
                             openedIds.add(openResult.sessionId());
                         }
-                        sessionManager.closeFile(openResult.sessionId());
+                        sessionManager.closeSession(openResult.sessionId());
                     }
                 }
                 catch (final Exception e)
@@ -419,7 +419,7 @@ public class FileSessionManagerTest
         assertTrue(resultC.success(), "attach with schema-b must succeed after eviction — stale peek must not produce false schema-mismatch error; got: " + resultC.error());
         if (resultC.success())
         {
-            timedManager.closeFile(resultC.sessionId());
+            timedManager.closeSession(resultC.sessionId());
         }
     }
 
@@ -476,7 +476,7 @@ public class FileSessionManagerTest
 
         // Cleanup
         sessionManager.detachSession(newGuiId);
-        sessionManager.closeFile(mcpId);
+        sessionManager.closeSession(mcpId);
         assertTrue(sessionManager.listSessions().isEmpty(), "All sessions must be cleaned up");
     }
 
