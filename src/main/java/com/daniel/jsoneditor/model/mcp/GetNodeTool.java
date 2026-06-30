@@ -8,13 +8,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class GetNodeTool extends ReadOnlyMcpTool
 {
-    private static final Logger logger = LoggerFactory.getLogger(GetNodeTool.class);
-
     public GetNodeTool(final FileSessionManager sessionManager)
     {
         super(sessionManager);
@@ -36,7 +32,7 @@ class GetNodeTool extends ReadOnlyMcpTool
     public ObjectNode getInputSchema()
     {
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("path", "string", "JSON path (e.g., /processes/0)");
-        addFileIdProperty(props);
+        addSessionIdProperty(props);
         return props;
     }
 
@@ -44,7 +40,7 @@ class GetNodeTool extends ReadOnlyMcpTool
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
-        addFileIdRequired(arr);
+        addSessionIdRequired(arr);
         arr.add("path");
         return arr;
     }

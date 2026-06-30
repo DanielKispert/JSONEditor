@@ -52,9 +52,10 @@ public class McpServerIntegrationTest extends McpTestBase
         {
             toolNames.add(tool.path("name").asText());
         }
-        assertTrue(toolNames.contains("open_file"), "Expected open_file tool");
-        assertTrue(toolNames.contains("list_files"), "Expected list_files tool");
-        assertTrue(toolNames.contains("close_file"), "Expected close_file tool");
+        assertTrue(toolNames.contains("open_session"), "Expected open_session tool");
+        assertTrue(toolNames.contains("open_file"), "Expected open_file deprecated alias");
+        assertTrue(toolNames.contains("list_sessions"), "Expected list_sessions tool");
+        assertTrue(toolNames.contains("close_session"), "Expected close_session tool");
         assertTrue(toolNames.contains("get_file_info"), "Expected get_file_info tool");
         assertTrue(toolNames.contains("get_node"), "Expected get_node tool");
     }
@@ -65,31 +66,31 @@ public class McpServerIntegrationTest extends McpTestBase
         final Path jsonFile = createTempJsonFile();
         final Path schemaFile = createTempSchemaFile();
 
-        final JsonNode openResult = callTool("open_file", OBJECT_MAPPER.createObjectNode()
+        final JsonNode openResult = callTool("open_session", OBJECT_MAPPER.createObjectNode()
                 .put("json_path", jsonFile.toString())
                 .put("schema_path", schemaFile.toString()));
-        assertNull(openResult.get("error"), "Expected no error from open_file");
+        assertNull(openResult.get("error"), "Expected no error from open_session");
 
         final JsonNode openPayload = parseToolResultPayload(openResult);
-        final String fileId = openPayload.path("file_id").asText();
-        assertFalse(fileId.isEmpty(), "Expected non-empty file_id");
+        final String fileId = openPayload.path("session_id").asText();
+        assertFalse(fileId.isEmpty(), "Expected non-empty session_id");
 
-        final JsonNode listResult = callTool("list_files", OBJECT_MAPPER.createObjectNode());
-        assertNull(listResult.get("error"), "Expected no error from list_files");
+        final JsonNode listResult = callTool("list_sessions", OBJECT_MAPPER.createObjectNode());
+        assertNull(listResult.get("error"), "Expected no error from list_sessions");
 
         final JsonNode listPayload = parseToolResultPayload(listResult);
-        assertTrue(listPayload.isArray(), "Expected array result from list_files");
+        assertTrue(listPayload.isArray(), "Expected array result from list_sessions");
 
         boolean found = false;
         for (final JsonNode entry : listPayload)
         {
-            if (fileId.equals(entry.path("file_id").asText()))
+            if (fileId.equals(entry.path("session_id").asText()))
             {
                 found = true;
                 break;
             }
         }
-        assertTrue(found, "Expected opened file to appear in list_files result");
+        assertTrue(found, "Expected opened file to appear in list_sessions result");
     }
 
     @Test
@@ -98,13 +99,13 @@ public class McpServerIntegrationTest extends McpTestBase
         final Path jsonFile = createTempJsonFile();
         final Path schemaFile = createTempSchemaFile();
 
-        final JsonNode openResult = callTool("open_file", OBJECT_MAPPER.createObjectNode()
+        final JsonNode openResult = callTool("open_session", OBJECT_MAPPER.createObjectNode()
                 .put("json_path", jsonFile.toString())
                 .put("schema_path", schemaFile.toString()));
-        final String fileId = parseToolResultPayload(openResult).path("file_id").asText();
+        final String fileId = parseToolResultPayload(openResult).path("session_id").asText();
 
         final JsonNode nodeResult = callTool("get_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("path", ""));
         assertNull(nodeResult.get("error"), "Expected no error from get_node");
 
@@ -122,13 +123,13 @@ public class McpServerIntegrationTest extends McpTestBase
         final Path jsonFile = createTempJsonFile();
         final Path schemaFile = createTempSchemaFile();
 
-        final JsonNode openResult = callTool("open_file", OBJECT_MAPPER.createObjectNode()
+        final JsonNode openResult = callTool("open_session", OBJECT_MAPPER.createObjectNode()
                 .put("json_path", jsonFile.toString())
                 .put("schema_path", schemaFile.toString()));
-        final String fileId = parseToolResultPayload(openResult).path("file_id").asText();
+        final String fileId = parseToolResultPayload(openResult).path("session_id").asText();
 
         final JsonNode infoResult = callTool("get_file_info", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId));
+                .put("session_id", fileId));
         assertNull(infoResult.get("error"), "Expected no error from get_file_info");
 
         final JsonNode infoPayload = parseToolResultPayload(infoResult);
@@ -143,38 +144,38 @@ public class McpServerIntegrationTest extends McpTestBase
         final Path jsonFile = createTempJsonFile();
         final Path schemaFile = createTempSchemaFile();
 
-        final JsonNode openResult = callTool("open_file", OBJECT_MAPPER.createObjectNode()
+        final JsonNode openResult = callTool("open_session", OBJECT_MAPPER.createObjectNode()
                 .put("json_path", jsonFile.toString())
                 .put("schema_path", schemaFile.toString()));
-        final String fileId = parseToolResultPayload(openResult).path("file_id").asText();
+        final String fileId = parseToolResultPayload(openResult).path("session_id").asText();
 
-        final JsonNode closeResult = callTool("close_file", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId));
-        assertNull(closeResult.get("error"), "Expected no error from close_file");
+        final JsonNode closeResult = callTool("close_session", OBJECT_MAPPER.createObjectNode()
+                .put("session_id", fileId));
+        assertNull(closeResult.get("error"), "Expected no error from close_session");
 
         final JsonNode closePayload = parseToolResultPayload(closeResult);
-        assertTrue(closePayload.path("success").asBoolean(), "Expected success=true from close_file");
+        assertTrue(closePayload.path("ok").asBoolean(), "Expected ok=true from close_session");
 
-        final JsonNode listResult = callTool("list_files", OBJECT_MAPPER.createObjectNode());
+        final JsonNode listResult = callTool("list_sessions", OBJECT_MAPPER.createObjectNode());
         final JsonNode listPayload = parseToolResultPayload(listResult);
         for (final JsonNode entry : listPayload)
         {
-            assertNotEquals(fileId, entry.path("file_id").asText(), "Closed file should not appear in list_files");
+            assertNotEquals(fileId, entry.path("session_id").asText(), "Closed file should not appear in list_sessions");
         }
     }
 
     @Test
     void testCloseNonExistentFile() throws Exception
     {
-        final JsonNode result = callTool("close_file", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", "nonexistent-id-12345"));
+        final JsonNode result = callTool("close_session", OBJECT_MAPPER.createObjectNode()
+                .put("session_id", "nonexistent-id-12345"));
         assertNotNull(result.get("error"), "Expected error when closing non-existent file_id");
     }
 
     @Test
     void testOpenInvalidFile() throws Exception
     {
-        final JsonNode result = callTool("open_file", OBJECT_MAPPER.createObjectNode()
+        final JsonNode result = callTool("open_session", OBJECT_MAPPER.createObjectNode()
                 .put("json_path", "/nonexistent/path/file.json")
                 .put("schema_path", "/nonexistent/path/schema.json"));
         assertNotNull(result.get("error"), "Expected error when opening non-existent files");
@@ -184,21 +185,21 @@ public class McpServerIntegrationTest extends McpTestBase
     void testGetNodeWithEmptyFileIdArgument() throws Exception
     {
         final JsonNode result = callTool("get_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", "")
+                .put("session_id", "")
                 .put("path", ""));
-        assertNotNull(result.get("error"), "Expected error when file_id is empty string");
+        assertNotNull(result.get("error"), "Expected error when session_id is empty string");
         final String message = result.path("error").path("message").asText();
-        assertTrue(message.contains("file_id argument is required"),
-                "Expected 'file_id argument is required' for empty file_id, got: " + message);
+        assertTrue(message.contains("session_id argument is required"),
+                "Expected 'session_id argument is required' for empty session_id, got: " + message);
     }
 
     @Test
     void testGetNodeWithNonExistentFileId() throws Exception
     {
         final JsonNode result = callTool("get_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", "nonexistent123")
+                .put("session_id", "nonexistent123")
                 .put("path", ""));
-        assertNotNull(result.get("error"), "Expected error when file_id is unknown");
+        assertNotNull(result.get("error"), "Expected error when session_id is unknown");
         final String message = result.path("error").path("message").asText();
         assertTrue(message.contains("nonexistent123"),
                 "Expected file_id to be included in error message, got: " + message);
@@ -219,7 +220,7 @@ public class McpServerIntegrationTest extends McpTestBase
 
         // valid content → valid=true, no errors
         final JsonNode validResult = callTool("validate_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("path", "")
                 .set("content", OBJECT_MAPPER.readTree("{\"name\":\"hello\",\"value\":10}")));
         assertNull(validResult.get("error"), "Expected no error from validate_node with valid content");
@@ -229,7 +230,7 @@ public class McpServerIntegrationTest extends McpTestBase
 
         // invalid content (wrong types) → valid=false, errors non-empty mentioning bad fields
         final JsonNode invalidResult = callTool("validate_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("path", "")
                 .set("content", OBJECT_MAPPER.readTree("{\"name\":123,\"value\":\"wrong\"}")));
         assertNull(invalidResult.get("error"), "Expected no RPC error from validate_node with invalid content");
@@ -256,7 +257,7 @@ public class McpServerIntegrationTest extends McpTestBase
 
         // missing content argument → error mentioning "content"
         final JsonNode missingContent = callTool("validate_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("path", ""));
         assertNotNull(missingContent.get("error"), "Expected error when content argument is missing");
         final String missingContentMessage = missingContent.path("error").path("message").asText();
@@ -264,7 +265,7 @@ public class McpServerIntegrationTest extends McpTestBase
 
         // path with no schema → error response
         final JsonNode noSchema = callTool("validate_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("path", "/unknown_field_xyz")
                 .set("content", OBJECT_MAPPER.readTree("\"anything\"")));
         assertNotNull(noSchema.get("error"), "Expected error when path has no schema");

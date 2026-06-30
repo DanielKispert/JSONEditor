@@ -60,30 +60,30 @@ public class McpMultiFileIntegrationTest extends McpTestBase
 
         // list_files must show all 3
         final JsonNode listPayload = parseToolResultPayload(
-                callTool("list_files", OBJECT_MAPPER.createObjectNode()));
-        assertTrue(listPayload.isArray(), "list_files must return an array");
+                callTool("list_sessions", OBJECT_MAPPER.createObjectNode()));
+        assertTrue(listPayload.isArray(), "list_sessions must return an array");
         final Set<String> listedIds = new HashSet<>();
         for (final JsonNode entry : listPayload)
         {
-            listedIds.add(entry.path("file_id").asText());
+            listedIds.add(entry.path("session_id").asText());
         }
-        assertTrue(listedIds.contains(id0), "list_files must include file 0");
-        assertTrue(listedIds.contains(id1), "list_files must include file 1");
-        assertTrue(listedIds.contains(id2), "list_files must include file 2");
+        assertTrue(listedIds.contains(id0), "list_sessions must include file 0");
+        assertTrue(listedIds.contains(id1), "list_sessions must include file 1");
+        assertTrue(listedIds.contains(id2), "list_sessions must include file 2");
 
         // get_node returns correct content per file
         final JsonNode root0 = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", id0).put("path", "")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", id0).put("path", "")));
         assertEquals("Acme", root0.path("value").path("company").asText(),
                 "File 0 must contain company=Acme");
 
         final JsonNode root1 = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", id1).put("path", "")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", id1).put("path", "")));
         assertTrue(root1.path("value").path("items").isArray(),
                 "File 1 must contain an items array");
 
         final JsonNode root2 = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", id2).put("path", "")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", id2).put("path", "")));
         assertEquals(7, root2.path("value").path("count").asInt(),
                 "File 2 must contain count=7");
     }
@@ -97,16 +97,16 @@ public class McpMultiFileIntegrationTest extends McpTestBase
 
         // Close the middle file
         final JsonNode closePayload = parseToolResultPayload(
-                callTool("close_file", OBJECT_MAPPER.createObjectNode().put("file_id", id1)));
-        assertTrue(closePayload.path("success").asBoolean(), "Expected success=true from close_file");
+                callTool("close_session", OBJECT_MAPPER.createObjectNode().put("session_id", id1)));
+        assertTrue(closePayload.path("ok").asBoolean(), "Expected ok=true from close_session");
 
-        // list_files must now show exactly id0 and id2
+        // list_sessions must now show exactly id0 and id2
         final JsonNode listPayload = parseToolResultPayload(
-                callTool("list_files", OBJECT_MAPPER.createObjectNode()));
+                callTool("list_sessions", OBJECT_MAPPER.createObjectNode()));
         final Set<String> remaining = new HashSet<>();
         for (final JsonNode entry : listPayload)
         {
-            remaining.add(entry.path("file_id").asText());
+            remaining.add(entry.path("session_id").asText());
         }
         assertTrue(remaining.contains(id0), "id0 must still be listed after closing id1");
         assertFalse(remaining.contains(id1), "id1 must be gone after close");
@@ -114,12 +114,12 @@ public class McpMultiFileIntegrationTest extends McpTestBase
 
         // Remaining files must still respond correctly
         final JsonNode node0 = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", id0).put("path", "")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", id0).put("path", "")));
         assertEquals("Acme", node0.path("value").path("company").asText(),
                 "id0 must still return correct content after id1 was closed");
 
         final JsonNode node2 = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", id2).put("path", "")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", id2).put("path", "")));
         assertEquals(7, node2.path("value").path("count").asInt(),
                 "id2 must still return correct content after id1 was closed");
     }
@@ -131,9 +131,9 @@ public class McpMultiFileIntegrationTest extends McpTestBase
         final String idItems = openFile(JSON_ITEMS, SCHEMA_ITEMS);
 
         final JsonNode companyRoot = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", idCompany).put("path", "")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", idCompany).put("path", "")));
         final JsonNode itemsRoot = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", idItems).put("path", "")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", idItems).put("path", "")));
 
         // No cross-contamination: company session has "company" key, items session does not
         assertTrue(companyRoot.path("value").has("company"),
@@ -154,13 +154,13 @@ public class McpMultiFileIntegrationTest extends McpTestBase
         final JsonNode mixedJson = OBJECT_MAPPER.readTree("{\"items\":\"not-an-array\"}");
 
         final ObjectNode companyValidateParams = OBJECT_MAPPER.createObjectNode()
-                .put("file_id", idCompany).put("path", "");
+                .put("session_id", idCompany).put("path", "");
         companyValidateParams.set("content", mixedJson);
         assertTrue(parseToolResultPayload(callTool("validate_node", companyValidateParams)).path("valid").asBoolean(),
                 "Company schema must accept {items:string} — it has no 'items' constraint");
 
         final ObjectNode itemsValidateParams = OBJECT_MAPPER.createObjectNode()
-                .put("file_id", idItems).put("path", "");
+                .put("session_id", idItems).put("path", "");
         itemsValidateParams.set("content", mixedJson);
         assertFalse(parseToolResultPayload(callTool("validate_node", itemsValidateParams)).path("valid").asBoolean(),
                 "Items schema must reject {items:string} because 'items' must be an array");
@@ -173,20 +173,20 @@ public class McpMultiFileIntegrationTest extends McpTestBase
 
         // Query employees sub-path
         final JsonNode employeesNode = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", fileId).put("path", "/employees")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", fileId).put("path", "/employees")));
         assertTrue(employeesNode.path("value").isArray(), "Expected employees to be an array");
         assertEquals(2, employeesNode.path("value").size(), "Expected 2 employees");
 
         // Query config sub-path
         final JsonNode configNode = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", fileId).put("path", "/config")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", fileId).put("path", "/config")));
         assertTrue(configNode.path("value").isObject(), "Expected config to be an object");
         assertEquals(2, configNode.path("value").path("version").asInt(), "Expected version=2");
         assertTrue(configNode.path("value").path("darkMode").asBoolean(), "Expected darkMode=true");
 
         // Query first employee by index
         final JsonNode firstEmployee = parseToolResultPayload(
-                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("file_id", fileId).put("path", "/employees/0")));
+                callTool("get_node", OBJECT_MAPPER.createObjectNode().put("session_id", fileId).put("path", "/employees/0")));
         assertEquals("Alice", firstEmployee.path("value").path("name").asText());
         assertEquals("dev", firstEmployee.path("value").path("role").asText());
     }
@@ -197,7 +197,7 @@ public class McpMultiFileIntegrationTest extends McpTestBase
         final String fileId = openFile(JSON_COMPANY, SCHEMA_COMPANY);
 
         final JsonNode result = callTool("get_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("path", "/nonexistent/deeply/nested"));
 
         // The server handles non-existent paths gracefully.
@@ -216,7 +216,7 @@ public class McpMultiFileIntegrationTest extends McpTestBase
     void testToolCallWithInvalidFileId() throws Exception
     {
         final JsonNode result = callTool("get_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", "bogus-file-id-does-not-exist")
+                .put("session_id", "bogus-file-id-does-not-exist")
                 .put("path", ""));
 
         assertNotNull(result.get("error"),
@@ -230,7 +230,7 @@ public class McpMultiFileIntegrationTest extends McpTestBase
                 "{\"active\":\"not-a-boolean\",\"count\":\"not-a-number\"}");
         final java.nio.file.Path schemaFile = createTempFile("mcp-invalid-schema-", ".json", SCHEMA_FLAGS);
 
-        final JsonNode result = callTool("open_file", OBJECT_MAPPER.createObjectNode()
+        final JsonNode result = callTool("open_session", OBJECT_MAPPER.createObjectNode()
                 .put("json_path", jsonFile.toString())
                 .put("schema_path", schemaFile.toString()));
 
@@ -249,12 +249,12 @@ public class McpMultiFileIntegrationTest extends McpTestBase
 
         // Close the session
         final JsonNode closeResult = parseToolResultPayload(
-                callTool("close_file", OBJECT_MAPPER.createObjectNode().put("file_id", fileId)));
-        assertTrue(closeResult.path("success").asBoolean(), "close_file must succeed");
+                callTool("close_session", OBJECT_MAPPER.createObjectNode().put("session_id", fileId)));
+        assertTrue(closeResult.path("ok").asBoolean(), "close_session must succeed");
 
         // Now try to read from the closed session - must return an error, not crash
         final JsonNode getNodeResult = callTool("get_node", OBJECT_MAPPER.createObjectNode()
-                .put("file_id", fileId)
+                .put("session_id", fileId)
                 .put("path", ""));
         assertNotNull(getNodeResult.get("error"),
                 "Expected JSON-RPC error when accessing a closed session");

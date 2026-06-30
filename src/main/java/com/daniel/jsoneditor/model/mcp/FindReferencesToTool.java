@@ -8,15 +8,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 class FindReferencesToTool extends ReadOnlyMcpTool
 {
-    private static final Logger logger = LoggerFactory.getLogger(FindReferencesToTool.class);
-    
 
     public FindReferencesToTool(final FileSessionManager sessionManager)
     {
@@ -40,7 +36,7 @@ class FindReferencesToTool extends ReadOnlyMcpTool
     {
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("path", "string",
                 "JSON path to a referenceable object instance to find references to (e.g., /processes/0)");
-        addFileIdProperty(props);
+        addSessionIdProperty(props);
         return props;
     }
 
@@ -48,7 +44,7 @@ class FindReferencesToTool extends ReadOnlyMcpTool
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
-        addFileIdRequired(arr);
+        addSessionIdRequired(arr);
         arr.add("path");
         return arr;
     }

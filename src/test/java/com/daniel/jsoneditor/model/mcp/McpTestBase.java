@@ -125,12 +125,12 @@ abstract class McpTestBase
     {
         final Path jsonFile = createTempFile("mcp-test-", ".json", jsonContent);
         final Path schemaFile = createTempFile("mcp-schema-", ".json", schemaContent);
-        final JsonNode openResult = callTool("open_file", OBJECT_MAPPER.createObjectNode()
+        final JsonNode openResult = callTool("open_session", OBJECT_MAPPER.createObjectNode()
                 .put("json_path", jsonFile.toString())
                 .put("schema_path", schemaFile.toString()));
-        assertNull(openResult.get("error"), "Expected no error from open_file");
-        final String fileId = parseToolResultPayload(openResult).path("file_id").asText();
-        assertFalse(fileId.isEmpty(), "Expected non-empty file_id");
+        assertNull(openResult.get("error"), "Expected no error from open_session");
+        final String fileId = parseToolResultPayload(openResult).path("session_id").asText();
+        assertFalse(fileId.isEmpty(), "Expected non-empty session_id");
         return fileId;
     }
 

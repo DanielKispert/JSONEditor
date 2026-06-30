@@ -125,7 +125,7 @@ public class FileSessionManager
      * @return {@link CloseFileResult#CLOSED} if closed, {@link CloseFileResult#NOT_FOUND} if not found,
      *         {@link CloseFileResult#GUI_OWNED} if the session is GUI-owned
      */
-    public CloseFileResult closeFile(final String sessionId)
+    public CloseFileResult closeSession(final String sessionId)
     {
         Objects.requireNonNull(sessionId, "sessionId must not be null");
         final CloseFileResult[] result = {CloseFileResult.NOT_FOUND};
@@ -383,7 +383,7 @@ public class FileSessionManager
     /**
      * Removes this session from {@code sessionToCanonicalPath} and decrements the ref count in
      * {@code filesByPath}. When the count reaches zero the shared model is evicted from the map.
-     * Called by both {@link #closeFile(String)} and {@link #detachSession(String)}.
+     * Called by both {@link #closeSession(String)} and {@link #detachSession(String)}.
      */
     private void decrementRefCount(final String sessionId)
     {
@@ -403,6 +403,11 @@ public class FileSessionManager
         }
     }
 
+    /**
+     * Hook for testing concurrent fast-path/slow-path races. Override in test subclasses to inject
+     * a delay between the fast-path peek and the subsequent {@code compute()} call.
+     * Empty in production.
+     */
     protected void afterFastPathPeek(final String canonicalJson)
     {
     }

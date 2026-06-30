@@ -34,7 +34,7 @@ class FindReferenceableInstanceTool extends ReadOnlyMcpTool
     {
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("referencing_key", "string",
                 "The referencing key of the referenceable object type");
-        addFileIdProperty(props);
+        addSessionIdProperty(props);
         final ObjectNode instanceKeyProp = JsonNodeFactory.instance.objectNode();
         instanceKeyProp.put("type", "string");
         instanceKeyProp.put("description", "The key value of the specific instance to find");
@@ -46,7 +46,7 @@ class FindReferenceableInstanceTool extends ReadOnlyMcpTool
     public ArrayNode getRequiredInputProperties()
     {
         final ArrayNode arr = JsonNodeFactory.instance.arrayNode();
-        addFileIdRequired(arr);
+        addSessionIdRequired(arr);
         arr.add("referencing_key");
         arr.add("instance_key");
         return arr;

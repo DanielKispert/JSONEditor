@@ -9,12 +9,17 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
+import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.settings.Settings;
+import java.io.File;
+
 /**
- * Base class for read-only MCP tools. Resolves the target model from a file_id argument.
+ * Base class for read-only MCP tools. Resolves the target model from a session_id argument.
  */
 public abstract class ReadOnlyMcpTool extends McpTool
 {
-    protected static final String FILE_ID_REQUIRED_MESSAGE = "file_id argument is required";
+    protected static final String SESSION_ID_REQUIRED_MESSAGE = "session_id argument is required";
 
     protected final FileSessionManager sessionManager;
 
@@ -25,16 +30,16 @@ public abstract class ReadOnlyMcpTool extends McpTool
     record ResolveResult(ReadableModel model, String error) {}
 
     protected ReadOnlyMcpTool(final FileSessionManager sessionManager)
-{
-        if (sessionManager == null)
     {
+        if (sessionManager == null)
+        {
             throw new IllegalArgumentException("sessionManager cannot be null");
         }
         this.sessionManager = sessionManager;
     }
 
     /**
-     * Resolves the {@code file_id} argument to a {@link ReadableModel},
+     * Resolves the {@code session_id} argument to a {@link ReadableModel},
      * eliminating the double-lookup between validation and retrieval.
      * <p>Note: the returned model reference remains valid even if the session
      * is concurrently closed, but may represent stale state.</p>
@@ -45,52 +50,68 @@ public abstract class ReadOnlyMcpTool extends McpTool
      * immediately when non-null.
      */
     protected ResolveResult resolveFileSession(final JsonNode arguments, final JsonNode id)
-{
-        final String fileId = getValidatedFileId(arguments);
-        if (fileId == null)
     {
-            return new ResolveResult(null, fileIdRequiredError(id));
+        final String sessionId = getValidatedSessionId(arguments);
+        if (sessionId == null)
+        {
+            return new ResolveResult(null, sessionIdRequiredError(id));
         }
-        final EditorSession session = sessionManager.getSession(fileId);
+        final EditorSession session = sessionManager.getSession(sessionId);
         if (session == null)
-    {
+        {
             return new ResolveResult(null,
                     JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
-                            "Unknown file_id: " + fileId));
+                            "Unknown session_id: " + sessionId));
         }
         return new ResolveResult(session.model(), null);
     }
 
     /**
-     * Returns the file_id string from arguments if present and non-empty, or null if missing/empty.
-     * Callers should return {@link #fileIdRequiredError(JsonNode)} when this returns null.
+     * Returns the session_id string from arguments if present and non-empty, or null if missing/empty.
+     * Callers should return {@link #sessionIdRequiredError(JsonNode)} when this returns null.
      */
-    protected String getValidatedFileId(final JsonNode arguments)
-{
-        final String fileId = arguments.path("file_id").asText(null);
-        if (fileId == null || fileId.isEmpty())
+    protected String getValidatedSessionId(final JsonNode arguments)
     {
+        final String sessionId = arguments.path("session_id").asText(null);
+        if (sessionId == null || sessionId.isEmpty())
+        {
             return null;
         }
-        return fileId;
+        return sessionId;
     }
 
-    /** Builds a JSON-RPC error response for a missing or empty file_id argument. */
-    protected String fileIdRequiredError(final JsonNode id)
-{
-        return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, FILE_ID_REQUIRED_MESSAGE);
+    /** Builds a JSON-RPC error response for a missing or empty session_id argument. */
+    protected String sessionIdRequiredError(final JsonNode id)
+    {
+        return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, SESSION_ID_REQUIRED_MESSAGE);
     }
 
-    protected static void addFileIdProperty(final ObjectNode properties)
-{
-        final ObjectNode fileIdProp = JsonNodeFactory.instance.objectNode();
-        fileIdProp.put("type", "string");
-        fileIdProp.put("description", "Session ID of the file to operate on (from list_files or open_file)");
-        properties.set("file_id", fileIdProp);
+    protected static void addSessionIdProperty(final ObjectNode properties)
+    {
+        final ObjectNode sessionIdProp = JsonNodeFactory.instance.objectNode();
+        sessionIdProp.put("type", "string");
+        sessionIdProp.put("description", "Session ID of the file to operate on (from list_sessions or open_session)");
+        properties.set("session_id", sessionIdProp);
     }
 
-    protected static void addFileIdRequired(final ArrayNode required)
-{
-        required.add("file_id");
+    protected static void addSessionIdRequired(final ArrayNode required)
+    {
+        required.add("session_id");
+    }
+
+    /**
+     * Loads settings from the given file and applies them to the model.
+     *
+     * @return {@code true} if settings were loaded and applied; {@code false} if the file could not be parsed
+     */
+    protected static boolean applySettingsFile(final File settingsFile, final WritableModel writableModel)
+    {
+        final Settings settings = new JsonFileReaderAndWriterImpl().getJsonFromFile(settingsFile, Settings.class, true);
+        if (settings == null)
+        {
+            return false;
+        }
+        writableModel.setSettings(settings);
+        return true;
     }
 }

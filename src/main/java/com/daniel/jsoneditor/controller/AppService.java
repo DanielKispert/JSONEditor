@@ -145,6 +145,16 @@ public class AppService
      */
     public void openFileInNewWindowDirect(final File jsonFile, final File schemaFile)
     {
+        openFileInNewWindowDirect(jsonFile, schemaFile, null);
+    }
+
+    /**
+     * Opens a new editor window and immediately loads the given JSON+schema file pair with optional settings.
+     * If a window for this file is already open, focuses it instead.
+     * Must be called on the JavaFX Application Thread.
+     */
+    public void openFileInNewWindowDirect(final File jsonFile, final File schemaFile, final File settingsFile)
+    {
         assert Platform.isFxApplicationThread() : "Must be called on JavaFX Application Thread";
         if (shuttingDown.get())
         {
@@ -156,7 +166,7 @@ public class AppService
         window.setOnClose(() -> onWindowClosed(window));
         try
         {
-            final AttachResult result = attachLoadedSession(window, window.getStage(), jsonFile, schemaFile, null);
+            final AttachResult result = attachLoadedSession(window, window.getStage(), jsonFile, schemaFile, settingsFile);
             if (!result.success())
             {
                 windows.remove(window);
