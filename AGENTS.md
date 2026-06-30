@@ -113,7 +113,7 @@ Session management tools (extend `ReadOnlyMcpTool`, no `session_id` needed):
 
 Per-file read tools (require `session_id`):
 - `GetFileInfoTool`, `GetNodeTool`, `GetSchemaForPathTool`, `GetExamplesTool`
-- `GetReferenceableObjectsTool`, `GetReferenceableInstancesTool`, `FindReferencesToTool`
+- `GetReferenceableObjectsTool`, `GetReferenceableInstancesTool`, `FindReferenceableInstanceTool`, `FindReferencesToTool`, `ValidateNodeTool`
 
 - `ShowGuiTool` / `show_gui` – open GUI for a file; requires EITHER `session_id` OR `json_path`+`schema_path` (mutually exclusive)
 
