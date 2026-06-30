@@ -1,11 +1,11 @@
 package com.daniel.jsoneditor.model.mcp;
 
-import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
+
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.model.sessions.EditorSession;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
-import com.daniel.jsoneditor.model.settings.Settings;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -94,14 +94,9 @@ class OpenSessionTool extends ReadOnlyMcpTool
             }
             else if (session != null && session.model() instanceof WritableModel writableModel)
             {
-                final Settings settings = new JsonFileReaderAndWriterImpl().getJsonFromFile(settingsFile, Settings.class, true);
-                if (settings == null)
+                if (!applySettingsFile(settingsFile, writableModel))
                 {
                     logger.warn("Settings file could not be parsed, session will use default settings: {}", settingsPath);
-                }
-                else
-                {
-                    writableModel.setSettings(settings);
                 }
             }
         }

@@ -9,6 +9,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
+import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.settings.Settings;
+import java.io.File;
+
 /**
  * Base class for read-only MCP tools. Resolves the target model from a session_id argument.
  */
@@ -92,5 +97,21 @@ public abstract class ReadOnlyMcpTool extends McpTool
     protected static void addSessionIdRequired(final ArrayNode required)
     {
         required.add("session_id");
+    }
+
+    /**
+     * Loads settings from the given file and applies them to the model.
+     *
+     * @return {@code true} if settings were loaded and applied; {@code false} if the file could not be parsed
+     */
+    protected static boolean applySettingsFile(final File settingsFile, final WritableModel writableModel)
+    {
+        final Settings settings = new JsonFileReaderAndWriterImpl().getJsonFromFile(settingsFile, Settings.class, true);
+        if (settings == null)
+        {
+            return false;
+        }
+        writableModel.setSettings(settings);
+        return true;
     }
 }

@@ -47,10 +47,10 @@ class CloseSessionTool extends ReadOnlyMcpTool
     @Override
     public String execute(final JsonNode arguments, final JsonNode id) throws JsonProcessingException
     {
-        final String sessionId = arguments.path("session_id").asText(null);
-        if (sessionId == null || sessionId.isEmpty())
+        final String sessionId = getValidatedSessionId(arguments);
+        if (sessionId == null)
         {
-            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, "session_id argument is required");
+            return sessionIdRequiredError(id);
         }
 
         final CloseFileResult result = sessionManager.closeSession(sessionId);

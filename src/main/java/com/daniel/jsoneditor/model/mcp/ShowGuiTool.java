@@ -1,12 +1,12 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.controller.AppService;
-import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
+
 import com.daniel.jsoneditor.model.WritableModel;
 import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.model.sessions.EditorSession;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
-import com.daniel.jsoneditor.model.settings.Settings;
+
 import com.daniel.jsoneditor.util.CanonicalPaths;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -146,13 +146,7 @@ class ShowGuiTool extends McpTool
                 final EditorSession attachedSession = sessionManager.getSession(resolvedSessionId);
                 if (attachedSession != null && attachedSession.model() instanceof WritableModel writableModel)
                 {
-                    final Settings settings =
-                            new JsonFileReaderAndWriterImpl()
-                                    .getJsonFromFile(settingsFile, Settings.class, true);
-                    if (settings != null)
-                    {
-                        writableModel.setSettings(settings);
-                    }
+                    ReadOnlyMcpTool.applySettingsFile(settingsFile, writableModel);
                 }
             }
         }
@@ -175,10 +169,7 @@ class ShowGuiTool extends McpTool
         });
 
         final ObjectNode result = JsonNodeFactory.instance.objectNode();
-        if (resolvedSessionId != null)
-        {
-            result.put("session_id", resolvedSessionId);
-        }
+        result.put("session_id", resolvedSessionId);
         result.put("gui_state", guiState);
         result.put("note", "Window operation queued on the JavaFX thread.");
         return McpToolRegistry.createToolResult(id, result);
