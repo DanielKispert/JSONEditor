@@ -1,8 +1,12 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.controller.AppService;
+import com.daniel.jsoneditor.controller.impl.json.impl.JsonFileReaderAndWriterImpl;
+import com.daniel.jsoneditor.model.WritableModel;
+import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.model.sessions.EditorSession;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
+import com.daniel.jsoneditor.model.settings.Settings;
 import com.daniel.jsoneditor.util.CanonicalPaths;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -129,7 +133,28 @@ class ShowGuiTool extends McpTool
             schemaFile = new File(schemaPath);
             final String settingsPath = arguments.path("settings_path").asText(null);
             settingsFile = (settingsPath != null && !settingsPath.isEmpty()) ? new File(settingsPath) : null;
-            resolvedSessionId = null;
+
+            final AttachResult attachResult = sessionManager.attachSession(jsonPath, schemaPath, false);
+            if (!attachResult.success())
+            {
+                return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS, attachResult.error());
+            }
+            resolvedSessionId = attachResult.sessionId();
+
+            if (settingsFile != null && settingsFile.exists())
+            {
+                final EditorSession attachedSession = sessionManager.getSession(resolvedSessionId);
+                if (attachedSession != null && attachedSession.model() instanceof WritableModel writableModel)
+                {
+                    final Settings settings =
+                            new JsonFileReaderAndWriterImpl()
+                                    .getJsonFromFile(settingsFile, Settings.class, true);
+                    if (settings != null)
+                    {
+                        writableModel.setSettings(settings);
+                    }
+                }
+            }
         }
 
         final String canonicalPath = CanonicalPaths.canonicalize(jsonFile);
