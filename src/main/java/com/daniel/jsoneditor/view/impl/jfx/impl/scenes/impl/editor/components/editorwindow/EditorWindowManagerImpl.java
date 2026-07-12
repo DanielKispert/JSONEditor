@@ -14,8 +14,11 @@ import javafx.scene.control.SplitPane;
 import javafx.stage.Screen;
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+
 
 // manages the positions of editor windows etc
 public class EditorWindowManagerImpl implements EditorWindowManager
@@ -261,8 +264,119 @@ public class EditorWindowManagerImpl implements EditorWindowManager
     {
         editorWindowContainer.getItems().remove(windowToClose);
     }
-    
-    
+
+    @Override
+    public void closeOtherWindows(final JsonEditorEditorWindow windowToKeep)
+    {
+        final List<Node> toRemove = new ArrayList<>();
+        for (final Node node : editorWindowContainer.getItems())
+        {
+            if (node instanceof JsonEditorEditorWindow && node != windowToKeep)
+            {
+                toRemove.add(node);
+            }
+        }
+        editorWindowContainer.getItems().removeAll(toRemove);
+    }
+
+    @Override
+    public void closeAllWindows()
+    {
+        editorWindowContainer.getItems().removeIf(node -> node instanceof JsonEditorEditorWindow);
+    }
+
+    @Override
+    public void closeWindowsToTheRight(final JsonEditorEditorWindow reference)
+    {
+        final ObservableList<Node> items = editorWindowContainer.getItems();
+        final int index = items.indexOf(reference);
+        if (index < 0)
+        {
+            return;
+        }
+        final List<Node> toRemove = new ArrayList<>();
+        for (int i = index + 1; i < items.size(); i++)
+        {
+            if (items.get(i) instanceof JsonEditorEditorWindow)
+            {
+                toRemove.add(items.get(i));
+            }
+        }
+        items.removeAll(toRemove);
+    }
+
+    @Override
+    public void closeWindowsToTheLeft(final JsonEditorEditorWindow reference)
+    {
+        final ObservableList<Node> items = editorWindowContainer.getItems();
+        final int index = items.indexOf(reference);
+        if (index < 0)
+        {
+            return;
+        }
+        final List<Node> toRemove = new ArrayList<>();
+        for (int i = 0; i < index; i++)
+        {
+            if (items.get(i) instanceof JsonEditorEditorWindow)
+            {
+                toRemove.add(items.get(i));
+            }
+        }
+        items.removeAll(toRemove);
+    }
+
+    @Override
+    public int getOpenWindowCount()
+    {
+        int count = 0;
+        for (final Node node : editorWindowContainer.getItems())
+        {
+            if (node instanceof JsonEditorEditorWindow)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public boolean hasWindowsToTheRight(final JsonEditorEditorWindow reference)
+    {
+        final ObservableList<Node> items = editorWindowContainer.getItems();
+        final int index = items.indexOf(reference);
+        if (index < 0)
+        {
+            return false;
+        }
+        for (int i = index + 1; i < items.size(); i++)
+        {
+            if (items.get(i) instanceof JsonEditorEditorWindow)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean hasWindowsToTheLeft(final JsonEditorEditorWindow reference)
+    {
+        final ObservableList<Node> items = editorWindowContainer.getItems();
+        final int index = items.indexOf(reference);
+        if (index < 0)
+        {
+            return false;
+        }
+        for (int i = 0; i < index; i++)
+        {
+            if (items.get(i) instanceof JsonEditorEditorWindow)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void selectOnNavbar(String path)
     {

@@ -254,4 +254,83 @@ class EditorWindowManagerFlashTest
                 "focusArrayItem() must be called: item is rendered inline in the child table already visible in this window");
         assertEquals(1, windowCount(), "no new window: item is visible via child table in existing window");
     }
+
+    /**
+     * Exercises all close-group operations in a realistic flow, and verifies the ordering query methods
+     * that drive enable/disable logic in the context menu.
+     */
+    @Test
+    void closeWindowGroupOperations_flowAcrossMultipleWindows()
+    {
+        // Phase 1: four windows open — validate query state
+        final TestEditorWindow leftWindow = createTestWindow("/left", NO_CHILD_PATHS);
+        final TestEditorWindow refWindow = createTestWindow("/ref", NO_CHILD_PATHS);
+        final TestEditorWindow rightA = createTestWindow("/rightA", NO_CHILD_PATHS);
+        final TestEditorWindow rightB = createTestWindow("/rightB", NO_CHILD_PATHS);
+        addWindows(leftWindow, refWindow, rightA, rightB);
+
+        assertEquals(4, editorWindowManager.getOpenWindowCount(), "four windows open initially");
+        assertTrue(editorWindowManager.hasWindowsToTheLeft(refWindow), "ref has windows to its left");
+        assertTrue(editorWindowManager.hasWindowsToTheRight(refWindow), "ref has windows to its right");
+        assertFalse(editorWindowManager.hasWindowsToTheLeft(leftWindow), "leftmost has no windows to its left");
+        assertFalse(editorWindowManager.hasWindowsToTheRight(rightB), "rightmost has no windows to its right");
+
+        // Phase 2: closeWindowsToTheRight — keeps ref and everything left
+        WaitForAsyncUtils.asyncFx(() -> editorWindowManager.closeWindowsToTheRight(refWindow));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertEquals(2, windowCount(), "leftWindow + refWindow remain after closeRight");
+        assertTrue(editorWindowManager.getEditorWindowContainer().getItems().contains(leftWindow), "leftWindow survives closeRight");
+        assertTrue(editorWindowManager.getEditorWindowContainer().getItems().contains(refWindow), "refWindow survives closeRight");
+        assertFalse(editorWindowManager.hasWindowsToTheRight(refWindow), "refWindow is now rightmost");
+
+        // Phase 3: re-populate, closeWindowsToTheLeft — keeps ref and everything right
+        clearWindows();
+        addWindows(leftWindow, refWindow, rightA, rightB);
+
+        WaitForAsyncUtils.asyncFx(() -> editorWindowManager.closeWindowsToTheLeft(refWindow));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertEquals(3, windowCount(), "refWindow + rightA + rightB remain after closeLeft");
+        assertFalse(editorWindowManager.getEditorWindowContainer().getItems().contains(leftWindow), "leftWindow removed by closeLeft");
+        assertTrue(editorWindowManager.getEditorWindowContainer().getItems().contains(refWindow), "refWindow survives closeLeft");
+        assertTrue(editorWindowManager.getEditorWindowContainer().getItems().contains(rightA), "rightA survives closeLeft");
+        assertTrue(editorWindowManager.getEditorWindowContainer().getItems().contains(rightB), "rightB survives closeLeft");
+        assertFalse(editorWindowManager.hasWindowsToTheLeft(refWindow), "refWindow is now leftmost");
+
+        // Phase 4: re-populate, closeOtherWindows — keeps only the named window
+        clearWindows();
+        addWindows(leftWindow, refWindow, rightA, rightB);
+
+        WaitForAsyncUtils.asyncFx(() -> editorWindowManager.closeOtherWindows(leftWindow));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertEquals(1, windowCount(), "only leftWindow survives closeOtherWindows");
+        assertTrue(editorWindowManager.getEditorWindowContainer().getItems().contains(leftWindow), "leftWindow is sole survivor");
+        assertEquals(1, editorWindowManager.getOpenWindowCount(), "getOpenWindowCount reflects single survivor");
+
+        // Phase 5: closeAllWindows — empties the list
+        WaitForAsyncUtils.asyncFx(() -> editorWindowManager.closeAllWindows());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertEquals(0, windowCount(), "closeAllWindows must empty the list");
+        assertEquals(0, editorWindowManager.getOpenWindowCount(), "getOpenWindowCount is 0 after closeAll");
+
+        // Phase 6: no-op edge case — reference window not in list
+        addWindows(leftWindow, rightA);
+        final TestEditorWindow ghost = createTestWindow("/ghost", NO_CHILD_PATHS);
+
+        WaitForAsyncUtils.asyncFx(() -> editorWindowManager.closeWindowsToTheRight(ghost));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertEquals(2, windowCount(), "closeWindowsToTheRight with absent window must not change list");
+
+        WaitForAsyncUtils.asyncFx(() -> editorWindowManager.closeWindowsToTheLeft(ghost));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertEquals(2, windowCount(), "closeWindowsToTheLeft with absent window must not change list");
+
+        assertFalse(editorWindowManager.hasWindowsToTheRight(ghost), "absent window reports false for hasWindowsToTheRight");
+        assertFalse(editorWindowManager.hasWindowsToTheLeft(ghost), "absent window reports false for hasWindowsToTheLeft");
+
+        clearWindows();
+    }
 }
