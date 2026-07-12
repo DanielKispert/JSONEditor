@@ -28,6 +28,45 @@ public interface EditorWindowManager
     void closeWindow(JsonEditorEditorWindow windowToClose);
     
     /**
+     * Closes all editor windows except the given one.
+     */
+    void closeOtherWindows(JsonEditorEditorWindow windowToKeep);
+    
+    /**
+     * Closes all editor windows.
+     */
+    void closeAllWindows();
+    
+    /**
+     * Closes all editor windows positioned to the right of the reference window in the SplitPane items list.
+     * Does nothing if the reference window is not present.
+     */
+    void closeWindowsToTheRight(JsonEditorEditorWindow reference);
+    
+    /**
+     * Closes all editor windows positioned to the left of the reference window in the SplitPane items list.
+     * Does nothing if the reference window is not present.
+     */
+    void closeWindowsToTheLeft(JsonEditorEditorWindow reference);
+    
+    /**
+     * Returns the number of open editor windows.
+     */
+    int getOpenWindowCount();
+
+    /**
+     * Returns true if at least one editor window exists after the reference window in the SplitPane order.
+     * Returns false if the reference window is not present in the list.
+     */
+    boolean hasWindowsToTheRight(JsonEditorEditorWindow reference);
+
+    /**
+     * Returns true if at least one editor window exists before the reference window in the SplitPane order.
+     * Returns false if the reference window is not present in the list.
+     */
+    boolean hasWindowsToTheLeft(JsonEditorEditorWindow reference);
+    
+    /**
      * focuses the windows with the parent array onto this item. If no window has the array open, opens a new window with the array and
      * scrolls to the item
      */

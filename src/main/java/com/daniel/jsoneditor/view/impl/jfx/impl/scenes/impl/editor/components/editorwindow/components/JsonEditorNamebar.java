@@ -14,7 +14,10 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.ed
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+
 import com.daniel.jsoneditor.model.json.JsonNodeWithPath;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -131,13 +134,40 @@ public class JsonEditorNamebar extends HBox
     
     private Button makeCloseWindowButton()
     {
-        Button closeWindowButton = new Button();
+        final Button closeWindowButton = new Button();
         ButtonHelper.setButtonImage(closeWindowButton, "/icons/material/darkmode/outline_close_white_24dp.png");
         closeWindowButton.setOnAction(actionEvent -> manager.closeWindow(editorWindow));
         closeWindowButton.setAlignment(Pos.CENTER_RIGHT);
+        final ContextMenu contextMenu = buildCloseContextMenu();
+        closeWindowButton.setOnContextMenuRequested(
+                event -> contextMenu.show(closeWindowButton, event.getScreenX(), event.getScreenY()));
         return closeWindowButton;
     }
-    
+
+    private ContextMenu buildCloseContextMenu()
+    {
+        final MenuItem closeOthers = new MenuItem("Close Others");
+        final MenuItem closeAll = new MenuItem("Close All");
+        final MenuItem closeRight = new MenuItem("Close to the Right");
+        final MenuItem closeLeft = new MenuItem("Close to the Left");
+
+        closeOthers.setOnAction(event -> manager.closeOtherWindows(editorWindow));
+        closeAll.setOnAction(event -> manager.closeAllWindows());
+        closeRight.setOnAction(event -> manager.closeWindowsToTheRight(editorWindow));
+        closeLeft.setOnAction(event -> manager.closeWindowsToTheLeft(editorWindow));
+
+        final ContextMenu contextMenu = new ContextMenu(closeOthers, closeAll, closeRight, closeLeft);
+        contextMenu.setOnShowing(event ->
+        {
+            final boolean moreThanOne = manager.getOpenWindowCount() > 1;
+            closeOthers.setDisable(!moreThanOne);
+            closeAll.setDisable(!moreThanOne);
+            closeRight.setDisable(!manager.hasWindowsToTheRight(editorWindow));
+            closeLeft.setDisable(!manager.hasWindowsToTheLeft(editorWindow));
+        });
+        return contextMenu;
+    }
+
     private Button makeDeleteItemButton()
     {
         Button deleteItemButton = new Button();
