@@ -17,9 +17,9 @@ public class DiffEntry
     {
         /** Normal JSON node without special schema metadata */
         NORMAL,
-        /** Entity reference (e.g., /processes/0/entityReferences/3) */
+        /** Entity reference (e.g., /items/0/links/3) */
         REFERENCE_TO_OBJECT,
-        /** Referenceable object instance (e.g., /processes/0, /fields/5) */
+        /** Referenceable object instance (e.g., /items/0, /items/5) */
         REFERENCEABLE_OBJECT
     }
     
