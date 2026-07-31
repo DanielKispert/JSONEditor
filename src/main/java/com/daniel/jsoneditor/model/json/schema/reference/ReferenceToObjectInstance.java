@@ -59,6 +59,16 @@ public class ReferenceToObjectInstance implements ReferencingInstance
         return remarks;
     }
     
+    /**
+     * Returns the resolved runtime value of the object's referencing key — the value found at
+     * the objectReferencingKey JSON pointer in this instance's node. Distinct from
+     * {@link ReferenceToObject#getObjectReferencingKey()} which returns the schema JSON pointer template.
+     */
+    public String getResolvedObjectReferencingKey()
+    {
+        return referencingKey;
+    }
+    
     public boolean refersToObject(ReferenceableObjectInstance objectInstance)
     {
         final String objectKey = objectInstance.getKey();

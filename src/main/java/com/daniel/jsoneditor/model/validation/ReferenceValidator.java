@@ -69,7 +69,7 @@ public final class ReferenceValidator
         if (resolvedPath == null)
         {
             final ReferenceableObject refObject = ReferenceHelper.getReferenceableObject(model,
-                instance.getReference().getObjectReferencingKey());
+                instance.getResolvedObjectReferencingKey());
             
             if (refObject == null)
             {
