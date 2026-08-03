@@ -35,7 +35,7 @@ class GetSchemaForPathTool extends ReadOnlyMcpTool
     public ObjectNode getInputSchema()
     {
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("path", "string",
-                "JSON path to get schema for (e.g., /processes/0)");
+                "JSON path to get schema for (e.g., /items/0)");
         addSessionIdProperty(props);
         return props;
     }

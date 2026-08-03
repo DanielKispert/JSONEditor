@@ -35,7 +35,7 @@ class FindReferencesToTool extends ReadOnlyMcpTool
     public ObjectNode getInputSchema()
     {
         final ObjectNode props = McpToolRegistry.createSchemaWithProperty("path", "string",
-                "JSON path to a referenceable object instance to find references to (e.g., /processes/0)");
+                "JSON path to a referenceable object instance to find references to (e.g., /items/0)");
         addSessionIdProperty(props);
         return props;
     }
