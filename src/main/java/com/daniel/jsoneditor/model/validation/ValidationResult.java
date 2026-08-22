@@ -43,7 +43,7 @@ public class ValidationResult
         
         for (ValidationError error : errors)
         {
-            summary.append("  • ").append(error.getMessage()).append("\n");
+            summary.append("  • ").append(error.toString()).append("\n");
         }
         
         return summary.toString();

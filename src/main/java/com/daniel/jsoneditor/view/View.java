@@ -2,8 +2,11 @@ package com.daniel.jsoneditor.view;
 
 import com.daniel.jsoneditor.model.observe.Observer;
 import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.model.validation.ValidationError;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
 import javafx.scene.paint.Color;
+
+import java.util.List;
 
 
 public interface View extends Observer
@@ -26,6 +29,13 @@ public interface View extends Observer
      * @param color The color of the toast
      */
     void showCustomToast(String message, Color color);
+
+    /**
+     * Formats and displays each validation error as a red toast message.
+     *
+     * @param errors the structured validation errors to display
+     */
+    void showValidationErrors(List<ValidationError> errors);
     
     /**
      * Updates the window title with the given unsaved changes count.
