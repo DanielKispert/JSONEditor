@@ -1,9 +1,11 @@
 package com.daniel.jsoneditor.view.impl;
 
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
+import com.daniel.jsoneditor.model.validation.ValidationError;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.ThemedAlert;
 import com.daniel.jsoneditor.view.impl.jfx.toast.DebugToastMessageGenerator;
 import com.daniel.jsoneditor.view.impl.jfx.toast.Toasts;
+import com.daniel.jsoneditor.view.impl.jfx.toast.ValidationErrorFormatter;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.paint.Color;
@@ -137,6 +139,15 @@ public class ViewImpl implements View
     public void showCustomToast(String message, Color color)
     {
         uiHandler.showToastMessage(message, color);
+    }
+    
+    @Override
+    public void showValidationErrors(List<ValidationError> errors)
+    {
+        for (ValidationError error : errors)
+        {
+            showCustomToast(ValidationErrorFormatter.format(error, model), Color.RED);
+        }
     }
     
     @Override

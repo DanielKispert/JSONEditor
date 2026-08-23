@@ -40,7 +40,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.daniel.jsoneditor.model.statemachine.impl.Event;
 import com.daniel.jsoneditor.model.statemachine.impl.EventEnum;
 import com.daniel.jsoneditor.model.validation.ReferenceValidator;
-import com.daniel.jsoneditor.model.validation.ValidationError;
 import com.daniel.jsoneditor.model.validation.ValidationResult;
 import com.daniel.jsoneditor.view.View;
 import com.daniel.jsoneditor.view.impl.ViewImpl;
@@ -536,10 +535,7 @@ public class ControllerImpl implements Controller, Observer
 
         if (!validationResult.isValid())
         {
-            for (ValidationError error : validationResult.getErrors())
-            {
-                view.showCustomToast(error.getMessage(), Color.RED);
-            }
+            view.showValidationErrors(validationResult.getErrors());
             return;
         }
 

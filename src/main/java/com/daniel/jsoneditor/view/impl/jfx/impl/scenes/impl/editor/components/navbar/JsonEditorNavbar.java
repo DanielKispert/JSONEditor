@@ -54,7 +54,7 @@ public class JsonEditorNavbar extends VBox
     {
         HBox buttonBar = new HBox();
         HistoryButton historyButton = new HistoryButton(controller, stage);
-        DiffButton diffButton = new DiffButton(controller, editorWindowManager, stage);
+        DiffButton diffButton = new DiffButton(controller, editorWindowManager, stage, model);
         NavBarSwitchButton navBarSwitchButton = new NavBarSwitchButton(model, this);
         buttonBar.getChildren().addAll(diffButton, historyButton, navBarSwitchButton);
         HBox.setHgrow(buttonBar, Priority.NEVER);

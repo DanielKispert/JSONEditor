@@ -2,6 +2,8 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs;
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.diff.DiffEntry;
+import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.PathDisplayConverter;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -26,8 +28,9 @@ public class DiffDialog extends Dialog<Void>
     private final ListView<DiffEntry> diffListView;
     private final EditorWindowManager editorWindowManager;
     private final Controller controller;
+    private final ReadableModel model;
     
-    public DiffDialog(List<DiffEntry> diffs, EditorWindowManager editorWindowManager, Controller controller)
+    public DiffDialog(List<DiffEntry> diffs, EditorWindowManager editorWindowManager, Controller controller, ReadableModel model)
     {
         if (diffs == null)
         {
@@ -36,6 +39,7 @@ public class DiffDialog extends Dialog<Void>
         
         this.editorWindowManager = editorWindowManager;
         this.controller = controller;
+        this.model = model;
         
         setTitle(String.format("JSON Differences (%d)", diffs.size()));
         
@@ -117,7 +121,7 @@ public class DiffDialog extends Dialog<Void>
             final Text iconText = new Text(getIconForType(item.getType()));
             iconText.getStyleClass().add("diff-icon-" + item.getType().name().toLowerCase());
             
-            final Text pathText = new Text(item.getPath());
+            final Text pathText = new Text(PathDisplayConverter.convertToDisplay(dialog.model, item.getPath()));
             pathText.getStyleClass().add("dialog-list-cell-text");
             
             topRow.getChildren().addAll(iconText, pathText);

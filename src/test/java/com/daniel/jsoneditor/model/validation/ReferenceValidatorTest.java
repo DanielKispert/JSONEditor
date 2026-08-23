@@ -2,6 +2,7 @@ package com.daniel.jsoneditor.model.validation;
 
 import com.daniel.jsoneditor.model.impl.ModelFactory;
 import com.daniel.jsoneditor.model.impl.ModelImpl;
+import com.daniel.jsoneditor.model.validation.ValidationError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -12,9 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Verifies that ReferenceValidator correctly detects dangling cross-object references.
@@ -39,7 +38,7 @@ public class ReferenceValidatorTest
             + "\"referenceRemarks\":\"/label\"}]}";
 
     @Test
-    void danglingReferenceIsReportedAsInvalid()
+    void danglingReference_isStructured_withRawPathAndKindAndKeys()
     {
         // item_a exists; its links point to item_b which does NOT exist -> dangling reference.
         final ModelImpl model = buildModel(buildItemWithLink("item_a", "item_b", "item_ref", "lbl_1"));
@@ -49,8 +48,19 @@ public class ReferenceValidatorTest
         assertFalse(result.isValid(), "Dangling reference should be flagged as invalid");
         assertEquals(1, result.getErrorCount(), "Expected exactly one validation error");
         final ValidationError error = result.getErrors().get(0);
-        assertTrue(error.getPath().contains("links"), "Error path should reference the links node");
-        assertTrue(error.getMessage().contains("item_b"), "Error message should name the missing target key");
+
+        // structured type
+        assertEquals(ValidationError.Type.DANGLING_REFERENCE, error.getType());
+
+        // error location: raw JSON pointer (not display name)
+        assertTrue(error.getPath().contains("/items"), "Path must contain '/items': " + error.getPath());
+        assertTrue(error.getPath().contains("links"), "Path must contain 'links': " + error.getPath());
+        assertFalse(error.getPath().contains("item_a"), "Path must not contain display name: " + error.getPath());
+
+        // structured fields for view-layer formatting
+        assertEquals("item_ref", error.getReferencingKey(), "referencingKey should be the schema reference type");
+        assertEquals("item_b", error.getObjectKey(), "objectKey should be the unresolvable target key");
+        assertEquals("/items", error.getReferencedObjectPath(), "referencedObjectPath should be the raw array path");
     }
 
     @Test
@@ -120,4 +130,5 @@ public class ReferenceValidatorTest
                 new File("dummy.json"), new File("dummy_schema.json"), data, schema);
         return model;
     }
+
 }

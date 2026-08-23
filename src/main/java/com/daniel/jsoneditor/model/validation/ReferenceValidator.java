@@ -57,10 +57,7 @@ public final class ReferenceValidator
         
         if (objectKey == null || objectKey.isEmpty())
         {
-            errors.add(new ValidationError(path, String.format(
-                "Invalid reference at '%s': Empty or missing reference key",
-                path
-            )));
+            errors.add(ValidationError.emptyKey(path));
             return;
         }
         
@@ -76,13 +73,12 @@ public final class ReferenceValidator
                 return;
             }
             
-            errors.add(new ValidationError(path, String.format(
-                "Invalid reference at '%s': Cannot find %s with key '%s' in '%s'",
+            errors.add(ValidationError.danglingReference(
                 path,
                 refObject.getReferencingKey(),
                 objectKey,
                 refObject.getPath()
-            )));
+            ));
         }
     }
 }

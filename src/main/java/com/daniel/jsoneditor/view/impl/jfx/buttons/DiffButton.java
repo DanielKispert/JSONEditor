@@ -1,6 +1,7 @@
 package com.daniel.jsoneditor.view.impl.jfx.buttons;
 
 import com.daniel.jsoneditor.controller.Controller;
+import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.diff.DiffEntry;
 import com.daniel.jsoneditor.view.impl.jfx.dialogs.DiffDialog;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
@@ -21,13 +22,15 @@ public class DiffButton extends Button
     private final Controller controller;
     private final EditorWindowManager manager;
     private final Stage parentStage;
+    private final ReadableModel model;
     
-    public DiffButton(Controller controller, EditorWindowManager manager, Stage parentStage)
+    public DiffButton(final Controller controller, final EditorWindowManager manager, final Stage parentStage, final ReadableModel model)
     {
         super();
         this.controller = controller;
         this.manager = manager;
         this.parentStage = parentStage;
+        this.model = model;
         
         ButtonHelper.setButtonImage(this, "/icons/material/darkmode/outline_difference_white_24dp.png");
         setOnAction(actionEvent -> showDiff());
@@ -44,7 +47,7 @@ public class DiffButton extends Button
             return;
         }
         
-        final DiffDialog dialog = new DiffDialog(diffs, manager, controller);
+        final DiffDialog dialog = new DiffDialog(diffs, manager, controller, model);
         dialog.initOwner(parentStage);
         dialog.showAndWait();
     }
