@@ -10,7 +10,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.ReadableModel;
 import com.daniel.jsoneditor.model.observe.Subject;
@@ -21,24 +20,32 @@ import com.daniel.jsoneditor.view.impl.jfx.impl.UIHandlerImpl;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ViewImpl implements View {
 
+public class ViewImpl implements View
+{
     private final List<Subject> subjects;
+    
     private ReadableModel model;
+    
     private final Controller controller;
+    
     private final UIHandler uiHandler;
-
-    public ViewImpl(ReadableModel model, Controller controller, Stage stage) {
+    
+    public ViewImpl(ReadableModel model, Controller controller, Stage stage)
+    {
         this.subjects = new ArrayList<>();
         this.uiHandler = new UIHandlerImpl(controller, stage, model);
         this.controller = controller;
         this.model = model;
     }
-
+    
+    
     @Override
-    public void update() {
+    public void update()
+    {
         Event newEvent = model.getLatestEvent();
-        switch (newEvent.getEvent()) {
+        switch (newEvent.getEvent())
+        {
             case LAUNCHING:
                 controller.launchFinished();
                 break;
@@ -73,26 +80,31 @@ public class ViewImpl implements View {
                 break;
             case COMMAND_APPLIED:
                 uiHandler.handleCommandApplied(newEvent);
-                if (controller.getSettingsController().isDebugMode()) {
+                if (controller.getSettingsController().isDebugMode())
+                {
                     final String debugMessage = DebugToastMessageGenerator.generateMessage(newEvent);
-                    showCustomToast(debugMessage, Color.ORANGE);
+                    showCustomToast(debugMessage, javafx.scene.paint.Color.ORANGE);
                 }
                 break;
             case GIT_BLAME_LOADED:
                 uiHandler.handleGitBlameLoaded();
                 break;
         }
+    
     }
-
+    
     @Override
-    public void observe(Subject subjectToObserve) {
+    public void observe(Subject subjectToObserve)
+    {
         subjectToObserve.registerObserver(this);
         subjects.add(subjectToObserve);
     }
 
     @Override
-    public void reloadForNewModel(final ReadableModel newModel) {
-        for (final Subject subject : subjects) {
+    public void reloadForNewModel(final ReadableModel newModel)
+    {
+        for (final Subject subject : subjects)
+        {
             subject.removeObserver(this);
         }
         subjects.clear();
@@ -101,41 +113,46 @@ public class ViewImpl implements View {
         newModel.getForObservation().registerObserver(this);
         subjects.add(newModel.getForObservation());
     }
-
+    
     @Override
-    public void cantValidateJson() {
-        Alert alert = new ThemedAlert(Alert.AlertType.ERROR,
-                "Can't validate JSON using selected Schema. See the console for details",
+    public void cantValidateJson()
+    {
+        Alert alert = new ThemedAlert(Alert.AlertType.ERROR, "Can't validate JSON using selected Schema. See the console for details",
                 ButtonType.OK);
         alert.showAndWait();
     }
-
+    
     @Override
-    public void selectJsonAndSchema() {
-        Alert alert = new ThemedAlert(Alert.AlertType.ERROR,
-                "Select a JSON and a Schema!", ButtonType.OK);
+    public void selectJsonAndSchema()
+    {
+        Alert alert = new ThemedAlert(Alert.AlertType.ERROR, "Select a JSON and a Schema!", ButtonType.OK);
         alert.showAndWait();
     }
-
+    
     @Override
-    public void showToast(Toasts toast) {
+    public void showToast(Toasts toast)
+    {
         uiHandler.showToastMessage(toast.getMessage(), toast.getColor());
     }
-
+    
     @Override
-    public void showCustomToast(String message, Color color) {
+    public void showCustomToast(String message, Color color)
+    {
         uiHandler.showToastMessage(message, color);
     }
-
+    
     @Override
-    public void showValidationErrors(List<ValidationError> errors) {
-        for (ValidationError error : errors) {
+    public void showValidationErrors(List<ValidationError> errors)
+    {
+        for (ValidationError error : errors)
+        {
             showCustomToast(ValidationErrorFormatter.format(error, model), Color.RED);
         }
     }
-
+    
     @Override
-    public void updateWindowTitle(final int unsavedChangesCount) {
+    public void updateWindowTitle(final int unsavedChangesCount)
+    {
         uiHandler.updateWindowTitle(unsavedChangesCount);
     }
 }

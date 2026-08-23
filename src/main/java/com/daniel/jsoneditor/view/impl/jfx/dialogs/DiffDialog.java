@@ -2,6 +2,8 @@ package com.daniel.jsoneditor.view.impl.jfx.dialogs;
 
 import com.daniel.jsoneditor.controller.Controller;
 import com.daniel.jsoneditor.model.diff.DiffEntry;
+import com.daniel.jsoneditor.model.ReadableModel;
+import com.daniel.jsoneditor.view.impl.jfx.PathDisplayConverter;
 import com.daniel.jsoneditor.view.impl.jfx.impl.scenes.impl.editor.components.editorwindow.EditorWindowManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -11,10 +13,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-
-import com.daniel.jsoneditor.model.ReadableModel;
-
-import com.daniel.jsoneditor.view.impl.jfx.PathDisplayConverter;
 
 import java.util.List;
 
