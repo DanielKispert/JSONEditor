@@ -43,7 +43,14 @@ public class ValidationResult
         
         for (ValidationError error : errors)
         {
-            summary.append("  • ").append(error.toString()).append("\n");
+            String detail = switch (error.getType())
+            {
+                case EMPTY_KEY -> String.format("  • EMPTY_KEY: '%s'", error.getPath());
+                case DANGLING_REFERENCE -> String.format(
+                    "  • DANGLING_REFERENCE: '%s' [referencingKey='%s', objectKey='%s', referencedObjectPath='%s']",
+                    error.getPath(), error.getReferencingKey(), error.getObjectKey(), error.getReferencedObjectPath());
+            };
+            summary.append(detail).append("\n");
         }
         
         return summary.toString();

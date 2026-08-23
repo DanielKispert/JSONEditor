@@ -1,5 +1,6 @@
 package com.daniel.jsoneditor.model.validation;
 
+import java.util.Objects;
 
 public final class ValidationError
 {
@@ -85,6 +86,30 @@ public final class ValidationError
     public String getReferencedObjectPath()
     {
         return referencedObjectPath;
+    }
+
+    @Override
+    public boolean equals(final Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (!(obj instanceof ValidationError other))
+        {
+            return false;
+        }
+        return Objects.equals(this.path, other.path)
+            && Objects.equals(this.type, other.type)
+            && Objects.equals(this.referencingKey, other.referencingKey)
+            && Objects.equals(this.objectKey, other.objectKey)
+            && Objects.equals(this.referencedObjectPath, other.referencedObjectPath);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(path, type, referencingKey, objectKey, referencedObjectPath);
     }
 
     @Override

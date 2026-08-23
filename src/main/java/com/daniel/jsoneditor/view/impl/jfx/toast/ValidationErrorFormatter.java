@@ -26,20 +26,18 @@ public final class ValidationErrorFormatter
     public static String format(final ValidationError error, final ReadableModel model)
     {
         final String displayPath = PathDisplayConverter.convertToDisplay(model, error.getPath());
-        switch (error.getType())
+        return switch (error.getType())
         {
-            case EMPTY_KEY:
-                return String.format("Invalid reference at '%s': Empty or missing reference key", displayPath);
-            case DANGLING_REFERENCE:
-                return String.format(
+            case EMPTY_KEY ->
+                String.format("Invalid reference at '%s': Empty or missing reference key", displayPath);
+            case DANGLING_REFERENCE ->
+                String.format(
                     "Invalid reference at '%s': Cannot find %s with key '%s' in '%s'",
                     displayPath,
                     error.getReferencingKey(),
                     error.getObjectKey(),
                     error.getReferencedObjectPath()
                 );
-            default:
-                return String.format("Invalid reference at '%s'", displayPath);
-        }
+        };
     }
 }

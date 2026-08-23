@@ -55,6 +55,13 @@ public class PathDisplayConverterTest
         assertTrue(result.contains("item_a"), "Display path must contain item display name 'item_a': " + result);
     }
 
+    @Test
+    void nullModel_returnsRawPath()
+    {
+        final String result = PathDisplayConverter.convertToDisplay(null, "/items/0");
+        assertEquals("/items/0", result, "null model should return raw path unchanged");
+    }
+
     // --- helpers ---
 
     private static ModelImpl buildModel()

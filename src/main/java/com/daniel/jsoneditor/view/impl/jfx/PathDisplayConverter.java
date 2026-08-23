@@ -15,18 +15,19 @@ public final class PathDisplayConverter
     }
 
     /**
-     * Converts a raw JSON Pointer path to a readable display path using node name resolution.
-     * Falls back to rawPath when rawPath is null or the node is missing.
-     *
-     * @param model   the model used to look up node display names
-     * @param rawPath the JSON Pointer path to convert
-     * @return a human-readable path, or rawPath if resolution is not possible
+     * Returns null when rawPath is null. Returns rawPath unchanged when the model is null or
+     * the node cannot be resolved (null or missing). Otherwise returns the readable display
+     * path via node.makeNameIncludingPath(model).
      */
     public static String convertToDisplay(final ReadableModel model, final String rawPath)
     {
         if (rawPath == null)
         {
             return null;
+        }
+        if (model == null)
+        {
+            return rawPath;
         }
         final JsonNodeWithPath node = model.getNodeForPath(rawPath);
         if (node == null || node.isMissing())
