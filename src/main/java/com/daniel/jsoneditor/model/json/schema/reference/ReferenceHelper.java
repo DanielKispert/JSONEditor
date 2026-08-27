@@ -248,12 +248,12 @@ public class ReferenceHelper
                         JsonNode objectKeyNode = refNode.get("objectKey");
                         JsonNode remarksNode = refNode.get("referenceRemarks");
                         if (pathNode != null && pathNode.isTextual() && objectKeyNode != null && objectKeyNode.isTextual()
-                                    && objectReferencingKeyNode != null && objectReferencingKeyNode.isTextual() && remarksNode != null
-                                    && remarksNode.isTextual())
+                                    && objectReferencingKeyNode != null && objectReferencingKeyNode.isTextual())
                         {
+                            final String remarks = remarksNode != null && remarksNode.isTextual() ? remarksNode.asText() : "";
                             referenceToObjects.add(
                                     new ReferenceToObject(pathNode.asText(), objectReferencingKeyNode.asText(), objectKeyNode.asText(),
-                                            remarksNode.asText()));
+                                            remarks));
                         }
                     }
                 }
