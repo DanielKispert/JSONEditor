@@ -204,7 +204,9 @@ public abstract class EditorTableCell extends TableCell<JsonNodeWithPath, String
             return;
         }
         
-        if (Objects.equals(newValue, committedValue))
+        final boolean newIsEmpty = newValue == null || newValue.isEmpty();
+        final boolean committedIsEmpty = committedValue == null || committedValue.isEmpty();
+        if ((newIsEmpty && committedIsEmpty) || Objects.equals(newValue, committedValue))
         {
             return;
         }
