@@ -20,9 +20,9 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.api.FxRobot;
 
 import java.lang.reflect.Field;
 
@@ -32,12 +32,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 /**
- * Tests that focus-loss on an empty, never-committed required field does NOT produce a spurious commit.
- *
- * Root cause on main:
- *   EditorTableCell.commitEdit guards with Objects.equals(newValue, committedValue).
- *   When committedValue == null and newValue == "" the guard evaluates to false (not equal),
- *   so execution continues and saveValue is called for the empty string on a required column.
+ * Tests for EditorTableCell.commitEdit focus-loss behaviour: the guard must treat
+ * null and "" as equivalent "empty" values to prevent spurious model writes.
  */
 @ExtendWith(ApplicationExtension.class)
 class EditorTableCellTest
@@ -46,6 +42,10 @@ class EditorTableCellTest
     private TextTableCell cell;
     private Control inputControl;
 
+    /**
+     * Creates a TextTableCell backed by a required column and an empty row item
+     * (the "name" property does not exist in the JSON node, committedValue == null).
+     */
     @SuppressWarnings("unchecked")
     @Start
     void start(final Stage stage) throws Exception
@@ -56,12 +56,11 @@ class EditorTableCellTest
         final ReadableModel mockModel = Mockito.mock(ReadableModel.class);
         final EditorWindowManager mockManager = Mockito.mock(EditorWindowManager.class);
 
-        // Required column whose JSON property does not yet exist in the row item
         final EditorTableColumn mockColumn = Mockito.mock(EditorTableColumn.class);
         Mockito.when(mockColumn.isRequired()).thenReturn(true);
         Mockito.when(mockColumn.getPropertyName()).thenReturn("name");
 
-        // Row item: real ObjectNode that has no "name" property  →  jsonNode == null in commitEdit
+        // ObjectNode with no "name" property — jsonNode == null inside commitEdit.
         final ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
         final JsonNodeWithPath mockItem = Mockito.mock(JsonNodeWithPath.class);
         Mockito.when(mockItem.getNode()).thenReturn(objectNode);
@@ -70,39 +69,42 @@ class EditorTableCellTest
         final TableRow<JsonNodeWithPath> mockTableRow = Mockito.mock(TableRow.class);
         Mockito.when(mockTableRow.getItem()).thenReturn(mockItem);
 
-        // Create the cell. committedValue stays null (Java default) — simulates a field never committed.
+        // committedValue stays null (Java default) — simulates a field never committed.
         cell = new TextTableCell(mockManager, mockController, mockModel, false, false);
 
-        // Inject mockTableRow via TableCell's private ReadOnlyObjectWrapper<TableRow> field.
-        // The --add-opens javafx.controls/javafx.scene.control=ALL-UNNAMED JVM arg (in build.gradle)
-        // allows setAccessible(true) on this private field from our test module.
+        // TableCell.getTableColumn() / getTableRow() are final — they cannot be overridden
+        // or mocked via subclassing. We inject mocks into the private ReadOnlyObjectWrapper
+        // fields directly. Requires --add-opens javafx.controls/javafx.scene.control=ALL-UNNAMED
+        // in build.gradle (field names are JavaFX-version-specific; tested against JavaFX 21).
         final Field tableRowField = TableCell.class.getDeclaredField("tableRow");
         tableRowField.setAccessible(true);
         ((ReadOnlyObjectWrapper<TableRow<JsonNodeWithPath>>) tableRowField.get(cell)).set(mockTableRow);
 
-        // Inject mockColumn after tableRow so that updateColumnIndex() (triggered by invalidation)
-        // finds a null tableView rather than NPE-ing on the row-to-table path.
+        // Inject column after row: updateColumnIndex() triggered by the column property's
+        // invalidation calls getTableView() via the row — null tableView is safe; absent row is not.
         final Field tableColumnField = TableCell.class.getDeclaredField("tableColumn");
         tableColumnField.setAccessible(true);
-        ((ReadOnlyObjectWrapper<TableColumn<JsonNodeWithPath, String>>) tableColumnField.get(cell)).set(mockColumn);
+        ((ReadOnlyObjectWrapper<TableColumn<JsonNodeWithPath, String>>) tableColumnField.get(cell))
+                .set(mockColumn);
 
-        // Simulate a text input control that was set during updateItem (normally on cell render).
         inputControl = new TextField();
         final Field ctrlField = EditorTableCell.class.getDeclaredField("currentTextInputControl");
         ctrlField.setAccessible(true);
         ctrlField.set(cell, inputControl);
     }
 
+    /** Sets the protected {@code committedValue} field on a cell via reflection. */
+    private static void setCommittedValue(final TextTableCell target, final String value) throws Exception
+    {
+        final Field f = EditorTableCell.class.getDeclaredField("committedValue");
+        f.setAccessible(true);
+        f.set(target, value);
+    }
+
     /**
-     * Simulates focus loss on an empty required field that was never previously committed
-     * (committedValue == null, the JSON property does not yet exist on the row item).
-     *
-     * Expected: controller.setValueAtPath is NEVER called because saving "" for a
-     * required field that never had a value is meaningless and should be suppressed.
-     *
-     * On main this test is RED: setValueAtPath IS called with "" because
-     * Objects.equals("", null) == false bypasses the equality guard, and the
-     * isRequired() branch calls saveValue("") unconditionally.
+     * Focus loss on a required field that is empty and was never committed
+     * (committedValue == null) must NOT write to the model — "" on a virgin
+     * field is meaningless noise, not a user edit.
      */
     @Test
     void focusLossOnEmptyRequiredFieldDoesNotCommit(final FxRobot robot)
@@ -110,5 +112,31 @@ class EditorTableCellTest
         robot.interact(() -> cell.commitEditFromCurrentControl("", inputControl));
 
         verify(mockController, never()).setValueAtPath(anyString(), any());
+    }
+
+    /**
+     * null newValue on a never-committed field is treated identically to "" —
+     * both are "empty" — and must not trigger a model write.
+     */
+    @Test
+    void focusLossWithNullNewValueDoesNotCommit(final FxRobot robot)
+    {
+        robot.interact(() -> cell.commitEditFromCurrentControl(null, inputControl));
+
+        verify(mockController, never()).setValueAtPath(anyString(), any());
+    }
+
+    /**
+     * Focus loss when the user changes an existing committed value must still
+     * produce a model write — the fix must not suppress legitimate edits.
+     */
+    @Test
+    void focusLossWithChangedValueCommits(final FxRobot robot) throws Exception
+    {
+        setCommittedValue(cell, "old");
+
+        robot.interact(() -> cell.commitEditFromCurrentControl("new", inputControl));
+
+        verify(mockController).setValueAtPath("/items/0/name", "new");
     }
 }
