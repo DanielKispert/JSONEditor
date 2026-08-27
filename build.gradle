@@ -68,6 +68,7 @@ test {
     jvmArgs '--add-exports', 'javafx.graphics/com.sun.javafx.application=ALL-UNNAMED'
     jvmArgs '--add-exports', 'javafx.graphics/com.sun.glass.ui.monocle=ALL-UNNAMED'
     jvmArgs '--add-opens', 'javafx.graphics/com.sun.glass.ui=ALL-UNNAMED'
+    jvmArgs '--add-opens', 'javafx.controls/javafx.scene.control=ALL-UNNAMED'
 }
 
 runtime {
