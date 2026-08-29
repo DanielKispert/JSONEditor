@@ -1,7 +1,7 @@
 package com.daniel.jsoneditor.model.mcp;
 
 import com.daniel.jsoneditor.controller.AppService;
-import com.daniel.jsoneditor.controller.WindowRegistry;
+
 import com.daniel.jsoneditor.model.sessions.AttachResult;
 import com.daniel.jsoneditor.model.sessions.EditorSession;
 import com.daniel.jsoneditor.model.sessions.FileSessionManager;
@@ -14,7 +14,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.io.File;
-import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mockStatic;
@@ -26,16 +26,12 @@ class ShowGuiToolTest
     private AppService appService;
     private FileSessionManager sessionManager;
     private ShowGuiTool tool;
-    private WindowRegistry windowRegistry;
 
     @BeforeEach
     void setUp()
     {
         appService = Mockito.mock(AppService.class);
         sessionManager = Mockito.mock(FileSessionManager.class);
-        windowRegistry = Mockito.mock(WindowRegistry.class);
-        Mockito.when(appService.getWindowRegistry()).thenReturn(windowRegistry);
-        Mockito.when(windowRegistry.findByPath(Mockito.anyString())).thenReturn(Optional.empty());
         tool = new ShowGuiTool(appService, sessionManager);
     }
 
@@ -100,6 +96,40 @@ class ShowGuiToolTest
                     "{\"json_path\":\"/data/file.json\",\"schema_path\":\"/data/schema.json\",\"settings_path\":\"/data/settings.json\"}");
             assertFalse(payload.path("gui_state").asText().isEmpty(), "Expected gui_state with settings");
             assertEquals("new-session-id", payload.path("session_id").asText(), "Expected session_id with settings");
+        }
+    }
+
+    @Test
+    void guiState_derivedFromLiveSessions_notWindowRegistry() throws Exception
+    {
+        Mockito.when(appService.isShuttingDown()).thenReturn(false);
+
+        // Scenario A: a guiOwned session exists for /data/file.json — window is currently open.
+        // The implementation must derive gui_state from the session list, not from WindowRegistry.
+        final EditorSession guiSession = new EditorSession(
+                "gui-open", null, new File("/data/file.json"), new File("/data/schema.json"), true);
+        Mockito.when(sessionManager.listSessions()).thenReturn(List.of(guiSession));
+        Mockito.when(sessionManager.getSession("gui-open")).thenReturn(guiSession);
+
+        try (final MockedStatic<Platform> platformMock = mockStatic(Platform.class))
+        {
+            final JsonNode payload = callAndParsePayload("{\"session_id\":\"gui-open\"}");
+            assertEquals("focused", payload.path("gui_state").asText(),
+                    "gui_state must be 'focused' when a guiOwned session exists for the same file path");
+        }
+
+        // Scenario B: no guiOwned sessions exist — window was closed since last show_gui call.
+        Mockito.when(sessionManager.listSessions()).thenReturn(List.of());
+        Mockito.when(sessionManager.attachSession(
+                Mockito.anyString(), Mockito.anyString(), Mockito.eq(false)))
+                .thenReturn(AttachResult.ofSuccess("new-headless"));
+
+        try (final MockedStatic<Platform> platformMock = mockStatic(Platform.class))
+        {
+            final JsonNode payload = callAndParsePayload(
+                    "{\"json_path\":\"/data/file.json\",\"schema_path\":\"/data/schema.json\"}");
+            assertEquals("opened", payload.path("gui_state").asText(),
+                    "gui_state must be 'opened' when no guiOwned session exists for the file (window was closed)");
         }
     }
 

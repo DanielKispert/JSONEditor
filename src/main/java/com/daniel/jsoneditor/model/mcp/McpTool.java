@@ -15,6 +15,13 @@ public abstract class McpTool
     /** JSON-RPC error code for invalid method parameters. */
     protected static final int JSONRPC_INVALID_PARAMS = -32602;
 
+    /** JSON value for gui_state: a GUI window is active or was just opened. */
+    protected static final String GUI_STATE_OPENED = "opened";
+    /** JSON value for gui_state (show_gui action result): an existing window was brought to front. */
+    protected static final String GUI_STATE_FOCUSED = "focused";
+    /** JSON value for gui_state: no GUI window is associated with this session. */
+    protected static final String GUI_STATE_NONE = "none";
+
     /**
      * @return unique tool name (e.g., "get_node", "set_node")
      */

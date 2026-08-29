@@ -27,7 +27,8 @@ class ListSessionsTool extends ReadOnlyMcpTool
     @Override
     public String getDescription()
     {
-        return "List all active editing sessions. Returns session IDs and their associated file paths.";
+        return "List all active editing sessions. Returns session IDs and their associated file paths. "
+                + "gui_state reflects current window status: \"opened\"=GUI window is active, \"none\"=headless (no window).";
     }
 
     @Override
@@ -48,6 +49,7 @@ class ListSessionsTool extends ReadOnlyMcpTool
             entry.put("json_path", session.jsonFile() != null ? session.jsonFile().getAbsolutePath() : "");
             entry.put("schema_path", session.schemaFile() != null ? session.schemaFile().getAbsolutePath() : "");
             entry.put("gui_owned", session.guiOwned());
+            entry.put("gui_state", session.guiOwned() ? GUI_STATE_OPENED : GUI_STATE_NONE);
             arr.add(entry);
         }
         return McpToolRegistry.createToolResult(id, arr);
