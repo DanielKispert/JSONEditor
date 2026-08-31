@@ -47,7 +47,8 @@ class ShowGuiTool extends McpTool
     {
         return "Open the JSON Editor GUI for a file. Provide EITHER session_id (attach to an existing session) "
                 + "OR json_path + schema_path (open a new file directly). Mutually exclusive. "
-                + "Returns session_id and gui_state: \"opened\" (new window) or \"focused\" (existing window brought to front).";
+                + "Returns session_id and gui_state (action result: \"opened\"=new window was opened, "
+                + "\"focused\"=existing window was brought to front).";
     }
 
     @Override
@@ -151,9 +152,18 @@ class ShowGuiTool extends McpTool
             }
         }
 
+        if (jsonFile == null)
+        {
+            return JsonEditorMcpServer.createErrorResponseStatic(id, JSONRPC_INVALID_PARAMS,
+                    "Session has no associated file path");
+        }
+
         final String canonicalPath = CanonicalPaths.canonicalize(jsonFile);
-        final boolean alreadyOpen = appService.getWindowRegistry().findByPath(canonicalPath).isPresent();
-        final String guiState = alreadyOpen ? "focused" : "opened";
+        final boolean alreadyOpen = sessionManager.listSessions().stream()
+                .anyMatch(s -> s.guiOwned()
+                        && s.jsonFile() != null
+                        && canonicalPath.equals(CanonicalPaths.canonicalize(s.jsonFile())));
+        final String guiState = alreadyOpen ? GUI_STATE_FOCUSED : GUI_STATE_OPENED;
 
         final File finalSettingsFile = settingsFile;
         Platform.runLater(() ->

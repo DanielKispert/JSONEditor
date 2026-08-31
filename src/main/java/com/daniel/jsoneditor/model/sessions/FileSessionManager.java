@@ -236,6 +236,10 @@ public class FileSessionManager
         }
         while (true);
 
+        if (guiOwned)
+        {
+            removeOrphanedHeadlessSessionsForPath(canonicalJson, sessionId);
+        }
         logger.info("Attached session {} to path {} (refCount={})", sessionId, canonicalJson, sharedFile.refCount().get());
         return AttachResult.ofSuccess(sessionId);
     }
@@ -400,6 +404,28 @@ public class FileSessionManager
                 }
                 return sharedFile;
             });
+        }
+    }
+
+    /**
+     * Removes any headless (non-GUI-owned) sessions that refer to {@code canonicalPath},
+     * excluding the newly attached GUI session identified by {@code guiSessionId}.
+     * Called immediately after a GUI session is committed to {@code sessions} to prevent
+     * orphaned headless sessions (created by repeated show_gui calls) from accumulating.
+     */
+    private void removeOrphanedHeadlessSessionsForPath(final String canonicalPath, final String guiSessionId)
+    {
+        final List<String> orphanIds = sessions.entrySet().stream()
+                .filter(e -> !e.getValue().guiOwned()
+                        && !e.getKey().equals(guiSessionId)
+                        && canonicalPath.equals(sessionToCanonicalPath.get(e.getKey())))
+                .map(Map.Entry::getKey)
+                .toList();
+        for (final String orphanId : orphanIds)
+        {
+            logger.info("Removing orphaned headless session {} for path {} after GUI session attached",
+                    orphanId, canonicalPath);
+            detachSession(orphanId);
         }
     }
 

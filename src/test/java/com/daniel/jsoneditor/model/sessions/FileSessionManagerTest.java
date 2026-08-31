@@ -480,4 +480,39 @@ public class FileSessionManagerTest
         assertTrue(sessionManager.listSessions().isEmpty(), "All sessions must be cleaned up");
     }
 
+    /**
+     * Verifies that when a GUI session attaches to a path that already has orphaned headless sessions
+     * (created by repeated show_gui calls), those headless sessions are removed — no session leak.
+     * Symptom: multiple show_gui calls for the same file left N headless sessions + 1 GUI session.
+     */
+    @Test
+    void attachGuiSession_removesOrphanedHeadlessSessions() throws Exception
+    {
+        // Simulate two show_gui calls creating orphaned headless sessions for the same file
+        final AttachResult headless1 = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(headless1.success(), "first headless attach must succeed");
+        final AttachResult headless2 = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), false);
+        assertTrue(headless2.success(), "second headless attach must succeed");
+        assertNotEquals(headless1.sessionId(), headless2.sessionId(), "headless sessions must have distinct IDs");
+        assertEquals(2, sessionManager.listSessions().size(),
+                "two headless sessions must exist before GUI attaches");
+
+        // Simulate the GUI window opening for the same file (what AppService.attachLoadedSession does)
+        final AttachResult gui = sessionManager.attachSession(jsonFile.toString(), schemaFile.toString(), true);
+        assertTrue(gui.success(), "GUI attach must succeed");
+        assertTrue(gui.sessionId().startsWith("gui-"), "GUI session ID must start with gui-");
+
+        // After GUI attaches, the orphaned headless sessions must have been removed automatically
+        final List<EditorSession> remaining = sessionManager.listSessions();
+        assertEquals(1, remaining.size(),
+                "Orphaned headless sessions must be removed when GUI session attaches to same path — no session leak");
+        assertTrue(remaining.get(0).guiOwned(), "Remaining session must be GUI-owned");
+        assertEquals(gui.sessionId(), remaining.get(0).id(),
+                "Remaining session must be the newly attached GUI session");
+
+        // Cleanup
+        sessionManager.unregisterGuiSession(gui.sessionId());
+        assertTrue(sessionManager.listSessions().isEmpty(), "Must be fully clean after GUI unregister");
+    }
+
 }
